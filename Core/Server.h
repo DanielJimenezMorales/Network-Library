@@ -3,10 +3,12 @@
 #include <winsock2.h>
 #include <ws2tcpip.h>
 #include <vector>
-#include "Buffer.h"
-#include "Address.h"
+
 #include "RemoteClient.h"
 #include "PendingConnectionData.h"
+
+class Buffer;
+class Address;
 
 #define REMOTE_CLIENT_INACTIVITY_TIME 5.0f
 

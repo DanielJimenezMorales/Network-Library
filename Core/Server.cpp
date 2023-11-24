@@ -1,5 +1,6 @@
-#include "Server.h"
 #include <sstream>
+
+#include "Server.h"
 #include "Logger.h"
 #include "NetworkPacket.h"
 

@@ -5,8 +5,10 @@
 #define NOMINMAX
 #include <winsock2.h>
 #include <ws2tcpip.h>
-#include "Buffer.h"
+
 #include "Address.h"
+
+class Buffer;
 
 enum ClientState
 {
