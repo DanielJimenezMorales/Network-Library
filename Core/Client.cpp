@@ -1,7 +1,6 @@
 #include "Client.h"
 #include "NetworkPacket.h"
 #include "../Utils/Logger.h"
-#include "../Utils/BufferUtils.h"
 
 Client::Client(float serverMaxInactivityTimeout) : 
 			_serverMaxInactivityTimeout(serverMaxInactivityTimeout),
@@ -9,13 +8,11 @@ Client::Client(float serverMaxInactivityTimeout) :
 			_saltNumber(0),
 			_dataPrefix(0)
 {
-	_serverAddress = new Address("127.0.0.1", 54000);
+	_serverAddress = Address("127.0.0.1", 54000);
 }
 
 Client::~Client()
 {
-	delete _serverAddress;
-	_serverAddress = nullptr;
 }
 
 int Client::Start()
@@ -116,14 +113,16 @@ void Client::ProcessReceivedData()
 	int clientLength = sizeof(client);
 	ZeroMemory(&client, clientLength);
 
-	Buffer* buffer = new Buffer(1024);
+	int size = 1024;
+	uint8_t* data = new uint8_t[size];
 
-	int bytesIn = recvfrom(_socket, (char*)buffer->data, 1024, 0, (sockaddr*)&client, &clientLength);
+	int bytesIn = recvfrom(_socket, (char*)data, size, 0, (sockaddr*)&client, &clientLength);
 	if (bytesIn == SOCKET_ERROR)
 	{		
 		LOG_ERROR("Error while receiving a message, error code " + WSAGetLastError());
 	}
 
+	Buffer* buffer = new Buffer(data, bytesIn);
 	Address address = Address(client);
 	ProcessDatagram(*buffer, address);
 
@@ -133,7 +132,7 @@ void Client::ProcessReceivedData()
 
 void Client::ProcessDatagram(Buffer& buffer, const Address& address)
 {
-	uint8_t packetType = BufferUtils::ReadByte(buffer);
+	uint8_t packetType = buffer.ReadByte();
 
 	switch (packetType)
 	{
@@ -171,8 +170,8 @@ void Client::ProcessConnectionChallenge(Buffer& buffer)
 {
 	LOG_INFO("Challenge packet received from server");
 
-	uint64_t clientSalt = BufferUtils::ReadLong(buffer);
-	uint64_t serverSalt = BufferUtils::ReadLong(buffer);
+	uint64_t clientSalt = buffer.ReadLong();
+	uint64_t serverSalt = buffer.ReadLong();
 	if (_saltNumber != clientSalt)
 	{
 		LOG_WARNING("The generated salt number does not match the server's challenge client salt number. Aborting operation");
@@ -197,14 +196,14 @@ void Client::ProcessConnectionChallenge(Buffer& buffer)
 
 void Client::ProcessConnectionRequestAccepted(Buffer& buffer)
 {
-	uint64_t dataPrefix = BufferUtils::ReadLong(buffer);
+	uint64_t dataPrefix = buffer.ReadLong();
 	if (dataPrefix != _dataPrefix)
 	{
 		LOG_WARNING("Packet prefix does not match. Skipping packet...");
 		return;
 	}
 
-	_clientIndex = BufferUtils::ReadShort(buffer);
+	_clientIndex = buffer.ReadShort();
 	_currentState = ClientState::Connected;
 	LOG_INFO("Connection accepted!");
 }
@@ -217,7 +216,7 @@ void Client::ProcessConnectionRequestDenied()
 
 void Client::ProcessDisconnection(Buffer& buffer)
 {
-	uint64_t dataPrefix = BufferUtils::ReadLong(buffer);
+	uint64_t dataPrefix = buffer.ReadLong();
 	if (dataPrefix != _dataPrefix)
 	{
 		LOG_WARNING("Packet prefix does not match. Skipping packet...");
@@ -244,7 +243,7 @@ void Client::SendConnectionRequestPacket()
 
 void Client::SendPacketToServer(const Buffer& buffer) const
 {
-	int bytesSent = sendto(_socket, (char*)buffer.data, buffer.size, 0, (sockaddr*)&_serverAddress->GetInfo(), sizeof(_serverAddress->GetInfo()));
+	int bytesSent = sendto(_socket, (char*)buffer.GetData(), buffer.GetSize(), 0, (sockaddr*)&_serverAddress.GetInfo(), sizeof(_serverAddress.GetInfo()));
 	if (bytesSent == SOCKET_ERROR)
 	{
 		int iResult = WSAGetLastError();

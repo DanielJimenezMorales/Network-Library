@@ -1,39 +1,38 @@
 #include "NetworkPacket.h"
-#include "../Utils/BufferUtils.h"
 
 void NetworkConnectionRequestPacket::Write(Buffer& buffer) const
 {
-	BufferUtils::WriteByte(buffer, type);
-	BufferUtils::WriteLong(buffer, clientSalt);
+	buffer.WriteByte(type);
+	buffer.WriteLong(clientSalt);
 }
 
 void NetworkConnectionChallengePacket::Write(Buffer& buffer) const
 {
-	BufferUtils::WriteByte(buffer, type);
-	BufferUtils::WriteLong(buffer, clientSalt);
-	BufferUtils::WriteLong(buffer, serverSalt);
+	buffer.WriteByte(type);
+	buffer.WriteLong(clientSalt);
+	buffer.WriteLong(serverSalt);
 }
 
 void NetworkConnectionChallengeResponsePacket::Write(Buffer& buffer) const
 {
-	BufferUtils::WriteByte(buffer, type);
-	BufferUtils::WriteLong(buffer, prefix);
+	buffer.WriteByte(type);
+	buffer.WriteLong(prefix);
 }
 
 void NetworkConnectionAcceptedPacket::Write(Buffer& buffer) const
 {
-	BufferUtils::WriteByte(buffer, type);
-	BufferUtils::WriteLong(buffer, prefix);
-	BufferUtils::WriteShort(buffer, clientIndexAssigned);
+	buffer.WriteByte(type);
+	buffer.WriteLong(prefix);
+	buffer.WriteShort(clientIndexAssigned);
 }
 
 void NetworkConnectionDeniedPacket::Write(Buffer& buffer) const
 {
-	BufferUtils::WriteByte(buffer, type);
+	buffer.WriteByte(type);
 }
 
 void NetworkDisconnectionPacket::Write(Buffer& buffer) const
 {
-	BufferUtils::WriteByte(buffer, type);
-	BufferUtils::WriteLong(buffer, prefix);
+	buffer.WriteByte(type);
+	buffer.WriteLong(prefix);
 }

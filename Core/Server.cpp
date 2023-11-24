@@ -1,6 +1,5 @@
 #include "Server.h"
 #include <sstream>
-#include "../Utils/BufferUtils.h"
 #include "../Utils/Logger.h"
 #include "NetworkPacket.h"
 
@@ -149,8 +148,10 @@ void Server::ProcessReceivedData()
 	int clientLength = sizeof(client);
 	ZeroMemory(&client, clientLength);
 
-	Buffer* buffer = new Buffer(1024);
-	int bytesIn = recvfrom(_listenSocket, (char*)buffer->data, 1024, 0, (sockaddr*)&client, &clientLength);
+	int size = 1024;
+	uint8_t* data = new uint8_t[size];
+
+	int bytesIn = recvfrom(_listenSocket, (char*)data, size, 0, (sockaddr*)&client, &clientLength);
 	if (bytesIn == SOCKET_ERROR)
 	{
 		std::stringstream ss;
@@ -159,6 +160,7 @@ void Server::ProcessReceivedData()
 		return;
 	}
 
+	Buffer* buffer = new Buffer(data, bytesIn);
 	Address address = Address(client);
 	ProcessDatagram(*buffer, address);
 
@@ -168,7 +170,7 @@ void Server::ProcessReceivedData()
 
 void Server::ProcessDatagram(Buffer& buffer, const Address& address)
 {
-	uint8_t packetType = BufferUtils::ReadByte(buffer);
+	uint8_t packetType = buffer.ReadByte();
 
 	switch (packetType)
 	{
@@ -191,7 +193,7 @@ void Server::ProcessConnectionRequest(Buffer& buffer, const Address& address)
 
 	if (isAbleToConnectResult == 0)//If there is green light keep with the connection pipeline.
 	{
-		uint64_t clientSalt = BufferUtils::ReadLong(buffer);
+		uint64_t clientSalt = buffer.ReadLong();
 		int pendingConnectionIndex = -1;
 		for (unsigned int i = 0; i < _pendingConnections.size(); ++i)
 		{
@@ -280,7 +282,7 @@ void Server::ProcessConnectionChallengeResponse(Buffer& buffer, const Address& a
 	ss << "Processing connection challenge response from [IP: " << address.GetIP() << ", Port: " << address.GetPort() << "]";
 	LOG_INFO(ss.str());
 
-	uint64_t dataPrefix = BufferUtils::ReadLong(buffer);
+	uint64_t dataPrefix = buffer.ReadLong();
 
 	int isAbleToConnectResult = IsClientAbleToConnect(address);
 
@@ -429,7 +431,7 @@ void Server::SendDatagramToRemoteClient(const RemoteClient& remoteClient, const 
 void Server::SendDataToAddress(const Buffer& buffer, const Address& address) const
 {
 	int iResult = 0;
-	iResult = sendto(_listenSocket, (char*)buffer.data, buffer.size, 0, (sockaddr*)&address.GetInfo(), sizeof(address.GetInfo()));
+	iResult = sendto(_listenSocket, (char*)buffer.GetData(), buffer.GetSize(), 0, (sockaddr*)&address.GetInfo(), sizeof(address.GetInfo()));
 	if (iResult == SOCKET_ERROR)
 	{
 		iResult = WSAGetLastError();

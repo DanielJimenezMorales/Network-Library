@@ -42,7 +42,7 @@ private:
 	void SendPacketToServer(const Buffer& buffer) const;
 
 	SOCKET _socket = INVALID_SOCKET;
-	Address* _serverAddress;
+	Address _serverAddress = Address("127.0.0.1", htons(1234));
 	ClientState _currentState = ClientState::Disconnected;
 	const float _serverMaxInactivityTimeout;
 	float _serverInactivityTimeLeft;
