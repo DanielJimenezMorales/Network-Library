@@ -1,6 +1,6 @@
 #include "Address.h"
 #include <sstream>
-#include "../Utils/Logger.h"
+#include "Logger.h"
 
 Address::Address(const std::string& ip, unsigned int port)
 {

@@ -4,9 +4,9 @@
 #include <iostream>
 #include <winsock2.h>
 #include <chrono>
-#include "Core/Server.h"
-#include "Core/Client.h"
-#include "Utils/Logger.h"
+#include "Server.h"
+#include "Client.h"
+#include "Logger.h"
 
 #define DEFAULT_IP "127.0.0.1"
 #define DEFAULT_PORT "27015"

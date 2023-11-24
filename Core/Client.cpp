@@ -1,6 +1,6 @@
 #include "Client.h"
 #include "NetworkPacket.h"
-#include "../Utils/Logger.h"
+#include "Logger.h"
 
 Client::Client(float serverMaxInactivityTimeout) : 
 			_serverMaxInactivityTimeout(serverMaxInactivityTimeout),
