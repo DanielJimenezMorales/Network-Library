@@ -1,4 +1,5 @@
 #include "NetworkPacket.h"
+#include "../Utils/BufferUtils.h"
 
 void NetworkConnectionRequestPacket::Write(Buffer& buffer) const
 {

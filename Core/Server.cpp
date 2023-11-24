@@ -1,4 +1,8 @@
 #include "Server.h"
+#include <sstream>
+#include "../Utils/BufferUtils.h"
+#include "../Utils/Logger.h"
+#include "NetworkPacket.h"
 
 Server::Server(int maxConnections) : _maxConnections(maxConnections)
 {
