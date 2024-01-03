@@ -132,6 +132,8 @@
     <ClCompile Include="Core\Address.cpp" />
     <ClCompile Include="Core\Buffer.cpp" />
     <ClCompile Include="Core\Client.cpp" />
+    <ClCompile Include="Core\Message.cpp" />
+    <ClCompile Include="Core\MessageHeader.cpp" />
     <ClCompile Include="network-library.cpp" />
     <ClCompile Include="Core\NetworkPacket.cpp" />
     <ClCompile Include="Core\RemoteClient.cpp" />
@@ -141,6 +143,9 @@
     <ClInclude Include="Core\Address.h" />
     <ClInclude Include="Core\Buffer.h" />
     <ClInclude Include="Core\Client.h" />
+    <ClInclude Include="Core\Message.h" />
+    <ClInclude Include="Core\MessageHeader.h" />
+    <ClInclude Include="Core\NetworkPacket.h" />
     <ClInclude Include="Utils\Logger.h" />
     <ClInclude Include="Core\RemoteClient.h" />
     <ClInclude Include="Core\Server.h" />

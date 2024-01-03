@@ -1,38 +1,16 @@
 #include "NetworkPacket.h"
+#include "Buffer.h"
 
-void NetworkConnectionRequestPacket::Write(Buffer& buffer) const
+void NetworkPacketHeader::Write(Buffer& buffer) const
 {
-	buffer.WriteByte(type);
-	buffer.WriteLong(clientSalt);
+	buffer.WriteShort(sequenceNumber);
+	buffer.WriteShort(lastAckedSequenceNumber);
+	buffer.WriteInteger(ackBits);
 }
 
-void NetworkConnectionChallengePacket::Write(Buffer& buffer) const
+void NetworkPacketHeader::Read(Buffer& buffer)
 {
-	buffer.WriteByte(type);
-	buffer.WriteLong(clientSalt);
-	buffer.WriteLong(serverSalt);
-}
-
-void NetworkConnectionChallengeResponsePacket::Write(Buffer& buffer) const
-{
-	buffer.WriteByte(type);
-	buffer.WriteLong(prefix);
-}
-
-void NetworkConnectionAcceptedPacket::Write(Buffer& buffer) const
-{
-	buffer.WriteByte(type);
-	buffer.WriteLong(prefix);
-	buffer.WriteShort(clientIndexAssigned);
-}
-
-void NetworkConnectionDeniedPacket::Write(Buffer& buffer) const
-{
-	buffer.WriteByte(type);
-}
-
-void NetworkDisconnectionPacket::Write(Buffer& buffer) const
-{
-	buffer.WriteByte(type);
-	buffer.WriteLong(prefix);
+	sequenceNumber = buffer.ReadShort();
+	lastAckedSequenceNumber = buffer.ReadShort();
+	ackBits = buffer.ReadInteger();
 }

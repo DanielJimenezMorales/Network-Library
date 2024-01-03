@@ -2,7 +2,9 @@
 
 #include "Server.h"
 #include "Logger.h"
-#include "NetworkPacket.h"
+//#include "NetworkPacket.h"
+#include "Message.h"
+#include "Buffer.h"
 
 Server::Server(int maxConnections) : _maxConnections(maxConnections)
 {
@@ -175,10 +177,10 @@ void Server::ProcessDatagram(Buffer& buffer, const Address& address)
 
 	switch (packetType)
 	{
-	case NetworkPacketType::ConnectionRequest:
+	case MessageType::ConnectionRequest:
 		ProcessConnectionRequest(buffer, address);
 		break;
-	case NetworkPacketType::ConnectionChallengeResponse:
+	case MessageType::ConnectionChallengeResponse:
 		ProcessConnectionChallengeResponse(buffer, address);
 		break;
 	}
@@ -236,7 +238,7 @@ void Server::ProcessConnectionRequest(Buffer& buffer, const Address& address)
 
 void Server::SendDisconnectionPacketToRemoteClient(const RemoteClient& remoteClient) const
 {
-	NetworkDisconnectionPacket disconnectionPacket;
+	DisconnectionMessage disconnectionPacket;
 	disconnectionPacket.prefix = remoteClient.GetDataPrefix();
 	Buffer* disconnectionBuffer = new Buffer(sizeof(disconnectionPacket));
 	disconnectionPacket.Write(*disconnectionBuffer);
@@ -250,7 +252,7 @@ void Server::SendDisconnectionPacketToRemoteClient(const RemoteClient& remoteCli
 
 void Server::SendConnectionChallengePacket(const Address& address, int pendingConnectionIndex) const
 {
-	NetworkConnectionChallengePacket connectionChallengePacket;
+	ConnectionChallengeMessage connectionChallengePacket;
 	connectionChallengePacket.clientSalt = _pendingConnections[pendingConnectionIndex].clientSalt;
 	connectionChallengePacket.serverSalt = _pendingConnections[pendingConnectionIndex].serverSalt;
 
@@ -266,7 +268,7 @@ void Server::SendConnectionChallengePacket(const Address& address, int pendingCo
 
 void Server::SendConnectionDeniedPacket(const Address& address) const
 {
-	NetworkConnectionDeniedPacket connectionDeniedPacket;
+	ConnectionDeniedMessage connectionDeniedPacket;
 	Buffer* connectionDeniedBuffer = new Buffer(sizeof(connectionDeniedPacket));
 	connectionDeniedPacket.Write(*connectionDeniedBuffer);
 
@@ -408,7 +410,7 @@ int Server::FindExistingClientIndex(const Address& address) const
 void Server::SendConnectionApprovedPacketToRemoteClient(const RemoteClient& remoteClient) const
 {
 	//Write connection packet data into buffer
-	NetworkConnectionAcceptedPacket connectionAcceptedPacket;
+	ConnectionAcceptedMessage connectionAcceptedPacket;
 	connectionAcceptedPacket.prefix = remoteClient.GetDataPrefix();
 	connectionAcceptedPacket.clientIndexAssigned = remoteClient.GetClientIndex();
 	int connectionAcceptedPacketSize = sizeof(connectionAcceptedPacket);

@@ -1,5 +1,7 @@
 #include "Client.h"
-#include "NetworkPacket.h"
+//#include "NetworkPacket.h"
+#include "Message.h"
+#include "Buffer.h"
 #include "Logger.h"
 
 Client::Client(float serverMaxInactivityTimeout) : 
@@ -136,25 +138,25 @@ void Client::ProcessDatagram(Buffer& buffer, const Address& address)
 
 	switch (packetType)
 	{
-	case NetworkPacketType::ConnectionChallenge:
+	case MessageType::ConnectionChallenge:
 		if (_currentState == ClientState::SendingConnectionRequest || _currentState == ClientState::SendingConnectionChallengeResponse)
 		{
 			ProcessConnectionChallenge(buffer);
 		}
 		break;
-	case NetworkPacketType::ConnectionAccepted:
+	case MessageType::ConnectionAccepted:
 		if (_currentState == ClientState::SendingConnectionChallengeResponse)
 		{
 			ProcessConnectionRequestAccepted(buffer);
 		}
 		break;
-	case NetworkPacketType::ConnectionDenied:
+	case MessageType::ConnectionDenied:
 		if (_currentState == ClientState::SendingConnectionChallengeResponse || _currentState == ClientState::SendingConnectionRequest)
 		{
 			ProcessConnectionRequestDenied();
 		}
 		break;
-	case NetworkPacketType::Disconnection:
+	case MessageType::Disconnection:
 		if (_currentState == ClientState::Connected)
 		{
 			ProcessDisconnection(buffer);
@@ -182,7 +184,7 @@ void Client::ProcessConnectionChallenge(Buffer& buffer)
 
 	_currentState = ClientState::SendingConnectionChallengeResponse;
 
-	NetworkConnectionChallengeResponsePacket connectionChallengeResponsePacket;
+	ConnectionChallengeResponseMessage connectionChallengeResponsePacket;
 	connectionChallengeResponsePacket.prefix = _dataPrefix;
 	Buffer* challengeResponseBuffer = new Buffer(sizeof(connectionChallengeResponsePacket));
 	connectionChallengeResponsePacket.Write(*challengeResponseBuffer);
@@ -230,7 +232,7 @@ void Client::ProcessDisconnection(Buffer& buffer)
 void Client::SendConnectionRequestPacket()
 {
 	LOG_INFO("Sending connection request to server...");
-	NetworkConnectionRequestPacket connectionRequestPacket = NetworkConnectionRequestPacket();
+	ConnectionRequestMessage connectionRequestPacket = ConnectionRequestMessage();
 	connectionRequestPacket.clientSalt = _saltNumber;
 	int connectionRequestPacketSize = sizeof(connectionRequestPacket);
 	Buffer* buffer = new Buffer(connectionRequestPacketSize);
