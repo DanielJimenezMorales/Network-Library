@@ -134,10 +134,12 @@
     <ClCompile Include="Core\Client.cpp" />
     <ClCompile Include="Core\Message.cpp" />
     <ClCompile Include="Core\MessageHeader.cpp" />
+    <ClCompile Include="Core\PendingConnection.cpp" />
     <ClCompile Include="network-library.cpp" />
     <ClCompile Include="Core\NetworkPacket.cpp" />
     <ClCompile Include="Core\RemoteClient.cpp" />
     <ClCompile Include="Core\Server.cpp" />
+    <ClCompile Include="Utils\MessageUtils.cpp" />
   </ItemGroup>
   <ItemGroup>
     <ClInclude Include="Core\Address.h" />
@@ -146,9 +148,11 @@
     <ClInclude Include="Core\Message.h" />
     <ClInclude Include="Core\MessageHeader.h" />
     <ClInclude Include="Core\NetworkPacket.h" />
+    <ClInclude Include="Core\PendingConnection.h" />
     <ClInclude Include="Utils\Logger.h" />
     <ClInclude Include="Core\RemoteClient.h" />
     <ClInclude Include="Core\Server.h" />
+    <ClInclude Include="Utils\MessageUtils.h" />
   </ItemGroup>
   <Import Project="$(VCTargetsPath)\Microsoft.Cpp.targets" />
   <ImportGroup Label="ExtensionTargets">

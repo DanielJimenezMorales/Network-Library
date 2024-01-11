@@ -9,6 +9,11 @@
 #include "Address.h"
 
 class Buffer;
+class Message;
+class ConnectionChallengeMessage;
+class ConnectionAcceptedMessage;
+class ConnectionDeniedMessage;
+class DisconnectionMessage;
 
 enum ClientState
 {
@@ -36,9 +41,13 @@ private:
 	void ProcessReceivedData();
 	void ProcessDatagram(Buffer& buffer, const Address& address);
 	void ProcessConnectionChallenge(Buffer& buffer);
+	void ProcessConnectionChallenge(const ConnectionChallengeMessage& message);
 	void ProcessConnectionRequestAccepted(Buffer& buffer);
+	void ProcessConnectionRequestAccepted(const ConnectionAcceptedMessage& message);
 	void ProcessConnectionRequestDenied();
+	void ProcessConnectionRequestDenied(const ConnectionDeniedMessage& message);
 	void ProcessDisconnection(Buffer& buffer);
+	void ProcessDisconnection(const DisconnectionMessage& message);
 
 	void SendConnectionRequestPacket();
 	void SendPacketToServer(const Buffer& buffer) const;

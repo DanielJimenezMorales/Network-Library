@@ -7,7 +7,9 @@ class Message
 public:
 	Message() {};
 	virtual void Write(Buffer& buffer) const = 0;
+	//Read it without the message header type
 	virtual void Read(Buffer& buffer) = 0;
+	virtual uint32_t Size() const = 0;
 
 	MessageHeader header;
 };
@@ -22,6 +24,7 @@ public:
 
 	void Write(Buffer& buffer) const override;
 	void Read(Buffer& buffer) override;
+	uint32_t Size() const override;
 
 	~ConnectionRequestMessage() {}
 
@@ -38,6 +41,7 @@ public:
 
 	void Write(Buffer& buffer) const override;
 	void Read(Buffer& buffer) override;
+	uint32_t Size() const override;
 
 	~ConnectionChallengeMessage() {}
 
@@ -55,6 +59,7 @@ public:
 
 	void Write(Buffer& buffer) const override;
 	void Read(Buffer& buffer) override;
+	uint32_t Size() const override;
 
 	~ConnectionChallengeResponseMessage() {}
 
@@ -71,6 +76,7 @@ public:
 
 	void Write(Buffer & buffer) const override;
 	void Read(Buffer & buffer) override;
+	uint32_t Size() const override;
 
 	~ConnectionAcceptedMessage() {}
 
@@ -88,6 +94,7 @@ public:
 
 	void Write(Buffer& buffer) const override;
 	void Read(Buffer& buffer) override;
+	uint32_t Size() const override;
 
 	~ConnectionDeniedMessage() {}
 };
@@ -102,6 +109,7 @@ public:
 
 	void Write(Buffer& buffer) const override;
 	void Read(Buffer& buffer) override;
+	uint32_t Size() const override;
 
 	~DisconnectionMessage() {}
 

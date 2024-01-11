@@ -81,3 +81,8 @@ uint8_t Buffer::ReadByte()
 
 	return value;
 }
+
+void Buffer::ResetAccessIndex()
+{
+	_index = 0;
+}

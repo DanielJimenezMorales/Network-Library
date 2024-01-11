@@ -5,10 +5,10 @@
 #include <vector>
 
 #include "RemoteClient.h"
-#include "PendingConnectionData.h"
 
 class Buffer;
 class Address;
+class PendingConnection;
 
 #define REMOTE_CLIENT_INACTIVITY_TIME 5.0f
 
@@ -51,6 +51,10 @@ private:
 	void AddNewRemoteClient(int remoteClientSlotIndex, const Address& address, uint64_t dataPrefix);
 	int FindExistingClientIndex(const Address& address) const;
 
+	void SendData();
+	void CreateConnectionChallengeMessage(const Address& address, int pendingConnectionIndex);
+	void CreateConnectionApprovedMessage(RemoteClient& remoteClient);
+	void CreateDisconnectionMessage(RemoteClient& remoteClient);
 	void SendDisconnectionPacketToRemoteClient(const RemoteClient& remoteClient) const;
 	void SendConnectionChallengePacket(const Address& address, int pendingConnectionIndex) const;
 	void SendConnectionDeniedPacket(const Address& address) const;
@@ -64,7 +68,7 @@ private:
 	std::vector<bool> _remoteClientSlots;
 	std::vector<RemoteClient*> _remoteClients;
 
-	std::vector<PendingConnectionData> _pendingConnections;
+	std::vector<PendingConnection> _pendingConnections;
 	SOCKET _listenSocket = INVALID_SOCKET;
 
 	unsigned int _nextAssignedRemoteClientIndex = 1;

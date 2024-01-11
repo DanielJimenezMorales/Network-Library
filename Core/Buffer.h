@@ -35,6 +35,8 @@ public:
 	uint16_t ReadShort();
 	uint8_t ReadByte();
 
+	void ResetAccessIndex();
+
 private:
 	uint8_t* _data;
 	int _size;

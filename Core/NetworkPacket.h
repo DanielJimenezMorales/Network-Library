@@ -13,6 +13,8 @@ struct NetworkPacketHeader
 	void Write(Buffer& buffer) const;
 	void Read(Buffer& buffer);
 
+	static uint32_t Size() { return (sizeof(uint16_t) * 2) + sizeof(uint32_t); }
+
 	uint16_t sequenceNumber;
 	uint16_t lastAckedSequenceNumber;
 	uint32_t ackBits;
@@ -26,6 +28,13 @@ public:
 	void Write(Buffer& buffer) const;
 	void Read(Buffer& buffer);
 
+	bool AddMessage(Message* message);
+	std::vector<Message*>::const_iterator GetMessages();
+	unsigned int GetNumberOfMessages() { return messages.size(); }
+
+	uint32_t Size() const;
+
+private:
 	NetworkPacketHeader header;
-	std::vector<Message> messages;
+	std::vector<Message*> messages;
 };

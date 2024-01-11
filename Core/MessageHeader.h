@@ -18,8 +18,11 @@ struct MessageHeader
 	MessageHeader() {}
 	MessageHeader(MessageType messageType) : type(messageType) {}
 
+	MessageHeader(const MessageHeader& other) : type(other.type) {}
+
 	void Write(Buffer& buffer) const;
 	void Read(Buffer& buffer);
+	static uint32_t Size() { return sizeof(MessageType); }
 
 	~MessageHeader() {}
 
