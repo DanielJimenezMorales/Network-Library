@@ -135,14 +135,13 @@ void Client::ProcessReceivedData()
 
 void Client::ProcessDatagram(Buffer& buffer, const Address& address)
 {
-	//AHORA ESTO RECIBE UN NETWORK PACKET CON MENSAJES DENTRO
 	NetworkPacket packet = NetworkPacket();
 	packet.Read(buffer);
 
 	std::vector<Message*>::const_iterator constIterator = packet.GetMessages();
 	unsigned int numberOfMessagesInPacket = packet.GetNumberOfMessages();
 	MessageType messageType;
-	Message* message = nullptr;
+	const Message* message = nullptr;
 	for (unsigned int i = 0; i < numberOfMessagesInPacket; ++i)
 	{
 		message = *(constIterator+i);
@@ -153,29 +152,29 @@ void Client::ProcessDatagram(Buffer& buffer, const Address& address)
 		case MessageType::ConnectionChallenge:
 			if (_currentState == ClientState::SendingConnectionRequest || _currentState == ClientState::SendingConnectionChallengeResponse)
 			{
-				//ProcessConnectionChallenge(buffer);
-				ProcessConnectionChallenge(*static_cast<ConnectionChallengeMessage*>(message));
+				const ConnectionChallengeMessage* connectionChallengeMessage = static_cast<const ConnectionChallengeMessage*>(message);
+				ProcessConnectionChallenge(*connectionChallengeMessage);
 			}
 			break;
 		case MessageType::ConnectionAccepted:
 			if (_currentState == ClientState::SendingConnectionChallengeResponse)
 			{
-				//ProcessConnectionRequestAccepted(buffer);
-				ProcessConnectionRequestAccepted(*static_cast<ConnectionAcceptedMessage*>(message));
+				const ConnectionAcceptedMessage* connectionAcceptedMessage = static_cast<const ConnectionAcceptedMessage*>(message);
+				ProcessConnectionRequestAccepted(*connectionAcceptedMessage);
 			}
 			break;
 		case MessageType::ConnectionDenied:
 			if (_currentState == ClientState::SendingConnectionChallengeResponse || _currentState == ClientState::SendingConnectionRequest)
 			{
-				//ProcessConnectionRequestDenied();
-				ProcessConnectionRequestDenied(*static_cast<ConnectionDeniedMessage*>(message));
+				const ConnectionDeniedMessage* connectionDeniedMessage = static_cast<const ConnectionDeniedMessage*>(message);
+				ProcessConnectionRequestDenied(*connectionDeniedMessage);
 			}
 			break;
 		case MessageType::Disconnection:
 			if (_currentState == ClientState::Connected)
 			{
-				//ProcessDisconnection(buffer);
-				ProcessDisconnection(*static_cast<DisconnectionMessage*>(message));
+				const DisconnectionMessage* disconnectionMessage = static_cast<const DisconnectionMessage*>(message);
+				ProcessDisconnection(*disconnectionMessage);
 			}
 			break;
 		default:
@@ -183,68 +182,6 @@ void Client::ProcessDatagram(Buffer& buffer, const Address& address)
 			break;
 		}
 	}
-
-
-	/*uint8_t packetType = buffer.ReadByte();
-
-	switch (packetType)
-	{
-	case MessageType::ConnectionChallenge:
-		if (_currentState == ClientState::SendingConnectionRequest || _currentState == ClientState::SendingConnectionChallengeResponse)
-		{
-			ProcessConnectionChallenge(buffer);
-		}
-		break;
-	case MessageType::ConnectionAccepted:
-		if (_currentState == ClientState::SendingConnectionChallengeResponse)
-		{
-			ProcessConnectionRequestAccepted(buffer);
-		}
-		break;
-	case MessageType::ConnectionDenied:
-		if (_currentState == ClientState::SendingConnectionChallengeResponse || _currentState == ClientState::SendingConnectionRequest)
-		{
-			ProcessConnectionRequestDenied();
-		}
-		break;
-	case MessageType::Disconnection:
-		if (_currentState == ClientState::Connected)
-		{
-			ProcessDisconnection(buffer);
-		}
-		break;
-	default:
-		LOG_WARNING("Invalid datagram, ignoring it...");
-		break;
-	}*/
-}
-
-void Client::ProcessConnectionChallenge(Buffer& buffer)
-{
-	LOG_INFO("Challenge packet received from server");
-
-	uint64_t clientSalt = buffer.ReadLong();
-	uint64_t serverSalt = buffer.ReadLong();
-	if (_saltNumber != clientSalt)
-	{
-		LOG_WARNING("The generated salt number does not match the server's challenge client salt number. Aborting operation");
-		return;
-	}
-
-	_dataPrefix = clientSalt ^ serverSalt; //XOR operation to create the data prefix for all packects from now on
-
-	_currentState = ClientState::SendingConnectionChallengeResponse;
-
-	ConnectionChallengeResponseMessage connectionChallengeResponsePacket;
-	connectionChallengeResponsePacket.prefix = _dataPrefix;
-	Buffer* challengeResponseBuffer = new Buffer(sizeof(connectionChallengeResponsePacket));
-	connectionChallengeResponsePacket.Write(*challengeResponseBuffer);
-
-	LOG_INFO("Sending challenge response packet to server...");
-	SendPacketToServer(*challengeResponseBuffer);
-
-	delete challengeResponseBuffer;
-	challengeResponseBuffer = nullptr;
 }
 
 void Client::ProcessConnectionChallenge(const ConnectionChallengeMessage& message)
@@ -275,20 +212,6 @@ void Client::ProcessConnectionChallenge(const ConnectionChallengeMessage& messag
 	challengeResponseBuffer = nullptr;
 }
 
-void Client::ProcessConnectionRequestAccepted(Buffer& buffer)
-{
-	uint64_t dataPrefix = buffer.ReadLong();
-	if (dataPrefix != _dataPrefix)
-	{
-		LOG_WARNING("Packet prefix does not match. Skipping packet...");
-		return;
-	}
-
-	_clientIndex = buffer.ReadShort();
-	_currentState = ClientState::Connected;
-	LOG_INFO("Connection accepted!");
-}
-
 void Client::ProcessConnectionRequestAccepted(const ConnectionAcceptedMessage& message)
 {
 	uint64_t dataPrefix = message.prefix;
@@ -303,29 +226,10 @@ void Client::ProcessConnectionRequestAccepted(const ConnectionAcceptedMessage& m
 	LOG_INFO("Connection accepted!");
 }
 
-void Client::ProcessConnectionRequestDenied()
-{
-	_currentState = ClientState::Disconnected;
-	LOG_INFO("Connection denied");
-}
-
 void Client::ProcessConnectionRequestDenied(const ConnectionDeniedMessage& message)
 {
 	_currentState = ClientState::Disconnected;
 	LOG_INFO("Connection denied");
-}
-
-void Client::ProcessDisconnection(Buffer& buffer)
-{
-	uint64_t dataPrefix = buffer.ReadLong();
-	if (dataPrefix != _dataPrefix)
-	{
-		LOG_WARNING("Packet prefix does not match. Skipping packet...");
-		return;
-	}
-
-	_currentState = ClientState::Disconnected();
-	LOG_INFO("Disconnection message received from server. Disconnecting...");
 }
 
 void Client::ProcessDisconnection(const DisconnectionMessage& message)
