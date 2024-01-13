@@ -1,4 +1,11 @@
+#include <sstream>
+
 #include "Server.h"
+#include "Logger.h"
+#include "NetworkPacket.h"
+#include "Message.h"
+#include "Buffer.h"
+#include "PendingConnection.h"
 
 Server::Server(int maxConnections) : _maxConnections(maxConnections)
 {
@@ -88,6 +95,8 @@ void Server::Tick(float elapsedTime)
 	}
 
 	HandleConnectedClientsInactivity(elapsedTime);
+
+	SendData();
 }
 
 void Server::HandleConnectedClientsInactivity(float elapsedTime)
@@ -145,8 +154,10 @@ void Server::ProcessReceivedData()
 	int clientLength = sizeof(client);
 	ZeroMemory(&client, clientLength);
 
-	Buffer* buffer = new Buffer(1024);
-	int bytesIn = recvfrom(_listenSocket, (char*)buffer->data, 1024, 0, (sockaddr*)&client, &clientLength);
+	int size = 1024;
+	uint8_t* data = new uint8_t[size];
+
+	int bytesIn = recvfrom(_listenSocket, (char*)data, size, 0, (sockaddr*)&client, &clientLength);
 	if (bytesIn == SOCKET_ERROR)
 	{
 		std::stringstream ss;
@@ -155,6 +166,7 @@ void Server::ProcessReceivedData()
 		return;
 	}
 
+	Buffer* buffer = new Buffer(data, bytesIn);
 	Address address = Address(client);
 	ProcessDatagram(*buffer, address);
 
@@ -164,20 +176,42 @@ void Server::ProcessReceivedData()
 
 void Server::ProcessDatagram(Buffer& buffer, const Address& address)
 {
-	uint8_t packetType = BufferUtils::ReadByte(buffer);
+	//Read incoming packet
+	NetworkPacket packet = NetworkPacket();
+	packet.Read(buffer);
 
-	switch (packetType)
+	//Process packet messages one by one
+	std::vector<Message*>::const_iterator constIterator = packet.GetMessages();
+	unsigned int numberOfMessagesInPacket = packet.GetNumberOfMessages();
+	MessageType messageType;
+	const Message* message = nullptr;
+	for (unsigned int i = 0; i < numberOfMessagesInPacket; ++i)
 	{
-	case NetworkPacketType::ConnectionRequest:
-		ProcessConnectionRequest(buffer, address);
-		break;
-	case NetworkPacketType::ConnectionChallengeResponse:
-		ProcessConnectionChallengeResponse(buffer, address);
-		break;
+		message = *(constIterator + i);
+		messageType = message->header.type;
+
+		switch (messageType)
+		{
+		case MessageType::ConnectionRequest:
+		{
+			const ConnectionRequestMessage* connectionRequestMessage = static_cast<const ConnectionRequestMessage*>(message);
+			ProcessConnectionRequest(*connectionRequestMessage, address);
+			break;
+		}
+		case MessageType::ConnectionChallengeResponse:
+		{
+			const ConnectionChallengeResponseMessage* connectionChallengeResponseMessage = static_cast<const ConnectionChallengeResponseMessage*>(message);
+			ProcessConnectionChallengeResponse(*connectionChallengeResponseMessage, address);
+			break;
+		}
+		default:
+			LOG_WARNING("Invalid datagram, ignoring it...");
+			break;
+		}
 	}
 }
 
-void Server::ProcessConnectionRequest(Buffer& buffer, const Address& address)
+void Server::ProcessConnectionRequest(const ConnectionRequestMessage& message, const Address& address)
 {
 	std::stringstream ss;
 	ss << "Processing connection request from [IP: " << address.GetIP() << ", Port: " << address.GetPort() << "]";
@@ -187,11 +221,11 @@ void Server::ProcessConnectionRequest(Buffer& buffer, const Address& address)
 
 	if (isAbleToConnectResult == 0)//If there is green light keep with the connection pipeline.
 	{
-		uint64_t clientSalt = BufferUtils::ReadLong(buffer);
+		uint64_t clientSalt = message.clientSalt;
 		int pendingConnectionIndex = -1;
 		for (unsigned int i = 0; i < _pendingConnections.size(); ++i)
 		{
-			if (_pendingConnections[i].address == address && _pendingConnections[i].clientSalt == clientSalt)
+			if (_pendingConnections[i].IsAddressEqual(address) && _pendingConnections[i].GetClientSalt() == clientSalt)
 			{
 				pendingConnectionIndex = i;
 				break;
@@ -200,24 +234,24 @@ void Server::ProcessConnectionRequest(Buffer& buffer, const Address& address)
 
 		if (pendingConnectionIndex == -1) //If no pending connection was found create one!
 		{
-			PendingConnectionData newPendingConnection(address);
-			newPendingConnection.clientSalt = clientSalt;
-			newPendingConnection.serverSalt = GenerateServerSalt();
+			PendingConnection newPendingConnection(address);
+			newPendingConnection.SetClientSalt(clientSalt);
+			newPendingConnection.SetServerSalt(GenerateServerSalt());
 			_pendingConnections.push_back(newPendingConnection);
 
 			pendingConnectionIndex = _pendingConnections.size() - 1;
 
 			std::stringstream ss;
-			ss << "Creating a pending connection entry. Client salt: " << clientSalt << " Server salt: " << newPendingConnection.serverSalt;
+			ss << "Creating a pending connection entry. Client salt: " << clientSalt << " Server salt: " << newPendingConnection.GetServerSalt();
 			LOG_INFO(ss.str());
 		}
 
-		SendConnectionChallengePacket(address, pendingConnectionIndex);
+		CreateConnectionChallengeMessage(address, pendingConnectionIndex);
 	}
 	else if (isAbleToConnectResult == 1)//If the client is already connected just send a connection approved message
 	{
 		int connectedClientIndex = FindExistingClientIndex(address);
-		SendConnectionApprovedPacketToRemoteClient(*_remoteClients[connectedClientIndex]);
+		CreateConnectionApprovedMessage(*_remoteClients[connectedClientIndex]);
 		LOG_INFO("The client is already connected, sending connection approved...");
 	}
 	else if (isAbleToConnectResult == -1)//If all the client slots are full deny the connection
@@ -227,9 +261,59 @@ void Server::ProcessConnectionRequest(Buffer& buffer, const Address& address)
 	}
 }
 
+void Server::SendData()
+{
+	for (unsigned int i = 0; i < _pendingConnections.size(); ++i)
+	{
+		if (!_pendingConnections[i].ArePendingMessages())
+		{
+			continue;
+		}
+
+		NetworkPacket packet = NetworkPacket();
+		Message* message;
+		do
+		{
+			message = _pendingConnections[i].GetAMessage();
+			packet.AddMessage(message);
+		} while (_pendingConnections[i].ArePendingMessages());
+
+		Buffer* buffer = new Buffer(packet.Size());
+		packet.Write(*buffer);
+		SendDataToAddress(*buffer, _pendingConnections[i].GetAddress());
+		delete buffer;
+	}
+
+	for (unsigned int i = 0; i < _remoteClientSlots.size(); ++i)
+	{
+		if (!_remoteClientSlots[i])
+		{
+			continue;
+		}
+
+		if (!_remoteClients[i]->ArePendingMessages())
+		{
+			continue;
+		}
+
+		NetworkPacket packet = NetworkPacket();
+		Message* message;
+		do
+		{
+			message = _remoteClients[i]->GetAMessage();
+			packet.AddMessage(message);
+		} while (_remoteClients[i]->ArePendingMessages());
+
+		Buffer* buffer = new Buffer(packet.Size());
+		packet.Write(*buffer);
+		SendDataToAddress(*buffer, _remoteClients[i]->GetAddress());
+		delete buffer;
+	}
+}
+
 void Server::SendDisconnectionPacketToRemoteClient(const RemoteClient& remoteClient) const
 {
-	NetworkDisconnectionPacket disconnectionPacket;
+	DisconnectionMessage disconnectionPacket;
 	disconnectionPacket.prefix = remoteClient.GetDataPrefix();
 	Buffer* disconnectionBuffer = new Buffer(sizeof(disconnectionPacket));
 	disconnectionPacket.Write(*disconnectionBuffer);
@@ -241,11 +325,20 @@ void Server::SendDisconnectionPacketToRemoteClient(const RemoteClient& remoteCli
 	disconnectionBuffer = nullptr;
 }
 
+void Server::CreateDisconnectionMessage(RemoteClient& remoteClient)
+{
+	DisconnectionMessage* disconnectionPacket = new DisconnectionMessage();
+	disconnectionPacket->prefix = remoteClient.GetDataPrefix();
+	remoteClient.AddMessage(disconnectionPacket);
+
+	LOG_INFO("Sending disconnection packet...");
+}
+
 void Server::SendConnectionChallengePacket(const Address& address, int pendingConnectionIndex) const
 {
-	NetworkConnectionChallengePacket connectionChallengePacket;
-	connectionChallengePacket.clientSalt = _pendingConnections[pendingConnectionIndex].clientSalt;
-	connectionChallengePacket.serverSalt = _pendingConnections[pendingConnectionIndex].serverSalt;
+	ConnectionChallengeMessage connectionChallengePacket;
+	connectionChallengePacket.clientSalt = _pendingConnections[pendingConnectionIndex].GetClientSalt();
+	connectionChallengePacket.serverSalt = _pendingConnections[pendingConnectionIndex].GetServerSalt();
 
 	Buffer* connectionChallengeBuffer = new Buffer(sizeof(connectionChallengePacket));
 	connectionChallengePacket.Write(*connectionChallengeBuffer);
@@ -257,9 +350,19 @@ void Server::SendConnectionChallengePacket(const Address& address, int pendingCo
 	connectionChallengeBuffer = nullptr;
 }
 
+void Server::CreateConnectionChallengeMessage(const Address& address, int pendingConnectionIndex)
+{
+	ConnectionChallengeMessage* connectionChallengePacket = new ConnectionChallengeMessage();
+	connectionChallengePacket->clientSalt = _pendingConnections[pendingConnectionIndex].GetClientSalt();
+	connectionChallengePacket->serverSalt = _pendingConnections[pendingConnectionIndex].GetServerSalt();
+	_pendingConnections[pendingConnectionIndex].AddMessage(connectionChallengePacket);
+
+	LOG_INFO("Sending connection challenge...");
+}
+
 void Server::SendConnectionDeniedPacket(const Address& address) const
 {
-	NetworkConnectionDeniedPacket connectionDeniedPacket;
+	ConnectionDeniedMessage connectionDeniedPacket;
 	Buffer* connectionDeniedBuffer = new Buffer(sizeof(connectionDeniedPacket));
 	connectionDeniedPacket.Write(*connectionDeniedBuffer);
 
@@ -270,13 +373,13 @@ void Server::SendConnectionDeniedPacket(const Address& address) const
 	connectionDeniedBuffer = nullptr;
 }
 
-void Server::ProcessConnectionChallengeResponse(Buffer& buffer, const Address& address)
+void Server::ProcessConnectionChallengeResponse(const ConnectionChallengeResponseMessage& message, const Address& address)
 {
 	std::stringstream ss;
 	ss << "Processing connection challenge response from [IP: " << address.GetIP() << ", Port: " << address.GetPort() << "]";
 	LOG_INFO(ss.str());
 
-	uint64_t dataPrefix = BufferUtils::ReadLong(buffer);
+	uint64_t dataPrefix = message.prefix;
 
 	int isAbleToConnectResult = IsClientAbleToConnect(address);
 
@@ -286,7 +389,7 @@ void Server::ProcessConnectionChallengeResponse(Buffer& buffer, const Address& a
 		int pendingConnectionIndex = -1;
 		for (unsigned int i = 0; i < _pendingConnections.size(); ++i)
 		{
-			if (_pendingConnections[i].GetPrefix() == dataPrefix && address == _pendingConnections[i].address)
+			if (_pendingConnections[i].GetPrefix() == dataPrefix && _pendingConnections[i].IsAddressEqual(address))
 			{
 				pendingConnectionIndex = i;
 				break;
@@ -308,7 +411,7 @@ void Server::ProcessConnectionChallengeResponse(Buffer& buffer, const Address& a
 			_pendingConnections.erase(_pendingConnections.begin() + pendingConnectionIndex);
 
 			//Senc connection approved packet
-			SendConnectionApprovedPacketToRemoteClient(*_remoteClients[availableClientSlot]);
+			CreateConnectionApprovedMessage(*_remoteClients[availableClientSlot]);
 			LOG_INFO("Connection approved");
 		}
 	}
@@ -323,7 +426,7 @@ void Server::ProcessConnectionChallengeResponse(Buffer& buffer, const Address& a
 			return;
 		}
 
-		SendConnectionApprovedPacketToRemoteClient(*_remoteClients[targetClientIndex]);
+		CreateConnectionApprovedMessage(*_remoteClients[targetClientIndex]);
 	}
 	else if (isAbleToConnectResult == -1)//If all the client slots are full deny the connection
 	{
@@ -401,7 +504,7 @@ int Server::FindExistingClientIndex(const Address& address) const
 void Server::SendConnectionApprovedPacketToRemoteClient(const RemoteClient& remoteClient) const
 {
 	//Write connection packet data into buffer
-	NetworkConnectionAcceptedPacket connectionAcceptedPacket;
+	ConnectionAcceptedMessage connectionAcceptedPacket;
 	connectionAcceptedPacket.prefix = remoteClient.GetDataPrefix();
 	connectionAcceptedPacket.clientIndexAssigned = remoteClient.GetClientIndex();
 	int connectionAcceptedPacketSize = sizeof(connectionAcceptedPacket);
@@ -417,6 +520,15 @@ void Server::SendConnectionApprovedPacketToRemoteClient(const RemoteClient& remo
 	buffer = nullptr;
 }
 
+void Server::CreateConnectionApprovedMessage(RemoteClient& remoteClient)
+{
+	//Write connection packet data into buffer
+	ConnectionAcceptedMessage* connectionAcceptedPacket = new ConnectionAcceptedMessage();
+	connectionAcceptedPacket->prefix = remoteClient.GetDataPrefix();
+	connectionAcceptedPacket->clientIndexAssigned = remoteClient.GetClientIndex();
+	remoteClient.AddMessage(connectionAcceptedPacket);
+}
+
 void Server::SendDatagramToRemoteClient(const RemoteClient& remoteClient, const Buffer& buffer) const
 {
 	SendDataToAddress(buffer, remoteClient.GetAddress());
@@ -425,7 +537,7 @@ void Server::SendDatagramToRemoteClient(const RemoteClient& remoteClient, const 
 void Server::SendDataToAddress(const Buffer& buffer, const Address& address) const
 {
 	int iResult = 0;
-	iResult = sendto(_listenSocket, (char*)buffer.data, buffer.size, 0, (sockaddr*)&address.GetInfo(), sizeof(address.GetInfo()));
+	iResult = sendto(_listenSocket, (char*)buffer.GetData(), buffer.GetSize(), 0, (sockaddr*)&address.GetInfo(), sizeof(address.GetInfo()));
 	if (iResult == SOCKET_ERROR)
 	{
 		iResult = WSAGetLastError();
@@ -441,7 +553,8 @@ void Server::DisconnectRemoteClient(unsigned int index)
 	}
 
 	//Send disconnection packet
-	SendDisconnectionPacketToRemoteClient(*_remoteClients[index]);
+	//SendDisconnectionPacketToRemoteClient(*_remoteClients[index]);
+	CreateDisconnectionMessage(*_remoteClients[index]);
 
 	_remoteClientSlots[index] = false;
 

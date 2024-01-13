@@ -4,9 +4,10 @@
 #include <iostream>
 #include <winsock2.h>
 #include <chrono>
-#include "Core/Server.h"
-#include "Core/Client.h"
-#include "Utils/Logger.h"
+
+#include "Server.h"
+#include "Client.h"
+#include "Logger.h"
 
 #define DEFAULT_IP "127.0.0.1"
 #define DEFAULT_PORT "27015"
@@ -16,7 +17,7 @@ const unsigned int FIXED_FRAMES_PER_SECOND = 50;
 const float FIXED_FRAME_TARGET_DURATION = 1.0f / FIXED_FRAMES_PER_SECOND;
 bool isRunning = true;
 
-#pragma comment(lib, "Ws2_32.lib")
+//#pragma comment(lib, "Ws2_32.lib") //Added to Properties/Linker/Input/Additional Dependencies
 int main()
 {
     std::cout << "Select:\nServer: 0\nClient: 1\n";

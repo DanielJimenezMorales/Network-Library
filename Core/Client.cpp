@@ -1,4 +1,9 @@
 #include "Client.h"
+//#include "NetworkPacket.h"
+#include "Message.h"
+#include "Buffer.h"
+#include "Logger.h"
+#include <NetworkPacket.h>
 
 Client::Client(float serverMaxInactivityTimeout) : 
 			_serverMaxInactivityTimeout(serverMaxInactivityTimeout),
@@ -6,13 +11,12 @@ Client::Client(float serverMaxInactivityTimeout) :
 			_saltNumber(0),
 			_dataPrefix(0)
 {
-	_serverAddress = new Address("127.0.0.1", 54000);
+	_serverAddress = Address("127.0.0.1", 54000);
+	_pendingMessages.reserve(5);
 }
 
 Client::~Client()
 {
-	delete _serverAddress;
-	_serverAddress = nullptr;
 }
 
 int Client::Start()
@@ -55,13 +59,15 @@ void Client::Tick(float elapsedTime)
 
 	if (_currentState == ClientState::SendingConnectionRequest || _currentState == ClientState::SendingConnectionChallengeResponse)
 	{
-		SendConnectionRequestPacket();
+		CreateConnectionRequestMessage();
 	}
 
 	if (IsThereNewDataToProcess())
 	{
 		ProcessReceivedData();
 	}
+
+	SendData();
 
 	if (_currentState != ClientState::Disconnected)
 	{
@@ -113,14 +119,16 @@ void Client::ProcessReceivedData()
 	int clientLength = sizeof(client);
 	ZeroMemory(&client, clientLength);
 
-	Buffer* buffer = new Buffer(1024);
+	int size = 1024;
+	uint8_t* data = new uint8_t[size];
 
-	int bytesIn = recvfrom(_socket, (char*)buffer->data, 1024, 0, (sockaddr*)&client, &clientLength);
+	int bytesIn = recvfrom(_socket, (char*)data, size, 0, (sockaddr*)&client, &clientLength);
 	if (bytesIn == SOCKET_ERROR)
 	{		
 		LOG_ERROR("Error while receiving a message, error code " + WSAGetLastError());
 	}
 
+	Buffer* buffer = new Buffer(data, bytesIn);
 	Address address = Address(client);
 	ProcessDatagram(*buffer, address);
 
@@ -130,46 +138,65 @@ void Client::ProcessReceivedData()
 
 void Client::ProcessDatagram(Buffer& buffer, const Address& address)
 {
-	uint8_t packetType = BufferUtils::ReadByte(buffer);
+	//Read incoming packet
+	NetworkPacket packet = NetworkPacket();
+	packet.Read(buffer);
 
-	switch (packetType)
+	//Process packet messages one by one
+	std::vector<Message*>::const_iterator constIterator = packet.GetMessages();
+	unsigned int numberOfMessagesInPacket = packet.GetNumberOfMessages();
+	MessageType messageType;
+	const Message* message = nullptr;
+	for (unsigned int i = 0; i < numberOfMessagesInPacket; ++i)
 	{
-	case NetworkPacketType::ConnectionChallenge:
-		if (_currentState == ClientState::SendingConnectionRequest || _currentState == ClientState::SendingConnectionChallengeResponse)
+		message = *(constIterator+i);
+		messageType = message->header.type;
+
+		switch (messageType)
 		{
-			ProcessConnectionChallenge(buffer);
+		case MessageType::ConnectionChallenge:
+			if (_currentState == ClientState::SendingConnectionRequest || _currentState == ClientState::SendingConnectionChallengeResponse)
+			{
+				const ConnectionChallengeMessage* connectionChallengeMessage = static_cast<const ConnectionChallengeMessage*>(message);
+				ProcessConnectionChallenge(*connectionChallengeMessage);
+			}
+			break;
+		case MessageType::ConnectionAccepted:
+			if (_currentState == ClientState::SendingConnectionChallengeResponse)
+			{
+				const ConnectionAcceptedMessage* connectionAcceptedMessage = static_cast<const ConnectionAcceptedMessage*>(message);
+				ProcessConnectionRequestAccepted(*connectionAcceptedMessage);
+			}
+			break;
+		case MessageType::ConnectionDenied:
+			if (_currentState == ClientState::SendingConnectionChallengeResponse || _currentState == ClientState::SendingConnectionRequest)
+			{
+				const ConnectionDeniedMessage* connectionDeniedMessage = static_cast<const ConnectionDeniedMessage*>(message);
+				ProcessConnectionRequestDenied(*connectionDeniedMessage);
+			}
+			break;
+		case MessageType::Disconnection:
+			if (_currentState == ClientState::Connected)
+			{
+				const DisconnectionMessage* disconnectionMessage = static_cast<const DisconnectionMessage*>(message);
+				ProcessDisconnection(*disconnectionMessage);
+			}
+			break;
+		default:
+			LOG_WARNING("Invalid datagram, ignoring it...");
+			break;
 		}
-		break;
-	case NetworkPacketType::ConnectionAccepted:
-		if (_currentState == ClientState::SendingConnectionChallengeResponse)
-		{
-			ProcessConnectionRequestAccepted(buffer);
-		}
-		break;
-	case NetworkPacketType::ConnectionDenied:
-		if (_currentState == ClientState::SendingConnectionChallengeResponse || _currentState == ClientState::SendingConnectionRequest)
-		{
-			ProcessConnectionRequestDenied();
-		}
-		break;
-	case NetworkPacketType::Disconnection:
-		if (_currentState == ClientState::Connected)
-		{
-			ProcessDisconnection(buffer);
-		}
-		break;
-	default:
-		LOG_WARNING("Invalid datagram, ignoring it...");
-		break;
 	}
+
+	//Free memory for those messages
 }
 
-void Client::ProcessConnectionChallenge(Buffer& buffer)
+void Client::ProcessConnectionChallenge(const ConnectionChallengeMessage& message)
 {
 	LOG_INFO("Challenge packet received from server");
 
-	uint64_t clientSalt = BufferUtils::ReadLong(buffer);
-	uint64_t serverSalt = BufferUtils::ReadLong(buffer);
+	uint64_t clientSalt = message.clientSalt;
+	uint64_t serverSalt = message.serverSalt;
 	if (_saltNumber != clientSalt)
 	{
 		LOG_WARNING("The generated salt number does not match the server's challenge client salt number. Aborting operation");
@@ -180,41 +207,34 @@ void Client::ProcessConnectionChallenge(Buffer& buffer)
 
 	_currentState = ClientState::SendingConnectionChallengeResponse;
 
-	NetworkConnectionChallengeResponsePacket connectionChallengeResponsePacket;
-	connectionChallengeResponsePacket.prefix = _dataPrefix;
-	Buffer* challengeResponseBuffer = new Buffer(sizeof(connectionChallengeResponsePacket));
-	connectionChallengeResponsePacket.Write(*challengeResponseBuffer);
+	CreateConnectionChallengeResponse();
 
 	LOG_INFO("Sending challenge response packet to server...");
-	SendPacketToServer(*challengeResponseBuffer);
-
-	delete challengeResponseBuffer;
-	challengeResponseBuffer = nullptr;
 }
 
-void Client::ProcessConnectionRequestAccepted(Buffer& buffer)
+void Client::ProcessConnectionRequestAccepted(const ConnectionAcceptedMessage& message)
 {
-	uint64_t dataPrefix = BufferUtils::ReadLong(buffer);
+	uint64_t dataPrefix = message.prefix;
 	if (dataPrefix != _dataPrefix)
 	{
 		LOG_WARNING("Packet prefix does not match. Skipping packet...");
 		return;
 	}
 
-	_clientIndex = BufferUtils::ReadShort(buffer);
+	_clientIndex = message.clientIndexAssigned;
 	_currentState = ClientState::Connected;
 	LOG_INFO("Connection accepted!");
 }
 
-void Client::ProcessConnectionRequestDenied()
+void Client::ProcessConnectionRequestDenied(const ConnectionDeniedMessage& message)
 {
 	_currentState = ClientState::Disconnected;
 	LOG_INFO("Connection denied");
 }
 
-void Client::ProcessDisconnection(Buffer& buffer)
+void Client::ProcessDisconnection(const DisconnectionMessage& message)
 {
-	uint64_t dataPrefix = BufferUtils::ReadLong(buffer);
+	uint64_t dataPrefix = message.prefix;
 	if (dataPrefix != _dataPrefix)
 	{
 		LOG_WARNING("Packet prefix does not match. Skipping packet...");
@@ -225,10 +245,31 @@ void Client::ProcessDisconnection(Buffer& buffer)
 	LOG_INFO("Disconnection message received from server. Disconnecting...");
 }
 
+void Client::SendData()
+{
+	if (!ArePendingMessages())
+	{
+		return;
+	}
+
+	NetworkPacket packet = NetworkPacket();
+	Message* message;
+	do
+	{
+		message = GetAMessage();
+		packet.AddMessage(message);
+	} while (ArePendingMessages());
+
+	Buffer* buffer = new Buffer(packet.Size());
+	packet.Write(*buffer);
+	SendPacketToServer(*buffer);
+	delete buffer;
+}
+
 void Client::SendConnectionRequestPacket()
 {
 	LOG_INFO("Sending connection request to server...");
-	NetworkConnectionRequestPacket connectionRequestPacket = NetworkConnectionRequestPacket();
+	ConnectionRequestMessage connectionRequestPacket = ConnectionRequestMessage();
 	connectionRequestPacket.clientSalt = _saltNumber;
 	int connectionRequestPacketSize = sizeof(connectionRequestPacket);
 	Buffer* buffer = new Buffer(connectionRequestPacketSize);
@@ -239,14 +280,49 @@ void Client::SendConnectionRequestPacket()
 	buffer = nullptr;
 }
 
+void Client::CreateConnectionRequestMessage()
+{
+	LOG_INFO("Sending connection request to server...");
+	ConnectionRequestMessage* connectionRequestMessage = new ConnectionRequestMessage();
+	connectionRequestMessage->clientSalt = _saltNumber;
+
+	AddMessage(connectionRequestMessage);
+}
+
 void Client::SendPacketToServer(const Buffer& buffer) const
 {
-	int bytesSent = sendto(_socket, (char*)buffer.data, buffer.size, 0, (sockaddr*)&_serverAddress->GetInfo(), sizeof(_serverAddress->GetInfo()));
+	int bytesSent = sendto(_socket, (char*)buffer.GetData(), buffer.GetSize(), 0, (sockaddr*)&_serverAddress.GetInfo(), sizeof(_serverAddress.GetInfo()));
 	if (bytesSent == SOCKET_ERROR)
 	{
 		int iResult = WSAGetLastError();
 		LOG_ERROR("Error while sending datagram to server, error code " + iResult);
 	}
+}
+
+bool Client::AddMessage(Message* message)
+{
+	_pendingMessages.push_back(message);
+	return true;
+}
+
+void Client::CreateConnectionChallengeResponse()
+{
+	ConnectionChallengeResponseMessage* connectionChallengeResponsePacket = new ConnectionChallengeResponseMessage();
+	connectionChallengeResponsePacket->prefix = _dataPrefix;
+	AddMessage(connectionChallengeResponsePacket);
+}
+
+Message* Client::GetAMessage()
+{
+	if (!ArePendingMessages())
+	{
+		return nullptr;
+	}
+
+	Message* message = _pendingMessages[0];
+	_pendingMessages.erase(_pendingMessages.begin());
+
+	return message;
 }
 
 int Client::Stop()

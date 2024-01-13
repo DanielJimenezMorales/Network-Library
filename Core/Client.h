@@ -5,11 +5,16 @@
 #define NOMINMAX
 #include <winsock2.h>
 #include <ws2tcpip.h>
-#include <string>
-#include "Buffer.h"
-#include "NetworkPacket.h"
+#include <vector>
+
 #include "Address.h"
-#include "../Utils/Logger.h"
+
+class Buffer;
+class Message;
+class ConnectionChallengeMessage;
+class ConnectionAcceptedMessage;
+class ConnectionDeniedMessage;
+class DisconnectionMessage;
 
 enum ClientState
 {
@@ -36,21 +41,30 @@ private:
 	bool IsThereNewDataToProcess() const;
 	void ProcessReceivedData();
 	void ProcessDatagram(Buffer& buffer, const Address& address);
-	void ProcessConnectionChallenge(Buffer& buffer);
-	void ProcessConnectionRequestAccepted(Buffer& buffer);
-	void ProcessConnectionRequestDenied();
-	void ProcessDisconnection(Buffer& buffer);
+	void ProcessConnectionChallenge(const ConnectionChallengeMessage& message);
+	void ProcessConnectionRequestAccepted(const ConnectionAcceptedMessage& message);
+	void ProcessConnectionRequestDenied(const ConnectionDeniedMessage& message);
+	void ProcessDisconnection(const DisconnectionMessage& message);
 
+	void SendData();
 	void SendConnectionRequestPacket();
+	void CreateConnectionRequestMessage();
+	void CreateConnectionChallengeResponse();
 	void SendPacketToServer(const Buffer& buffer) const;
 
+	bool AddMessage(Message* message);
+	bool ArePendingMessages() const { return !_pendingMessages.empty(); }
+	Message* GetAMessage();
+
 	SOCKET _socket = INVALID_SOCKET;
-	Address* _serverAddress;
+	Address _serverAddress = Address("127.0.0.1", htons(1234));
 	ClientState _currentState = ClientState::Disconnected;
 	const float _serverMaxInactivityTimeout;
 	float _serverInactivityTimeLeft;
 	uint64_t _saltNumber;
 	uint64_t _dataPrefix;
 	unsigned int _clientIndex;
+
+	std::vector<Message*> _pendingMessages;
 };
 

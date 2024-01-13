@@ -3,14 +3,14 @@
 #include <winsock2.h>
 #include <ws2tcpip.h>
 #include <vector>
-#include <sstream>
-#include "../Utils/BufferUtils.h"
-#include "Buffer.h"
-#include "NetworkPacket.h"
-#include "Address.h"
+
 #include "RemoteClient.h"
-#include "../Utils/Logger.h"
-#include "PendingConnectionData.h"
+
+class Buffer;
+class Address;
+class PendingConnection;
+class ConnectionRequestMessage;
+class ConnectionChallengeResponseMessage;
 
 #define REMOTE_CLIENT_INACTIVITY_TIME 5.0f
 
@@ -33,8 +33,8 @@ private:
 	bool IsThereNewDataToProcess() const;
 	void ProcessReceivedData();
 	void ProcessDatagram(Buffer& buffer, const Address& address);
-	void ProcessConnectionRequest(Buffer& buffer, const Address& address);
-	void ProcessConnectionChallengeResponse(Buffer& buffer, const Address& address);
+	void ProcessConnectionRequest(const ConnectionRequestMessage& message, const Address& address);
+	void ProcessConnectionChallengeResponse(const ConnectionChallengeResponseMessage& message, const Address& address);
 
 	void HandleConnectedClientsInactivity(float elapsedTime);
 
@@ -53,6 +53,10 @@ private:
 	void AddNewRemoteClient(int remoteClientSlotIndex, const Address& address, uint64_t dataPrefix);
 	int FindExistingClientIndex(const Address& address) const;
 
+	void SendData();
+	void CreateConnectionChallengeMessage(const Address& address, int pendingConnectionIndex);
+	void CreateConnectionApprovedMessage(RemoteClient& remoteClient);
+	void CreateDisconnectionMessage(RemoteClient& remoteClient);
 	void SendDisconnectionPacketToRemoteClient(const RemoteClient& remoteClient) const;
 	void SendConnectionChallengePacket(const Address& address, int pendingConnectionIndex) const;
 	void SendConnectionDeniedPacket(const Address& address) const;
@@ -66,7 +70,7 @@ private:
 	std::vector<bool> _remoteClientSlots;
 	std::vector<RemoteClient*> _remoteClients;
 
-	std::vector<PendingConnectionData> _pendingConnections;
+	std::vector<PendingConnection> _pendingConnections;
 	SOCKET _listenSocket = INVALID_SOCKET;
 
 	unsigned int _nextAssignedRemoteClientIndex = 1;

@@ -1,5 +1,8 @@
 #pragma once
+#include <vector>
 #include "Address.h"
+
+class Message;
 
 class RemoteClient
 {
@@ -10,6 +13,8 @@ private:
 	const float _maxInactivityTime;
 	float _inactivityTimeLeft;
 	const uint64_t _dataPrefix;
+
+	std::vector<Message*> _pendingMessages;
 
 public:
 	RemoteClient(const sockaddr_in& addressInfo, uint16_t index, float maxInactivityTime, uint64_t dataPrefix);
@@ -22,5 +27,8 @@ public:
 	uint64_t GetDataPrefix() const { return _dataPrefix; }
 	bool IsAddressEqual(const Address& other) const { return other == *_address; }
 	bool IsInactive() const { return _inactivityTimeLeft == 0.f; }
+	bool AddMessage(Message* message);
+	bool ArePendingMessages() const { return !_pendingMessages.empty(); }
+	Message* GetAMessage();
 };
 

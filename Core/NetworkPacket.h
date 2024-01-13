@@ -1,64 +1,40 @@
 #pragma once
 #include <cstdint>
-#include "Buffer.h"
-#include "../Utils/BufferUtils.h"
+#include <vector>
 
+class Buffer;
+class Message;
 
-enum NetworkPacketType : uint8_t
+struct NetworkPacketHeader
 {
-	ConnectionRequest = 0,
-	ConnectionAccepted = 1,
-	ConnectionDenied = 2,
-	ConnectionChallenge = 3,
-	ConnectionChallengeResponse = 4,
-	Disconnection = 5,
-};
-
-struct NetworkConnectionRequestPacket
-{
-	NetworkPacketType type = NetworkPacketType::ConnectionRequest;
-	uint64_t clientSalt;
+	NetworkPacketHeader() {}
+	NetworkPacketHeader(uint16_t sequence, uint16_t ack, uint32_t ack_bits) : sequenceNumber(sequence), lastAckedSequenceNumber(ack), ackBits(ack_bits){}
 
 	void Write(Buffer& buffer) const;
+	void Read(Buffer& buffer);
+
+	static uint32_t Size() { return (sizeof(uint16_t) * 2) + sizeof(uint32_t); }
+
+	uint16_t sequenceNumber;
+	uint16_t lastAckedSequenceNumber;
+	uint32_t ackBits;
 };
 
-struct NetworkConnectionChallengePacket
+class NetworkPacket
 {
-	NetworkPacketType type = NetworkPacketType::ConnectionChallenge;
-	uint64_t clientSalt;
-	uint64_t serverSalt;
+public:
+	NetworkPacket() {}
 
 	void Write(Buffer& buffer) const;
-};
+	void Read(Buffer& buffer);
 
-struct NetworkConnectionChallengeResponsePacket
-{
-	NetworkPacketType type = NetworkPacketType::ConnectionChallengeResponse;
-	uint64_t prefix;
+	bool AddMessage(Message* message);
+	std::vector<Message*>::const_iterator GetMessages();
+	unsigned int GetNumberOfMessages() { return messages.size(); }
 
-	void Write(Buffer& buffer) const;
-};
+	uint32_t Size() const;
 
-struct NetworkConnectionAcceptedPacket
-{
-	NetworkPacketType type = NetworkPacketType::ConnectionAccepted;
-	uint64_t prefix;
-	uint16_t clientIndexAssigned;
-
-	void Write(Buffer& buffer) const;
-};
-
-struct NetworkConnectionDeniedPacket
-{
-	NetworkPacketType type = NetworkPacketType::ConnectionDenied;
-
-	void Write(Buffer& buffer) const;
-};
-
-struct NetworkDisconnectionPacket
-{
-	NetworkPacketType type = NetworkPacketType::Disconnection;
-	uint64_t prefix;
-
-	void Write(Buffer& buffer) const;
+private:
+	NetworkPacketHeader header;
+	std::vector<Message*> messages;
 };

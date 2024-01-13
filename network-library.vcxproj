@@ -104,10 +104,12 @@
       <SDLCheck>true</SDLCheck>
       <PreprocessorDefinitions>_DEBUG;_CONSOLE;%(PreprocessorDefinitions)</PreprocessorDefinitions>
       <ConformanceMode>true</ConformanceMode>
+      <AdditionalIncludeDirectories>D:\Developer\GithubRepositories\Network-Library\Utils;D:\Developer\GithubRepositories\Network-Library\Core;%(AdditionalIncludeDirectories)</AdditionalIncludeDirectories>
     </ClCompile>
     <Link>
       <SubSystem>Console</SubSystem>
       <GenerateDebugInformation>true</GenerateDebugInformation>
+      <AdditionalDependencies>Ws2_32.lib;%(AdditionalDependencies)</AdditionalDependencies>
     </Link>
   </ItemDefinitionGroup>
   <ItemDefinitionGroup Condition="'$(Configuration)|$(Platform)'=='Release|x64'">
@@ -129,21 +131,28 @@
   <ItemGroup>
     <ClCompile Include="Core\Address.cpp" />
     <ClCompile Include="Core\Buffer.cpp" />
-    <ClCompile Include="Utils\BufferUtils.cpp" />
     <ClCompile Include="Core\Client.cpp" />
+    <ClCompile Include="Core\Message.cpp" />
+    <ClCompile Include="Core\MessageHeader.cpp" />
+    <ClCompile Include="Core\PendingConnection.cpp" />
     <ClCompile Include="network-library.cpp" />
     <ClCompile Include="Core\NetworkPacket.cpp" />
     <ClCompile Include="Core\RemoteClient.cpp" />
     <ClCompile Include="Core\Server.cpp" />
+    <ClCompile Include="Utils\MessageUtils.cpp" />
   </ItemGroup>
   <ItemGroup>
     <ClInclude Include="Core\Address.h" />
     <ClInclude Include="Core\Buffer.h" />
-    <ClInclude Include="Utils\BufferUtils.h" />
     <ClInclude Include="Core\Client.h" />
+    <ClInclude Include="Core\Message.h" />
+    <ClInclude Include="Core\MessageHeader.h" />
+    <ClInclude Include="Core\NetworkPacket.h" />
+    <ClInclude Include="Core\PendingConnection.h" />
     <ClInclude Include="Utils\Logger.h" />
     <ClInclude Include="Core\RemoteClient.h" />
     <ClInclude Include="Core\Server.h" />
+    <ClInclude Include="Utils\MessageUtils.h" />
   </ItemGroup>
   <Import Project="$(VCTargetsPath)\Microsoft.Cpp.targets" />
   <ImportGroup Label="ExtensionTargets">

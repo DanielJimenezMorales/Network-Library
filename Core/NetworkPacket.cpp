@@ -1,38 +1,76 @@
 #include "NetworkPacket.h"
+#include "Buffer.h"
+#include "Message.h"
+#include "MessageUtils.h"
 
-void NetworkConnectionRequestPacket::Write(Buffer& buffer) const
+void NetworkPacketHeader::Write(Buffer& buffer) const
 {
-	BufferUtils::WriteByte(buffer, type);
-	BufferUtils::WriteLong(buffer, clientSalt);
+	buffer.WriteShort(sequenceNumber);
+	buffer.WriteShort(lastAckedSequenceNumber);
+	buffer.WriteInteger(ackBits);
 }
 
-void NetworkConnectionChallengePacket::Write(Buffer& buffer) const
+void NetworkPacketHeader::Read(Buffer& buffer)
 {
-	BufferUtils::WriteByte(buffer, type);
-	BufferUtils::WriteLong(buffer, clientSalt);
-	BufferUtils::WriteLong(buffer, serverSalt);
+	sequenceNumber = buffer.ReadShort();
+	lastAckedSequenceNumber = buffer.ReadShort();
+	ackBits = buffer.ReadInteger();
 }
 
-void NetworkConnectionChallengeResponsePacket::Write(Buffer& buffer) const
+void NetworkPacket::Write(Buffer& buffer) const
 {
-	BufferUtils::WriteByte(buffer, type);
-	BufferUtils::WriteLong(buffer, prefix);
+	header.Write(buffer);
+
+	uint8_t numberOfMessages = messages.size();
+	buffer.WriteByte(numberOfMessages);
+
+	std::vector<Message*>::const_iterator iterator = messages.cbegin();
+	while (iterator != messages.cend())
+	{
+		(*iterator)->Write(buffer);
+		++iterator;
+	}
 }
 
-void NetworkConnectionAcceptedPacket::Write(Buffer& buffer) const
+void NetworkPacket::Read(Buffer& buffer)
 {
-	BufferUtils::WriteByte(buffer, type);
-	BufferUtils::WriteLong(buffer, prefix);
-	BufferUtils::WriteShort(buffer, clientIndexAssigned);
+	header.Read(buffer);
+
+	uint8_t numberOfMessages = buffer.ReadByte();
+
+	Message* message = nullptr;
+	for (unsigned int i = 0; i < numberOfMessages; ++i)
+	{
+		MessageUtils::ReadMessage(buffer, &message);
+		if (message != nullptr)
+		{
+			AddMessage(message);
+		}
+	}
 }
 
-void NetworkConnectionDeniedPacket::Write(Buffer& buffer) const
+bool NetworkPacket::AddMessage(Message* message)
 {
-	BufferUtils::WriteByte(buffer, type);
+	messages.push_back(message);
+	return true;
 }
 
-void NetworkDisconnectionPacket::Write(Buffer& buffer) const
+std::vector<Message*>::const_iterator NetworkPacket::GetMessages()
 {
-	BufferUtils::WriteByte(buffer, type);
-	BufferUtils::WriteLong(buffer, prefix);
+	return messages.cbegin();
+}
+
+uint32_t NetworkPacket::Size() const
+{
+	uint32_t packetSize = NetworkPacketHeader::Size();
+	packetSize += 1; //We store in 1 byte the number of messages that this packet contains
+
+	std::vector<Message*>::const_iterator iterator = messages.cbegin();
+	while (iterator != messages.cend())
+	{
+		packetSize += (*iterator)->Size();
+		++iterator;
+	}
+
+	return packetSize;
 }
