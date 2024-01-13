@@ -135,6 +135,7 @@
     <ClCompile Include="Core\Message.cpp" />
     <ClCompile Include="Core\MessageHeader.cpp" />
     <ClCompile Include="Core\PendingConnection.cpp" />
+    <ClCompile Include="MessageFactory.cpp" />
     <ClCompile Include="network-library.cpp" />
     <ClCompile Include="Core\NetworkPacket.cpp" />
     <ClCompile Include="Core\RemoteClient.cpp" />
@@ -149,6 +150,7 @@
     <ClInclude Include="Core\MessageHeader.h" />
     <ClInclude Include="Core\NetworkPacket.h" />
     <ClInclude Include="Core\PendingConnection.h" />
+    <ClInclude Include="MessageFactory.h" />
     <ClInclude Include="Utils\Logger.h" />
     <ClInclude Include="Core\RemoteClient.h" />
     <ClInclude Include="Core\Server.h" />

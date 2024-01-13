@@ -3,7 +3,7 @@
 #include "Message.h"
 #include "Buffer.h"
 #include "Logger.h"
-#include <NetworkPacket.h>
+#include "NetworkPacket.h"
 
 Client::Client(float serverMaxInactivityTimeout) : 
 			_serverMaxInactivityTimeout(serverMaxInactivityTimeout),

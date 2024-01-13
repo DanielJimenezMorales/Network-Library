@@ -17,7 +17,7 @@ public:
 	uint64_t GetPrefix() const { return _clientSalt ^ _serverSalt; }
 	uint64_t GetClientSalt() const { return _clientSalt; }
 	uint64_t GetServerSalt() const { return _serverSalt; }
-	Address GetAddress() const { return _address; }
+	const Address& GetAddress() const { return _address; }
 	bool IsAddressEqual(const Address& address) const { return this->_address == address; }
 
 	void SetClientSalt(uint64_t newValue) { _clientSalt = newValue; }
