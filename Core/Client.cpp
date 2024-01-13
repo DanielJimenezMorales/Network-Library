@@ -12,6 +12,7 @@ Client::Client(float serverMaxInactivityTimeout) :
 			_dataPrefix(0)
 {
 	_serverAddress = Address("127.0.0.1", 54000);
+	_pendingMessages.reserve(5);
 }
 
 Client::~Client()
@@ -58,13 +59,15 @@ void Client::Tick(float elapsedTime)
 
 	if (_currentState == ClientState::SendingConnectionRequest || _currentState == ClientState::SendingConnectionChallengeResponse)
 	{
-		SendConnectionRequestPacket();
+		CreateConnectionRequestMessage();
 	}
 
 	if (IsThereNewDataToProcess())
 	{
 		ProcessReceivedData();
 	}
+
+	SendData();
 
 	if (_currentState != ClientState::Disconnected)
 	{
@@ -135,9 +138,11 @@ void Client::ProcessReceivedData()
 
 void Client::ProcessDatagram(Buffer& buffer, const Address& address)
 {
+	//Read incoming packet
 	NetworkPacket packet = NetworkPacket();
 	packet.Read(buffer);
 
+	//Process packet messages one by one
 	std::vector<Message*>::const_iterator constIterator = packet.GetMessages();
 	unsigned int numberOfMessagesInPacket = packet.GetNumberOfMessages();
 	MessageType messageType;
@@ -182,6 +187,8 @@ void Client::ProcessDatagram(Buffer& buffer, const Address& address)
 			break;
 		}
 	}
+
+	//Free memory for those messages
 }
 
 void Client::ProcessConnectionChallenge(const ConnectionChallengeMessage& message)
@@ -200,16 +207,9 @@ void Client::ProcessConnectionChallenge(const ConnectionChallengeMessage& messag
 
 	_currentState = ClientState::SendingConnectionChallengeResponse;
 
-	ConnectionChallengeResponseMessage connectionChallengeResponsePacket;
-	connectionChallengeResponsePacket.prefix = _dataPrefix;
-	Buffer* challengeResponseBuffer = new Buffer(sizeof(connectionChallengeResponsePacket));
-	connectionChallengeResponsePacket.Write(*challengeResponseBuffer);
+	CreateConnectionChallengeResponse();
 
 	LOG_INFO("Sending challenge response packet to server...");
-	SendPacketToServer(*challengeResponseBuffer);
-
-	delete challengeResponseBuffer;
-	challengeResponseBuffer = nullptr;
 }
 
 void Client::ProcessConnectionRequestAccepted(const ConnectionAcceptedMessage& message)
@@ -245,6 +245,27 @@ void Client::ProcessDisconnection(const DisconnectionMessage& message)
 	LOG_INFO("Disconnection message received from server. Disconnecting...");
 }
 
+void Client::SendData()
+{
+	if (!ArePendingMessages())
+	{
+		return;
+	}
+
+	NetworkPacket packet = NetworkPacket();
+	Message* message;
+	do
+	{
+		message = GetAMessage();
+		packet.AddMessage(message);
+	} while (ArePendingMessages());
+
+	Buffer* buffer = new Buffer(packet.Size());
+	packet.Write(*buffer);
+	SendPacketToServer(*buffer);
+	delete buffer;
+}
+
 void Client::SendConnectionRequestPacket()
 {
 	LOG_INFO("Sending connection request to server...");
@@ -259,6 +280,15 @@ void Client::SendConnectionRequestPacket()
 	buffer = nullptr;
 }
 
+void Client::CreateConnectionRequestMessage()
+{
+	LOG_INFO("Sending connection request to server...");
+	ConnectionRequestMessage* connectionRequestMessage = new ConnectionRequestMessage();
+	connectionRequestMessage->clientSalt = _saltNumber;
+
+	AddMessage(connectionRequestMessage);
+}
+
 void Client::SendPacketToServer(const Buffer& buffer) const
 {
 	int bytesSent = sendto(_socket, (char*)buffer.GetData(), buffer.GetSize(), 0, (sockaddr*)&_serverAddress.GetInfo(), sizeof(_serverAddress.GetInfo()));
@@ -267,6 +297,32 @@ void Client::SendPacketToServer(const Buffer& buffer) const
 		int iResult = WSAGetLastError();
 		LOG_ERROR("Error while sending datagram to server, error code " + iResult);
 	}
+}
+
+bool Client::AddMessage(Message* message)
+{
+	_pendingMessages.push_back(message);
+	return true;
+}
+
+void Client::CreateConnectionChallengeResponse()
+{
+	ConnectionChallengeResponseMessage* connectionChallengeResponsePacket = new ConnectionChallengeResponseMessage();
+	connectionChallengeResponsePacket->prefix = _dataPrefix;
+	AddMessage(connectionChallengeResponsePacket);
+}
+
+Message* Client::GetAMessage()
+{
+	if (!ArePendingMessages())
+	{
+		return nullptr;
+	}
+
+	Message* message = _pendingMessages[0];
+	_pendingMessages.erase(_pendingMessages.begin());
+
+	return message;
 }
 
 int Client::Stop()

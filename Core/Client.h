@@ -5,6 +5,7 @@
 #define NOMINMAX
 #include <winsock2.h>
 #include <ws2tcpip.h>
+#include <vector>
 
 #include "Address.h"
 
@@ -45,8 +46,15 @@ private:
 	void ProcessConnectionRequestDenied(const ConnectionDeniedMessage& message);
 	void ProcessDisconnection(const DisconnectionMessage& message);
 
+	void SendData();
 	void SendConnectionRequestPacket();
+	void CreateConnectionRequestMessage();
+	void CreateConnectionChallengeResponse();
 	void SendPacketToServer(const Buffer& buffer) const;
+
+	bool AddMessage(Message* message);
+	bool ArePendingMessages() const { return !_pendingMessages.empty(); }
+	Message* GetAMessage();
 
 	SOCKET _socket = INVALID_SOCKET;
 	Address _serverAddress = Address("127.0.0.1", htons(1234));
@@ -56,5 +64,7 @@ private:
 	uint64_t _saltNumber;
 	uint64_t _dataPrefix;
 	unsigned int _clientIndex;
+
+	std::vector<Message*> _pendingMessages;
 };
 

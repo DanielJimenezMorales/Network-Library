@@ -176,20 +176,42 @@ void Server::ProcessReceivedData()
 
 void Server::ProcessDatagram(Buffer& buffer, const Address& address)
 {
-	uint8_t packetType = buffer.ReadByte();
+	//Read incoming packet
+	NetworkPacket packet = NetworkPacket();
+	packet.Read(buffer);
 
-	switch (packetType)
+	//Process packet messages one by one
+	std::vector<Message*>::const_iterator constIterator = packet.GetMessages();
+	unsigned int numberOfMessagesInPacket = packet.GetNumberOfMessages();
+	MessageType messageType;
+	const Message* message = nullptr;
+	for (unsigned int i = 0; i < numberOfMessagesInPacket; ++i)
 	{
-	case MessageType::ConnectionRequest:
-		ProcessConnectionRequest(buffer, address);
-		break;
-	case MessageType::ConnectionChallengeResponse:
-		ProcessConnectionChallengeResponse(buffer, address);
-		break;
+		message = *(constIterator + i);
+		messageType = message->header.type;
+
+		switch (messageType)
+		{
+		case MessageType::ConnectionRequest:
+		{
+			const ConnectionRequestMessage* connectionRequestMessage = static_cast<const ConnectionRequestMessage*>(message);
+			ProcessConnectionRequest(*connectionRequestMessage, address);
+			break;
+		}
+		case MessageType::ConnectionChallengeResponse:
+		{
+			const ConnectionChallengeResponseMessage* connectionChallengeResponseMessage = static_cast<const ConnectionChallengeResponseMessage*>(message);
+			ProcessConnectionChallengeResponse(*connectionChallengeResponseMessage, address);
+			break;
+		}
+		default:
+			LOG_WARNING("Invalid datagram, ignoring it...");
+			break;
+		}
 	}
 }
 
-void Server::ProcessConnectionRequest(Buffer& buffer, const Address& address)
+void Server::ProcessConnectionRequest(const ConnectionRequestMessage& message, const Address& address)
 {
 	std::stringstream ss;
 	ss << "Processing connection request from [IP: " << address.GetIP() << ", Port: " << address.GetPort() << "]";
@@ -199,7 +221,7 @@ void Server::ProcessConnectionRequest(Buffer& buffer, const Address& address)
 
 	if (isAbleToConnectResult == 0)//If there is green light keep with the connection pipeline.
 	{
-		uint64_t clientSalt = buffer.ReadLong();
+		uint64_t clientSalt = message.clientSalt;
 		int pendingConnectionIndex = -1;
 		for (unsigned int i = 0; i < _pendingConnections.size(); ++i)
 		{
@@ -224,13 +246,11 @@ void Server::ProcessConnectionRequest(Buffer& buffer, const Address& address)
 			LOG_INFO(ss.str());
 		}
 
-		//SendConnectionChallengePacket(address, pendingConnectionIndex);
 		CreateConnectionChallengeMessage(address, pendingConnectionIndex);
 	}
 	else if (isAbleToConnectResult == 1)//If the client is already connected just send a connection approved message
 	{
 		int connectedClientIndex = FindExistingClientIndex(address);
-		//SendConnectionApprovedPacketToRemoteClient(*_remoteClients[connectedClientIndex]);
 		CreateConnectionApprovedMessage(*_remoteClients[connectedClientIndex]);
 		LOG_INFO("The client is already connected, sending connection approved...");
 	}
@@ -266,7 +286,6 @@ void Server::SendData()
 
 	for (unsigned int i = 0; i < _remoteClientSlots.size(); ++i)
 	{
-		//TODO
 		if (!_remoteClientSlots[i])
 		{
 			continue;
@@ -354,13 +373,13 @@ void Server::SendConnectionDeniedPacket(const Address& address) const
 	connectionDeniedBuffer = nullptr;
 }
 
-void Server::ProcessConnectionChallengeResponse(Buffer& buffer, const Address& address)
+void Server::ProcessConnectionChallengeResponse(const ConnectionChallengeResponseMessage& message, const Address& address)
 {
 	std::stringstream ss;
 	ss << "Processing connection challenge response from [IP: " << address.GetIP() << ", Port: " << address.GetPort() << "]";
 	LOG_INFO(ss.str());
 
-	uint64_t dataPrefix = buffer.ReadLong();
+	uint64_t dataPrefix = message.prefix;
 
 	int isAbleToConnectResult = IsClientAbleToConnect(address);
 
@@ -392,7 +411,6 @@ void Server::ProcessConnectionChallengeResponse(Buffer& buffer, const Address& a
 			_pendingConnections.erase(_pendingConnections.begin() + pendingConnectionIndex);
 
 			//Senc connection approved packet
-			//SendConnectionApprovedPacketToRemoteClient(*_remoteClients[availableClientSlot]);
 			CreateConnectionApprovedMessage(*_remoteClients[availableClientSlot]);
 			LOG_INFO("Connection approved");
 		}
@@ -408,7 +426,6 @@ void Server::ProcessConnectionChallengeResponse(Buffer& buffer, const Address& a
 			return;
 		}
 
-		//SendConnectionApprovedPacketToRemoteClient(*_remoteClients[targetClientIndex]);
 		CreateConnectionApprovedMessage(*_remoteClients[targetClientIndex]);
 	}
 	else if (isAbleToConnectResult == -1)//If all the client slots are full deny the connection

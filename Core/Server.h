@@ -9,6 +9,8 @@
 class Buffer;
 class Address;
 class PendingConnection;
+class ConnectionRequestMessage;
+class ConnectionChallengeResponseMessage;
 
 #define REMOTE_CLIENT_INACTIVITY_TIME 5.0f
 
@@ -31,8 +33,8 @@ private:
 	bool IsThereNewDataToProcess() const;
 	void ProcessReceivedData();
 	void ProcessDatagram(Buffer& buffer, const Address& address);
-	void ProcessConnectionRequest(Buffer& buffer, const Address& address);
-	void ProcessConnectionChallengeResponse(Buffer& buffer, const Address& address);
+	void ProcessConnectionRequest(const ConnectionRequestMessage& message, const Address& address);
+	void ProcessConnectionChallengeResponse(const ConnectionChallengeResponseMessage& message, const Address& address);
 
 	void HandleConnectedClientsInactivity(float elapsedTime);
 
