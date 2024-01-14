@@ -48,7 +48,7 @@
     <ClCompile Include="Utils\MessageUtils.cpp">
       <Filter>Source Files</Filter>
     </ClCompile>
-    <ClCompile Include="MessageFactory.cpp">
+    <ClCompile Include="Core\MessageFactory.cpp">
       <Filter>Source Files</Filter>
     </ClCompile>
   </ItemGroup>
@@ -86,7 +86,7 @@
     <ClInclude Include="Utils\MessageUtils.h">
       <Filter>Header Files</Filter>
     </ClInclude>
-    <ClInclude Include="MessageFactory.h">
+    <ClInclude Include="Core\MessageFactory.h">
       <Filter>Header Files</Filter>
     </ClInclude>
   </ItemGroup>

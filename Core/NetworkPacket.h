@@ -32,6 +32,8 @@ public:
 	std::vector<Message*>::const_iterator GetMessages();
 	unsigned int GetNumberOfMessages() { return messages.size(); }
 
+	void ReleaseMessages();
+
 	uint32_t Size() const;
 
 private:

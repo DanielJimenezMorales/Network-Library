@@ -3,20 +3,39 @@
 #include "MessageFactory.h"
 #include "Logger.h"
 
-MessageFactory::MessageFactory(unsigned int size) : _initialSize(size)
+bool MessageFactory::_isInitialized = false;
+unsigned int MessageFactory::_initialSize = 0;
+
+std::queue<Message*> MessageFactory::_connectionRequestMessagePool;
+std::queue<Message*> MessageFactory::_connectionChallengeMessagePool;
+std::queue<Message*> MessageFactory::_connectionChallengeResponseMessagePool;
+std::queue<Message*> MessageFactory::_connectionAcceptedMessagePool;
+std::queue<Message*> MessageFactory::_connectionDeniedMessagePool;
+std::queue<Message*> MessageFactory::_disconnectionMessagePool;
+
+void MessageFactory::Initialize(unsigned int size)
 {
+    _initialSize = size;
     InitializePools();
+    _isInitialized = true;
 }
 
 Message* MessageFactory::GetMessage(MessageType messageType)
 {
+    assert(_isInitialized == true);
+
     Message* message = nullptr;
 
-    std::queue<Message*>& pool = GetPoolFromType(messageType);
-    if (!pool.empty())
+    std::queue<Message*>* pool = GetPoolFromType(messageType);
+    if (pool == nullptr)
     {
-        message = pool.front();
-        pool.pop();
+        return nullptr;
+    }
+
+    if (!pool->empty())
+    {
+        message = pool->front();
+        pool->pop();
     }
     else
     {
@@ -35,16 +54,26 @@ Message* MessageFactory::GetMessage(MessageType messageType)
 
 void MessageFactory::ReleaseMessage(Message* message)
 {
+    assert(_isInitialized == true);
+
     if (message == nullptr)
     {
         return;
     }
 
     MessageType messageType = message->header.type;
-    std::queue<Message*>& pool = GetPoolFromType(messageType);
-    pool.push(message);
+    std::queue<Message*>* pool = GetPoolFromType(messageType);
+    if (pool != nullptr)
+    {
+        pool->push(message);
+    }
+    else
+    {
+        delete message;
+    }
 }
 
+/*
 MessageFactory::~MessageFactory()
 {
     ReleasePool(_connectionRequestMessagePool);
@@ -53,7 +82,7 @@ MessageFactory::~MessageFactory()
     ReleasePool(_connectionAcceptedMessagePool);
     ReleasePool(_connectionDeniedMessagePool);
     ReleasePool(_disconnectionMessagePool);
-}
+}*/
 
 void MessageFactory::InitializePools()
 {
@@ -78,32 +107,35 @@ void MessageFactory::InitializePool(std::queue<Message*>& pool, MessageType mess
     }
 }
 
-std::queue<Message*>& MessageFactory::GetPoolFromType(MessageType messageType)
+std::queue<Message*>* MessageFactory::GetPoolFromType(MessageType messageType)
 {
+    std::queue<Message*>* resultPool = nullptr;
     switch (messageType)
     {
     case MessageType::ConnectionRequest:
-        return _connectionRequestMessagePool;
+        resultPool = &_connectionRequestMessagePool;
         break;
     case MessageType::ConnectionChallenge:
-        return _connectionChallengeMessagePool;
+        resultPool = &_connectionChallengeMessagePool;
         break;
     case MessageType::ConnectionChallengeResponse:
-        return _connectionChallengeResponseMessagePool;
+        resultPool = &_connectionChallengeResponseMessagePool;
         break;
     case MessageType::ConnectionAccepted:
-        return _connectionAcceptedMessagePool;
+        resultPool = &_connectionAcceptedMessagePool;
         break;
     case MessageType::ConnectionDenied:
-        return _connectionDeniedMessagePool;
+        resultPool = &_connectionDeniedMessagePool;
         break;
     case MessageType::Disconnection:
-        return _disconnectionMessagePool;
+        resultPool = &_disconnectionMessagePool;
         break;
     default:
         LOG_ERROR("Can't get desired pool. Invalid message type");
         break;
     }
+
+    return resultPool;
 }
 
 Message* MessageFactory::CreateMessage(MessageType messageType)

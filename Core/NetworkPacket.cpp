@@ -1,6 +1,6 @@
 #include "NetworkPacket.h"
 #include "Buffer.h"
-#include "Message.h"
+#include "MessageFactory.h"
 #include "MessageUtils.h"
 
 void NetworkPacketHeader::Write(Buffer& buffer) const
@@ -58,6 +58,16 @@ bool NetworkPacket::AddMessage(Message* message)
 std::vector<Message*>::const_iterator NetworkPacket::GetMessages()
 {
 	return messages.cbegin();
+}
+
+void NetworkPacket::ReleaseMessages()
+{
+	for (int i = GetNumberOfMessages() - 1; i >= 0; --i)
+	{
+		Message* message = messages[i];
+		messages.erase(messages.begin() + i);
+		MessageFactory::ReleaseMessage(message);
+	}
 }
 
 uint32_t NetworkPacket::Size() const

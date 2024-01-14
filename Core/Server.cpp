@@ -209,6 +209,8 @@ void Server::ProcessDatagram(Buffer& buffer, const Address& address)
 			break;
 		}
 	}
+
+	packet.ReleaseMessages();
 }
 
 void Server::ProcessConnectionRequest(const ConnectionRequestMessage& message, const Address& address)
