@@ -11,6 +11,8 @@ public:
 	virtual void Read(Buffer& buffer) = 0;
 	virtual uint32_t Size() const = 0;
 
+	virtual ~Message() {};
+
 	MessageHeader header;
 };
 
@@ -26,7 +28,7 @@ public:
 	void Read(Buffer& buffer) override;
 	uint32_t Size() const override;
 
-	~ConnectionRequestMessage() {}
+	~ConnectionRequestMessage() override {};
 
 	uint64_t clientSalt;
 };
@@ -43,7 +45,7 @@ public:
 	void Read(Buffer& buffer) override;
 	uint32_t Size() const override;
 
-	~ConnectionChallengeMessage() {}
+	~ConnectionChallengeMessage() override {};
 
 	uint64_t clientSalt;
 	uint64_t serverSalt;
@@ -61,7 +63,7 @@ public:
 	void Read(Buffer& buffer) override;
 	uint32_t Size() const override;
 
-	~ConnectionChallengeResponseMessage() {}
+	~ConnectionChallengeResponseMessage() override {};
 
 	uint64_t prefix;
 };
@@ -78,7 +80,7 @@ public:
 	void Read(Buffer & buffer) override;
 	uint32_t Size() const override;
 
-	~ConnectionAcceptedMessage() {}
+	~ConnectionAcceptedMessage() override {};
 
 	uint64_t prefix;
 	uint16_t clientIndexAssigned;
@@ -96,7 +98,7 @@ public:
 	void Read(Buffer& buffer) override;
 	uint32_t Size() const override;
 
-	~ConnectionDeniedMessage() {}
+	~ConnectionDeniedMessage() override {};
 };
 
 class DisconnectionMessage : public Message
@@ -111,7 +113,7 @@ public:
 	void Read(Buffer& buffer) override;
 	uint32_t Size() const override;
 
-	~DisconnectionMessage() {}
+	~DisconnectionMessage() override {};
 
 	uint64_t prefix;
 };
