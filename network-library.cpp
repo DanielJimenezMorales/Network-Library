@@ -8,6 +8,7 @@
 #include "Server.h"
 #include "Client.h"
 #include "Logger.h"
+#include "MessageFactory.h"
 
 #define DEFAULT_IP "127.0.0.1"
 #define DEFAULT_PORT "27015"
@@ -34,6 +35,8 @@ int main()
         LOG_ERROR("WSAStartup failed: " + iResult);
         return EXIT_FAILURE;
     }
+
+    MessageFactory::Initialize(2);
 
     Server* server = nullptr;
     Client* client = nullptr;

@@ -3,7 +3,7 @@
 #include "Message.h"
 #include "Buffer.h"
 #include "Logger.h"
-#include <NetworkPacket.h>
+#include "NetworkPacket.h"
 
 Client::Client(float serverMaxInactivityTimeout) : 
 			_serverMaxInactivityTimeout(serverMaxInactivityTimeout),
@@ -189,6 +189,7 @@ void Client::ProcessDatagram(Buffer& buffer, const Address& address)
 	}
 
 	//Free memory for those messages
+	packet.ReleaseMessages();
 }
 
 void Client::ProcessConnectionChallenge(const ConnectionChallengeMessage& message)

@@ -1,5 +1,5 @@
 #include "MessageUtils.h"
-#include "Message.h"
+#include "MessageFactory.h"
 #include "Buffer.h"
 
 void MessageUtils::ReadMessage(Buffer& buffer, Message** message)
@@ -9,23 +9,28 @@ void MessageUtils::ReadMessage(Buffer& buffer, Message** message)
 	switch (type)
 	{
 	case MessageType::ConnectionRequest:
-		*message = new ConnectionRequestMessage();
+		*message = MessageFactory::GetMessage(MessageType::ConnectionRequest);
 		break;
 	case MessageType::ConnectionAccepted:
-		*message = new ConnectionAcceptedMessage();
+		*message = MessageFactory::GetMessage(MessageType::ConnectionAccepted);
 		break;
 	case MessageType::ConnectionDenied:
-		*message = new ConnectionDeniedMessage();
+		*message = MessageFactory::GetMessage(MessageType::ConnectionDenied);
 		break;
 	case MessageType::ConnectionChallenge:
-		*message = new ConnectionChallengeMessage();
+		*message = MessageFactory::GetMessage(MessageType::ConnectionChallenge);
 		break;
 	case MessageType::ConnectionChallengeResponse:
-		*message = new ConnectionChallengeResponseMessage();
+		*message = MessageFactory::GetMessage(MessageType::ConnectionChallengeResponse);
 		break;
 	case MessageType::Disconnection:
-		*message = new DisconnectionMessage();
+		*message = MessageFactory::GetMessage(MessageType::Disconnection);
 		break;
+	}
+
+	if (*message == nullptr)
+	{
+		return;
 	}
 
 	(*message)->Read(buffer);

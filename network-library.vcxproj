@@ -133,6 +133,7 @@
     <ClCompile Include="Core\Buffer.cpp" />
     <ClCompile Include="Core\Client.cpp" />
     <ClCompile Include="Core\Message.cpp" />
+    <ClCompile Include="Core\MessageFactory.cpp" />
     <ClCompile Include="Core\MessageHeader.cpp" />
     <ClCompile Include="Core\PendingConnection.cpp" />
     <ClCompile Include="network-library.cpp" />
@@ -146,6 +147,7 @@
     <ClInclude Include="Core\Buffer.h" />
     <ClInclude Include="Core\Client.h" />
     <ClInclude Include="Core\Message.h" />
+    <ClInclude Include="Core\MessageFactory.h" />
     <ClInclude Include="Core\MessageHeader.h" />
     <ClInclude Include="Core\NetworkPacket.h" />
     <ClInclude Include="Core\PendingConnection.h" />
