@@ -1,6 +1,3 @@
-# Executables
-*.exe
-
 # Builds
 [Dd]ebug/
 [Rr]elease/
