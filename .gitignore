@@ -1,5 +1,5 @@
 # Executables
-**.exe
+*.exe
 
 # Builds
 [Dd]ebug/
@@ -18,6 +18,3 @@ x86/
 **.vcxproj.filters
 **.vcxproj.user
 **.csproj
-
-# Custom directories to ignore
-vendor/premake/
