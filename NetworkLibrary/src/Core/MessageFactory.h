@@ -5,27 +5,35 @@
 class MessageFactory
 {
 public:
-	static void Initialize(unsigned int size);
-	static Message* GetMessage(MessageType messageType);
-	static void ReleaseMessage(Message* message);
+	static MessageFactory* GetInstance(unsigned int size = 2);
 
-	//~MessageFactory();
+	Message* GetMessage(MessageType messageType);
+	void ReleaseMessage(Message* message);
+
+	~MessageFactory();
 
 private:
-	static void InitializePools();
-	static void InitializePool(std::queue<Message*>& pool, MessageType messageType);
-	static std::queue<Message*>* GetPoolFromType(MessageType messageType);
-	static Message* CreateMessage(MessageType messageType);
-	static void ReleasePool(std::queue<Message*>& pool);
+	MessageFactory(unsigned int size);
+	MessageFactory(const MessageFactory&) = delete;
 
-	static bool _isInitialized;
-	static unsigned int _initialSize;
+	MessageFactory& operator=(const MessageFactory&) = delete;
 
-	static std::queue<Message*> _connectionRequestMessagePool;
-	static std::queue<Message*> _connectionChallengeMessagePool;
-	static std::queue<Message*> _connectionChallengeResponseMessagePool;
-	static std::queue<Message*> _connectionAcceptedMessagePool;
-	static std::queue<Message*> _connectionDeniedMessagePool;
-	static std::queue<Message*> _disconnectionMessagePool;
+	void InitializePools();
+	void InitializePool(std::queue<Message*>& pool, MessageType messageType);
+	std::queue<Message*>* GetPoolFromType(MessageType messageType);
+	Message* CreateMessage(MessageType messageType);
+	void ReleasePool(std::queue<Message*>& pool);
+
+	static MessageFactory* _instance;
+
+	bool _isInitialized;
+	unsigned int _initialSize;
+
+	std::queue<Message*> _connectionRequestMessagePool;
+	std::queue<Message*> _connectionChallengeMessagePool;
+	std::queue<Message*> _connectionChallengeResponseMessagePool;
+	std::queue<Message*> _connectionAcceptedMessagePool;
+	std::queue<Message*> _connectionDeniedMessagePool;
+	std::queue<Message*> _disconnectionMessagePool;
 };
 

@@ -3,17 +3,19 @@
 #include "MessageFactory.h"
 #include "Logger.h"
 
-bool MessageFactory::_isInitialized = false;
-unsigned int MessageFactory::_initialSize = 0;
+MessageFactory* MessageFactory::_instance = nullptr;
 
-std::queue<Message*> MessageFactory::_connectionRequestMessagePool;
-std::queue<Message*> MessageFactory::_connectionChallengeMessagePool;
-std::queue<Message*> MessageFactory::_connectionChallengeResponseMessagePool;
-std::queue<Message*> MessageFactory::_connectionAcceptedMessagePool;
-std::queue<Message*> MessageFactory::_connectionDeniedMessagePool;
-std::queue<Message*> MessageFactory::_disconnectionMessagePool;
+MessageFactory* MessageFactory::GetInstance(unsigned int size)
+{
+    if (_instance == nullptr)
+    {
+        _instance = new MessageFactory(size);
+    }
 
-void MessageFactory::Initialize(unsigned int size)
+    return _instance;
+}
+
+MessageFactory::MessageFactory(unsigned int size)
 {
     _initialSize = size;
     InitializePools();
@@ -73,7 +75,6 @@ void MessageFactory::ReleaseMessage(Message* message)
     }
 }
 
-/*
 MessageFactory::~MessageFactory()
 {
     ReleasePool(_connectionRequestMessagePool);
@@ -82,7 +83,7 @@ MessageFactory::~MessageFactory()
     ReleasePool(_connectionAcceptedMessagePool);
     ReleasePool(_connectionDeniedMessagePool);
     ReleasePool(_disconnectionMessagePool);
-}*/
+}
 
 void MessageFactory::InitializePools()
 {
