@@ -3,9 +3,7 @@
 #include <iostream>
 #include <ctime>
 
-#define LOG_ENABLED true
-
-#if LOG_ENABLED
+#ifdef LOG_ENABLED
 #define LOG_INFO(message) Logger::Info(message)
 #define LOG_WARNING(message) Logger::Warning(message)
 #define LOG_ERROR(message) Logger::Error(message)
