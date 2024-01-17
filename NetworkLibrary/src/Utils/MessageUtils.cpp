@@ -15,22 +15,22 @@ void MessageUtils::ReadMessage(Buffer& buffer, Message** message)
 	switch (type)
 	{
 	case MessageType::ConnectionRequest:
-		*message = messageFactory->GetMessage(MessageType::ConnectionRequest);
+		*message = messageFactory->LendMessage(MessageType::ConnectionRequest);
 		break;
 	case MessageType::ConnectionAccepted:
-		*message = messageFactory->GetMessage(MessageType::ConnectionAccepted);
+		*message = messageFactory->LendMessage(MessageType::ConnectionAccepted);
 		break;
 	case MessageType::ConnectionDenied:
-		*message = messageFactory->GetMessage(MessageType::ConnectionDenied);
+		*message = messageFactory->LendMessage(MessageType::ConnectionDenied);
 		break;
 	case MessageType::ConnectionChallenge:
-		*message = messageFactory->GetMessage(MessageType::ConnectionChallenge);
+		*message = messageFactory->LendMessage(MessageType::ConnectionChallenge);
 		break;
 	case MessageType::ConnectionChallengeResponse:
-		*message = messageFactory->GetMessage(MessageType::ConnectionChallengeResponse);
+		*message = messageFactory->LendMessage(MessageType::ConnectionChallengeResponse);
 		break;
 	case MessageType::Disconnection:
-		*message = messageFactory->GetMessage(MessageType::Disconnection);
+		*message = messageFactory->LendMessage(MessageType::Disconnection);
 		break;
 	}
 

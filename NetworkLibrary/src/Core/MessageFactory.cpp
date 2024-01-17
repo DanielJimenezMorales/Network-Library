@@ -22,7 +22,7 @@ MessageFactory::MessageFactory(unsigned int size)
     _isInitialized = true;
 }
 
-Message* MessageFactory::GetMessage(MessageType messageType)
+Message* MessageFactory::LendMessage(MessageType messageType)
 {
     assert(_isInitialized == true);
 

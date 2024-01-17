@@ -36,7 +36,7 @@ int main()
         return EXIT_FAILURE;
     }
 
-    MessageFactory::GetInstance(2);
+    MessageFactory::GetInstance(1);
 
     Server* server = nullptr;
     Client* client = nullptr;

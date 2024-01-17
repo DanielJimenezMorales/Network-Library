@@ -57,18 +57,17 @@ private:
 	void CreateConnectionChallengeMessage(const Address& address, int pendingConnectionIndex);
 	void CreateConnectionApprovedMessage(RemoteClient& remoteClient);
 	void CreateDisconnectionMessage(RemoteClient& remoteClient);
-	void SendDisconnectionPacketToRemoteClient(const RemoteClient& remoteClient) const;
-	void SendConnectionChallengePacket(const Address& address, int pendingConnectionIndex) const;
 	void SendConnectionDeniedPacket(const Address& address) const;
-	void SendConnectionApprovedPacketToRemoteClient(const RemoteClient& remoteClient) const;
 	void SendDatagramToRemoteClient(const RemoteClient& remoteClient, const Buffer& buffer) const;
 	void SendDataToAddress(const Buffer& buffer, const Address& address) const;
 
 	void DisconnectRemoteClient(unsigned int index);
+	void FinishRemoteClientsDisconnection();
 
 	int _maxConnections;
 	std::vector<bool> _remoteClientSlots;
 	std::vector<RemoteClient*> _remoteClients;
+	std::queue<unsigned int> _remoteClientSlotIDsToDisconnect;
 
 	std::vector<PendingConnection> _pendingConnections;
 	SOCKET _listenSocket = INVALID_SOCKET;

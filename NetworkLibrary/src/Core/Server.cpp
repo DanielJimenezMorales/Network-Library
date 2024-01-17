@@ -6,6 +6,7 @@
 #include "Message.h"
 #include "Buffer.h"
 #include "PendingConnection.h"
+#include "MessageFactory.h"
 
 Server::Server(int maxConnections) : _maxConnections(maxConnections)
 {
@@ -97,6 +98,8 @@ void Server::Tick(float elapsedTime)
 	HandleConnectedClientsInactivity(elapsedTime);
 
 	SendData();
+
+	FinishRemoteClientsDisconnection();
 }
 
 void Server::HandleConnectedClientsInactivity(float elapsedTime)
@@ -284,6 +287,8 @@ void Server::SendData()
 		packet.Write(*buffer);
 		SendDataToAddress(*buffer, _pendingConnections[i].GetAddress());
 		delete buffer;
+
+		_pendingConnections[i].FreeSentMessages();
 	}
 
 	for (unsigned int i = 0; i < _remoteClientSlots.size(); ++i)
@@ -310,56 +315,45 @@ void Server::SendData()
 		packet.Write(*buffer);
 		SendDataToAddress(*buffer, _remoteClients[i]->GetAddress());
 		delete buffer;
+
+		_remoteClients[i]->FreeSentMessages();
 	}
-}
-
-void Server::SendDisconnectionPacketToRemoteClient(const RemoteClient& remoteClient) const
-{
-	DisconnectionMessage disconnectionPacket;
-	disconnectionPacket.prefix = remoteClient.GetDataPrefix();
-	Buffer* disconnectionBuffer = new Buffer(sizeof(disconnectionPacket));
-	disconnectionPacket.Write(*disconnectionBuffer);
-
-	LOG_INFO("Sending disconnection packet...");
-	SendDatagramToRemoteClient(remoteClient, *disconnectionBuffer);
-
-	delete disconnectionBuffer;
-	disconnectionBuffer = nullptr;
 }
 
 void Server::CreateDisconnectionMessage(RemoteClient& remoteClient)
 {
-	DisconnectionMessage* disconnectionPacket = new DisconnectionMessage();
-	disconnectionPacket->prefix = remoteClient.GetDataPrefix();
-	remoteClient.AddMessage(disconnectionPacket);
+	MessageFactory* messageFactory = MessageFactory::GetInstance();
+	Message* message = messageFactory->LendMessage(MessageType::Disconnection);
+	if (message == nullptr)
+	{
+		LOG_ERROR("Can't create new Disconnection Message because the MessageFactory has returned a null message");
+		return;
+	}
 
-	LOG_INFO("Sending disconnection packet...");
-}
+	DisconnectionMessage* disconnectionMessage = static_cast<DisconnectionMessage*>(message);
 
-void Server::SendConnectionChallengePacket(const Address& address, int pendingConnectionIndex) const
-{
-	ConnectionChallengeMessage connectionChallengePacket;
-	connectionChallengePacket.clientSalt = _pendingConnections[pendingConnectionIndex].GetClientSalt();
-	connectionChallengePacket.serverSalt = _pendingConnections[pendingConnectionIndex].GetServerSalt();
+	disconnectionMessage->prefix = remoteClient.GetDataPrefix();
+	remoteClient.AddMessage(disconnectionMessage);
 
-	Buffer* connectionChallengeBuffer = new Buffer(sizeof(connectionChallengePacket));
-	connectionChallengePacket.Write(*connectionChallengeBuffer);
-
-	LOG_INFO("Sending connection challenge...");
-	SendDataToAddress(*connectionChallengeBuffer, address);
-
-	delete connectionChallengeBuffer;
-	connectionChallengeBuffer = nullptr;
+	LOG_INFO("Disconnection message created.");
 }
 
 void Server::CreateConnectionChallengeMessage(const Address& address, int pendingConnectionIndex)
 {
-	ConnectionChallengeMessage* connectionChallengePacket = new ConnectionChallengeMessage();
+	MessageFactory* messageFactory = MessageFactory::GetInstance();
+	Message* message = messageFactory->LendMessage(MessageType::ConnectionChallenge);
+	if (message == nullptr)
+	{
+		LOG_ERROR("Can't create new Connection Challenge Message because the MessageFactory has returned a null message");
+		return;
+	}
+
+	ConnectionChallengeMessage* connectionChallengePacket = static_cast<ConnectionChallengeMessage*>(message);
 	connectionChallengePacket->clientSalt = _pendingConnections[pendingConnectionIndex].GetClientSalt();
 	connectionChallengePacket->serverSalt = _pendingConnections[pendingConnectionIndex].GetServerSalt();
 	_pendingConnections[pendingConnectionIndex].AddMessage(connectionChallengePacket);
 
-	LOG_INFO("Sending connection challenge...");
+	LOG_INFO("Connection challenge message created.");
 }
 
 void Server::SendConnectionDeniedPacket(const Address& address) const
@@ -503,29 +497,17 @@ int Server::FindExistingClientIndex(const Address& address) const
 	return -1;
 }
 
-void Server::SendConnectionApprovedPacketToRemoteClient(const RemoteClient& remoteClient) const
-{
-	//Write connection packet data into buffer
-	ConnectionAcceptedMessage connectionAcceptedPacket;
-	connectionAcceptedPacket.prefix = remoteClient.GetDataPrefix();
-	connectionAcceptedPacket.clientIndexAssigned = remoteClient.GetClientIndex();
-	int connectionAcceptedPacketSize = sizeof(connectionAcceptedPacket);
-
-	Buffer* buffer = new Buffer(connectionAcceptedPacketSize);
-	connectionAcceptedPacket.Write(*buffer);
-
-	//Send connection approved packet to remote client
-	SendDatagramToRemoteClient(remoteClient, *buffer);
-
-	//Free memory
-	delete buffer;
-	buffer = nullptr;
-}
-
 void Server::CreateConnectionApprovedMessage(RemoteClient& remoteClient)
 {
-	//Write connection packet data into buffer
-	ConnectionAcceptedMessage* connectionAcceptedPacket = new ConnectionAcceptedMessage();
+	MessageFactory* messageFactory = MessageFactory::GetInstance();
+	Message* message = messageFactory->LendMessage(MessageType::ConnectionAccepted);
+	if (message == nullptr)
+	{
+		LOG_ERROR("Can't create new Connection Accepted Message because the MessageFactory has returned a null message");
+		return;
+	}
+
+	ConnectionAcceptedMessage* connectionAcceptedPacket = static_cast<ConnectionAcceptedMessage*>(message);
 	connectionAcceptedPacket->prefix = remoteClient.GetDataPrefix();
 	connectionAcceptedPacket->clientIndexAssigned = remoteClient.GetClientIndex();
 	remoteClient.AddMessage(connectionAcceptedPacket);
@@ -549,19 +531,31 @@ void Server::SendDataToAddress(const Buffer& buffer, const Address& address) con
 
 void Server::DisconnectRemoteClient(unsigned int index)
 {
-	if (!_remoteClients[index])
+	if (!_remoteClientSlots[index])
 	{
 		return;
 	}
 
-	//Send disconnection packet
-	//SendDisconnectionPacketToRemoteClient(*_remoteClients[index]);
 	CreateDisconnectionMessage(*_remoteClients[index]);
 
-	_remoteClientSlots[index] = false;
+	_remoteClientSlotIDsToDisconnect.push(index);
+}
 
-	delete _remoteClients[index];
-	_remoteClients[index] = nullptr;
+void Server::FinishRemoteClientsDisconnection()
+{
+	unsigned int remoteClientSlot;
+	while (!_remoteClientSlotIDsToDisconnect.empty())
+	{
+		remoteClientSlot = _remoteClientSlotIDsToDisconnect.front();
+		_remoteClientSlotIDsToDisconnect.pop();
+
+		if (_remoteClientSlots[remoteClientSlot])
+		{
+			_remoteClientSlots[remoteClientSlot] = false;
+			delete _remoteClients[remoteClientSlot];
+			_remoteClients[remoteClientSlot] = nullptr;
+		}
+	}
 }
 
 int Server::Stop()

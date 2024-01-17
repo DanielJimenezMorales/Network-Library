@@ -1,5 +1,6 @@
 #pragma once
 #include <vector>
+#include <queue>
 #include "Address.h"
 
 class Message;
@@ -15,6 +16,7 @@ private:
 	const uint64_t _dataPrefix;
 
 	std::vector<Message*> _pendingMessages;
+	std::queue<Message*> _sentMessages;
 
 public:
 	RemoteClient(const sockaddr_in& addressInfo, uint16_t index, float maxInactivityTime, uint64_t dataPrefix);
@@ -30,5 +32,6 @@ public:
 	bool AddMessage(Message* message);
 	bool ArePendingMessages() const { return !_pendingMessages.empty(); }
 	Message* GetAMessage();
+	void FreeSentMessages();
 };
 

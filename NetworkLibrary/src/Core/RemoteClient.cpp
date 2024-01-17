@@ -1,5 +1,7 @@
 #include "RemoteClient.h"
 #include "Message.h"
+#include "MessageFactory.h"
+#include "Logger.h"
 
 RemoteClient::RemoteClient(const sockaddr_in& addressInfo, uint16_t index, float maxInactivityTime, uint64_t dataPrefix) : 
 							_index(index), 
@@ -42,6 +44,20 @@ Message* RemoteClient::GetAMessage()
 
 	Message* message = _pendingMessages[0];
 	_pendingMessages.erase(_pendingMessages.begin());
+	
+	_sentMessages.push(message);
 
 	return message;
+}
+
+void RemoteClient::FreeSentMessages()
+{
+	MessageFactory* messageFactory = MessageFactory::GetInstance();
+
+	while (!_sentMessages.empty())
+	{
+		Message* message = _sentMessages.front();
+		_sentMessages.pop();
+		messageFactory->ReleaseMessage(message);
+	}
 }

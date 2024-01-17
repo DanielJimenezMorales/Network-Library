@@ -4,6 +4,7 @@
 #include "Buffer.h"
 #include "Logger.h"
 #include "NetworkPacket.h"
+#include "MessageFactory.h"
 
 Client::Client(float serverMaxInactivityTimeout) : 
 			_serverMaxInactivityTimeout(serverMaxInactivityTimeout),
@@ -265,29 +266,27 @@ void Client::SendData()
 	packet.Write(*buffer);
 	SendPacketToServer(*buffer);
 	delete buffer;
-}
 
-void Client::SendConnectionRequestPacket()
-{
-	LOG_INFO("Sending connection request to server...");
-	ConnectionRequestMessage connectionRequestPacket = ConnectionRequestMessage();
-	connectionRequestPacket.clientSalt = _saltNumber;
-	int connectionRequestPacketSize = sizeof(connectionRequestPacket);
-	Buffer* buffer = new Buffer(connectionRequestPacketSize);
-	connectionRequestPacket.Write(*buffer);
-	SendPacketToServer(*buffer);
-
-	delete buffer;
-	buffer = nullptr;
+	FreeSentMessages();
 }
 
 void Client::CreateConnectionRequestMessage()
 {
-	LOG_INFO("Sending connection request to server...");
-	ConnectionRequestMessage* connectionRequestMessage = new ConnectionRequestMessage();
+	MessageFactory* messageFactory = MessageFactory::GetInstance();
+	Message* message = messageFactory->LendMessage(MessageType::ConnectionRequest);
+	if (message == nullptr)
+	{
+		LOG_ERROR("Can't create new Connection Request Message because the MessageFactory has returned a null message");
+		return;
+	}
+
+	ConnectionRequestMessage* connectionRequestMessage = static_cast<ConnectionRequestMessage*>(message);
+
 	connectionRequestMessage->clientSalt = _saltNumber;
 
 	AddMessage(connectionRequestMessage);
+
+	LOG_INFO("Connection request created.");
 }
 
 void Client::SendPacketToServer(const Buffer& buffer) const
@@ -296,7 +295,7 @@ void Client::SendPacketToServer(const Buffer& buffer) const
 	if (bytesSent == SOCKET_ERROR)
 	{
 		int iResult = WSAGetLastError();
-		LOG_ERROR("Error while sending datagram to server, error code " + iResult);
+		LOG_ERROR("Error while sending packet to server, error code " + iResult);
 	}
 }
 
@@ -308,9 +307,44 @@ bool Client::AddMessage(Message* message)
 
 void Client::CreateConnectionChallengeResponse()
 {
-	ConnectionChallengeResponseMessage* connectionChallengeResponsePacket = new ConnectionChallengeResponseMessage();
+	MessageFactory* messageFactory = MessageFactory::GetInstance();
+	Message* message = messageFactory->LendMessage(MessageType::ConnectionChallengeResponse);
+	if (message == nullptr)
+	{
+		LOG_ERROR("Can't create new Connection Challenge Response Message because the MessageFactory has returned a null message");
+		return;
+	}
+
+	ConnectionChallengeResponseMessage* connectionChallengeResponsePacket = static_cast<ConnectionChallengeResponseMessage*>(message);
 	connectionChallengeResponsePacket->prefix = _dataPrefix;
 	AddMessage(connectionChallengeResponsePacket);
+}
+
+void Client::SendConnectionRequestPacket()
+{
+	LOG_INFO("Sending connection request to server...");
+	MessageFactory* messageFactory = MessageFactory::GetInstance();
+	Message* message = messageFactory->LendMessage(MessageType::ConnectionRequest);
+	if (message == nullptr)
+	{
+		LOG_ERROR("Can't create new Connection Request Message because the MessageFactory has returned a null message");
+		return;
+	}
+
+	ConnectionRequestMessage* connectionRequestPacket = static_cast<ConnectionRequestMessage*>(message);
+	connectionRequestPacket->clientSalt = _saltNumber;
+
+	NetworkPacket packet = NetworkPacket();
+	packet.AddMessage(message);
+
+	Buffer* buffer = new Buffer(packet.Size());
+	packet.Write(*buffer);
+	SendPacketToServer(*buffer);
+
+	messageFactory->ReleaseMessage(message);
+
+	delete buffer;
+	buffer = nullptr;
 }
 
 Message* Client::GetAMessage()
@@ -323,7 +357,21 @@ Message* Client::GetAMessage()
 	Message* message = _pendingMessages[0];
 	_pendingMessages.erase(_pendingMessages.begin());
 
+	_sentMessages.push(message);
 	return message;
+}
+
+void Client::FreeSentMessages()
+{
+	MessageFactory* messageFactory = MessageFactory::GetInstance();
+
+	while (!_sentMessages.empty())
+	{
+		Message* message = _sentMessages.front();
+		_sentMessages.pop();
+
+		messageFactory->ReleaseMessage(message);
+	}
 }
 
 int Client::Stop()

@@ -7,7 +7,7 @@ class MessageFactory
 public:
 	static MessageFactory* GetInstance(unsigned int size = 2);
 
-	Message* GetMessage(MessageType messageType);
+	Message* LendMessage(MessageType messageType);
 	void ReleaseMessage(Message* message);
 
 	~MessageFactory();
