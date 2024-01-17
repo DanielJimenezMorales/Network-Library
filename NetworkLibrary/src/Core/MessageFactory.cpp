@@ -49,7 +49,7 @@ Message* MessageFactory::LendMessage(MessageType messageType)
     }
 
     assert(message != nullptr);
-    assert(message->header.type == messageType);
+    assert(message->GetHeader().type == messageType);
 
     return message;
 }
@@ -63,7 +63,7 @@ void MessageFactory::ReleaseMessage(Message* message)
         return;
     }
 
-    MessageType messageType = message->header.type;
+    MessageType messageType = message->GetHeader().type;
     std::queue<Message*>* pool = GetPoolFromType(messageType);
     if (pool != nullptr)
     {
@@ -102,7 +102,7 @@ void MessageFactory::InitializePool(std::queue<Message*>& pool, MessageType mess
         Message* message = nullptr;
         message = CreateMessage(messageType);
         assert(message != nullptr);
-        assert(message->header.type == messageType);
+        assert(message->GetHeader().type == messageType);
 
         pool.push(message);
     }

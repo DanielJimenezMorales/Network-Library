@@ -151,7 +151,7 @@ void Client::ProcessDatagram(Buffer& buffer, const Address& address)
 	for (unsigned int i = 0; i < numberOfMessagesInPacket; ++i)
 	{
 		message = *(constIterator+i);
-		messageType = message->header.type;
+		messageType = message->GetHeader().type;
 
 		switch (messageType)
 		{

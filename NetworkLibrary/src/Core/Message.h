@@ -5,24 +5,25 @@
 class Message
 {
 public:
-	Message() {};
+	MessageHeader GetHeader() const { return _header; }
+
 	virtual void Write(Buffer& buffer) const = 0;
 	//Read it without the message header type
 	virtual void Read(Buffer& buffer) = 0;
 	virtual uint32_t Size() const = 0;
 
+
+protected:
+	Message(MessageType messageType) : _header(MessageHeader(messageType)) {};
 	virtual ~Message() {};
 
-	MessageHeader header;
+	MessageHeader _header;
 };
 
 class ConnectionRequestMessage : public Message
 {
 public:
-	ConnectionRequestMessage() : clientSalt(0)
-	{
-		header = MessageHeader(MessageType::ConnectionRequest);
-	}
+	ConnectionRequestMessage() : clientSalt(0), Message(MessageType::ConnectionRequest) {}
 
 	void Write(Buffer& buffer) const override;
 	void Read(Buffer& buffer) override;
@@ -36,10 +37,7 @@ public:
 class ConnectionChallengeMessage : public Message
 {
 public:
-	ConnectionChallengeMessage() : clientSalt(0), serverSalt(0)
-	{
-		header = MessageHeader(MessageType::ConnectionChallenge);
-	}
+	ConnectionChallengeMessage() : clientSalt(0), serverSalt(0), Message(MessageType::ConnectionChallenge) {}
 
 	void Write(Buffer& buffer) const override;
 	void Read(Buffer& buffer) override;
@@ -54,10 +52,7 @@ public:
 class ConnectionChallengeResponseMessage : public Message
 {
 public:
-	ConnectionChallengeResponseMessage() : prefix(0)
-	{
-		header = MessageHeader(MessageType::ConnectionChallengeResponse);
-	}
+	ConnectionChallengeResponseMessage() : prefix(0), Message(MessageType::ConnectionChallengeResponse) {}
 
 	void Write(Buffer& buffer) const override;
 	void Read(Buffer& buffer) override;
@@ -71,10 +66,7 @@ public:
 class ConnectionAcceptedMessage : public Message
 {
 public:
-	ConnectionAcceptedMessage() : prefix(0), clientIndexAssigned(0)
-	{
-		header = MessageHeader(MessageType::ConnectionAccepted);
-	}
+	ConnectionAcceptedMessage() : prefix(0), clientIndexAssigned(0), Message(MessageType::ConnectionAccepted) {}
 
 	void Write(Buffer & buffer) const override;
 	void Read(Buffer & buffer) override;
@@ -89,10 +81,7 @@ public:
 class ConnectionDeniedMessage : public Message
 {
 public:
-	ConnectionDeniedMessage()
-	{
-		header = MessageHeader(MessageType::ConnectionDenied);
-	}
+	ConnectionDeniedMessage() : Message(MessageType::ConnectionDenied) {}
 
 	void Write(Buffer& buffer) const override;
 	void Read(Buffer& buffer) override;
@@ -104,10 +93,7 @@ public:
 class DisconnectionMessage : public Message
 {
 public:
-	DisconnectionMessage() : prefix(0)
-	{
-		header = MessageHeader(MessageType::Disconnection);
-	}
+	DisconnectionMessage() : prefix(0), Message(MessageType::Disconnection) {}
 
 	void Write(Buffer& buffer) const override;
 	void Read(Buffer& buffer) override;
