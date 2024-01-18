@@ -33,6 +33,7 @@ private:
 	bool IsThereNewDataToProcess() const;
 	void ProcessReceivedData();
 	void ProcessDatagram(Buffer& buffer, const Address& address);
+	void ProcessMessage(const Message& message, const Address& address);
 	void ProcessConnectionRequest(const ConnectionRequestMessage& message, const Address& address);
 	void ProcessConnectionChallengeResponse(const ConnectionChallengeResponseMessage& message, const Address& address);
 

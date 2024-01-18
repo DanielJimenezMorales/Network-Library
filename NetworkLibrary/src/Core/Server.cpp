@@ -180,34 +180,39 @@ void Server::ProcessDatagram(Buffer& buffer, const Address& address)
 	//Process packet messages one by one
 	std::vector<Message*>::const_iterator constIterator = packet.GetMessages();
 	unsigned int numberOfMessagesInPacket = packet.GetNumberOfMessages();
-	MessageType messageType;
 	const Message* message = nullptr;
 	for (unsigned int i = 0; i < numberOfMessagesInPacket; ++i)
 	{
 		message = *(constIterator + i);
-		messageType = message->GetHeader().type;
 
-		switch (messageType)
-		{
-		case MessageType::ConnectionRequest:
-		{
-			const ConnectionRequestMessage* connectionRequestMessage = static_cast<const ConnectionRequestMessage*>(message);
-			ProcessConnectionRequest(*connectionRequestMessage, address);
-			break;
-		}
-		case MessageType::ConnectionChallengeResponse:
-		{
-			const ConnectionChallengeResponseMessage* connectionChallengeResponseMessage = static_cast<const ConnectionChallengeResponseMessage*>(message);
-			ProcessConnectionChallengeResponse(*connectionChallengeResponseMessage, address);
-			break;
-		}
-		default:
-			LOG_WARNING("Invalid datagram, ignoring it...");
-			break;
-		}
+		ProcessMessage(*message, address);
 	}
 
 	packet.ReleaseMessages();
+}
+
+void Server::ProcessMessage(const Message& message, const Address& address)
+{
+	MessageType messageType = message.GetHeader().type;
+
+	switch (messageType)
+	{
+	case MessageType::ConnectionRequest:
+	{
+		const ConnectionRequestMessage& connectionRequestMessage = static_cast<const ConnectionRequestMessage&>(message);
+		ProcessConnectionRequest(connectionRequestMessage, address);
+		break;
+	}
+	case MessageType::ConnectionChallengeResponse:
+	{
+		const ConnectionChallengeResponseMessage& connectionChallengeResponseMessage = static_cast<const ConnectionChallengeResponseMessage&>(message);
+		ProcessConnectionChallengeResponse(connectionChallengeResponseMessage, address);
+		break;
+	}
+	default:
+		LOG_WARNING("Invalid Message type, ignoring it...");
+		break;
+	}
 }
 
 void Server::ProcessConnectionRequest(const ConnectionRequestMessage& message, const Address& address)

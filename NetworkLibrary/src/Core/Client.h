@@ -5,6 +5,7 @@
 #define NOMINMAX
 #include <winsock2.h>
 #include <ws2tcpip.h>
+#include "Peer.h"
 #include <vector>
 #include <queue>
 
@@ -42,6 +43,7 @@ private:
 	bool IsThereNewDataToProcess() const;
 	void ProcessReceivedData();
 	void ProcessDatagram(Buffer& buffer, const Address& address);
+	void ProcessMessage(const Message& message, const Address& address);
 	void ProcessConnectionChallenge(const ConnectionChallengeMessage& message);
 	void ProcessConnectionRequestAccepted(const ConnectionAcceptedMessage& message);
 	void ProcessConnectionRequestDenied(const ConnectionDeniedMessage& message);

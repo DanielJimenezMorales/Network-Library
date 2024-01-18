@@ -1,3 +1,4 @@
+#include <sstream>
 #include "Client.h"
 //#include "NetworkPacket.h"
 #include "Message.h"
@@ -26,6 +27,8 @@ int Client::Start()
 
 	int iResult = 0;
 	_socket = socket(AF_INET, SOCK_DGRAM, IPPROTO_UDP);
+
+	
 
 	struct addrinfo* result = NULL;
 	struct addrinfo hints;
@@ -146,51 +149,55 @@ void Client::ProcessDatagram(Buffer& buffer, const Address& address)
 	//Process packet messages one by one
 	std::vector<Message*>::const_iterator constIterator = packet.GetMessages();
 	unsigned int numberOfMessagesInPacket = packet.GetNumberOfMessages();
-	MessageType messageType;
 	const Message* message = nullptr;
 	for (unsigned int i = 0; i < numberOfMessagesInPacket; ++i)
 	{
 		message = *(constIterator+i);
-		messageType = message->GetHeader().type;
-
-		switch (messageType)
-		{
-		case MessageType::ConnectionChallenge:
-			if (_currentState == ClientState::SendingConnectionRequest || _currentState == ClientState::SendingConnectionChallengeResponse)
-			{
-				const ConnectionChallengeMessage* connectionChallengeMessage = static_cast<const ConnectionChallengeMessage*>(message);
-				ProcessConnectionChallenge(*connectionChallengeMessage);
-			}
-			break;
-		case MessageType::ConnectionAccepted:
-			if (_currentState == ClientState::SendingConnectionChallengeResponse)
-			{
-				const ConnectionAcceptedMessage* connectionAcceptedMessage = static_cast<const ConnectionAcceptedMessage*>(message);
-				ProcessConnectionRequestAccepted(*connectionAcceptedMessage);
-			}
-			break;
-		case MessageType::ConnectionDenied:
-			if (_currentState == ClientState::SendingConnectionChallengeResponse || _currentState == ClientState::SendingConnectionRequest)
-			{
-				const ConnectionDeniedMessage* connectionDeniedMessage = static_cast<const ConnectionDeniedMessage*>(message);
-				ProcessConnectionRequestDenied(*connectionDeniedMessage);
-			}
-			break;
-		case MessageType::Disconnection:
-			if (_currentState == ClientState::Connected)
-			{
-				const DisconnectionMessage* disconnectionMessage = static_cast<const DisconnectionMessage*>(message);
-				ProcessDisconnection(*disconnectionMessage);
-			}
-			break;
-		default:
-			LOG_WARNING("Invalid datagram, ignoring it...");
-			break;
-		}
+		ProcessMessage(*message, address);
 	}
 
 	//Free memory for those messages
 	packet.ReleaseMessages();
+}
+
+void Client::ProcessMessage(const Message& message, const Address& address)
+{
+	MessageType messageType = message.GetHeader().type;
+
+	switch (messageType)
+	{
+	case MessageType::ConnectionChallenge:
+		if (_currentState == ClientState::SendingConnectionRequest || _currentState == ClientState::SendingConnectionChallengeResponse)
+		{
+			const ConnectionChallengeMessage& connectionChallengeMessage = static_cast<const ConnectionChallengeMessage&>(message);
+			ProcessConnectionChallenge(connectionChallengeMessage);
+		}
+		break;
+	case MessageType::ConnectionAccepted:
+		if (_currentState == ClientState::SendingConnectionChallengeResponse)
+		{
+			const ConnectionAcceptedMessage& connectionAcceptedMessage = static_cast<const ConnectionAcceptedMessage&>(message);
+			ProcessConnectionRequestAccepted(connectionAcceptedMessage);
+		}
+		break;
+	case MessageType::ConnectionDenied:
+		if (_currentState == ClientState::SendingConnectionChallengeResponse || _currentState == ClientState::SendingConnectionRequest)
+		{
+			const ConnectionDeniedMessage& connectionDeniedMessage = static_cast<const ConnectionDeniedMessage&>(message);
+			ProcessConnectionRequestDenied(connectionDeniedMessage);
+		}
+		break;
+	case MessageType::Disconnection:
+		if (_currentState == ClientState::Connected)
+		{
+			const DisconnectionMessage& disconnectionMessage = static_cast<const DisconnectionMessage&>(message);
+			ProcessDisconnection(disconnectionMessage);
+		}
+		break;
+	default:
+		LOG_WARNING("Invalid Message type, ignoring it...");
+		break;
+	}
 }
 
 void Client::ProcessConnectionChallenge(const ConnectionChallengeMessage& message)
