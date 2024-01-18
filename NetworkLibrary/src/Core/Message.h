@@ -12,10 +12,10 @@ public:
 	virtual void Read(Buffer& buffer) = 0;
 	virtual uint32_t Size() const = 0;
 
+	virtual ~Message() {};
 
 protected:
 	Message(MessageType messageType) : _header(MessageHeader(messageType)) {};
-	virtual ~Message() {};
 
 	MessageHeader _header;
 };

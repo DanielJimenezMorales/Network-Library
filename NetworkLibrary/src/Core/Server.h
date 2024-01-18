@@ -66,12 +66,12 @@ private:
 
 	int _maxConnections;
 	std::vector<bool> _remoteClientSlots;
-	std::vector<RemoteClient*> _remoteClients;
+	std::vector<RemoteClient> _remoteClients;
 	std::queue<unsigned int> _remoteClientSlotIDsToDisconnect;
 
 	std::vector<PendingConnection> _pendingConnections;
 	SOCKET _listenSocket = INVALID_SOCKET;
 
-	unsigned int _nextAssignedRemoteClientIndex = 1;
+	unsigned int _nextAssignedRemoteClientID = 1;
 };
 

@@ -17,20 +17,14 @@ Server::Server(int maxConnections) : _maxConnections(maxConnections)
 	for (size_t i = 0; i < _maxConnections; ++i)
 	{
 		_remoteClientSlots.push_back(false);
-		_remoteClients.push_back(nullptr);
+		_remoteClients.push_back(RemoteClient());
 	}
 }
 
 Server::~Server()
 {
-	for (size_t i = 0; i < _maxConnections; ++i)
-	{
-		if (_remoteClientSlots[i])
-		{
-			delete _remoteClients[i];
-			_remoteClients[i] = nullptr;
-		}
-	}
+	_remoteClientSlots.clear();
+	_remoteClients.clear();
 }
 
 bool Server::Start()
@@ -108,8 +102,8 @@ void Server::HandleConnectedClientsInactivity(float elapsedTime)
 	{
 		if (_remoteClientSlots[i])
 		{
-			_remoteClients[i]->Tick(elapsedTime);
-			if (_remoteClients[i]->IsInactive())
+			_remoteClients[i].Tick(elapsedTime);
+			if (_remoteClients[i].IsInactive())
 			{
 				DisconnectRemoteClient(i);
 			}
@@ -256,7 +250,7 @@ void Server::ProcessConnectionRequest(const ConnectionRequestMessage& message, c
 	else if (isAbleToConnectResult == 1)//If the client is already connected just send a connection approved message
 	{
 		int connectedClientIndex = FindExistingClientIndex(address);
-		CreateConnectionApprovedMessage(*_remoteClients[connectedClientIndex]);
+		CreateConnectionApprovedMessage(_remoteClients[connectedClientIndex]);
 		LOG_INFO("The client is already connected, sending connection approved...");
 	}
 	else if (isAbleToConnectResult == -1)//If all the client slots are full deny the connection
@@ -298,7 +292,7 @@ void Server::SendData()
 			continue;
 		}
 
-		if (!_remoteClients[i]->ArePendingMessages())
+		if (!_remoteClients[i].ArePendingMessages())
 		{
 			continue;
 		}
@@ -307,16 +301,16 @@ void Server::SendData()
 		Message* message;
 		do
 		{
-			message = _remoteClients[i]->GetAMessage();
+			message = _remoteClients[i].GetAMessage();
 			packet.AddMessage(message);
-		} while (_remoteClients[i]->ArePendingMessages());
+		} while (_remoteClients[i].ArePendingMessages());
 
 		Buffer* buffer = new Buffer(packet.Size());
 		packet.Write(*buffer);
-		SendDataToAddress(*buffer, _remoteClients[i]->GetAddress());
+		SendDataToAddress(*buffer, _remoteClients[i].GetAddress());
 		delete buffer;
 
-		_remoteClients[i]->FreeSentMessages();
+		_remoteClients[i].FreeSentMessages();
 	}
 }
 
@@ -406,8 +400,8 @@ void Server::ProcessConnectionChallengeResponse(const ConnectionChallengeRespons
 			//Delete pending connection since we have accepted
 			_pendingConnections.erase(_pendingConnections.begin() + pendingConnectionIndex);
 
-			//Senc connection approved packet
-			CreateConnectionApprovedMessage(*_remoteClients[availableClientSlot]);
+			//Send connection approved packet
+			CreateConnectionApprovedMessage(_remoteClients[availableClientSlot]);
 			LOG_INFO("Connection approved");
 		}
 	}
@@ -417,12 +411,12 @@ void Server::ProcessConnectionChallengeResponse(const ConnectionChallengeRespons
 		int targetClientIndex = FindExistingClientIndex(address);
 
 		//Check if data prefix match
-		if (_remoteClients[targetClientIndex]->GetDataPrefix() != dataPrefix)
+		if (_remoteClients[targetClientIndex].GetDataPrefix() != dataPrefix)
 		{
 			return;
 		}
 
-		CreateConnectionApprovedMessage(*_remoteClients[targetClientIndex]);
+		CreateConnectionApprovedMessage(_remoteClients[targetClientIndex]);
 	}
 	else if (isAbleToConnectResult == -1)//If all the client slots are full deny the connection
 	{
@@ -465,7 +459,7 @@ bool Server::IsClientAlreadyConnected(const Address& address) const
 	{
 		if (_remoteClientSlots[i])
 		{
-			if (_remoteClients[i]->IsAddressEqual(address))
+			if (_remoteClients[i].IsAddressEqual(address))
 			{
 				return true;
 			}
@@ -478,8 +472,8 @@ bool Server::IsClientAlreadyConnected(const Address& address) const
 void Server::AddNewRemoteClient(int remoteClientSlotIndex, const Address& address, uint64_t dataPrefix)
 {
 	_remoteClientSlots[remoteClientSlotIndex] = true;
-	_remoteClients[remoteClientSlotIndex] = new RemoteClient(address.GetInfo(), _nextAssignedRemoteClientIndex, REMOTE_CLIENT_INACTIVITY_TIME, dataPrefix);
-	++_nextAssignedRemoteClientIndex;
+	_remoteClients[remoteClientSlotIndex].Connect(address.GetInfo(), _nextAssignedRemoteClientID, REMOTE_CLIENT_INACTIVITY_TIME, dataPrefix);
+	++_nextAssignedRemoteClientID;
 }
 
 int Server::FindExistingClientIndex(const Address& address) const
@@ -488,7 +482,7 @@ int Server::FindExistingClientIndex(const Address& address) const
 	{
 		if (_remoteClientSlots[i])
 		{
-			if (_remoteClients[i]->GetAddress() == address)
+			if (_remoteClients[i].GetAddress() == address)
 			{
 				return i;
 			}
@@ -536,7 +530,7 @@ void Server::DisconnectRemoteClient(unsigned int index)
 		return;
 	}
 
-	CreateDisconnectionMessage(*_remoteClients[index]);
+	CreateDisconnectionMessage(_remoteClients[index]);
 
 	_remoteClientSlotIDsToDisconnect.push(index);
 }
@@ -552,8 +546,7 @@ void Server::FinishRemoteClientsDisconnection()
 		if (_remoteClientSlots[remoteClientSlot])
 		{
 			_remoteClientSlots[remoteClientSlot] = false;
-			delete _remoteClients[remoteClientSlot];
-			_remoteClients[remoteClientSlot] = nullptr;
+			_remoteClients[remoteClientSlot].Disconnect();
 		}
 	}
 }
