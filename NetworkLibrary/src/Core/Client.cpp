@@ -7,7 +7,7 @@
 #include "NetworkPacket.h"
 #include "MessageFactory.h"
 
-Client::Client(float serverMaxInactivityTimeout) : 
+Client::Client(float serverMaxInactivityTimeout) : Peer(PeerType::ClientMode),
 			_serverMaxInactivityTimeout(serverMaxInactivityTimeout),
 			_serverInactivityTimeLeft(serverMaxInactivityTimeout),
 			_saltNumber(0),
@@ -21,32 +21,8 @@ Client::~Client()
 {
 }
 
-int Client::Start()
+bool Client::StartConcrete()
 {
-	LOG_INFO("Starting client...");
-
-	int iResult = 0;
-	_socket = socket(AF_INET, SOCK_DGRAM, IPPROTO_UDP);
-
-	
-
-	struct addrinfo* result = NULL;
-	struct addrinfo hints;
-	ZeroMemory(&hints, sizeof(hints));
-	hints.ai_family = AF_INET;
-	hints.ai_socktype = SOCK_DGRAM;
-	hints.ai_protocol = IPPROTO_UDP;
-
-	iResult = getaddrinfo(NULL, "1234", &hints, &result);
-	if (iResult != 0)
-	{
-		LOG_ERROR("Error while getting the address information. Error code: " + iResult);
-		return iResult;
-	}
-
-	bind(_socket, result->ai_addr, (int)result->ai_addrlen);
-	freeaddrinfo(result);
-
 	_currentState = ClientState::SendingConnectionRequest;
 	_serverInactivityTimeLeft = _serverMaxInactivityTimeout;
 
@@ -54,36 +30,8 @@ int Client::Start()
 	SendConnectionRequestPacket();
 
 	LOG_INFO("Client started succesfully!");
-	return iResult;
-}
 
-void Client::Tick(float elapsedTime)
-{
-	int iResult = 0;
-
-	if (_currentState == ClientState::SendingConnectionRequest || _currentState == ClientState::SendingConnectionChallengeResponse)
-	{
-		CreateConnectionRequestMessage();
-	}
-
-	if (IsThereNewDataToProcess())
-	{
-		ProcessReceivedData();
-	}
-
-	SendData();
-
-	if (_currentState != ClientState::Disconnected)
-	{
-		_serverInactivityTimeLeft -= elapsedTime;
-
-		if (_serverInactivityTimeLeft <= 0.f)
-		{
-			LOG_INFO("Server inactivity timeout reached. Disconnecting client...");
-			_serverInactivityTimeLeft = 0.f;
-			_currentState = ClientState::Disconnected;
-		}
-	}
+	return true;
 }
 
 void Client::GenerateClientSaltNumber()
@@ -91,73 +39,6 @@ void Client::GenerateClientSaltNumber()
 	//TODO Change this for a better generator. rand is not generating a full 64bit integer since its maximum is roughly 32767. I have tried to use mt19937_64 but I think I get a conflict with winsocks and std::uniform_int_distribution
 	srand(time(NULL));
 	_saltNumber = rand();
-}
-
-bool Client::IsThereNewDataToProcess() const
-{
-	fd_set readSet;
-	FD_ZERO(&readSet);
-	FD_SET(_socket, &readSet);
-
-	timeval timeval;
-	timeval.tv_sec = 0;
-	timeval.tv_usec = 0;
-
-	int iResult = select(0, &readSet, NULL, NULL, &timeval);
-	if (iResult > 0)
-	{
-		return true;
-	}
-	else if (iResult == SOCKET_ERROR)
-	{
-		iResult = WSAGetLastError();
-		LOG_ERROR("Error while checking for incoming messages, error code " + iResult);
-	}
-
-	return false;
-}
-
-void Client::ProcessReceivedData()
-{
-	sockaddr_in client;
-	int clientLength = sizeof(client);
-	ZeroMemory(&client, clientLength);
-
-	int size = 1024;
-	uint8_t* data = new uint8_t[size];
-
-	int bytesIn = recvfrom(_socket, (char*)data, size, 0, (sockaddr*)&client, &clientLength);
-	if (bytesIn == SOCKET_ERROR)
-	{		
-		LOG_ERROR("Error while receiving a message, error code " + WSAGetLastError());
-	}
-
-	Buffer* buffer = new Buffer(data, bytesIn);
-	Address address = Address(client);
-	ProcessDatagram(*buffer, address);
-
-	delete buffer;
-	buffer = nullptr;
-}
-
-void Client::ProcessDatagram(Buffer& buffer, const Address& address)
-{
-	//Read incoming packet
-	NetworkPacket packet = NetworkPacket();
-	packet.Read(buffer);
-
-	//Process packet messages one by one
-	std::vector<Message*>::const_iterator constIterator = packet.GetMessages();
-	unsigned int numberOfMessagesInPacket = packet.GetNumberOfMessages();
-	const Message* message = nullptr;
-	for (unsigned int i = 0; i < numberOfMessagesInPacket; ++i)
-	{
-		message = *(constIterator+i);
-		ProcessMessage(*message, address);
-	}
-
-	//Free memory for those messages
-	packet.ReleaseMessages();
 }
 
 void Client::ProcessMessage(const Message& message, const Address& address)
@@ -198,6 +79,33 @@ void Client::ProcessMessage(const Message& message, const Address& address)
 		LOG_WARNING("Invalid Message type, ignoring it...");
 		break;
 	}
+}
+
+void Client::TickConcrete(float elapsedTime)
+{
+	if (_currentState == ClientState::SendingConnectionRequest || _currentState == ClientState::SendingConnectionChallengeResponse)
+	{
+		CreateConnectionRequestMessage();
+	}
+
+	SendData();
+
+	if (_currentState != ClientState::Disconnected)
+	{
+		_serverInactivityTimeLeft -= elapsedTime;
+
+		if (_serverInactivityTimeLeft <= 0.f)
+		{
+			LOG_INFO("Server inactivity timeout reached. Disconnecting client...");
+			_serverInactivityTimeLeft = 0.f;
+			_currentState = ClientState::Disconnected;
+		}
+	}
+}
+
+bool Client::StopConcrete()
+{
+	return true;
 }
 
 void Client::ProcessConnectionChallenge(const ConnectionChallengeMessage& message)
@@ -273,7 +181,7 @@ void Client::SendData()
 	packet.Write(*buffer);
 	SendPacketToServer(*buffer);
 	delete buffer;
-
+	LOG_INFO("Sending data to server.");
 	FreeSentMessages();
 }
 
@@ -298,7 +206,7 @@ void Client::CreateConnectionRequestMessage()
 
 void Client::SendPacketToServer(const Buffer& buffer) const
 {
-	int bytesSent = sendto(_socket, (char*)buffer.GetData(), buffer.GetSize(), 0, (sockaddr*)&_serverAddress.GetInfo(), sizeof(_serverAddress.GetInfo()));
+	int bytesSent = sendto(_listenSocket, (char*)buffer.GetData(), buffer.GetSize(), 0, (sockaddr*)&_serverAddress.GetInfo(), sizeof(_serverAddress.GetInfo()));
 	if (bytesSent == SOCKET_ERROR)
 	{
 		int iResult = WSAGetLastError();
@@ -379,19 +287,4 @@ void Client::FreeSentMessages()
 
 		messageFactory->ReleaseMessage(message);
 	}
-}
-
-int Client::Stop()
-{
-	LOG_INFO("Stopping client...");
-
-	int iResult = 0;
-	iResult = closesocket(_socket);
-	if (iResult == SOCKET_ERROR)
-	{
-		iResult = WSAGetLastError();
-		LOG_ERROR("Error while closing listen socket, error code " + iResult);
-	}
-
-	return iResult;
 }

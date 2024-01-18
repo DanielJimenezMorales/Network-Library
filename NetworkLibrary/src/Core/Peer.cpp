@@ -11,7 +11,8 @@ bool Peer::Start()
 	CreateSocket();
 	EnableSocketNonBlockingMode();
 	BindSocket();
-	return false;
+	StartConcrete();
+	return true;
 }
 
 bool Peer::Tick(float elapsedTime)
@@ -21,6 +22,7 @@ bool Peer::Tick(float elapsedTime)
 		ProcessReceivedData();
 	}
 
+	TickConcrete(elapsedTime);
 	return true;
 }
 
@@ -28,7 +30,7 @@ bool Peer::Stop()
 {
 	StopConcrete();
 	CloseSocket();
-	return false;
+	return true;
 }
 
 bool Peer::CreateSocket()

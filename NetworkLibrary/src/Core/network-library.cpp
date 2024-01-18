@@ -52,10 +52,10 @@ int main()
     else if (clientOrServer == 1)
     {
         client = new Client(5);
-        int clientStartUpResult = client->Start();
-        if (clientStartUpResult != 0)
+        bool clientStartUpResult = client->Start();
+        if (!clientStartUpResult)
         {
-            LOG_ERROR("Client startup failed with error " + clientStartUpResult);
+            LOG_ERROR("Client startup failed");
         }
     }
 

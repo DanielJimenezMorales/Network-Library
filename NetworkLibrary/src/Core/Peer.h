@@ -23,23 +23,24 @@ public:
 
 protected:
 	Peer(PeerType type) : _type(type), _listenSocket(INVALID_SOCKET) {}
+	virtual bool StartConcrete() = 0;
+	virtual void ProcessMessage(const Message& message, const Address& address) = 0;
+	virtual void TickConcrete(float elapsedTime) = 0;
+	virtual bool StopConcrete() = 0;
+
+	SOCKET _listenSocket;
+
 private:
 	bool CreateSocket();
 	bool EnableSocketNonBlockingMode();
 	bool BindSocket();
-	virtual bool StartConcrete() = 0;
 
 	bool IsThereNewDataToProcess() const;
 	void ProcessReceivedData();
 	bool GetDatagramFromAddress(Buffer** buffer, Address* address);
 	void ProcessDatagram(Buffer& buffer, const Address& address);
-	virtual void ProcessMessage(const Message& message, const Address& address) = 0;
 
-	virtual void TickConcrete(float elapsedTime) = 0;
-
-	virtual bool StopConcrete() = 0;
 	bool CloseSocket();
 
-	SOCKET _listenSocket;
 	PeerType _type;
 };

@@ -26,24 +26,20 @@ enum ClientState
 	SendingConnectionChallengeResponse = 3,
 };
 
-class Client
+class Client : public Peer
 {
 public:
 	Client(float serverMaxInactivityTimeout);
 	~Client();
-
-	int Start();
-	int Stop();
-
-	void Tick(float elapsedTime);
+	
+protected:
+	bool StartConcrete() override;
+	void ProcessMessage(const Message& message, const Address& address) override;
+	void TickConcrete(float elapsedTime) override;
+	bool StopConcrete() override;
 
 private:
 	void GenerateClientSaltNumber();
-
-	bool IsThereNewDataToProcess() const;
-	void ProcessReceivedData();
-	void ProcessDatagram(Buffer& buffer, const Address& address);
-	void ProcessMessage(const Message& message, const Address& address);
 	void ProcessConnectionChallenge(const ConnectionChallengeMessage& message);
 	void ProcessConnectionRequestAccepted(const ConnectionAcceptedMessage& message);
 	void ProcessConnectionRequestDenied(const ConnectionDeniedMessage& message);
@@ -61,7 +57,6 @@ private:
 
 	void FreeSentMessages();
 
-	SOCKET _socket = INVALID_SOCKET;
 	Address _serverAddress = Address("127.0.0.1", htons(1234));
 	ClientState _currentState = ClientState::Disconnected;
 	const float _serverMaxInactivityTimeout;
