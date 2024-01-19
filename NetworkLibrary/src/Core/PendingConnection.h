@@ -1,6 +1,7 @@
 #pragma once
 #include <cstdint>
 #include <vector>
+#include <queue>
 #include "Address.h"
 
 class Message;
@@ -13,6 +14,7 @@ public:
 	bool ArePendingMessages() const { return !_pendingMessages.empty(); }
 	bool AddMessage(Message* message);
 	Message* GetAMessage();
+	void FreeSentMessages();
 
 	uint64_t GetPrefix() const { return _clientSalt ^ _serverSalt; }
 	uint64_t GetClientSalt() const { return _clientSalt; }
@@ -31,4 +33,5 @@ private:
 	uint64_t _serverSalt;
 
 	std::vector<Message*> _pendingMessages;
+	std::queue<Message*> _sentMessages;
 };

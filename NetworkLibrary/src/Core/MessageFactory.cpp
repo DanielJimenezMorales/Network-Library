@@ -3,24 +3,26 @@
 #include "MessageFactory.h"
 #include "Logger.h"
 
-bool MessageFactory::_isInitialized = false;
-unsigned int MessageFactory::_initialSize = 0;
+MessageFactory* MessageFactory::_instance = nullptr;
 
-std::queue<Message*> MessageFactory::_connectionRequestMessagePool;
-std::queue<Message*> MessageFactory::_connectionChallengeMessagePool;
-std::queue<Message*> MessageFactory::_connectionChallengeResponseMessagePool;
-std::queue<Message*> MessageFactory::_connectionAcceptedMessagePool;
-std::queue<Message*> MessageFactory::_connectionDeniedMessagePool;
-std::queue<Message*> MessageFactory::_disconnectionMessagePool;
+MessageFactory* MessageFactory::GetInstance(unsigned int size)
+{
+    if (_instance == nullptr)
+    {
+        _instance = new MessageFactory(size);
+    }
 
-void MessageFactory::Initialize(unsigned int size)
+    return _instance;
+}
+
+MessageFactory::MessageFactory(unsigned int size)
 {
     _initialSize = size;
     InitializePools();
     _isInitialized = true;
 }
 
-Message* MessageFactory::GetMessage(MessageType messageType)
+Message* MessageFactory::LendMessage(MessageType messageType)
 {
     assert(_isInitialized == true);
 
@@ -40,14 +42,14 @@ Message* MessageFactory::GetMessage(MessageType messageType)
     else
     {
         std::stringstream ss;
-        ss << "The message pool of type " << messageType << " is empty. Creating a new message... Consider increasing pool size. Current init size: " << _initialSize;
+        ss << "The message pool of type " << (unsigned int)messageType << " is empty. Creating a new message... Consider increasing pool size. Current init size: " << _initialSize;
         LOG_WARNING(ss.str());
 
         message = CreateMessage(messageType);
     }
 
     assert(message != nullptr);
-    assert(message->header.type == messageType);
+    assert(message->GetHeader().type == messageType);
 
     return message;
 }
@@ -61,7 +63,7 @@ void MessageFactory::ReleaseMessage(Message* message)
         return;
     }
 
-    MessageType messageType = message->header.type;
+    MessageType messageType = message->GetHeader().type;
     std::queue<Message*>* pool = GetPoolFromType(messageType);
     if (pool != nullptr)
     {
@@ -73,7 +75,6 @@ void MessageFactory::ReleaseMessage(Message* message)
     }
 }
 
-/*
 MessageFactory::~MessageFactory()
 {
     ReleasePool(_connectionRequestMessagePool);
@@ -82,7 +83,7 @@ MessageFactory::~MessageFactory()
     ReleasePool(_connectionAcceptedMessagePool);
     ReleasePool(_connectionDeniedMessagePool);
     ReleasePool(_disconnectionMessagePool);
-}*/
+}
 
 void MessageFactory::InitializePools()
 {
@@ -101,7 +102,7 @@ void MessageFactory::InitializePool(std::queue<Message*>& pool, MessageType mess
         Message* message = nullptr;
         message = CreateMessage(messageType);
         assert(message != nullptr);
-        assert(message->header.type == messageType);
+        assert(message->GetHeader().type == messageType);
 
         pool.push(message);
     }

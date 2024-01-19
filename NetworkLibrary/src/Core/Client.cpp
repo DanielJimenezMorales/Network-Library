@@ -1,11 +1,13 @@
+#include <sstream>
+
 #include "Client.h"
-//#include "NetworkPacket.h"
 #include "Message.h"
 #include "Buffer.h"
 #include "Logger.h"
 #include "NetworkPacket.h"
+#include "MessageFactory.h"
 
-Client::Client(float serverMaxInactivityTimeout) : 
+Client::Client(float serverMaxInactivityTimeout) : Peer(PeerType::ClientMode),
 			_serverMaxInactivityTimeout(serverMaxInactivityTimeout),
 			_serverInactivityTimeLeft(serverMaxInactivityTimeout),
 			_saltNumber(0),
@@ -19,52 +21,70 @@ Client::~Client()
 {
 }
 
-int Client::Start()
+bool Client::StartConcrete()
 {
-	LOG_INFO("Starting client...");
-
-	int iResult = 0;
-	_socket = socket(AF_INET, SOCK_DGRAM, IPPROTO_UDP);
-
-	struct addrinfo* result = NULL;
-	struct addrinfo hints;
-	ZeroMemory(&hints, sizeof(hints));
-	hints.ai_family = AF_INET;
-	hints.ai_socktype = SOCK_DGRAM;
-	hints.ai_protocol = IPPROTO_UDP;
-
-	iResult = getaddrinfo(NULL, "1234", &hints, &result);
-	if (iResult != 0)
-	{
-		LOG_ERROR("Error while getting the address information. Error code: " + iResult);
-		return iResult;
-	}
-
-	bind(_socket, result->ai_addr, (int)result->ai_addrlen);
-	freeaddrinfo(result);
-
 	_currentState = ClientState::SendingConnectionRequest;
 	_serverInactivityTimeLeft = _serverMaxInactivityTimeout;
 
 	GenerateClientSaltNumber();
-	SendConnectionRequestPacket();
 
 	LOG_INFO("Client started succesfully!");
-	return iResult;
+
+	return true;
 }
 
-void Client::Tick(float elapsedTime)
+void Client::GenerateClientSaltNumber()
 {
-	int iResult = 0;
+	//TODO Change this for a better generator. rand is not generating a full 64bit integer since its maximum is roughly 32767. I have tried to use mt19937_64 but I think I get a conflict with winsocks and std::uniform_int_distribution
+	srand(time(NULL));
+	_saltNumber = rand();
+}
 
+void Client::ProcessMessage(const Message& message, const Address& address)
+{
+	MessageType messageType = message.GetHeader().type;
+
+	switch (messageType)
+	{
+	case MessageType::ConnectionChallenge:
+		if (_currentState == ClientState::SendingConnectionRequest || _currentState == ClientState::SendingConnectionChallengeResponse)
+		{
+			const ConnectionChallengeMessage& connectionChallengeMessage = static_cast<const ConnectionChallengeMessage&>(message);
+			ProcessConnectionChallenge(connectionChallengeMessage);
+		}
+		break;
+	case MessageType::ConnectionAccepted:
+		if (_currentState == ClientState::SendingConnectionChallengeResponse)
+		{
+			const ConnectionAcceptedMessage& connectionAcceptedMessage = static_cast<const ConnectionAcceptedMessage&>(message);
+			ProcessConnectionRequestAccepted(connectionAcceptedMessage);
+		}
+		break;
+	case MessageType::ConnectionDenied:
+		if (_currentState == ClientState::SendingConnectionChallengeResponse || _currentState == ClientState::SendingConnectionRequest)
+		{
+			const ConnectionDeniedMessage& connectionDeniedMessage = static_cast<const ConnectionDeniedMessage&>(message);
+			ProcessConnectionRequestDenied(connectionDeniedMessage);
+		}
+		break;
+	case MessageType::Disconnection:
+		if (_currentState == ClientState::Connected)
+		{
+			const DisconnectionMessage& disconnectionMessage = static_cast<const DisconnectionMessage&>(message);
+			ProcessDisconnection(disconnectionMessage);
+		}
+		break;
+	default:
+		LOG_WARNING("Invalid Message type, ignoring it...");
+		break;
+	}
+}
+
+void Client::TickConcrete(float elapsedTime)
+{
 	if (_currentState == ClientState::SendingConnectionRequest || _currentState == ClientState::SendingConnectionChallengeResponse)
 	{
 		CreateConnectionRequestMessage();
-	}
-
-	if (IsThereNewDataToProcess())
-	{
-		ProcessReceivedData();
 	}
 
 	SendData();
@@ -82,114 +102,9 @@ void Client::Tick(float elapsedTime)
 	}
 }
 
-void Client::GenerateClientSaltNumber()
+bool Client::StopConcrete()
 {
-	//TODO Change this for a better generator. rand is not generating a full 64bit integer since its maximum is roughly 32767. I have tried to use mt19937_64 but I think I get a conflict with winsocks and std::uniform_int_distribution
-	srand(time(NULL));
-	_saltNumber = rand();
-}
-
-bool Client::IsThereNewDataToProcess() const
-{
-	fd_set readSet;
-	FD_ZERO(&readSet);
-	FD_SET(_socket, &readSet);
-
-	timeval timeval;
-	timeval.tv_sec = 0;
-	timeval.tv_usec = 0;
-
-	int iResult = select(0, &readSet, NULL, NULL, &timeval);
-	if (iResult > 0)
-	{
-		return true;
-	}
-	else if (iResult == SOCKET_ERROR)
-	{
-		iResult = WSAGetLastError();
-		LOG_ERROR("Error while checking for incoming messages, error code " + iResult);
-	}
-
-	return false;
-}
-
-void Client::ProcessReceivedData()
-{
-	sockaddr_in client;
-	int clientLength = sizeof(client);
-	ZeroMemory(&client, clientLength);
-
-	int size = 1024;
-	uint8_t* data = new uint8_t[size];
-
-	int bytesIn = recvfrom(_socket, (char*)data, size, 0, (sockaddr*)&client, &clientLength);
-	if (bytesIn == SOCKET_ERROR)
-	{		
-		LOG_ERROR("Error while receiving a message, error code " + WSAGetLastError());
-	}
-
-	Buffer* buffer = new Buffer(data, bytesIn);
-	Address address = Address(client);
-	ProcessDatagram(*buffer, address);
-
-	delete buffer;
-	buffer = nullptr;
-}
-
-void Client::ProcessDatagram(Buffer& buffer, const Address& address)
-{
-	//Read incoming packet
-	NetworkPacket packet = NetworkPacket();
-	packet.Read(buffer);
-
-	//Process packet messages one by one
-	std::vector<Message*>::const_iterator constIterator = packet.GetMessages();
-	unsigned int numberOfMessagesInPacket = packet.GetNumberOfMessages();
-	MessageType messageType;
-	const Message* message = nullptr;
-	for (unsigned int i = 0; i < numberOfMessagesInPacket; ++i)
-	{
-		message = *(constIterator+i);
-		messageType = message->header.type;
-
-		switch (messageType)
-		{
-		case MessageType::ConnectionChallenge:
-			if (_currentState == ClientState::SendingConnectionRequest || _currentState == ClientState::SendingConnectionChallengeResponse)
-			{
-				const ConnectionChallengeMessage* connectionChallengeMessage = static_cast<const ConnectionChallengeMessage*>(message);
-				ProcessConnectionChallenge(*connectionChallengeMessage);
-			}
-			break;
-		case MessageType::ConnectionAccepted:
-			if (_currentState == ClientState::SendingConnectionChallengeResponse)
-			{
-				const ConnectionAcceptedMessage* connectionAcceptedMessage = static_cast<const ConnectionAcceptedMessage*>(message);
-				ProcessConnectionRequestAccepted(*connectionAcceptedMessage);
-			}
-			break;
-		case MessageType::ConnectionDenied:
-			if (_currentState == ClientState::SendingConnectionChallengeResponse || _currentState == ClientState::SendingConnectionRequest)
-			{
-				const ConnectionDeniedMessage* connectionDeniedMessage = static_cast<const ConnectionDeniedMessage*>(message);
-				ProcessConnectionRequestDenied(*connectionDeniedMessage);
-			}
-			break;
-		case MessageType::Disconnection:
-			if (_currentState == ClientState::Connected)
-			{
-				const DisconnectionMessage* disconnectionMessage = static_cast<const DisconnectionMessage*>(message);
-				ProcessDisconnection(*disconnectionMessage);
-			}
-			break;
-		default:
-			LOG_WARNING("Invalid datagram, ignoring it...");
-			break;
-		}
-	}
-
-	//Free memory for those messages
-	packet.ReleaseMessages();
+	return true;
 }
 
 void Client::ProcessConnectionChallenge(const ConnectionChallengeMessage& message)
@@ -261,43 +176,28 @@ void Client::SendData()
 		packet.AddMessage(message);
 	} while (ArePendingMessages());
 
-	Buffer* buffer = new Buffer(packet.Size());
-	packet.Write(*buffer);
-	SendPacketToServer(*buffer);
-	delete buffer;
-}
-
-void Client::SendConnectionRequestPacket()
-{
-	LOG_INFO("Sending connection request to server...");
-	ConnectionRequestMessage connectionRequestPacket = ConnectionRequestMessage();
-	connectionRequestPacket.clientSalt = _saltNumber;
-	int connectionRequestPacketSize = sizeof(connectionRequestPacket);
-	Buffer* buffer = new Buffer(connectionRequestPacketSize);
-	connectionRequestPacket.Write(*buffer);
-	SendPacketToServer(*buffer);
-
-	delete buffer;
-	buffer = nullptr;
+	SendPacketToAddress(packet, _serverAddress);
+	LOG_INFO("Sending data to server.");
+	FreeSentMessages();
 }
 
 void Client::CreateConnectionRequestMessage()
 {
-	LOG_INFO("Sending connection request to server...");
-	ConnectionRequestMessage* connectionRequestMessage = new ConnectionRequestMessage();
+	MessageFactory* messageFactory = MessageFactory::GetInstance();
+	Message* message = messageFactory->LendMessage(MessageType::ConnectionRequest);
+	if (message == nullptr)
+	{
+		LOG_ERROR("Can't create new Connection Request Message because the MessageFactory has returned a null message");
+		return;
+	}
+
+	ConnectionRequestMessage* connectionRequestMessage = static_cast<ConnectionRequestMessage*>(message);
+
 	connectionRequestMessage->clientSalt = _saltNumber;
 
 	AddMessage(connectionRequestMessage);
-}
 
-void Client::SendPacketToServer(const Buffer& buffer) const
-{
-	int bytesSent = sendto(_socket, (char*)buffer.GetData(), buffer.GetSize(), 0, (sockaddr*)&_serverAddress.GetInfo(), sizeof(_serverAddress.GetInfo()));
-	if (bytesSent == SOCKET_ERROR)
-	{
-		int iResult = WSAGetLastError();
-		LOG_ERROR("Error while sending datagram to server, error code " + iResult);
-	}
+	LOG_INFO("Connection request created.");
 }
 
 bool Client::AddMessage(Message* message)
@@ -308,7 +208,15 @@ bool Client::AddMessage(Message* message)
 
 void Client::CreateConnectionChallengeResponse()
 {
-	ConnectionChallengeResponseMessage* connectionChallengeResponsePacket = new ConnectionChallengeResponseMessage();
+	MessageFactory* messageFactory = MessageFactory::GetInstance();
+	Message* message = messageFactory->LendMessage(MessageType::ConnectionChallengeResponse);
+	if (message == nullptr)
+	{
+		LOG_ERROR("Can't create new Connection Challenge Response Message because the MessageFactory has returned a null message");
+		return;
+	}
+
+	ConnectionChallengeResponseMessage* connectionChallengeResponsePacket = static_cast<ConnectionChallengeResponseMessage*>(message);
 	connectionChallengeResponsePacket->prefix = _dataPrefix;
 	AddMessage(connectionChallengeResponsePacket);
 }
@@ -323,20 +231,19 @@ Message* Client::GetAMessage()
 	Message* message = _pendingMessages[0];
 	_pendingMessages.erase(_pendingMessages.begin());
 
+	_sentMessages.push(message);
 	return message;
 }
 
-int Client::Stop()
+void Client::FreeSentMessages()
 {
-	LOG_INFO("Stopping client...");
+	MessageFactory* messageFactory = MessageFactory::GetInstance();
 
-	int iResult = 0;
-	iResult = closesocket(_socket);
-	if (iResult == SOCKET_ERROR)
+	while (!_sentMessages.empty())
 	{
-		iResult = WSAGetLastError();
-		LOG_ERROR("Error while closing listen socket, error code " + iResult);
-	}
+		Message* message = _sentMessages.front();
+		_sentMessages.pop();
 
-	return iResult;
+		messageFactory->ReleaseMessage(message);
+	}
 }

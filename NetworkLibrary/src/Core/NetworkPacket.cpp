@@ -1,3 +1,4 @@
+#include <cassert>
 #include "NetworkPacket.h"
 #include "Buffer.h"
 #include "MessageFactory.h"
@@ -62,11 +63,14 @@ std::vector<Message*>::const_iterator NetworkPacket::GetMessages()
 
 void NetworkPacket::ReleaseMessages()
 {
+	MessageFactory* messageFactory = MessageFactory::GetInstance();
+	assert(messageFactory != nullptr);
+	
 	for (int i = GetNumberOfMessages() - 1; i >= 0; --i)
 	{
 		Message* message = messages[i];
 		messages.erase(messages.begin() + i);
-		MessageFactory::ReleaseMessage(message);
+		messageFactory->ReleaseMessage(message);
 	}
 }
 

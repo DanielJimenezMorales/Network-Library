@@ -1,20 +1,33 @@
+#include <cassert>
 #include "RemoteClient.h"
 #include "Message.h"
+#include "MessageFactory.h"
+#include "Logger.h"
 
-RemoteClient::RemoteClient(const sockaddr_in& addressInfo, uint16_t index, float maxInactivityTime, uint64_t dataPrefix) : 
-							_index(index), 
-							_maxInactivityTime(maxInactivityTime), 
-							_inactivityTimeLeft(maxInactivityTime),
-							_dataPrefix(dataPrefix)
+RemoteClient::RemoteClient() : _address(Address::GetInvalid()), _dataPrefix(0), _maxInactivityTime(0), _inactivityTimeLeft(0)
 {
-	_address = new Address(addressInfo);
 	_pendingMessages.reserve(5);
+}
+
+RemoteClient::RemoteClient(const sockaddr_in& addressInfo, uint16_t id, float maxInactivityTime, uint64_t dataPrefix) : _address(Address::GetInvalid())
+{
+	_pendingMessages.reserve(5);
+
+	Connect(addressInfo, id, maxInactivityTime, dataPrefix);
 }
 
 RemoteClient::~RemoteClient()
 {
-	delete _address;
-	_address = nullptr;
+	Disconnect();
+}
+
+void RemoteClient::Connect(const sockaddr_in& addressInfo, uint16_t id, float maxInactivityTime, uint64_t dataPrefix)
+{
+	_address = Address(addressInfo);
+	_id = id;
+	_maxInactivityTime = maxInactivityTime;
+	_inactivityTimeLeft = _maxInactivityTime;
+	_dataPrefix = dataPrefix;
 }
 
 void RemoteClient::Tick(float elapsedTime)
@@ -42,6 +55,46 @@ Message* RemoteClient::GetAMessage()
 
 	Message* message = _pendingMessages[0];
 	_pendingMessages.erase(_pendingMessages.begin());
+	
+	_sentMessages.push(message);
 
 	return message;
+}
+
+void RemoteClient::FreeSentMessages()
+{
+	MessageFactory* messageFactory = MessageFactory::GetInstance();
+
+	while (!_sentMessages.empty())
+	{
+		Message* message = _sentMessages.front();
+		_sentMessages.pop();
+		messageFactory->ReleaseMessage(message);
+	}
+}
+
+void RemoteClient::Disconnect()
+{
+	MessageFactory* messageFactory = MessageFactory::GetInstance();
+	assert(messageFactory != nullptr);
+
+	while (!_sentMessages.empty())
+	{
+		Message* message = _sentMessages.front();
+		_sentMessages.pop();
+
+		messageFactory->ReleaseMessage(message);
+	}
+
+	for (unsigned int i = 0; i < _pendingMessages.size(); ++i)
+	{
+		Message* message = _pendingMessages[i];
+		_pendingMessages[i] = nullptr;
+
+		messageFactory->ReleaseMessage(message);
+	}
+
+	_pendingMessages.clear();
+
+	_address = Address::GetInvalid();
 }

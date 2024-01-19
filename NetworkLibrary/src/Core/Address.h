@@ -9,8 +9,9 @@ private:
 	struct sockaddr_in _addressInfo;
 
 public:
+	static Address GetInvalid() { return Address("0.0.0.0", 0); }
+
 	Address(const std::string& ip, unsigned int port);
-	
 	Address(const sockaddr_in& addressInfo);
 	
 	const sockaddr_in& GetInfo() const { return _addressInfo; }
