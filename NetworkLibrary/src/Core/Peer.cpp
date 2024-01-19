@@ -8,10 +8,35 @@
 
 bool Peer::Start()
 {
-	CreateSocket();
-	EnableSocketNonBlockingMode();
-	BindSocket();
-	StartConcrete();
+	if (!InitializeSocketsLibrary())
+	{
+		LOG_ERROR("Error while starting peer, aborting operation...");
+		return false;
+	}
+	
+	if (!CreateSocket())
+	{
+		LOG_ERROR("Error while starting peer, aborting operation...");
+		return false;
+	}
+
+	if(!EnableSocketNonBlockingMode())
+	{
+		LOG_ERROR("Error while starting peer, aborting operation...");
+		return false;
+	}
+
+	if (!BindSocket())
+	{
+		LOG_ERROR("Error while starting peer, aborting operation...");
+		return false;
+	}
+
+	if (!StartConcrete())
+	{
+		LOG_ERROR("Error while starting peer, aborting operation...");
+		return false;
+	}
 	return true;
 }
 
@@ -30,7 +55,13 @@ bool Peer::Stop()
 {
 	StopConcrete();
 	CloseSocket();
+	WSACleanup();
+
 	return true;
+}
+
+Peer::~Peer()
+{
 }
 
 bool Peer::CreateSocket()
@@ -60,6 +91,16 @@ bool Peer::EnableSocketNonBlockingMode()
 	}
 
 	return true;
+}
+
+void Peer::SendPacketToAddress(const NetworkPacket& packet, const Address& address) const
+{
+	Buffer* buffer = new Buffer(packet.Size());
+	packet.Write(*buffer);
+
+	SendDataToAddress(*buffer, address);
+
+	delete buffer;
 }
 
 bool Peer::BindSocket()
@@ -127,6 +168,19 @@ bool Peer::IsThereNewDataToProcess() const
 	return false;
 }
 
+bool Peer::InitializeSocketsLibrary()
+{
+	WSADATA wsaData;
+	int iResult = WSAStartup(MAKEWORD(2, 2), &wsaData);//Init WS. You need to pass it the version (1.0, 1.1, 2.2...) and a pointer to WSADATA which contains info about the WS impl.
+	if (iResult != 0)
+	{
+		LOG_ERROR("WSAStartup failed: " + iResult);
+		return false;
+	}
+
+	return true;
+}
+
 void Peer::ProcessReceivedData()
 {
 	Buffer* buffer = nullptr;
@@ -175,7 +229,7 @@ void Peer::ProcessDatagram(Buffer& buffer, const Address& address)
 		ProcessMessage(*message, address);
 	}
 
-	//Free memory for those messages
+	//Free memory for those messages in the packet.Read() operation
 	packet.ReleaseMessages();
 }
 
@@ -190,4 +244,15 @@ bool Peer::CloseSocket()
 	}
 
 	return true;
+}
+
+void Peer::SendDataToAddress(const Buffer& buffer, const Address& address) const
+{
+	int bytesSent = sendto(_listenSocket, (char*)buffer.GetData(), buffer.GetSize(), 0, (sockaddr*)&address.GetInfo(), sizeof(address.GetInfo()));
+	if (bytesSent == SOCKET_ERROR)
+	{
+		std::stringstream ss;
+		ss << "Error while sending packet to server, error code " << WSAGetLastError();
+		LOG_ERROR(ss.str());
+	}
 }

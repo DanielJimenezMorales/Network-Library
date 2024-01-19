@@ -3,8 +3,6 @@
 //Define this before any include in order to be able to use std::numeric_limits<uint64_t>::min() and std::numeric_limits<uint64_t>::max() methods and not getting errors with the ones
 //from Windows.h
 #define NOMINMAX
-#include <winsock2.h>
-#include <ws2tcpip.h>
 #include "Peer.h"
 #include <vector>
 #include <queue>
@@ -30,7 +28,7 @@ class Client : public Peer
 {
 public:
 	Client(float serverMaxInactivityTimeout);
-	~Client();
+	~Client() override;
 	
 protected:
 	bool StartConcrete() override;
@@ -48,8 +46,6 @@ private:
 	void SendData();
 	void CreateConnectionRequestMessage();
 	void CreateConnectionChallengeResponse();
-	void SendConnectionRequestPacket();
-	void SendPacketToServer(const Buffer& buffer) const;
 
 	bool AddMessage(Message* message);
 	bool ArePendingMessages() const { return !_pendingMessages.empty(); }

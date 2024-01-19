@@ -1,39 +1,32 @@
 #pragma once
 
-#include <winsock2.h>
-#include <ws2tcpip.h>
 #include <vector>
 
+#include "Peer.h"
 #include "RemoteClient.h"
 
-class Buffer;
-class Address;
 class PendingConnection;
 class ConnectionRequestMessage;
 class ConnectionChallengeResponseMessage;
 
 #define REMOTE_CLIENT_INACTIVITY_TIME 5.0f
 
-class Server
+class Server : public Peer
 {
 public:
 	Server(int maxConnections);
-	~Server();
+	~Server() override;
 
-	bool Start();
-	int Stop();
-
-	void Tick(float elapsedTime);
 
 private:
-	bool InitSocket();
+	bool StartConcrete() override;
+	void ProcessMessage(const Message& message, const Address& address) override;
+	void TickConcrete(float elapsedTime) override;
+	bool StopConcrete() override;
 
+private:
 	uint64_t GenerateServerSalt() const;
 
-	bool IsThereNewDataToProcess() const;
-	void ProcessReceivedData();
-	void ProcessDatagram(Buffer& buffer, const Address& address);
-	void ProcessMessage(const Message& message, const Address& address);
 	void ProcessConnectionRequest(const ConnectionRequestMessage& message, const Address& address);
 	void ProcessConnectionChallengeResponse(const ConnectionChallengeResponseMessage& message, const Address& address);
 
@@ -59,8 +52,7 @@ private:
 	void CreateConnectionApprovedMessage(RemoteClient& remoteClient);
 	void CreateDisconnectionMessage(RemoteClient& remoteClient);
 	void SendConnectionDeniedPacket(const Address& address) const;
-	void SendDatagramToRemoteClient(const RemoteClient& remoteClient, const Buffer& buffer) const;
-	void SendDataToAddress(const Buffer& buffer, const Address& address) const;
+	void SendPacketToRemoteClient(const RemoteClient& remoteClient, const NetworkPacket& packet) const;
 
 	void DisconnectRemoteClient(unsigned int index);
 	void FinishRemoteClientsDisconnection();
@@ -71,7 +63,6 @@ private:
 	std::queue<unsigned int> _remoteClientSlotIDsToDisconnect;
 
 	std::vector<PendingConnection> _pendingConnections;
-	SOCKET _listenSocket = INVALID_SOCKET;
 
 	unsigned int _nextAssignedRemoteClientID = 1;
 };

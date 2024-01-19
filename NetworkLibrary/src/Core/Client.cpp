@@ -1,6 +1,6 @@
 #include <sstream>
+
 #include "Client.h"
-//#include "NetworkPacket.h"
 #include "Message.h"
 #include "Buffer.h"
 #include "Logger.h"
@@ -27,7 +27,6 @@ bool Client::StartConcrete()
 	_serverInactivityTimeLeft = _serverMaxInactivityTimeout;
 
 	GenerateClientSaltNumber();
-	SendConnectionRequestPacket();
 
 	LOG_INFO("Client started succesfully!");
 
@@ -177,10 +176,7 @@ void Client::SendData()
 		packet.AddMessage(message);
 	} while (ArePendingMessages());
 
-	Buffer* buffer = new Buffer(packet.Size());
-	packet.Write(*buffer);
-	SendPacketToServer(*buffer);
-	delete buffer;
+	SendPacketToAddress(packet, _serverAddress);
 	LOG_INFO("Sending data to server.");
 	FreeSentMessages();
 }
@@ -204,16 +200,6 @@ void Client::CreateConnectionRequestMessage()
 	LOG_INFO("Connection request created.");
 }
 
-void Client::SendPacketToServer(const Buffer& buffer) const
-{
-	int bytesSent = sendto(_listenSocket, (char*)buffer.GetData(), buffer.GetSize(), 0, (sockaddr*)&_serverAddress.GetInfo(), sizeof(_serverAddress.GetInfo()));
-	if (bytesSent == SOCKET_ERROR)
-	{
-		int iResult = WSAGetLastError();
-		LOG_ERROR("Error while sending packet to server, error code " + iResult);
-	}
-}
-
 bool Client::AddMessage(Message* message)
 {
 	_pendingMessages.push_back(message);
@@ -233,33 +219,6 @@ void Client::CreateConnectionChallengeResponse()
 	ConnectionChallengeResponseMessage* connectionChallengeResponsePacket = static_cast<ConnectionChallengeResponseMessage*>(message);
 	connectionChallengeResponsePacket->prefix = _dataPrefix;
 	AddMessage(connectionChallengeResponsePacket);
-}
-
-void Client::SendConnectionRequestPacket()
-{
-	LOG_INFO("Sending connection request to server...");
-	MessageFactory* messageFactory = MessageFactory::GetInstance();
-	Message* message = messageFactory->LendMessage(MessageType::ConnectionRequest);
-	if (message == nullptr)
-	{
-		LOG_ERROR("Can't create new Connection Request Message because the MessageFactory has returned a null message");
-		return;
-	}
-
-	ConnectionRequestMessage* connectionRequestPacket = static_cast<ConnectionRequestMessage*>(message);
-	connectionRequestPacket->clientSalt = _saltNumber;
-
-	NetworkPacket packet = NetworkPacket();
-	packet.AddMessage(message);
-
-	Buffer* buffer = new Buffer(packet.Size());
-	packet.Write(*buffer);
-	SendPacketToServer(*buffer);
-
-	messageFactory->ReleaseMessage(message);
-
-	delete buffer;
-	buffer = nullptr;
 }
 
 Message* Client::GetAMessage()

@@ -42,7 +42,7 @@ Message* MessageFactory::LendMessage(MessageType messageType)
     else
     {
         std::stringstream ss;
-        ss << "The message pool of type " << messageType << " is empty. Creating a new message... Consider increasing pool size. Current init size: " << _initialSize;
+        ss << "The message pool of type " << (unsigned int)messageType << " is empty. Creating a new message... Consider increasing pool size. Current init size: " << _initialSize;
         LOG_WARNING(ss.str());
 
         message = CreateMessage(messageType);

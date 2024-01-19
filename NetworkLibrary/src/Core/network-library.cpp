@@ -2,7 +2,6 @@
 //
 
 #include <iostream>
-#include <winsock2.h>
 #include <chrono>
 
 #include "Server.h"
@@ -25,16 +24,6 @@ int main()
 
     int clientOrServer;
     std::cin >> clientOrServer;
-
-    WSADATA wsaData;
-    int iResult;
-
-    iResult = WSAStartup(MAKEWORD(2, 2), &wsaData);//Init WS. You need to pass it the version (1.0, 1.1, 2.2...) and a pointer to WSADATA which contains info about the WS impl.
-    if (iResult != 0)
-    {
-        LOG_ERROR("WSAStartup failed: " + iResult);
-        return EXIT_FAILURE;
-    }
 
     MessageFactory::GetInstance(1);
 
@@ -94,26 +83,23 @@ int main()
 
     if (clientOrServer == 0)
     {
-        int serverStopResult = server->Stop();
-        if (serverStopResult != 0)
+        if (!server->Stop())
         {
-            LOG_ERROR("Server stop failed with error " + serverStopResult);
+            LOG_ERROR("Server stop failed");
         }
         delete server;
         server = nullptr;
     }
     else if (clientOrServer == 1)
     {
-        int clientStopResult = client->Stop();
-        if (clientStopResult != 0)
+        if (!client->Stop())
         {
-            LOG_ERROR("Client stop failed with error " + clientStopResult);
+            LOG_ERROR("Client stop failed");
         }
         delete client;
         client = nullptr;
     }
 
-    WSACleanup();
     return EXIT_SUCCESS;
 }
 
