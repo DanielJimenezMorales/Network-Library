@@ -4,10 +4,8 @@
 //from Windows.h
 #define NOMINMAX
 #include "Peer.h"
-#include <vector>
-#include <queue>
-
 #include "Address.h"
+#include "PeerMessagesHandler.h"
 
 class Buffer;
 class Message;
@@ -48,7 +46,7 @@ private:
 	void CreateConnectionChallengeResponse();
 
 	bool AddMessage(Message* message);
-	bool ArePendingMessages() const { return !_pendingMessages.empty(); }
+	bool ArePendingMessages() const { return _messagesHandler.ArePendingMessages(); }
 	Message* GetAMessage();
 
 	void FreeSentMessages();
@@ -61,7 +59,6 @@ private:
 	uint64_t _dataPrefix;
 	unsigned int _clientIndex;
 
-	std::vector<Message*> _pendingMessages;
-	std::queue<Message*> _sentMessages;
+	PeerMessagesHandler _messagesHandler;
 };
 

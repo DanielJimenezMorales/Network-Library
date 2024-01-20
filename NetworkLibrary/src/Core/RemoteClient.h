@@ -1,7 +1,6 @@
 #pragma once
-#include <vector>
-#include <queue>
 #include "Address.h"
+#include "PeerMessagesHandler.h"
 
 class Message;
 
@@ -15,8 +14,7 @@ private:
 	float _inactivityTimeLeft;
 	uint64_t _dataPrefix;
 
-	std::vector<Message*> _pendingMessages;
-	std::queue<Message*> _sentMessages;
+	PeerMessagesHandler _messagesHandler;
 
 public:
 	RemoteClient();
@@ -41,18 +39,8 @@ public:
 	bool IsAddressEqual(const Address& other) const { return other == _address; }
 	bool IsInactive() const { return _inactivityTimeLeft == 0.f; }
 	bool AddMessage(Message* message);
-	bool ArePendingMessages() const { return !_pendingMessages.empty(); }
-
-	/// <summary>
-	/// Get a message from the pending messages to send collection. IMPORTANT: DO NOT FREE THIS MEMORY. Instead, call FreeSentMessages() once the packet
-	/// has been sent.
-	/// </summary>
-	/// <returns></returns>
+	bool ArePendingMessages() const { return _messagesHandler.ArePendingMessages(); }
 	Message* GetAMessage();
-
-	/// <summary>
-	/// Call this after sending a packet to this client. This will release all the memory related to messages sent (Only if they are non reliable)
-	/// </summary>
 	void FreeSentMessages();
 
 	/// <summary>

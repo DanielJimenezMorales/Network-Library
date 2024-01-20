@@ -11,10 +11,10 @@ Client::Client(float serverMaxInactivityTimeout) : Peer(PeerType::ClientMode),
 			_serverMaxInactivityTimeout(serverMaxInactivityTimeout),
 			_serverInactivityTimeLeft(serverMaxInactivityTimeout),
 			_saltNumber(0),
-			_dataPrefix(0)
+			_dataPrefix(0),
+			_messagesHandler()
 {
 	_serverAddress = Address("127.0.0.1", 54000);
-	_pendingMessages.reserve(5);
 }
 
 Client::~Client()
@@ -202,7 +202,7 @@ void Client::CreateConnectionRequestMessage()
 
 bool Client::AddMessage(Message* message)
 {
-	_pendingMessages.push_back(message);
+	_messagesHandler.AddMessage(message);
 	return true;
 }
 
@@ -223,27 +223,10 @@ void Client::CreateConnectionChallengeResponse()
 
 Message* Client::GetAMessage()
 {
-	if (!ArePendingMessages())
-	{
-		return nullptr;
-	}
-
-	Message* message = _pendingMessages[0];
-	_pendingMessages.erase(_pendingMessages.begin());
-
-	_sentMessages.push(message);
-	return message;
+	return _messagesHandler.GetAMessage();
 }
 
 void Client::FreeSentMessages()
 {
-	MessageFactory* messageFactory = MessageFactory::GetInstance();
-
-	while (!_sentMessages.empty())
-	{
-		Message* message = _sentMessages.front();
-		_sentMessages.pop();
-
-		messageFactory->ReleaseMessage(message);
-	}
+	_messagesHandler.FreeSentMessages();
 }
