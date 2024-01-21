@@ -23,20 +23,23 @@ struct NetworkPacketHeader
 class NetworkPacket
 {
 public:
-	NetworkPacket() {}
+	NetworkPacket() {};
+	NetworkPacket(uint16_t packetSequenceNumber);
 
 	void Write(Buffer& buffer) const;
 	void Read(Buffer& buffer);
 
+	const NetworkPacketHeader& GetHeader() const { return _header; };
+
 	bool AddMessage(Message* message);
 	std::vector<Message*>::const_iterator GetMessages();
-	unsigned int GetNumberOfMessages() { return messages.size(); }
+	unsigned int GetNumberOfMessages() { return _messages.size(); }
 
 	void ReleaseMessages();
 
 	uint32_t Size() const;
 
 private:
-	NetworkPacketHeader header;
-	std::vector<Message*> messages;
+	NetworkPacketHeader _header;
+	std::vector<Message*> _messages;
 };

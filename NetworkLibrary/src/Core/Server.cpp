@@ -146,7 +146,7 @@ void Server::SendData()
 			continue;
 		}
 
-		NetworkPacket packet = NetworkPacket();
+		NetworkPacket packet = NetworkPacket(0);
 		Message* message;
 		do
 		{
@@ -171,7 +171,7 @@ void Server::SendData()
 			continue;
 		}
 
-		NetworkPacket packet = NetworkPacket();
+		NetworkPacket packet = NetworkPacket(0);
 		Message* message;
 		do
 		{
@@ -232,7 +232,7 @@ void Server::SendConnectionDeniedPacket(const Address& address) const
 
 	Message* connectionDeniedMessage = messageFactory->LendMessage(MessageType::ConnectionDenied);
 
-	NetworkPacket packet = NetworkPacket();
+	NetworkPacket packet = NetworkPacket(0);
 	packet.AddMessage(connectionDeniedMessage);
 
 	LOG_INFO("Sending connection denied...");

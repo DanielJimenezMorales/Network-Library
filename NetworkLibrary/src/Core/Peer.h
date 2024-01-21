@@ -3,7 +3,9 @@
 #include <ws2tcpip.h>
 #include <cstdint>
 
-class Address;
+#include "Address.h"
+#include "Socket.h"
+
 class Buffer;
 class Message;
 class NetworkPacket;
@@ -25,7 +27,7 @@ public:
 	virtual ~Peer();
 
 protected:
-	Peer(PeerType type) : _type(type), _listenSocket(INVALID_SOCKET) {}
+	Peer(PeerType type) : _type(type), _socket(), _address(Address::GetInvalid()) {}
 	virtual bool StartConcrete() = 0;
 	virtual void ProcessMessage(const Message& message, const Address& address) = 0;
 	virtual void TickConcrete(float elapsedTime) = 0;
@@ -33,12 +35,9 @@ protected:
 
 	void SendPacketToAddress(const NetworkPacket& packet, const Address& address) const;
 
-	SOCKET _listenSocket;
 
 private:
 	bool InitializeSocketsLibrary();
-	bool CreateSocket();
-	bool EnableSocketNonBlockingMode();
 	bool BindSocket();
 
 	bool IsThereNewDataToProcess() const;
@@ -48,7 +47,7 @@ private:
 
 	void SendDataToAddress(const Buffer& buffer, const Address& address) const;
 
-	bool CloseSocket();
-
 	PeerType _type;
+	Address _address;
+	Socket _socket;
 };

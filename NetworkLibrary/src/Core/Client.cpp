@@ -12,7 +12,9 @@ Client::Client(float serverMaxInactivityTimeout) : Peer(PeerType::ClientMode),
 			_serverInactivityTimeLeft(serverMaxInactivityTimeout),
 			_saltNumber(0),
 			_dataPrefix(0),
-			_messagesHandler()
+			_messagesHandler(),
+			_nextPacketSequenceNumber(0),
+			_lastPacketSequenceAcked(0)
 {
 	_serverAddress = Address("127.0.0.1", 54000);
 }
@@ -168,7 +170,7 @@ void Client::SendData()
 		return;
 	}
 
-	NetworkPacket packet = NetworkPacket();
+	NetworkPacket packet = NetworkPacket(_nextPacketSequenceNumber);
 	Message* message;
 	do
 	{
@@ -179,6 +181,8 @@ void Client::SendData()
 	SendPacketToAddress(packet, _serverAddress);
 	LOG_INFO("Sending data to server.");
 	FreeSentMessages();
+
+	++_nextPacketSequenceNumber;
 }
 
 void Client::CreateConnectionRequestMessage()

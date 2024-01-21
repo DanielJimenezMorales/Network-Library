@@ -60,5 +60,8 @@ private:
 	unsigned int _clientIndex;
 
 	PeerMessagesHandler _messagesHandler;
+
+	uint16_t _nextPacketSequenceNumber;
+	uint16_t _lastPacketSequenceAcked;
 };
 
