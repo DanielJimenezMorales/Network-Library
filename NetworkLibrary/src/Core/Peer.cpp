@@ -34,6 +34,7 @@ bool Peer::Start()
 		LOG_ERROR("Error while starting peer, aborting operation...");
 		return false;
 	}
+
 	return true;
 }
 
@@ -72,9 +73,7 @@ Peer::Peer(PeerType type, int maxConnections, unsigned int receiveBufferSize, un
 		_address(Address::GetInvalid()),
 		_maxConnections(maxConnections),
 		_receiveBufferSize(receiveBufferSize),
-		_sendBufferSize(sendBufferSize),
-		_nextPacketSequenceNumber(1),
-		_lastPacketSequenceAcked(0)
+		_sendBufferSize(sendBufferSize)
 {
 	_receiveBuffer = new uint8_t[_receiveBufferSize];
 	_sendBuffer = new uint8_t[_sendBufferSize];
@@ -194,10 +193,6 @@ bool Peer::IsPendingConnectionAlreadyAdded(const Address& address) const
 
 bool Peer::BindSocket()
 {
-	//Me he quedado aquí mirando para que es el bind y por qué solo se hace en el servidor. Mirar quicknet.
-	//Me interesa meter la lista de remote clients directamente en peer en vez de tenerlo solo en server. El cliente también tendrá
-	//dicha lista pero será igual a 1 (el servidor). Así puedo soportar también P2P
-
 	if (_type == PeerType::ServerMode)
 	{
 		sockaddr_in serverHint;
@@ -251,7 +246,7 @@ void Peer::ProcessReceivedData()
 			int remotePeerIndex = GetRemotePeerIndexFromAddress(remoteAddress);
 			if (remotePeerIndex != -1)
 			{
-				DisconnectRemotePeer(remotePeerIndex);
+				StartDisconnectingRemotePeer(remotePeerIndex);
 			}
 		}
 	} while (arePendingDatagramsToRead);
@@ -303,7 +298,7 @@ void Peer::HandlerRemotePeersInactivity()
 		{
 			if (_remotePeers[i].IsInactive())
 			{
-				DisconnectRemotePeer(i);
+				StartDisconnectingRemotePeer(i);
 			}
 		}
 	}
@@ -353,7 +348,7 @@ void Peer::SendData()
 			continue;
 		}
 
-		NetworkPacket packet = NetworkPacket(0);
+		NetworkPacket packet = NetworkPacket();
 		Message* message;
 		do
 		{
@@ -373,28 +368,29 @@ void Peer::SendData()
 			continue;
 		}
 
-		if (!_remotePeers[i].ArePendingMessages())
-		{
-			continue;
-		}
-
-		NetworkPacket packet = NetworkPacket(0);
-		Message* message;
-		do
-		{
-			message = _remotePeers[i].GetAMessage();
-			packet.AddMessage(message);
-		} while (_remotePeers[i].ArePendingMessages());
-
-		SendPacketToRemoteClient(_remotePeers[i], packet);
-
-		_remotePeers[i].FreeSentMessages();
+		SendPacketToRemotePeer(_remotePeers[i]);
 	}
 }
 
-void Peer::SendPacketToRemoteClient(const RemotePeer& remoteClient, const NetworkPacket& packet) const
+void Peer::SendPacketToRemotePeer(RemotePeer& remotePeer)
 {
-	SendPacketToAddress(packet, remoteClient.GetAddress());
+	if (!remotePeer.ArePendingMessages())
+	{
+		return;
+	}
+
+	NetworkPacket packet = NetworkPacket(remotePeer.GetNextPacketSequenceNumber());
+	Message* message = nullptr;
+	do
+	{
+		message = remotePeer.GetAMessage();
+		packet.AddMessage(message);
+	} while (remotePeer.ArePendingMessages());
+
+	SendPacketToAddress(packet, remotePeer.GetAddress());
+
+	remotePeer.FreeSentMessages();
+	remotePeer.IncreaseNextPacketSequenceNumber();
 }
 
 void Peer::SendDataToAddress(const Buffer& buffer, const Address& address) const
@@ -402,10 +398,9 @@ void Peer::SendDataToAddress(const Buffer& buffer, const Address& address) const
 	_socket.SendTo(buffer.GetData(), buffer.GetSize(), address);
 }
 
-void Peer::DisconnectRemotePeer(unsigned int index)
+void Peer::StartDisconnectingRemotePeer(unsigned int index)
 {
 	DisconnectRemotePeerConcrete(_remotePeers[index]);
-
 	_remotePeerSlotIDsToDisconnect.push(index);
 }
 

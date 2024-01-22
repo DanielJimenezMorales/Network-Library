@@ -7,7 +7,7 @@ class Message;
 
 struct NetworkPacketHeader
 {
-	NetworkPacketHeader() {}
+	NetworkPacketHeader() : sequenceNumber(0), lastAckedSequenceNumber(0), ackBits(0) {}
 	NetworkPacketHeader(uint16_t sequence, uint16_t ack, uint32_t ack_bits) : sequenceNumber(sequence), lastAckedSequenceNumber(ack), ackBits(ack_bits){}
 
 	void Write(Buffer& buffer) const;

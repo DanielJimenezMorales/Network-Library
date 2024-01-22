@@ -148,7 +148,6 @@ void Server::CreateConnectionChallengeMessage(const Address& address, int pendin
 
 void Server::SendConnectionDeniedPacket(const Address& address) const
 {
-	//TODO Do it in the new way. Create message, store message, send message
 	MessageFactory* messageFactory = MessageFactory::GetInstance();
 
 	Message* connectionDeniedMessage = messageFactory->LendMessage(MessageType::ConnectionDenied);

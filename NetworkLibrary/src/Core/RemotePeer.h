@@ -1,4 +1,6 @@
 #pragma once
+#include <cstdint>
+
 #include "Address.h"
 #include "PeerMessagesHandler.h"
 
@@ -14,12 +16,19 @@ private:
 	float _inactivityTimeLeft;
 	uint64_t _dataPrefix;
 
+	uint16_t _nextPacketSequenceNumber;
+	uint16_t _lastPacketSequenceNumberAcked;
+
 	PeerMessagesHandler _messagesHandler;
 
 public:
 	RemotePeer();
 	RemotePeer(const sockaddr_in& addressInfo, uint16_t id, float maxInactivityTime, uint64_t dataPrefix);
 	~RemotePeer();
+
+	uint16_t GetNextPacketSequenceNumber() const { return _nextPacketSequenceNumber; };
+	uint16_t GetLastPacketSequenceNumberAcked() const { return _lastPacketSequenceNumberAcked; };
+	void IncreaseNextPacketSequenceNumber() { ++_nextPacketSequenceNumber; }
 
 	/// <summary>
 	/// Initializes all the internal systems. You must call this method before performing any other operation. It is also automatically called in

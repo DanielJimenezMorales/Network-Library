@@ -5,11 +5,22 @@
 #include "MessageFactory.h"
 #include "Logger.h"
 
-RemotePeer::RemotePeer() : _address(Address::GetInvalid()), _dataPrefix(0), _maxInactivityTime(0), _inactivityTimeLeft(0), _messagesHandler()
+RemotePeer::RemotePeer() :
+	_address(Address::GetInvalid()),
+	_dataPrefix(0),
+	_maxInactivityTime(0),
+	_inactivityTimeLeft(0),
+	_messagesHandler(),
+	_nextPacketSequenceNumber(1),
+	_lastPacketSequenceNumberAcked(0)
 {
 }
 
-RemotePeer::RemotePeer(const sockaddr_in& addressInfo, uint16_t id, float maxInactivityTime, uint64_t dataPrefix) : _address(Address::GetInvalid()), _messagesHandler()
+RemotePeer::RemotePeer(const sockaddr_in& addressInfo, uint16_t id, float maxInactivityTime, uint64_t dataPrefix) :
+	_address(Address::GetInvalid()),
+	_messagesHandler(),
+	_nextPacketSequenceNumber(1),
+	_lastPacketSequenceNumberAcked(0)
 {
 	Connect(addressInfo, id, maxInactivityTime, dataPrefix);
 }

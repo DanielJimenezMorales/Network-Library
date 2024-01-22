@@ -15,7 +15,6 @@ public:
 	Server(int maxConnections);
 	~Server() override;
 
-
 protected:
 	bool StartConcrete() override;
 	void ProcessMessage(const Message& message, const Address& address) override;
@@ -34,8 +33,8 @@ private:
 	/// </summary>
 	/// <param name="address">The network address information of the client trying to connect</param>
 	/// <returns>
-	/// 0 = Is able to connect. 
-	/// 1 = Is already connected. 
+	/// 0 = Is able to connect.
+	/// 1 = Is already connected.
 	/// -1 = Unable to connect, the server has reached its maximum connections.
 	/// </returns>
 	int IsClientAbleToConnect(const Address& address) const;

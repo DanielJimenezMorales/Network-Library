@@ -69,10 +69,10 @@ private:
 	int GetRemotePeerIndexFromAddress(const Address& address) const;
 
 	void SendData();
-	void SendPacketToRemoteClient(const RemotePeer& remoteClient, const NetworkPacket& packet) const;
+	void SendPacketToRemotePeer(RemotePeer& remotePeer);
 	void SendDataToAddress(const Buffer& buffer, const Address& address) const;
 
-	void DisconnectRemotePeer(unsigned int index);
+	void StartDisconnectingRemotePeer(unsigned int index);
 
 	void FinishRemotePeersDisconnection();
 
@@ -84,7 +84,4 @@ private:
 	uint8_t* _receiveBuffer;
 	unsigned int _sendBufferSize;
 	uint8_t* _sendBuffer;
-
-	uint16_t _nextPacketSequenceNumber;
-	uint16_t _lastPacketSequenceAcked;
 };
