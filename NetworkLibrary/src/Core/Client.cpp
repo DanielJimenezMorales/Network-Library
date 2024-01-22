@@ -2,19 +2,19 @@
 
 #include "Client.h"
 #include "Message.h"
-#include "Buffer.h"
 #include "Logger.h"
 #include "NetworkPacket.h"
 #include "MessageFactory.h"
+#include "RemotePeer.h"
+#include "PendingConnection.h"
 
-Client::Client(float serverMaxInactivityTimeout) : Peer(PeerType::ClientMode),
+Client::Client(float serverMaxInactivityTimeout) : Peer(PeerType::ClientMode, 1, 1024, 1024),
 			_serverMaxInactivityTimeout(serverMaxInactivityTimeout),
 			_serverInactivityTimeLeft(serverMaxInactivityTimeout),
 			_saltNumber(0),
-			_dataPrefix(0)
+			_dataPrefix(0),
+			_serverAddress("127.0.0.1", 54000)
 {
-	_serverAddress = Address("127.0.0.1", 54000);
-	_pendingMessages.reserve(5);
 }
 
 Client::~Client()
@@ -27,6 +27,7 @@ bool Client::StartConcrete()
 	_serverInactivityTimeLeft = _serverMaxInactivityTimeout;
 
 	GenerateClientSaltNumber();
+	_pendingConnections.push_back(PendingConnection(_serverAddress));
 
 	LOG_INFO("Client started succesfully!");
 
@@ -87,8 +88,6 @@ void Client::TickConcrete(float elapsedTime)
 		CreateConnectionRequestMessage();
 	}
 
-	SendData();
-
 	if (_currentState != ClientState::Disconnected)
 	{
 		_serverInactivityTimeLeft -= elapsedTime;
@@ -100,6 +99,10 @@ void Client::TickConcrete(float elapsedTime)
 			_currentState = ClientState::Disconnected;
 		}
 	}
+}
+
+void Client::DisconnectRemotePeerConcrete(RemotePeer& remotePeer)
+{
 }
 
 bool Client::StopConcrete()
@@ -137,6 +140,11 @@ void Client::ProcessConnectionRequestAccepted(const ConnectionAcceptedMessage& m
 		return;
 	}
 
+	_pendingConnections.erase(_pendingConnections.begin());
+
+	_remotePeerSlots[0] = true;
+	_remotePeers[0].Connect(_serverAddress.GetInfo(), 0, 5, dataPrefix);
+
 	_clientIndex = message.clientIndexAssigned;
 	_currentState = ClientState::Connected;
 	LOG_INFO("Connection accepted!");
@@ -161,26 +169,6 @@ void Client::ProcessDisconnection(const DisconnectionMessage& message)
 	LOG_INFO("Disconnection message received from server. Disconnecting...");
 }
 
-void Client::SendData()
-{
-	if (!ArePendingMessages())
-	{
-		return;
-	}
-
-	NetworkPacket packet = NetworkPacket();
-	Message* message;
-	do
-	{
-		message = GetAMessage();
-		packet.AddMessage(message);
-	} while (ArePendingMessages());
-
-	SendPacketToAddress(packet, _serverAddress);
-	LOG_INFO("Sending data to server.");
-	FreeSentMessages();
-}
-
 void Client::CreateConnectionRequestMessage()
 {
 	MessageFactory* messageFactory = MessageFactory::GetInstance();
@@ -195,15 +183,9 @@ void Client::CreateConnectionRequestMessage()
 
 	connectionRequestMessage->clientSalt = _saltNumber;
 
-	AddMessage(connectionRequestMessage);
+	_pendingConnections[0].AddMessage(connectionRequestMessage);
 
 	LOG_INFO("Connection request created.");
-}
-
-bool Client::AddMessage(Message* message)
-{
-	_pendingMessages.push_back(message);
-	return true;
 }
 
 void Client::CreateConnectionChallengeResponse()
@@ -218,32 +200,6 @@ void Client::CreateConnectionChallengeResponse()
 
 	ConnectionChallengeResponseMessage* connectionChallengeResponsePacket = static_cast<ConnectionChallengeResponseMessage*>(message);
 	connectionChallengeResponsePacket->prefix = _dataPrefix;
-	AddMessage(connectionChallengeResponsePacket);
-}
 
-Message* Client::GetAMessage()
-{
-	if (!ArePendingMessages())
-	{
-		return nullptr;
-	}
-
-	Message* message = _pendingMessages[0];
-	_pendingMessages.erase(_pendingMessages.begin());
-
-	_sentMessages.push(message);
-	return message;
-}
-
-void Client::FreeSentMessages()
-{
-	MessageFactory* messageFactory = MessageFactory::GetInstance();
-
-	while (!_sentMessages.empty())
-	{
-		Message* message = _sentMessages.front();
-		_sentMessages.pop();
-
-		messageFactory->ReleaseMessage(message);
-	}
+	_pendingConnections[0].AddMessage(connectionChallengeResponsePacket);
 }

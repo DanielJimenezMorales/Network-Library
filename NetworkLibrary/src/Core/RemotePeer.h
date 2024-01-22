@@ -1,11 +1,12 @@
 #pragma once
-#include <vector>
-#include <queue>
+#include <cstdint>
+
 #include "Address.h"
+#include "PeerMessagesHandler.h"
 
 class Message;
 
-class RemoteClient
+class RemotePeer
 {
 private:
 	Address _address;
@@ -15,13 +16,19 @@ private:
 	float _inactivityTimeLeft;
 	uint64_t _dataPrefix;
 
-	std::vector<Message*> _pendingMessages;
-	std::queue<Message*> _sentMessages;
+	uint16_t _nextPacketSequenceNumber;
+	uint16_t _lastPacketSequenceNumberAcked;
+
+	PeerMessagesHandler _messagesHandler;
 
 public:
-	RemoteClient();
-	RemoteClient(const sockaddr_in& addressInfo, uint16_t id, float maxInactivityTime, uint64_t dataPrefix);
-	~RemoteClient();
+	RemotePeer();
+	RemotePeer(const sockaddr_in& addressInfo, uint16_t id, float maxInactivityTime, uint64_t dataPrefix);
+	~RemotePeer();
+
+	uint16_t GetNextPacketSequenceNumber() const { return _nextPacketSequenceNumber; };
+	uint16_t GetLastPacketSequenceNumberAcked() const { return _lastPacketSequenceNumberAcked; };
+	void IncreaseNextPacketSequenceNumber() { ++_nextPacketSequenceNumber; }
 
 	/// <summary>
 	/// Initializes all the internal systems. You must call this method before performing any other operation. It is also automatically called in
@@ -41,18 +48,8 @@ public:
 	bool IsAddressEqual(const Address& other) const { return other == _address; }
 	bool IsInactive() const { return _inactivityTimeLeft == 0.f; }
 	bool AddMessage(Message* message);
-	bool ArePendingMessages() const { return !_pendingMessages.empty(); }
-
-	/// <summary>
-	/// Get a message from the pending messages to send collection. IMPORTANT: DO NOT FREE THIS MEMORY. Instead, call FreeSentMessages() once the packet
-	/// has been sent.
-	/// </summary>
-	/// <returns></returns>
+	bool ArePendingMessages() const { return _messagesHandler.ArePendingMessages(); }
 	Message* GetAMessage();
-
-	/// <summary>
-	/// Call this after sending a packet to this client. This will release all the memory related to messages sent (Only if they are non reliable)
-	/// </summary>
 	void FreeSentMessages();
 
 	/// <summary>

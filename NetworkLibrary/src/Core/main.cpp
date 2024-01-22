@@ -27,25 +27,21 @@ int main()
 
     MessageFactory::GetInstance(1);
 
-    Server* server = nullptr;
-    Client* client = nullptr;
+    Peer* peer = nullptr;
 
     if (clientOrServer == 0)
     {
-        server = new Server(2);
-        if (!server->Start())
-        {
-            LOG_ERROR("Server startup failed");
-        }
+        peer = new Server(2);
     }
     else if (clientOrServer == 1)
     {
-        client = new Client(5);
-        bool clientStartUpResult = client->Start();
-        if (!clientStartUpResult)
-        {
-            LOG_ERROR("Client startup failed");
-        }
+        peer = new Client(5);
+    }
+
+    bool result = peer->Start();
+    if (!result)
+    {
+        LOG_ERROR("Peer startup failed");
     }
 
     //GAMELOOP BEGIN
@@ -65,14 +61,7 @@ int main()
 
         while (accumulator >= FIXED_FRAME_TARGET_DURATION)
         {
-            if (clientOrServer == 0)
-            {
-                server->Tick(FIXED_FRAME_TARGET_DURATION);
-            }
-            else if (clientOrServer == 1)
-            {
-                client->Tick(FIXED_FRAME_TARGET_DURATION);
-            }
+            peer->Tick(FIXED_FRAME_TARGET_DURATION);
 
             accumulator -= FIXED_FRAME_TARGET_DURATION;
         }
@@ -81,24 +70,14 @@ int main()
     }
     //GAMELOOP END
 
-    if (clientOrServer == 0)
+    result = peer->Stop();
+    if (!result)
     {
-        if (!server->Stop())
-        {
-            LOG_ERROR("Server stop failed");
-        }
-        delete server;
-        server = nullptr;
+        LOG_ERROR("Peer stop failed");
     }
-    else if (clientOrServer == 1)
-    {
-        if (!client->Stop())
-        {
-            LOG_ERROR("Client stop failed");
-        }
-        delete client;
-        client = nullptr;
-    }
+
+    delete peer;
+    peer = nullptr;
 
     return EXIT_SUCCESS;
 }
