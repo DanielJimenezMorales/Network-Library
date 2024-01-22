@@ -2,20 +2,17 @@
 
 #include "Client.h"
 #include "Message.h"
-#include "Buffer.h"
 #include "Logger.h"
 #include "NetworkPacket.h"
 #include "MessageFactory.h"
 #include "RemotePeer.h"
 #include "PendingConnection.h"
 
-Client::Client(float serverMaxInactivityTimeout) : Peer(PeerType::ClientMode, 1),
+Client::Client(float serverMaxInactivityTimeout) : Peer(PeerType::ClientMode, 1, 1024, 1024),
 			_serverMaxInactivityTimeout(serverMaxInactivityTimeout),
 			_serverInactivityTimeLeft(serverMaxInactivityTimeout),
 			_saltNumber(0),
 			_dataPrefix(0),
-			_nextPacketSequenceNumber(0),
-			_lastPacketSequenceAcked(0),
 			_serverAddress("127.0.0.1", 54000)
 {
 }
@@ -104,6 +101,10 @@ void Client::TickConcrete(float elapsedTime)
 	}
 }
 
+void Client::DisconnectRemotePeerConcrete(RemotePeer& remotePeer)
+{
+}
+
 bool Client::StopConcrete()
 {
 	return true;
@@ -141,8 +142,8 @@ void Client::ProcessConnectionRequestAccepted(const ConnectionAcceptedMessage& m
 
 	_pendingConnections.erase(_pendingConnections.begin());
 
-	_remoteClientSlots[0] = true;
-	_remoteClients[0].Connect(_serverAddress.GetInfo(), 0, 5, dataPrefix);
+	_remotePeerSlots[0] = true;
+	_remotePeers[0].Connect(_serverAddress.GetInfo(), 0, 5, dataPrefix);
 
 	_clientIndex = message.clientIndexAssigned;
 	_currentState = ClientState::Connected;

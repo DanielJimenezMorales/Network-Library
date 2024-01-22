@@ -4,11 +4,10 @@
 #include "Logger.h"
 #include "NetworkPacket.h"
 #include "Message.h"
-#include "Buffer.h"
 #include "PendingConnection.h"
 #include "MessageFactory.h"
 
-Server::Server(int maxConnections) : Peer(PeerType::ServerMode, maxConnections)
+Server::Server(int maxConnections) : Peer(PeerType::ServerMode, maxConnections, 1024, 1024)
 {
 	
 }
@@ -25,22 +24,6 @@ bool Server::StartConcrete()
 
 void Server::TickConcrete(float elapsedTime)
 {
-	HandleConnectedClientsInactivity(elapsedTime);
-}
-
-void Server::HandleConnectedClientsInactivity(float elapsedTime)
-{
-	for (unsigned int i = 0; i < _maxConnections; ++i)
-	{
-		if (_remoteClientSlots[i])
-		{
-			_remoteClients[i].Tick(elapsedTime);
-			if (_remoteClients[i].IsInactive())
-			{
-				DisconnectRemoteClient(i);
-			}
-		}
-	}
 }
 
 uint64_t Server::GenerateServerSalt() const
@@ -217,7 +200,7 @@ void Server::ProcessConnectionChallengeResponse(const ConnectionChallengeRespons
 			_pendingConnections.erase(_pendingConnections.begin() + pendingConnectionIndex);
 
 			//Send connection approved packet
-			CreateConnectionApprovedMessage(_remoteClients[availableClientSlot]);
+			CreateConnectionApprovedMessage(_remotePeers[availableClientSlot]);
 			LOG_INFO("Connection approved");
 		}
 	}
@@ -258,8 +241,8 @@ int Server::IsClientAbleToConnect(const Address& address) const
 
 void Server::AddNewRemoteClient(int remoteClientSlotIndex, const Address& address, uint64_t dataPrefix)
 {
-	_remoteClientSlots[remoteClientSlotIndex] = true;
-	_remoteClients[remoteClientSlotIndex].Connect(address.GetInfo(), _nextAssignedRemoteClientID, REMOTE_CLIENT_INACTIVITY_TIME, dataPrefix);
+	_remotePeerSlots[remoteClientSlotIndex] = true;
+	_remotePeers[remoteClientSlotIndex].Connect(address.GetInfo(), _nextAssignedRemoteClientID, REMOTE_CLIENT_INACTIVITY_TIME, dataPrefix);
 	++_nextAssignedRemoteClientID;
 }
 
@@ -284,16 +267,9 @@ void Server::SendPacketToRemoteClient(const RemotePeer& remoteClient, const Netw
 	SendPacketToAddress(packet, remoteClient.GetAddress());
 }
 
-void Server::DisconnectRemoteClient(unsigned int index)
+void Server::DisconnectRemotePeerConcrete(RemotePeer& remotePeer)
 {
-	if (!_remoteClientSlots[index])
-	{
-		return;
-	}
-
-	CreateDisconnectionMessage(_remoteClients[index]);
-
-	_remoteClientSlotIDsToDisconnect.push(index);
+	CreateDisconnectionMessage(remotePeer);
 }
 
 bool Server::StopConcrete()

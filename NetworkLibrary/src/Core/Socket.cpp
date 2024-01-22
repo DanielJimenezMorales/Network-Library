@@ -97,36 +97,11 @@ bool Socket::Start()
 	return true;
 }
 
-bool Socket::ArePendingDataToReceive() const
-{
-	fd_set readSet;
-	FD_ZERO(&readSet);
-	FD_SET(_listenSocket, &readSet);
-
-	timeval timeval;
-	timeval.tv_sec = 0;
-	timeval.tv_usec = 0;
-
-	int iResult = select(0, &readSet, NULL, NULL, &timeval);
-	if (iResult > 0)
-	{
-		return true;
-	}
-	else if (iResult == SOCKET_ERROR)
-	{
-		std::stringstream ss;
-		ss << "Socket error. Error while checking for incoming messages, error code: " << GetLastError();
-		LOG_ERROR(ss.str());
-	}
-
-	return false;
-}
-
-bool Socket::ReceiveFrom(uint8_t* incomingDataBuffer, unsigned int incomingDataBufferSize, Address* remoteAddress, unsigned int& numberOfBytesRead) const
+SocketResult Socket::ReceiveFrom(uint8_t* incomingDataBuffer, unsigned int incomingDataBufferSize, Address* remoteAddress, unsigned int& numberOfBytesRead) const
 {
 	if (incomingDataBuffer == nullptr || !IsValid())
 	{
-		return false;
+		return SocketResult::ERR;
 	}
 
 	sockaddr_in incomingAddress;
@@ -137,31 +112,41 @@ bool Socket::ReceiveFrom(uint8_t* incomingDataBuffer, unsigned int incomingDataB
 	if (bytesIn == SOCKET_ERROR)
 	{
 		int error = GetLastError();
+
 		if (error == WSAEMSGSIZE)
 		{
 			LOG_ERROR("Socket error. The message received does not fit inside the buffer.");
+			return SocketResult::ERR;
+		}
+		else if (error == WSAEWOULDBLOCK)
+		{
+			return SocketResult::WOULDBLOCK;
+		}
+		else if (error == WSAECONNRESET)
+		{
+			LOG_WARNING("Socket warning. The remote socket has been closed unexpectly.");
+			return SocketResult::CONNRESET;
 		}
 		else
 		{
-			//TODO handle error WSAECONNRESET when a client socket was closed but we are trying to keep sending messages to it.
 			std::stringstream ss;
 			ss << "Socket error. Error while receiving a message, error code: " << error;
 			LOG_ERROR(ss.str());
+			return SocketResult::ERR;
 		}
-		return false;
 	}
 
 	*remoteAddress = Address(incomingAddress);
 	numberOfBytesRead = bytesIn;
 
-	return true;
+	return SocketResult::SUCCESS;
 }
 
-bool Socket::SendTo(const uint8_t* dataBuffer, unsigned int dataBufferSize, const Address& remoteAddress) const
+SocketResult Socket::SendTo(const uint8_t* dataBuffer, unsigned int dataBufferSize, const Address& remoteAddress) const
 {
 	if (dataBuffer == nullptr || !IsValid())
 	{
-		return false;
+		return SocketResult::ERR;
 	}
 
 	if (dataBufferSize > _defaultMTUSize)
@@ -179,10 +164,10 @@ bool Socket::SendTo(const uint8_t* dataBuffer, unsigned int dataBufferSize, cons
 		std::stringstream ss;
 		ss << "Socket error. Error while sending data, error code " << GetLastError();
 		LOG_ERROR(ss.str());
-		return false;
+		return SocketResult::ERR;
 	}
 
-	return true;
+	return SocketResult::SUCCESS;
 }
 
 Socket::~Socket()

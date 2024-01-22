@@ -8,8 +8,8 @@
 #include "Address.h"
 #include "PendingConnection.h"
 #include "Socket.h"
+#include "Buffer.h";
 
-class Buffer;
 class Message;
 class NetworkPacket;
 class RemotePeer;
@@ -33,10 +33,11 @@ public:
 	virtual ~Peer();
 
 protected:
-	Peer(PeerType type, int maxConnections);
+	Peer(PeerType type, int maxConnections, unsigned int receiveBufferSize, unsigned int sendBufferSize);
 	virtual bool StartConcrete() = 0;
 	virtual void ProcessMessage(const Message& message, const Address& address) = 0;
 	virtual void TickConcrete(float elapsedTime) = 0;
+	virtual void DisconnectRemotePeerConcrete(RemotePeer& remotePeer) = 0;
 	virtual bool StopConcrete() = 0;
 
 	void SendPacketToAddress(const NetworkPacket& packet, const Address& address) const;
@@ -48,30 +49,42 @@ protected:
 	bool IsPendingConnectionAlreadyAdded(const Address& address) const;
 	void RemovePendingConnection(const Address& address);
 
-	std::queue<unsigned int> _remoteClientSlotIDsToDisconnect;
+	std::queue<unsigned int> _remotePeerSlotIDsToDisconnect;
 	std::vector<PendingConnection> _pendingConnections;
 	const int _maxConnections;
-	std::vector<bool> _remoteClientSlots;
-	std::vector<RemotePeer> _remoteClients;
+	std::vector<bool> _remotePeerSlots;
+	std::vector<RemotePeer> _remotePeers;
 
 private:
 	bool InitializeSocketsLibrary();
 	bool BindSocket();
 
 	void ProcessReceivedData();
-	bool GetDatagramFromAddress(Buffer** buffer, Address* address);
 	void ProcessDatagram(Buffer& buffer, const Address& address);
 
+	void TickRemotePeers(float elapsedTime);
+	void HandlerRemotePeersInactivity();
+
 	int GetPendingConnectionIndexFromAddress(const Address& address) const;
+	int GetRemotePeerIndexFromAddress(const Address& address) const;
 
 	void SendData();
 	void SendPacketToRemoteClient(const RemotePeer& remoteClient, const NetworkPacket& packet) const;
 	void SendDataToAddress(const Buffer& buffer, const Address& address) const;
 
-	void FinishRemoteClientsDisconnection();
+	void DisconnectRemotePeer(unsigned int index);
+
+	void FinishRemotePeersDisconnection();
 
 	PeerType _type;
 	Address _address;
 	Socket _socket;
 
+	unsigned int _receiveBufferSize;
+	uint8_t* _receiveBuffer;
+	unsigned int _sendBufferSize;
+	uint8_t* _sendBuffer;
+
+	uint16_t _nextPacketSequenceNumber;
+	uint16_t _lastPacketSequenceAcked;
 };

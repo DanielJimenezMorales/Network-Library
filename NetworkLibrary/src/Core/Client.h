@@ -7,7 +7,6 @@
 #include "Address.h"
 #include "PeerMessagesHandler.h"
 
-class Buffer;
 class Message;
 class ConnectionChallengeMessage;
 class ConnectionAcceptedMessage;
@@ -32,6 +31,7 @@ protected:
 	bool StartConcrete() override;
 	void ProcessMessage(const Message& message, const Address& address) override;
 	void TickConcrete(float elapsedTime) override;
+	void DisconnectRemotePeerConcrete(RemotePeer& remotePeer) override;
 	bool StopConcrete() override;
 
 private:
@@ -51,8 +51,5 @@ private:
 	uint64_t _saltNumber;
 	uint64_t _dataPrefix;
 	unsigned int _clientIndex;
-
-	uint16_t _nextPacketSequenceNumber;
-	uint16_t _lastPacketSequenceAcked;
 };
 

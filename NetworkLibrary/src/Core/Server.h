@@ -16,10 +16,11 @@ public:
 	~Server() override;
 
 
-private:
+protected:
 	bool StartConcrete() override;
 	void ProcessMessage(const Message& message, const Address& address) override;
 	void TickConcrete(float elapsedTime) override;
+	void DisconnectRemotePeerConcrete(RemotePeer& remotePeer) override;
 	bool StopConcrete() override;
 
 private:
@@ -27,8 +28,6 @@ private:
 
 	void ProcessConnectionRequest(const ConnectionRequestMessage& message, const Address& address);
 	void ProcessConnectionChallengeResponse(const ConnectionChallengeResponseMessage& message, const Address& address);
-
-	void HandleConnectedClientsInactivity(float elapsedTime);
 
 	/// <summary>
 	/// This method checks if a new client is able to connect to server
@@ -47,8 +46,6 @@ private:
 	void CreateDisconnectionMessage(RemotePeer& remoteClient);
 	void SendConnectionDeniedPacket(const Address& address) const;
 	void SendPacketToRemoteClient(const RemotePeer& remoteClient, const NetworkPacket& packet) const;
-
-	void DisconnectRemoteClient(unsigned int index);
 
 	unsigned int _nextAssignedRemoteClientID = 1;
 };

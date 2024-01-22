@@ -39,15 +39,12 @@ bool Peer::Start()
 
 bool Peer::Tick(float elapsedTime)
 {
-	if (_socket.ArePendingDataToReceive()) //TODO delete this and add it inside ProcessReceiveData. Create buffers to reuse
-	{
-		ProcessReceivedData();
-	}
-
+	ProcessReceivedData();
+	TickRemotePeers(elapsedTime);
+	HandlerRemotePeersInactivity();
 	TickConcrete(elapsedTime);
-
 	SendData();
-	FinishRemoteClientsDisconnection(); //Change name to Remote Peer instead of Remote Client
+	FinishRemotePeersDisconnection(); //Change name to Remote Peer instead of Remote Client
 	return true;
 }
 
@@ -62,34 +59,45 @@ bool Peer::Stop()
 
 Peer::~Peer()
 {
-	_remoteClientSlots.clear();
-	_remoteClients.clear();
+	_remotePeerSlots.clear();
+	_remotePeers.clear();
+
+	delete[] _receiveBuffer;
+	delete[] _sendBuffer;
 }
 
-Peer::Peer(PeerType type, int maxConnections) : _type(type), _socket(), _address(Address::GetInvalid()), _maxConnections(maxConnections)
+Peer::Peer(PeerType type, int maxConnections, unsigned int receiveBufferSize, unsigned int sendBufferSize) :
+		_type(type),
+		_socket(),
+		_address(Address::GetInvalid()),
+		_maxConnections(maxConnections),
+		_receiveBufferSize(receiveBufferSize),
+		_sendBufferSize(sendBufferSize),
+		_nextPacketSequenceNumber(1),
+		_lastPacketSequenceAcked(0)
 {
+	_receiveBuffer = new uint8_t[_receiveBufferSize];
+	_sendBuffer = new uint8_t[_sendBufferSize];
+
 	if (_maxConnections > 0)
 	{
-		_remoteClientSlots.reserve(_maxConnections);
-		_remoteClients.reserve(_maxConnections);
+		_remotePeerSlots.reserve(_maxConnections);
+		_remotePeers.reserve(_maxConnections);
 		_pendingConnections.reserve(_maxConnections * 2); //There could be more pending connections than clients
 
 		for (size_t i = 0; i < _maxConnections; ++i)
 		{
-			_remoteClientSlots.push_back(false);
-			_remoteClients.push_back(RemotePeer());
+			_remotePeerSlots.push_back(false);
+			_remotePeers.push_back(RemotePeer());
 		}
 	}
 }
 
 void Peer::SendPacketToAddress(const NetworkPacket& packet, const Address& address) const
 {
-	Buffer* buffer = new Buffer(packet.Size());
-	packet.Write(*buffer);
-
-	SendDataToAddress(*buffer, address);
-
-	delete buffer;
+	Buffer buffer = Buffer(_sendBuffer, packet.Size());
+	packet.Write(buffer);
+	_socket.SendTo(_sendBuffer, packet.Size(), address);
 }
 
 bool Peer::AddRemoteClient(const Address& addressInfo, uint16_t id, uint64_t dataPrefix)
@@ -100,8 +108,8 @@ bool Peer::AddRemoteClient(const Address& addressInfo, uint16_t id, uint64_t dat
 		return false;
 	}
 	
-	_remoteClientSlots[slotIndex] = true;
-	_remoteClients[slotIndex].Connect(addressInfo.GetInfo(), id, REMOTE_CLIENT_INACTIVITY_TIME, dataPrefix);
+	_remotePeerSlots[slotIndex] = true;
+	_remotePeers[slotIndex].Connect(addressInfo.GetInfo(), id, REMOTE_CLIENT_INACTIVITY_TIME, dataPrefix);
 	return true;
 }
 
@@ -109,7 +117,7 @@ int Peer::FindFreeRemoteClientSlot() const
 {
 	for (int i = 0; i < _maxConnections; ++i)
 	{
-		if (!_remoteClientSlots[i])
+		if (!_remotePeerSlots[i])
 		{
 			return i;
 		}
@@ -123,14 +131,14 @@ RemotePeer* Peer::GetRemoteClientFromAddress(const Address& address)
 	RemotePeer* result = nullptr;
 	for (unsigned int i = 0; i < _maxConnections; ++i)
 	{
-		if (!_remoteClientSlots[i])
+		if (!_remotePeerSlots[i])
 		{
 			continue;
 		}
 
-		if (_remoteClients[i].GetAddress() == address)
+		if (_remotePeers[i].GetAddress() == address)
 		{
-			result = &_remoteClients[i];
+			result = &_remotePeers[i];
 			break;
 		}
 	}
@@ -143,12 +151,12 @@ bool Peer::IsRemotePeerAlreadyConnected(const Address& address) const
 	bool found = false;
 	for (unsigned int i = 0; i < _maxConnections; ++i)
 	{
-		if (!_remoteClientSlots[i])
+		if (!_remotePeerSlots[i])
 		{
 			continue;
 		}
 
-		if (_remoteClients[i].GetAddress() == address)
+		if (_remotePeers[i].GetAddress() == address)
 		{
 			found = true;
 			break;
@@ -218,29 +226,35 @@ bool Peer::InitializeSocketsLibrary()
 
 void Peer::ProcessReceivedData()
 {
-	Buffer* buffer = nullptr;
-	Address address = Address::GetInvalid();
-	GetDatagramFromAddress(&buffer, &address);
-	ProcessDatagram(*buffer, address);
-
-	delete buffer;
-	buffer = nullptr;
-}
-
-bool Peer::GetDatagramFromAddress(Buffer** buffer, Address* address)
-{
-	int size = 1024;
-	uint8_t* data = new uint8_t[size];
+	Address remoteAddress = Address::GetInvalid();
 	unsigned int numberOfBytesRead = 0;
+	bool arePendingDatagramsToRead = true;
 
-	bool result = _socket.ReceiveFrom(data, size, address, numberOfBytesRead);
-	if (!result)
+	do
 	{
-		return false;
-	}
+		SocketResult result = _socket.ReceiveFrom(_receiveBuffer, _receiveBufferSize, &remoteAddress, numberOfBytesRead);
 
-	*buffer = new Buffer(data, numberOfBytesRead);
-	return true;
+		if (result == SocketResult::SUCCESS)
+		{
+			//Data read succesfully. Keep going!
+			Buffer buffer = Buffer(_receiveBuffer, numberOfBytesRead);
+			ProcessDatagram(buffer, remoteAddress);
+		}
+		else if (result == SocketResult::ERR || result == SocketResult::WOULDBLOCK)
+		{
+			//An unexpected error occurred or there is no more data to read atm
+			arePendingDatagramsToRead = false;
+		}
+		else if (result == SocketResult::CONNRESET)
+		{
+			//The remote socket got closed unexpectedly
+			int remotePeerIndex = GetRemotePeerIndexFromAddress(remoteAddress);
+			if (remotePeerIndex != -1)
+			{
+				DisconnectRemotePeer(remotePeerIndex);
+			}
+		}
+	} while (arePendingDatagramsToRead);
 }
 
 void Peer::ProcessDatagram(Buffer& buffer, const Address& address)
@@ -270,12 +284,57 @@ void Peer::ProcessDatagram(Buffer& buffer, const Address& address)
 	packet.ReleaseMessages();
 }
 
+void Peer::TickRemotePeers(float elapsedTime)
+{
+	for (unsigned int i = 0; i < _maxConnections; ++i)
+	{
+		if (_remotePeerSlots[i])
+		{
+			_remotePeers[i].Tick(elapsedTime);
+		}
+	}
+}
+
+void Peer::HandlerRemotePeersInactivity()
+{
+	for (unsigned int i = 0; i < _maxConnections; ++i)
+	{
+		if (_remotePeerSlots[i])
+		{
+			if (_remotePeers[i].IsInactive())
+			{
+				DisconnectRemotePeer(i);
+			}
+		}
+	}
+}
+
 int Peer::GetPendingConnectionIndexFromAddress(const Address& address) const
 {
 	int index = -1;
 	for (unsigned int i = 0; i < _pendingConnections.size(); ++i)
 	{
 		if (_pendingConnections[i].GetAddress() == address)
+		{
+			index = i;
+			break;
+		}
+	}
+
+	return index;
+}
+
+int Peer::GetRemotePeerIndexFromAddress(const Address& address) const
+{
+	int index = -1;
+	for (unsigned int i = 0; i < _maxConnections; ++i)
+	{
+		if (!_remotePeerSlots[i])
+		{
+			continue;
+		}
+
+		if (_remotePeers[i].GetAddress() == address)
 		{
 			index = i;
 			break;
@@ -307,14 +366,14 @@ void Peer::SendData()
 		_pendingConnections[i].FreeSentMessages();
 	}
 
-	for (unsigned int i = 0; i < _remoteClientSlots.size(); ++i)
+	for (unsigned int i = 0; i < _remotePeerSlots.size(); ++i)
 	{
-		if (!_remoteClientSlots[i])
+		if (!_remotePeerSlots[i])
 		{
 			continue;
 		}
 
-		if (!_remoteClients[i].ArePendingMessages())
+		if (!_remotePeers[i].ArePendingMessages())
 		{
 			continue;
 		}
@@ -323,16 +382,13 @@ void Peer::SendData()
 		Message* message;
 		do
 		{
-			message = _remoteClients[i].GetAMessage();
+			message = _remotePeers[i].GetAMessage();
 			packet.AddMessage(message);
-		} while (_remoteClients[i].ArePendingMessages());
+		} while (_remotePeers[i].ArePendingMessages());
 
-		Buffer* buffer = new Buffer(packet.Size());
-		packet.Write(*buffer);
-		SendPacketToRemoteClient(_remoteClients[i], packet);
-		delete buffer;
+		SendPacketToRemoteClient(_remotePeers[i], packet);
 
-		_remoteClients[i].FreeSentMessages();
+		_remotePeers[i].FreeSentMessages();
 	}
 }
 
@@ -346,18 +402,25 @@ void Peer::SendDataToAddress(const Buffer& buffer, const Address& address) const
 	_socket.SendTo(buffer.GetData(), buffer.GetSize(), address);
 }
 
-void Peer::FinishRemoteClientsDisconnection()
+void Peer::DisconnectRemotePeer(unsigned int index)
+{
+	DisconnectRemotePeerConcrete(_remotePeers[index]);
+
+	_remotePeerSlotIDsToDisconnect.push(index);
+}
+
+void Peer::FinishRemotePeersDisconnection()
 {
 	unsigned int remoteClientSlot;
-	while (!_remoteClientSlotIDsToDisconnect.empty())
+	while (!_remotePeerSlotIDsToDisconnect.empty())
 	{
-		remoteClientSlot = _remoteClientSlotIDsToDisconnect.front();
-		_remoteClientSlotIDsToDisconnect.pop();
+		remoteClientSlot = _remotePeerSlotIDsToDisconnect.front();
+		_remotePeerSlotIDsToDisconnect.pop();
 
-		if (_remoteClientSlots[remoteClientSlot])
+		if (_remotePeerSlots[remoteClientSlot])
 		{
-			_remoteClientSlots[remoteClientSlot] = false;
-			_remoteClients[remoteClientSlot].Disconnect();
+			_remotePeerSlots[remoteClientSlot] = false;
+			_remotePeers[remoteClientSlot].Disconnect();
 		}
 	}
 }

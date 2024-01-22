@@ -5,6 +5,14 @@
 
 class Address;
 
+enum SocketResult : uint8_t
+{
+	ERR = 0,
+	SUCCESS = 1,
+	WOULDBLOCK = 2,
+	CONNRESET = 3
+};
+
 class Socket
 {
 public:
@@ -12,9 +20,8 @@ public:
 
 	bool Start();
 	bool Bind(const Address& address);
-	bool ArePendingDataToReceive() const;
-	bool ReceiveFrom(uint8_t* incomingDataBuffer, unsigned int incomingDataBufferSize, Address* remoteAddress, unsigned int& numberOfBytesRead) const;
-	bool SendTo(const uint8_t* dataBuffer, unsigned int dataBufferSize, const Address& remoteAddress) const;
+	SocketResult ReceiveFrom(uint8_t* incomingDataBuffer, unsigned int incomingDataBufferSize, Address* remoteAddress, unsigned int& numberOfBytesRead) const;
+	SocketResult SendTo(const uint8_t* dataBuffer, unsigned int dataBufferSize, const Address& remoteAddress) const;
 	bool Close();
 
 	~Socket();

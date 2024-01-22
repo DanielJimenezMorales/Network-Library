@@ -4,13 +4,6 @@
 class Buffer
 {
 public:
-	Buffer(int size)
-	{
-		this->_size = size;
-		_index = 0;
-		_data = new uint8_t[size];
-	}
-
 	Buffer(uint8_t* data, int size) : _data(data), _size(size)
 	{
 		_index = 0;
@@ -18,7 +11,6 @@ public:
 
 	~Buffer()
 	{
-		delete[] _data;
 	}
 
 	int GetSize() const { return _size; }
