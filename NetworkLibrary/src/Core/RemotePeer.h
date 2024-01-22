@@ -4,7 +4,7 @@
 
 class Message;
 
-class RemoteClient
+class RemotePeer
 {
 private:
 	Address _address;
@@ -17,9 +17,9 @@ private:
 	PeerMessagesHandler _messagesHandler;
 
 public:
-	RemoteClient();
-	RemoteClient(const sockaddr_in& addressInfo, uint16_t id, float maxInactivityTime, uint64_t dataPrefix);
-	~RemoteClient();
+	RemotePeer();
+	RemotePeer(const sockaddr_in& addressInfo, uint16_t id, float maxInactivityTime, uint64_t dataPrefix);
+	~RemotePeer();
 
 	/// <summary>
 	/// Initializes all the internal systems. You must call this method before performing any other operation. It is also automatically called in

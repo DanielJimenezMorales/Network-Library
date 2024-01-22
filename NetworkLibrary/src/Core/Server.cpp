@@ -8,23 +8,13 @@
 #include "PendingConnection.h"
 #include "MessageFactory.h"
 
-Server::Server(int maxConnections) : _maxConnections(maxConnections), Peer(PeerType::ServerMode)
+Server::Server(int maxConnections) : Peer(PeerType::ServerMode, maxConnections)
 {
-	_remoteClientSlots.reserve(_maxConnections);
-	_remoteClients.reserve(_maxConnections);
-	_pendingConnections.reserve(_maxConnections * 2); //There could be more pending connections than clients
-
-	for (size_t i = 0; i < _maxConnections; ++i)
-	{
-		_remoteClientSlots.push_back(false);
-		_remoteClients.push_back(RemoteClient());
-	}
+	
 }
 
 Server::~Server()
 {
-	_remoteClientSlots.clear();
-	_remoteClients.clear();
 }
 
 bool Server::StartConcrete()
@@ -36,8 +26,6 @@ bool Server::StartConcrete()
 void Server::TickConcrete(float elapsedTime)
 {
 	HandleConnectedClientsInactivity(elapsedTime);
-	SendData();
-	FinishRemoteClientsDisconnection();
 }
 
 void Server::HandleConnectedClientsInactivity(float elapsedTime)
@@ -126,8 +114,9 @@ void Server::ProcessConnectionRequest(const ConnectionRequestMessage& message, c
 	}
 	else if (isAbleToConnectResult == 1)//If the client is already connected just send a connection approved message
 	{
-		int connectedClientIndex = FindExistingClientIndex(address);
-		CreateConnectionApprovedMessage(_remoteClients[connectedClientIndex]);
+		//int connectedClientIndex = FindExistingClientIndex(address);
+		RemotePeer* remoteClient = GetRemoteClientFromAddress(address);
+		CreateConnectionApprovedMessage(*remoteClient);
 		LOG_INFO("The client is already connected, sending connection approved...");
 	}
 	else if (isAbleToConnectResult == -1)//If all the client slots are full deny the connection
@@ -137,58 +126,7 @@ void Server::ProcessConnectionRequest(const ConnectionRequestMessage& message, c
 	}
 }
 
-void Server::SendData()
-{
-	for (unsigned int i = 0; i < _pendingConnections.size(); ++i)
-	{
-		if (!_pendingConnections[i].ArePendingMessages())
-		{
-			continue;
-		}
-
-		NetworkPacket packet = NetworkPacket(0);
-		Message* message;
-		do
-		{
-			message = _pendingConnections[i].GetAMessage();
-			packet.AddMessage(message);
-		} while (_pendingConnections[i].ArePendingMessages());
-
-		SendPacketToAddress(packet, _pendingConnections[i].GetAddress());
-
-		_pendingConnections[i].FreeSentMessages();
-	}
-
-	for (unsigned int i = 0; i < _remoteClientSlots.size(); ++i)
-	{
-		if (!_remoteClientSlots[i])
-		{
-			continue;
-		}
-
-		if (!_remoteClients[i].ArePendingMessages())
-		{
-			continue;
-		}
-
-		NetworkPacket packet = NetworkPacket(0);
-		Message* message;
-		do
-		{
-			message = _remoteClients[i].GetAMessage();
-			packet.AddMessage(message);
-		} while (_remoteClients[i].ArePendingMessages());
-
-		Buffer* buffer = new Buffer(packet.Size());
-		packet.Write(*buffer);
-		SendPacketToRemoteClient(_remoteClients[i], packet);
-		delete buffer;
-
-		_remoteClients[i].FreeSentMessages();
-	}
-}
-
-void Server::CreateDisconnectionMessage(RemoteClient& remoteClient)
+void Server::CreateDisconnectionMessage(RemotePeer& remoteClient)
 {
 	MessageFactory* messageFactory = MessageFactory::GetInstance();
 	Message* message = messageFactory->LendMessage(MessageType::Disconnection);
@@ -272,7 +210,7 @@ void Server::ProcessConnectionChallengeResponse(const ConnectionChallengeRespons
 		else
 		{
 			//Create remote client
-			int availableClientSlot = GetEmptyClientSlot();
+			int availableClientSlot = FindFreeRemoteClientSlot();
 			AddNewRemoteClient(availableClientSlot, address, dataPrefix);
 
 			//Delete pending connection since we have accepted
@@ -286,15 +224,15 @@ void Server::ProcessConnectionChallengeResponse(const ConnectionChallengeRespons
 	else if (isAbleToConnectResult == 1)//If the client is already connected just send a connection approved message
 	{
 		//Find remote client
-		int targetClientIndex = FindExistingClientIndex(address);
+		RemotePeer* remoteClient = GetRemoteClientFromAddress(address);
 
 		//Check if data prefix match
-		if (_remoteClients[targetClientIndex].GetDataPrefix() != dataPrefix)
+		if (remoteClient->GetDataPrefix() != dataPrefix)
 		{
 			return;
 		}
 
-		CreateConnectionApprovedMessage(_remoteClients[targetClientIndex]);
+		CreateConnectionApprovedMessage(*remoteClient);
 	}
 	else if (isAbleToConnectResult == -1)//If all the client slots are full deny the connection
 	{
@@ -304,47 +242,18 @@ void Server::ProcessConnectionChallengeResponse(const ConnectionChallengeRespons
 
 int Server::IsClientAbleToConnect(const Address& address) const
 {
-	if (IsClientAlreadyConnected(address))
+	if (IsRemotePeerAlreadyConnected(address))
 	{
 		return 1;
 	}
 
-	int availableClientSlot = GetEmptyClientSlot();
+	int availableClientSlot = FindFreeRemoteClientSlot();
 	if (availableClientSlot == -1)
 	{
 		return -1;
 	}
 
 	return 0;
-}
-
-int Server::GetEmptyClientSlot() const
-{
-	for (int i = 0; i < _maxConnections; ++i)
-	{
-		if (!_remoteClientSlots[i])
-		{
-			return i;
-		}
-	}
-
-	return -1;
-}
-
-bool Server::IsClientAlreadyConnected(const Address& address) const
-{
-	for (size_t i = 0; i < _maxConnections; ++i)
-	{
-		if (_remoteClientSlots[i])
-		{
-			if (_remoteClients[i].IsAddressEqual(address))
-			{
-				return true;
-			}
-		}
-	}
-
-	return false;
 }
 
 void Server::AddNewRemoteClient(int remoteClientSlotIndex, const Address& address, uint64_t dataPrefix)
@@ -354,22 +263,7 @@ void Server::AddNewRemoteClient(int remoteClientSlotIndex, const Address& addres
 	++_nextAssignedRemoteClientID;
 }
 
-int Server::FindExistingClientIndex(const Address& address) const
-{
-	for (size_t i = 0; i < _maxConnections; ++i)
-	{
-		if (_remoteClientSlots[i])
-		{
-			if (_remoteClients[i].GetAddress() == address)
-			{
-				return i;
-			}
-		}
-	}
-	return -1;
-}
-
-void Server::CreateConnectionApprovedMessage(RemoteClient& remoteClient)
+void Server::CreateConnectionApprovedMessage(RemotePeer& remoteClient)
 {
 	MessageFactory* messageFactory = MessageFactory::GetInstance();
 	Message* message = messageFactory->LendMessage(MessageType::ConnectionAccepted);
@@ -385,7 +279,7 @@ void Server::CreateConnectionApprovedMessage(RemoteClient& remoteClient)
 	remoteClient.AddMessage(connectionAcceptedPacket);
 }
 
-void Server::SendPacketToRemoteClient(const RemoteClient& remoteClient, const NetworkPacket& packet) const
+void Server::SendPacketToRemoteClient(const RemotePeer& remoteClient, const NetworkPacket& packet) const
 {
 	SendPacketToAddress(packet, remoteClient.GetAddress());
 }
@@ -400,22 +294,6 @@ void Server::DisconnectRemoteClient(unsigned int index)
 	CreateDisconnectionMessage(_remoteClients[index]);
 
 	_remoteClientSlotIDsToDisconnect.push(index);
-}
-
-void Server::FinishRemoteClientsDisconnection()
-{
-	unsigned int remoteClientSlot;
-	while (!_remoteClientSlotIDsToDisconnect.empty())
-	{
-		remoteClientSlot = _remoteClientSlotIDsToDisconnect.front();
-		_remoteClientSlotIDsToDisconnect.pop();
-
-		if (_remoteClientSlots[remoteClientSlot])
-		{
-			_remoteClientSlots[remoteClientSlot] = false;
-			_remoteClients[remoteClientSlot].Disconnect();
-		}
-	}
 }
 
 bool Server::StopConcrete()

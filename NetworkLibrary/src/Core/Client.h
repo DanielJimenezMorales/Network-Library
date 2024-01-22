@@ -41,25 +41,16 @@ private:
 	void ProcessConnectionRequestDenied(const ConnectionDeniedMessage& message);
 	void ProcessDisconnection(const DisconnectionMessage& message);
 
-	void SendData();
 	void CreateConnectionRequestMessage();
 	void CreateConnectionChallengeResponse();
 
-	bool AddMessage(Message* message);
-	bool ArePendingMessages() const { return _messagesHandler.ArePendingMessages(); }
-	Message* GetAMessage();
-
-	void FreeSentMessages();
-
-	Address _serverAddress = Address("127.0.0.1", htons(1234));
+	Address _serverAddress;
 	ClientState _currentState = ClientState::Disconnected;
 	const float _serverMaxInactivityTimeout;
 	float _serverInactivityTimeLeft;
 	uint64_t _saltNumber;
 	uint64_t _dataPrefix;
 	unsigned int _clientIndex;
-
-	PeerMessagesHandler _messagesHandler;
 
 	uint16_t _nextPacketSequenceNumber;
 	uint16_t _lastPacketSequenceAcked;

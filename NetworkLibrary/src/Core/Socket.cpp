@@ -143,6 +143,7 @@ bool Socket::ReceiveFrom(uint8_t* incomingDataBuffer, unsigned int incomingDataB
 		}
 		else
 		{
+			//TODO handle error WSAECONNRESET when a client socket was closed but we are trying to keep sending messages to it.
 			std::stringstream ss;
 			ss << "Socket error. Error while receiving a message, error code: " << error;
 			LOG_ERROR(ss.str());
