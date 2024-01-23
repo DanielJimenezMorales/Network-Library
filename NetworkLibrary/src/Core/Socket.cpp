@@ -19,11 +19,11 @@ bool Socket::IsValid() const
 	return !(_listenSocket == INVALID_SOCKET);
 }
 
-bool Socket::SetBlockingMode(bool status)
+SocketResult Socket::SetBlockingMode(bool status)
 {
 	if (!IsValid())
 	{
-		return false;
+		return SocketResult::ERR;
 	}
 
 	unsigned long listenSocketBlockingMode = status ? 0 : 1;
@@ -33,13 +33,13 @@ bool Socket::SetBlockingMode(bool status)
 		std::stringstream ss;
 		ss << "Socket error. Error while setting blocking mode, to " << listenSocketBlockingMode  << ". error code " << GetLastError();
 		LOG_ERROR(ss.str());
-		return false;
+		return SocketResult::ERR;
 	}
 
-	return true;
+	return SocketResult::SUCCESS;
 }
 
-bool Socket::Create()
+SocketResult Socket::Create()
 {
 	_listenSocket = socket(AF_INET, SOCK_DGRAM, IPPROTO_UDP);
 	if (!IsValid())
@@ -47,17 +47,17 @@ bool Socket::Create()
 		std::stringstream ss;
 		ss << "Socket error. Error while creating the socket, error code " << GetLastError();
 		LOG_ERROR(ss.str());
-		return false;
+		return SocketResult::ERR;
 	}
 
-	return true;
+	return SocketResult::SUCCESS;
 }
 
-bool Socket::Bind(const Address& address) const
+SocketResult Socket::Bind(const Address& address) const
 {
 	if (!IsValid())
 	{
-		return false;
+		return SocketResult::ERR;
 	}
 
 	if (bind(_listenSocket, (sockaddr*)&address.GetInfo(), sizeof(address.GetInfo())) == SOCKET_ERROR)
@@ -65,17 +65,17 @@ bool Socket::Bind(const Address& address) const
 		std::stringstream ss;
 		ss << "Socket error. Error while binding the listen socket, error code " << GetLastError();
 		LOG_ERROR(ss.str());
-		return false;
+		return SocketResult::ERR;
 	}
 
-	return false;
+	return SocketResult::SUCCESS;
 }
 
-bool Socket::Close()
+SocketResult Socket::Close()
 {
 	if (!IsValid())
 	{
-		return false;
+		return SocketResult::ERR;
 	}
 
 	int iResult = closesocket(_listenSocket);
@@ -84,17 +84,29 @@ bool Socket::Close()
 		std::stringstream ss;
 		ss << "Socket error. Error while closing the socket, error code " << GetLastError();
 		LOG_ERROR(ss.str());
-		return false;
+		return SocketResult::ERR;
 	}
 
-	return true;
+	return SocketResult::SUCCESS;
 }
 
-bool Socket::Start()
+SocketResult Socket::Start()
 {
-	Create();
-	SetBlockingMode(false);
-	return true;
+	SocketResult result = SocketResult::SUCCESS;
+
+	result = Create();
+	if (result != SocketResult::SUCCESS)
+	{
+		return result;
+	}
+
+	result = SetBlockingMode(false);
+	if (result != SocketResult::SUCCESS)
+	{
+		return result;
+	}
+
+	return SocketResult::SUCCESS;
 }
 
 SocketResult Socket::ReceiveFrom(uint8_t* incomingDataBuffer, unsigned int incomingDataBufferSize, Address* remoteAddress, unsigned int& numberOfBytesRead) const

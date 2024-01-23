@@ -15,7 +15,7 @@ bool Peer::Start()
 		return false;
 	}
 
-	if (!_socket.Start())
+	if (_socket.Start() != SocketResult::SUCCESS)
 	{
 		LOG_ERROR("Error while starting peer, aborting operation...");
 		return false;
@@ -185,7 +185,12 @@ bool Peer::IsPendingConnectionAlreadyAdded(const Address& address) const
 
 bool Peer::BindSocket(const Address& address) const
 {
-	_socket.Bind(address);
+	SocketResult result = _socket.Bind(address);
+	if (result != SocketResult::SUCCESS)
+	{
+		return false;
+	}
+
 	return true;
 }
 
