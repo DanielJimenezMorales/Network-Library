@@ -19,7 +19,7 @@ public:
 	Socket();
 
 	bool Start();
-	bool Bind(const Address& address);
+	bool Bind(const Address& address) const;
 	SocketResult ReceiveFrom(uint8_t* incomingDataBuffer, unsigned int incomingDataBufferSize, Address* remoteAddress, unsigned int& numberOfBytesRead) const;
 	SocketResult SendTo(const uint8_t* dataBuffer, unsigned int dataBufferSize, const Address& remoteAddress) const;
 	bool Close();

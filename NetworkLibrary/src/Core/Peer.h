@@ -48,6 +48,7 @@ protected:
 	PendingConnection* GetPendingConnectionFromAddress(const Address& address);
 	bool IsPendingConnectionAlreadyAdded(const Address& address) const;
 	void RemovePendingConnection(const Address& address);
+	bool BindSocket(const Address& address) const;
 
 	std::queue<unsigned int> _remotePeerSlotIDsToDisconnect;
 	std::vector<PendingConnection> _pendingConnections;
@@ -57,7 +58,6 @@ protected:
 
 private:
 	bool InitializeSocketsLibrary();
-	bool BindSocket();
 
 	void ProcessReceivedData();
 	void ProcessDatagram(Buffer& buffer, const Address& address);

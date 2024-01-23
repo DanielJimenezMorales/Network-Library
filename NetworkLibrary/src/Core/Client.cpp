@@ -23,6 +23,28 @@ Client::~Client()
 
 bool Client::StartConcrete()
 {
+	sockaddr_in addressInfo;
+	addressInfo.sin_family = AF_INET;
+	addressInfo.sin_port = 0; //This is zero so the system picks up a random port number
+
+	char ip[] = "127.0.0.1";
+	int iResult = inet_pton(addressInfo.sin_family, ip, &addressInfo.sin_addr);
+	if (iResult == -1)
+	{
+		std::stringstream ss;
+		ss << "Error at converting IP string into address. Error code: " << WSAGetLastError();
+		LOG_ERROR(ss.str());
+	}
+	else if (iResult == 0)
+	{
+		std::stringstream ss;
+		ss << "The IP string: " << ip << " is not valid";
+		LOG_ERROR(ss.str());
+	}
+
+	Address address = Address(addressInfo);
+	BindSocket(address);
+
 	_currentState = ClientState::SendingConnectionRequest;
 	_serverInactivityTimeLeft = _serverMaxInactivityTimeout;
 

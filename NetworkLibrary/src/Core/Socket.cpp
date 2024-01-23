@@ -53,7 +53,7 @@ bool Socket::Create()
 	return true;
 }
 
-bool Socket::Bind(const Address& address)
+bool Socket::Bind(const Address& address) const
 {
 	if (!IsValid())
 	{
@@ -129,10 +129,6 @@ SocketResult Socket::ReceiveFrom(uint8_t* incomingDataBuffer, unsigned int incom
 		}
 		else
 		{
-			/*TODO Handler error WSAEINVAL occurring when the client call recvfrom without having sent any data.The socket does not know which port does it need to listen to receive information!
-			Two ways of doing it:
-			1. Handle the error over here
-			2. Add a new method called "SendASAP()" that send a message to an address without waiting for SendData() method*/
 			std::stringstream ss;
 			ss << "Socket error. Error while receiving a message, error code: " << error;
 			LOG_ERROR(ss.str());
