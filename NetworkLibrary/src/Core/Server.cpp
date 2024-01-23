@@ -7,6 +7,8 @@
 #include "PendingConnection.h"
 #include "MessageFactory.h"
 
+#define SERVER_PORT 54000
+
 Server::Server(int maxConnections) : Peer(PeerType::ServerMode, maxConnections, 1024, 1024)
 {
 	
@@ -18,6 +20,13 @@ Server::~Server()
 
 bool Server::StartConcrete()
 {
+	sockaddr_in serverHint;
+	serverHint.sin_addr.S_un.S_addr = ADDR_ANY;
+	serverHint.sin_family = AF_INET;
+	serverHint.sin_port = htons(SERVER_PORT); // Convert from little to big endian
+	Address address = Address(serverHint);
+	BindSocket(address);
+
 	LOG_INFO("Server started succesfully!");
 	return true;
 }

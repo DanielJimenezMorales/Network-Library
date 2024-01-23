@@ -7,8 +7,6 @@
 #include "Buffer.h"
 #include "RemotePeer.h"
 
-#define SERVER_PORT 54000
-
 bool Peer::Start()
 {
 	if (!InitializeSocketsLibrary())
@@ -17,13 +15,7 @@ bool Peer::Start()
 		return false;
 	}
 
-	if (!_socket.Start())
-	{
-		LOG_ERROR("Error while starting peer, aborting operation...");
-		return false;
-	}
-
-	if (!BindSocket())
+	if (_socket.Start() != SocketResult::SUCCESS)
 	{
 		LOG_ERROR("Error while starting peer, aborting operation...");
 		return false;
@@ -191,16 +183,12 @@ bool Peer::IsPendingConnectionAlreadyAdded(const Address& address) const
 	return GetPendingConnectionIndexFromAddress(address) != -1;
 }
 
-bool Peer::BindSocket()
+bool Peer::BindSocket(const Address& address) const
 {
-	if (_type == PeerType::ServerMode)
+	SocketResult result = _socket.Bind(address);
+	if (result != SocketResult::SUCCESS)
 	{
-		sockaddr_in serverHint;
-		serverHint.sin_addr.S_un.S_addr = ADDR_ANY;
-		serverHint.sin_family = AF_INET;
-		serverHint.sin_port = htons(SERVER_PORT); // Convert from little to big endian
-		Address address = Address(serverHint);
-		_socket.Bind(address);
+		return false;
 	}
 
 	return true;
