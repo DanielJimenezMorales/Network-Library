@@ -7,19 +7,17 @@
 
 void NetworkPacketHeader::Write(Buffer& buffer) const
 {
-	buffer.WriteShort(sequenceNumber);
 	buffer.WriteShort(lastAckedSequenceNumber);
 	buffer.WriteInteger(ackBits);
 }
 
 void NetworkPacketHeader::Read(Buffer& buffer)
 {
-	sequenceNumber = buffer.ReadShort();
 	lastAckedSequenceNumber = buffer.ReadShort();
 	ackBits = buffer.ReadInteger();
 }
 
-NetworkPacket::NetworkPacket(uint16_t packetSequenceNumber) : _header(packetSequenceNumber, 0, 0)
+NetworkPacket::NetworkPacket() : _header(0, 0), _defaultMTUSizeInBytes(1500)
 {
 	_messages.reserve(5);
 }
@@ -94,4 +92,9 @@ uint32_t NetworkPacket::Size() const
 	}
 
 	return packetSize;
+}
+
+bool NetworkPacket::CanMessageFit(unsigned int sizeOfMessagesInBytes) const
+{
+	return (sizeOfMessagesInBytes + Size() < MaxSize());
 }

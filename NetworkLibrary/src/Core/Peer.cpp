@@ -246,13 +246,6 @@ void Peer::ProcessDatagram(Buffer& buffer, const Address& address)
 	NetworkPacket packet = NetworkPacket();
 	packet.Read(buffer);
 
-	if (_type == PeerType::ServerMode)
-	{
-		std::stringstream ss;
-		ss << "Packet received. Sequence number equal to " << packet.GetHeader().sequenceNumber;
-		LOG_INFO(ss.str());
-	}
-
 	//Process packet messages one by one
 	std::vector<Message*>::const_iterator constIterator = packet.GetMessages();
 	unsigned int numberOfMessagesInPacket = packet.GetNumberOfMessages();
@@ -367,18 +360,56 @@ void Peer::SendPacketToRemotePeer(RemotePeer& remotePeer)
 		return;
 	}
 
-	NetworkPacket packet = NetworkPacket(remotePeer.GetNextPacketSequenceNumber());
+	NetworkPacket packet = NetworkPacket();
 	Message* message = nullptr;
-	do
+
+	//TODO Check somewhere if there is a message larger than the maximum packet size. Log a warning saying that the message will never get sent and delete it.
+	//TODO Include data prefix in packet's header and check if the data prefix is correct when receiving a packet
+
+	bool arePendingMessages = true;
+	bool isThereCapacityLeft = true;
+
+	if (remotePeer.ArePendingACKReliableMessages())
 	{
-		message = remotePeer.GetAMessage();
+		message = remotePeer.GetPendingACKReliableMessage();
 		packet.AddMessage(message);
-	} while (remotePeer.ArePendingMessages());
+	}
+
+	//Check if we should include another message to the packet
+	arePendingMessages = remotePeer.ArePendingMessages();
+	isThereCapacityLeft = packet.CanMessageFit(remotePeer.GetSizeOfNextPendingMessage());
+
+	while (arePendingMessages && isThereCapacityLeft)
+	{
+		//Configure and add message to packet
+		message = remotePeer.GetPendingMessage();
+
+		uint16_t messageSequenceNumber = 0;
+		if (message->GetHeader().isReliable)
+		{
+			messageSequenceNumber = remotePeer.GetNextMessageSequenceNumber();
+		}
+		message->SetHeaderPacketSequenceNumber(messageSequenceNumber);
+
+		packet.AddMessage(message);
+
+		remotePeer.IncreaseMessageSequenceNumber();
+
+		//Check if we should include another message to the packet
+		arePendingMessages = remotePeer.ArePendingMessages();
+		isThereCapacityLeft = packet.CanMessageFit(remotePeer.GetSizeOfNextPendingMessage());
+	}
+
+	//Set packet header fields
+	uint32_t acks = remotePeer.GenerateACKs();
+	packet.SetHeaderACKs(acks);
+
+	uint16_t lastAckedMessageSequenceNumber = remotePeer.GetLastMessageSequenceNumberAcked();
+	packet.SetHeaderLastAcked(lastAckedMessageSequenceNumber);
 
 	SendPacketToAddress(packet, remotePeer.GetAddress());
 
 	remotePeer.FreeSentMessages();
-	remotePeer.IncreaseNextPacketSequenceNumber();
 }
 
 void Peer::SendDataToAddress(const Buffer& buffer, const Address& address) const

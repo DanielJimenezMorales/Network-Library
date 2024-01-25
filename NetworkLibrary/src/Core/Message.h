@@ -6,6 +6,7 @@ class Message
 {
 public:
 	MessageHeader GetHeader() const { return _header; }
+	void SetHeaderPacketSequenceNumber(uint16_t packetSequenceNumber) { _header.messageSequenceNumber = packetSequenceNumber; }
 
 	virtual void Write(Buffer& buffer) const = 0;
 	//Read it without the message header type
@@ -15,7 +16,7 @@ public:
 	virtual ~Message() {};
 
 protected:
-	Message(MessageType messageType) : _header(MessageHeader(messageType)) {};
+	Message(MessageType messageType) : _header(messageType, 0, false) {};
 
 	MessageHeader _header;
 };

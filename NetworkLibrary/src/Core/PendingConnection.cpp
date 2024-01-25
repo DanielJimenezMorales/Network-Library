@@ -19,7 +19,7 @@ bool PendingConnection::AddMessage(Message* message)
 
 Message* PendingConnection::GetAMessage()
 {
-	return _messagesHandler.GetAMessage();
+	return _messagesHandler.GetPendingMessage();
 }
 
 void PendingConnection::FreeSentMessages()

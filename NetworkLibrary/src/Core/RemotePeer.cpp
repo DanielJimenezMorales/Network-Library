@@ -11,16 +11,14 @@ RemotePeer::RemotePeer() :
 	_maxInactivityTime(0),
 	_inactivityTimeLeft(0),
 	_messagesHandler(),
-	_nextPacketSequenceNumber(1),
-	_lastPacketSequenceNumberAcked(0)
+	_nextPacketSequenceNumber(1)
 {
 }
 
 RemotePeer::RemotePeer(const sockaddr_in& addressInfo, uint16_t id, float maxInactivityTime, uint64_t dataPrefix) :
 	_address(Address::GetInvalid()),
 	_messagesHandler(),
-	_nextPacketSequenceNumber(1),
-	_lastPacketSequenceNumberAcked(0)
+	_nextPacketSequenceNumber(1)
 {
 	Connect(addressInfo, id, maxInactivityTime, dataPrefix);
 }
@@ -55,9 +53,14 @@ bool RemotePeer::AddMessage(Message* message)
 	return true;
 }
 
-Message* RemotePeer::GetAMessage()
+Message* RemotePeer::GetPendingMessage()
 {
-	return _messagesHandler.GetAMessage();
+	return _messagesHandler.GetPendingMessage();
+}
+
+Message* RemotePeer::GetPendingACKReliableMessage()
+{
+	return _messagesHandler.GetPendingACKReliableMessage();
 }
 
 void RemotePeer::FreeSentMessages()

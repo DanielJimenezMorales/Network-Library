@@ -17,7 +17,6 @@ private:
 	uint64_t _dataPrefix;
 
 	uint16_t _nextPacketSequenceNumber;
-	uint16_t _lastPacketSequenceNumberAcked;
 
 	PeerMessagesHandler _messagesHandler;
 
@@ -26,9 +25,9 @@ public:
 	RemotePeer(const sockaddr_in& addressInfo, uint16_t id, float maxInactivityTime, uint64_t dataPrefix);
 	~RemotePeer();
 
-	uint16_t GetNextPacketSequenceNumber() const { return _nextPacketSequenceNumber; };
-	uint16_t GetLastPacketSequenceNumberAcked() const { return _lastPacketSequenceNumberAcked; };
-	void IncreaseNextPacketSequenceNumber() { ++_nextPacketSequenceNumber; }
+	uint16_t GetNextMessageSequenceNumber() const { return _nextPacketSequenceNumber; };
+	uint16_t GetLastMessageSequenceNumberAcked() const { return _messagesHandler.GetLastMessageSequenceNumberAcked(); };
+	void IncreaseMessageSequenceNumber() { ++_nextPacketSequenceNumber; }
 
 	/// <summary>
 	/// Initializes all the internal systems. You must call this method before performing any other operation. It is also automatically called in
@@ -49,8 +48,12 @@ public:
 	bool IsInactive() const { return _inactivityTimeLeft == 0.f; }
 	bool AddMessage(Message* message);
 	bool ArePendingMessages() const { return _messagesHandler.ArePendingMessages(); }
-	Message* GetAMessage();
+	Message* GetPendingMessage();
+	bool ArePendingACKReliableMessages() const { return _messagesHandler.ArePendingACKReliableMessages(); };
+	Message* GetPendingACKReliableMessage();
+	unsigned int GetSizeOfNextPendingMessage() const { return _messagesHandler.GetSizeOfNextPendingMessage(); };
 	void FreeSentMessages();
+	uint32_t GenerateACKs() const { return _messagesHandler.GenerateACKs(); };
 
 	/// <summary>
 	/// Disconnect and reset the remote client

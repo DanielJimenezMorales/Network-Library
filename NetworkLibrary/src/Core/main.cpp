@@ -17,6 +17,8 @@ const unsigned int FIXED_FRAMES_PER_SECOND = 50;
 const float FIXED_FRAME_TARGET_DURATION = 1.0f / FIXED_FRAMES_PER_SECOND;
 bool isRunning = true;
 
+//TODO Add a maximum size to each packet and add as many messages as possible until reaching the max size
+
 //#pragma comment(lib, "Ws2_32.lib") //Added to Properties/Linker/Input/Additional Dependencies
 int main()
 {
