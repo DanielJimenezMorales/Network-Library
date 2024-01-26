@@ -4,6 +4,7 @@
 #include "Message.h"
 #include "MessageFactory.h"
 #include "BitwiseUtils.h"
+#include "Logger.h"
 
 PeerMessagesHandler::PeerMessagesHandler() : _reliableMessageEntriesBufferSize(1024), _lastMessageSequenceNumberAcked(0)
 {
@@ -119,16 +120,70 @@ uint32_t PeerMessagesHandler::GenerateACKs() const
 	return acks;
 }
 
+void PeerMessagesHandler::ProcessACKs(uint32_t acks, uint16_t lastAckedMessageSequenceNumber)
+{
+	//Check if the last acked is in reliable messages lists
+	int index = -1;
+	index = GetPendingACKReliableMessageIndexFromSequence(lastAckedMessageSequenceNumber);
+	if (index != -1)
+	{
+		DeletePendingACKReliableMessageAtIndex(index);
+	}
+
+	//Check for the rest of acked bits
+	uint16_t firstAckSequence = lastAckedMessageSequenceNumber - 1;
+	for (unsigned int i = 0; i < 32; ++i)
+	{
+		if (BitwiseUtils::GetBitAtIndex(acks, i))
+		{
+			index = GetPendingACKReliableMessageIndexFromSequence(firstAckSequence - i);
+			if (index != -1)
+			{
+				DeletePendingACKReliableMessageAtIndex(firstAckSequence - i);
+			}
+		}
+	}
+}
+
+void PeerMessagesHandler::AckReliableMessage(uint16_t messageSequenceNumber)
+{
+	unsigned int index = messageSequenceNumber % _reliableMessageEntriesBufferSize;
+	_reliableMessageEntries[index].sequenceNumber = messageSequenceNumber;
+	_reliableMessageEntries[index].isAcked = true;
+}
+
+int PeerMessagesHandler::GetPendingACKReliableMessageIndexFromSequence(uint16_t sequence) const
+{
+	int resultIndex = -1;
+	unsigned int currentIndex = 0;
+	for (std::list<Message*>::const_iterator it = _pendingAckReliableMessages.cbegin(); it != _pendingAckReliableMessages.cend(); ++it)
+	{
+		if((*it)->GetHeader().messageSequenceNumber == sequence)
+		{
+			resultIndex = currentIndex;
+			break;
+		}
+
+		++currentIndex;
+	}
+
+	return resultIndex;
+}
+
+void PeerMessagesHandler::DeletePendingACKReliableMessageAtIndex(unsigned int index)
+{
+	assert(index < _pendingAckReliableMessages.size());
+
+	std::list<Message*>::iterator it = _pendingAckReliableMessages.begin();
+	std::advance(it, index);
+	_pendingAckReliableMessages.erase(it);
+
+	LOG_INFO("DELETE");
+}
+
 PeerMessagesHandler::~PeerMessagesHandler()
 {
 	ClearMessages();
-}
-
-void PeerMessagesHandler::AddReliableMessageEntry(uint16_t sequenceNumber)
-{
-	unsigned int index = sequenceNumber % _reliableMessageEntriesBufferSize;
-	_reliableMessageEntries[index].sequenceNumber = sequenceNumber;
-	_reliableMessageEntries[index].isAcked = false;
 }
 
 const ReliableMessageEntry& PeerMessagesHandler::GetReliableMessageEntry(uint16_t sequenceNumber) const

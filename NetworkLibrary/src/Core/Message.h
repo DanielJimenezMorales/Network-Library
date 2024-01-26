@@ -7,6 +7,7 @@ class Message
 public:
 	MessageHeader GetHeader() const { return _header; }
 	void SetHeaderPacketSequenceNumber(uint16_t packetSequenceNumber) { _header.messageSequenceNumber = packetSequenceNumber; }
+	void SetReliability(bool isReliable) { _header.isReliable = isReliable; };
 
 	virtual void Write(Buffer& buffer) const = 0;
 	//Read it without the message header type

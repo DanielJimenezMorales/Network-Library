@@ -54,6 +54,8 @@ public:
 	unsigned int GetSizeOfNextPendingMessage() const { return _messagesHandler.GetSizeOfNextPendingMessage(); };
 	void FreeSentMessages();
 	uint32_t GenerateACKs() const { return _messagesHandler.GenerateACKs(); };
+	void ProcessACKs(uint32_t acks, uint16_t lastAckedMessageSequenceNumber) { _messagesHandler.ProcessACKs(acks, lastAckedMessageSequenceNumber); };
+	void AckReliableMessage(uint16_t messageSequenceNumber) { _messagesHandler.AckReliableMessage(messageSequenceNumber); };
 
 	/// <summary>
 	/// Disconnect and reset the remote client

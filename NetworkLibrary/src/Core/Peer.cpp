@@ -246,14 +246,34 @@ void Peer::ProcessDatagram(Buffer& buffer, const Address& address)
 	NetworkPacket packet = NetworkPacket();
 	packet.Read(buffer);
 
+	//Process ACKs
+	RemotePeer* remotePeer = GetRemoteClientFromAddress(address);
+	if(remotePeer != nullptr)
+	{
+		uint32_t acks = packet.GetHeader().ackBits;
+		uint16_t lastAckedMessageSequenceNumber = packet.GetHeader().lastAckedSequenceNumber;
+		remotePeer->ProcessACKs(acks, lastAckedMessageSequenceNumber);
+	}
+
 	//Process packet messages one by one
 	std::vector<Message*>::const_iterator constIterator = packet.GetMessages();
 	unsigned int numberOfMessagesInPacket = packet.GetNumberOfMessages();
-	const Message* message = nullptr;
+
 	for (unsigned int i = 0; i < numberOfMessagesInPacket; ++i)
 	{
-		message = *(constIterator + i);
-		ProcessMessage(*message, address);
+		const Message& message = **(constIterator + i);
+
+		//If it is reliable ACK the message
+		if (remotePeer != nullptr)
+		{
+			if (message.GetHeader().isReliable)
+			{
+				uint16_t messageSequenceNumber = message.GetHeader().messageSequenceNumber;
+				remotePeer->AckReliableMessage(messageSequenceNumber);
+			}
+		}
+
+		ProcessMessage(message, address);
 	}
 
 	//Free memory for those messages in the packet.Read() operation

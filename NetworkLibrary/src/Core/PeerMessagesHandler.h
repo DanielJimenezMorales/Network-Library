@@ -46,7 +46,9 @@ public:
 	void ClearMessages();
 
 	uint32_t GenerateACKs() const;
+	void ProcessACKs(uint32_t acks, uint16_t lastAckedMessageSequenceNumber);
 	uint16_t GetLastMessageSequenceNumberAcked() const { return _lastMessageSequenceNumberAcked; };
+	void AckReliableMessage(uint16_t messageSequenceNumber);
 
 	~PeerMessagesHandler();
 
@@ -60,7 +62,8 @@ private:
 	unsigned int _reliableMessageEntriesBufferSize;
 	std::vector<ReliableMessageEntry> _reliableMessageEntries;
 
-	void AddReliableMessageEntry(uint16_t sequenceNumber);
 	const ReliableMessageEntry& GetReliableMessageEntry(uint16_t sequenceNumber) const;
+	int GetPendingACKReliableMessageIndexFromSequence(uint16_t sequence) const;
+	void DeletePendingACKReliableMessageAtIndex(unsigned int index);
 };
 

@@ -22,5 +22,11 @@ public:
 		assert((index >= 0 && index < 8));
 		return (byte >> index) & 0x1;
 	}
+
+	static bool GetBitAtIndex(uint32_t byte, int index)
+	{
+		assert((index >= 0 && index < 32));
+		return (byte >> index) & 0x1;
+	}
 };
 

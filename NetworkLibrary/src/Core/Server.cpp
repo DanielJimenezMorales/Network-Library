@@ -263,7 +263,8 @@ void Server::CreateConnectionApprovedMessage(RemotePeer& remoteClient)
 		LOG_ERROR("Can't create new Connection Accepted Message because the MessageFactory has returned a null message");
 		return;
 	}
-
+	
+	message->SetReliability(true);
 	ConnectionAcceptedMessage* connectionAcceptedPacket = static_cast<ConnectionAcceptedMessage*>(message);
 	connectionAcceptedPacket->prefix = remoteClient.GetDataPrefix();
 	connectionAcceptedPacket->clientIndexAssigned = remoteClient.GetClientIndex();
