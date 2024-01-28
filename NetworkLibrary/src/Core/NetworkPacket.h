@@ -35,7 +35,7 @@ public:
 
 	bool AddMessage(Message* message);
 	std::vector<Message*>::const_iterator GetMessages();
-	unsigned int GetNumberOfMessages() { return _messages.size(); }
+	unsigned int GetNumberOfMessages() const { return _messages.size(); }
 
 	void ReleaseMessages();
 

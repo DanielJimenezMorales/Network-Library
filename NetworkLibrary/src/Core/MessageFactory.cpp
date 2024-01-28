@@ -57,11 +57,7 @@ Message* MessageFactory::LendMessage(MessageType messageType)
 void MessageFactory::ReleaseMessage(Message* message)
 {
     assert(_isInitialized == true);
-
-    if (message == nullptr)
-    {
-        return;
-    }
+    assert(message != nullptr);
 
     MessageType messageType = message->GetHeader().type;
     std::queue<Message*>* pool = GetPoolFromType(messageType);
@@ -77,22 +73,39 @@ void MessageFactory::ReleaseMessage(Message* message)
 
 MessageFactory::~MessageFactory()
 {
-    ReleasePool(_connectionRequestMessagePool);
-    ReleasePool(_connectionChallengeMessagePool);
-    ReleasePool(_connectionChallengeResponseMessagePool);
-    ReleasePool(_connectionAcceptedMessagePool);
-    ReleasePool(_connectionDeniedMessagePool);
-    ReleasePool(_disconnectionMessagePool);
+    for (std::unordered_map<MessageType, std::queue<Message*>>::iterator it = _messagePools.begin(); it != _messagePools.end(); ++it)
+    {
+        ReleasePool((*it).second);
+    }
+
+    _messagePools.clear();
 }
 
 void MessageFactory::InitializePools()
 {
-    InitializePool(_connectionRequestMessagePool, MessageType::ConnectionRequest);
-    InitializePool(_connectionChallengeMessagePool, MessageType::ConnectionChallenge);
-    InitializePool(_connectionChallengeResponseMessagePool, MessageType::ConnectionChallengeResponse);
-    InitializePool(_connectionAcceptedMessagePool, MessageType::ConnectionAccepted);
-    InitializePool(_connectionDeniedMessagePool, MessageType::ConnectionDenied);
-    InitializePool(_disconnectionMessagePool, MessageType::Disconnection);
+    _messagePools[MessageType::ConnectionRequest] = std::queue<Message*>();
+    InitializePool(_messagePools[MessageType::ConnectionRequest], MessageType::ConnectionRequest);
+
+    _messagePools[MessageType::ConnectionChallenge] = std::queue<Message*>();
+    InitializePool(_messagePools[MessageType::ConnectionChallenge], MessageType::ConnectionChallenge);
+
+    _messagePools[MessageType::ConnectionChallengeResponse] = std::queue<Message*>();
+    InitializePool(_messagePools[MessageType::ConnectionChallengeResponse], MessageType::ConnectionChallengeResponse);
+
+    _messagePools[MessageType::ConnectionAccepted] = std::queue<Message*>();
+    InitializePool(_messagePools[MessageType::ConnectionAccepted], MessageType::ConnectionAccepted);
+    
+    _messagePools[MessageType::ConnectionDenied] = std::queue<Message*>();
+    InitializePool(_messagePools[MessageType::ConnectionDenied], MessageType::ConnectionDenied);
+
+    _messagePools[MessageType::Disconnection] = std::queue<Message*>();
+    InitializePool(_messagePools[MessageType::Disconnection], MessageType::Disconnection);
+
+    _messagePools[MessageType::InGame] = std::queue<Message*>();
+    InitializePool(_messagePools[MessageType::InGame], MessageType::InGame);
+
+    _messagePools[MessageType::InGameResponse] = std::queue<Message*>();
+    InitializePool(_messagePools[MessageType::InGameResponse], MessageType::InGameResponse);
 }
 
 void MessageFactory::InitializePool(std::queue<Message*>& pool, MessageType messageType)
@@ -111,29 +124,11 @@ void MessageFactory::InitializePool(std::queue<Message*>& pool, MessageType mess
 std::queue<Message*>* MessageFactory::GetPoolFromType(MessageType messageType)
 {
     std::queue<Message*>* resultPool = nullptr;
-    switch (messageType)
+
+    std::unordered_map<MessageType, std::queue<Message*>>::iterator it = _messagePools.find(messageType);
+    if (it != _messagePools.end())
     {
-    case MessageType::ConnectionRequest:
-        resultPool = &_connectionRequestMessagePool;
-        break;
-    case MessageType::ConnectionChallenge:
-        resultPool = &_connectionChallengeMessagePool;
-        break;
-    case MessageType::ConnectionChallengeResponse:
-        resultPool = &_connectionChallengeResponseMessagePool;
-        break;
-    case MessageType::ConnectionAccepted:
-        resultPool = &_connectionAcceptedMessagePool;
-        break;
-    case MessageType::ConnectionDenied:
-        resultPool = &_connectionDeniedMessagePool;
-        break;
-    case MessageType::Disconnection:
-        resultPool = &_disconnectionMessagePool;
-        break;
-    default:
-        LOG_ERROR("Can't get desired pool. Invalid message type");
-        break;
+        resultPool = &(*it).second;
     }
 
     return resultPool;
@@ -162,6 +157,12 @@ Message* MessageFactory::CreateMessage(MessageType messageType)
         break;
     case MessageType::Disconnection:
         resultMessage = new DisconnectionMessage();
+        break;
+    case MessageType::InGame:
+        resultMessage = new InGameMessage();
+        break;
+    case MessageType::InGameResponse:
+        resultMessage = new InGameResponseMessage();
         break;
     default:
         LOG_ERROR("Can't create a new message. Invalid message type");

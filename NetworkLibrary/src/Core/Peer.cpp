@@ -88,6 +88,7 @@ void Peer::SendPacketToAddress(const NetworkPacket& packet, const Address& addre
 {
 	Buffer buffer = Buffer(_sendBuffer, packet.Size());
 	packet.Write(buffer);
+
 	_socket.SendTo(_sendBuffer, packet.Size(), address);
 }
 
@@ -408,12 +409,15 @@ void Peer::SendPacketToRemotePeer(RemotePeer& remotePeer)
 		if (message->GetHeader().isReliable)
 		{
 			messageSequenceNumber = remotePeer.GetNextMessageSequenceNumber();
+			remotePeer.IncreaseMessageSequenceNumber();
+			
+			std::stringstream ss;
+			ss << "Reliable message sequence number: " << messageSequenceNumber << " Message type: " << (int)message->GetHeader().type;
+			LOG_INFO(ss.str());
 		}
 		message->SetHeaderPacketSequenceNumber(messageSequenceNumber);
 
 		packet.AddMessage(message);
-
-		remotePeer.IncreaseMessageSequenceNumber();
 
 		//Check if we should include another message to the packet
 		arePendingMessages = remotePeer.ArePendingMessages();

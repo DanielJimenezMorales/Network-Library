@@ -12,6 +12,7 @@ class ConnectionChallengeMessage;
 class ConnectionAcceptedMessage;
 class ConnectionDeniedMessage;
 class DisconnectionMessage;
+class InGameResponseMessage;
 
 enum ClientState
 {
@@ -40,9 +41,11 @@ private:
 	void ProcessConnectionRequestAccepted(const ConnectionAcceptedMessage& message);
 	void ProcessConnectionRequestDenied(const ConnectionDeniedMessage& message);
 	void ProcessDisconnection(const DisconnectionMessage& message);
+	void ProcessInGameResponse(const InGameResponseMessage& message);
 
 	void CreateConnectionRequestMessage();
 	void CreateConnectionChallengeResponse();
+	void CreateInGameMessage();
 
 	Address _serverAddress;
 	ClientState _currentState = ClientState::Disconnected;
@@ -51,5 +54,7 @@ private:
 	uint64_t _saltNumber;
 	uint64_t _dataPrefix;
 	unsigned int _clientIndex;
+
+	unsigned int inGameMessageID; //Only for RUDP testing purposes. Delete later!
 };
 

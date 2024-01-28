@@ -11,14 +11,14 @@ RemotePeer::RemotePeer() :
 	_maxInactivityTime(0),
 	_inactivityTimeLeft(0),
 	_messagesHandler(),
-	_nextPacketSequenceNumber(1)
+	_nextPacketSequenceNumber(0)
 {
 }
 
 RemotePeer::RemotePeer(const sockaddr_in& addressInfo, uint16_t id, float maxInactivityTime, uint64_t dataPrefix) :
 	_address(Address::GetInvalid()),
 	_messagesHandler(),
-	_nextPacketSequenceNumber(1)
+	_nextPacketSequenceNumber(0)
 {
 	Connect(addressInfo, id, maxInactivityTime, dataPrefix);
 }

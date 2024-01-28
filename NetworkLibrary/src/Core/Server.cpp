@@ -1,4 +1,5 @@
 #include <sstream>
+#include <cassert>
 
 #include "Server.h"
 #include "Logger.h"
@@ -59,6 +60,12 @@ void Server::ProcessMessage(const Message& message, const Address& address)
 	{
 		const ConnectionChallengeResponseMessage& connectionChallengeResponseMessage = static_cast<const ConnectionChallengeResponseMessage&>(message);
 		ProcessConnectionChallengeResponse(connectionChallengeResponseMessage, address);
+		break;
+	}
+	case MessageType::InGame:
+	{
+		const InGameMessage& inGameMessage = static_cast<const InGameMessage&>(message);
+		ProcessInGame(inGameMessage, address);
 		break;
 	}
 	default:
@@ -134,6 +141,26 @@ void Server::CreateDisconnectionMessage(RemotePeer& remoteClient)
 	remoteClient.AddMessage(disconnectionMessage);
 
 	LOG_INFO("Disconnection message created.");
+}
+
+void Server::CreateInGameResponseMessage(RemotePeer& remoteClient, uint64_t data)
+{
+	MessageFactory* messageFactory = MessageFactory::GetInstance();
+	Message* message = messageFactory->LendMessage(MessageType::InGameResponse);
+	if (message == nullptr)
+	{
+		LOG_ERROR("Can't create new in game response Message because the MessageFactory has returned a null message");
+		return;
+	}
+
+	message->SetReliability(true);
+
+	InGameResponseMessage* inGameResponseMessage = static_cast<InGameResponseMessage*>(message);
+
+	inGameResponseMessage->data = data;
+	remoteClient.AddMessage(inGameResponseMessage);
+
+	LOG_INFO("In game response message created.");
 }
 
 void Server::CreateConnectionChallengeMessage(const Address& address, int pendingConnectionIndex)
@@ -231,6 +258,18 @@ void Server::ProcessConnectionChallengeResponse(const ConnectionChallengeRespons
 	}
 }
 
+void Server::ProcessInGame(const InGameMessage& message, const Address& address)
+{
+	std::stringstream ss;
+	ss << "InGame ID: " << message.data;
+	LOG_INFO(ss.str());
+
+	RemotePeer* remotePeer = GetRemoteClientFromAddress(address);
+	assert(remotePeer != nullptr);
+
+	CreateInGameResponseMessage(*remotePeer, message.data);
+}
+
 int Server::IsClientAbleToConnect(const Address& address) const
 {
 	if (IsRemotePeerAlreadyConnected(address))
@@ -264,7 +303,6 @@ void Server::CreateConnectionApprovedMessage(RemotePeer& remoteClient)
 		return;
 	}
 	
-	message->SetReliability(true);
 	ConnectionAcceptedMessage* connectionAcceptedPacket = static_cast<ConnectionAcceptedMessage*>(message);
 	connectionAcceptedPacket->prefix = remoteClient.GetDataPrefix();
 	connectionAcceptedPacket->clientIndexAssigned = remoteClient.GetClientIndex();

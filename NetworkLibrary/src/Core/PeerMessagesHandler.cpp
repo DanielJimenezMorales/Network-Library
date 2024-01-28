@@ -1,4 +1,5 @@
 #include <cassert>
+#include <sstream>
 
 #include "PeerMessagesHandler.h"
 #include "Message.h"
@@ -122,6 +123,10 @@ uint32_t PeerMessagesHandler::GenerateACKs() const
 
 void PeerMessagesHandler::ProcessACKs(uint32_t acks, uint16_t lastAckedMessageSequenceNumber)
 {
+	std::stringstream ss;
+	ss << "Last acked from client = " << lastAckedMessageSequenceNumber;
+	LOG_INFO(ss.str());
+
 	//Check if the last acked is in reliable messages lists
 	int index = -1;
 	index = GetPendingACKReliableMessageIndexFromSequence(lastAckedMessageSequenceNumber);
@@ -139,7 +144,7 @@ void PeerMessagesHandler::ProcessACKs(uint32_t acks, uint16_t lastAckedMessageSe
 			index = GetPendingACKReliableMessageIndexFromSequence(firstAckSequence - i);
 			if (index != -1)
 			{
-				DeletePendingACKReliableMessageAtIndex(firstAckSequence - i);
+				DeletePendingACKReliableMessageAtIndex(index);
 			}
 		}
 	}
@@ -150,6 +155,8 @@ void PeerMessagesHandler::AckReliableMessage(uint16_t messageSequenceNumber)
 	unsigned int index = messageSequenceNumber % _reliableMessageEntriesBufferSize;
 	_reliableMessageEntries[index].sequenceNumber = messageSequenceNumber;
 	_reliableMessageEntries[index].isAcked = true;
+
+	_lastMessageSequenceNumberAcked = messageSequenceNumber;
 }
 
 int PeerMessagesHandler::GetPendingACKReliableMessageIndexFromSequence(uint16_t sequence) const
@@ -174,9 +181,16 @@ void PeerMessagesHandler::DeletePendingACKReliableMessageAtIndex(unsigned int in
 {
 	assert(index < _pendingAckReliableMessages.size());
 
+	MessageFactory* messageFactory = MessageFactory::GetInstance();
+	assert(messageFactory != nullptr);
+
 	std::list<Message*>::iterator it = _pendingAckReliableMessages.begin();
 	std::advance(it, index);
+	Message* message = *it;
+
 	_pendingAckReliableMessages.erase(it);
+
+	messageFactory->ReleaseMessage(message);
 
 	LOG_INFO("DELETE");
 }

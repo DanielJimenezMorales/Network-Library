@@ -11,6 +11,8 @@ enum MessageType : uint8_t
 	ConnectionChallenge = 3,
 	ConnectionChallengeResponse = 4,
 	Disconnection = 5,
+	InGame = 6,
+	InGameResponse = 7
 };
 
 struct MessageHeader
