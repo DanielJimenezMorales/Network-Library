@@ -56,6 +56,7 @@ public:
 	uint32_t GenerateACKs() const { return _messagesHandler.GenerateACKs(); };
 	void ProcessACKs(uint32_t acks, uint16_t lastAckedMessageSequenceNumber) { _messagesHandler.ProcessACKs(acks, lastAckedMessageSequenceNumber); };
 	void AckReliableMessage(uint16_t messageSequenceNumber) { _messagesHandler.AckReliableMessage(messageSequenceNumber); };
+	bool IsMessageDuplicated(uint16_t messageSequenceNumber) const { return _messagesHandler.IsMessageDuplicated(messageSequenceNumber);};
 
 	/// <summary>
 	/// Disconnect and reset the remote client

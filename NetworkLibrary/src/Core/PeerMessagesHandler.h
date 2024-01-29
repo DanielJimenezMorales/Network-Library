@@ -49,6 +49,7 @@ public:
 	void ProcessACKs(uint32_t acks, uint16_t lastAckedMessageSequenceNumber);
 	uint16_t GetLastMessageSequenceNumberAcked() const { return _lastMessageSequenceNumberAcked; };
 	void AckReliableMessage(uint16_t messageSequenceNumber);
+	bool IsMessageDuplicated(uint16_t messageSequenceNumber) const;
 
 	~PeerMessagesHandler();
 
@@ -65,5 +66,6 @@ private:
 	const ReliableMessageEntry& GetReliableMessageEntry(uint16_t sequenceNumber) const;
 	int GetPendingACKReliableMessageIndexFromSequence(uint16_t sequence) const;
 	void DeletePendingACKReliableMessageAtIndex(unsigned int index);
+	unsigned int GetRollingBufferIndex(uint16_t index) const {return index % _reliableMessageEntriesBufferSize;};
 };
 

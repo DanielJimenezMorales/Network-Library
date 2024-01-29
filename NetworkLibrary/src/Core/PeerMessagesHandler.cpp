@@ -152,11 +152,24 @@ void PeerMessagesHandler::ProcessACKs(uint32_t acks, uint16_t lastAckedMessageSe
 
 void PeerMessagesHandler::AckReliableMessage(uint16_t messageSequenceNumber)
 {
-	unsigned int index = messageSequenceNumber % _reliableMessageEntriesBufferSize;
+	unsigned int index = GetRollingBufferIndex(messageSequenceNumber);
 	_reliableMessageEntries[index].sequenceNumber = messageSequenceNumber;
 	_reliableMessageEntries[index].isAcked = true;
 
 	_lastMessageSequenceNumberAcked = messageSequenceNumber;
+}
+
+bool PeerMessagesHandler::IsMessageDuplicated(uint16_t messageSequenceNumber) const
+{
+	bool result = false;
+
+	unsigned int index = GetRollingBufferIndex(messageSequenceNumber);
+	if (_reliableMessageEntries[index].sequenceNumber == messageSequenceNumber && _reliableMessageEntries[index].isAcked)
+	{
+		result = true;
+	}
+
+	return result;
 }
 
 int PeerMessagesHandler::GetPendingACKReliableMessageIndexFromSequence(uint16_t sequence) const
@@ -202,6 +215,6 @@ PeerMessagesHandler::~PeerMessagesHandler()
 
 const ReliableMessageEntry& PeerMessagesHandler::GetReliableMessageEntry(uint16_t sequenceNumber) const
 {
-	unsigned int index = sequenceNumber % _reliableMessageEntriesBufferSize;
+	unsigned int index = GetRollingBufferIndex(sequenceNumber);
 	return _reliableMessageEntries[index];
 }

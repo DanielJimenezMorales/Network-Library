@@ -33,11 +33,14 @@ bool Peer::Start()
 bool Peer::Tick(float elapsedTime)
 {
 	ProcessReceivedData();
+
 	TickRemotePeers(elapsedTime);
 	HandlerRemotePeersInactivity();
 	TickConcrete(elapsedTime);
+
 	SendData();
-	FinishRemotePeersDisconnection(); //Change name to Remote Peer instead of Remote Client
+
+	FinishRemotePeersDisconnection();
 	return true;
 }
 
@@ -270,6 +273,14 @@ void Peer::ProcessDatagram(Buffer& buffer, const Address& address)
 			if (message.GetHeader().isReliable)
 			{
 				uint16_t messageSequenceNumber = message.GetHeader().messageSequenceNumber;
+				if (remotePeer->IsMessageDuplicated(messageSequenceNumber))
+				{
+					std::stringstream ss;
+					ss << "The message with ID = " << messageSequenceNumber << " is duplicated. Ignoring it...";
+					LOG_INFO(ss.str());
+					continue;
+				}
+
 				remotePeer->AckReliableMessage(messageSequenceNumber);
 			}
 		}
