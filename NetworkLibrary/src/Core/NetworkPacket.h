@@ -34,7 +34,7 @@ public:
 	const NetworkPacketHeader& GetHeader() const { return _header; };
 
 	bool AddMessage(Message* message);
-	std::vector<Message*>::const_iterator GetMessages();
+	std::vector<Message*>::iterator GetMessages();
 	unsigned int GetNumberOfMessages() const { return _messages.size(); }
 
 	void ReleaseMessages();

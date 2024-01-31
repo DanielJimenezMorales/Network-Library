@@ -61,9 +61,9 @@ bool NetworkPacket::AddMessage(Message* message)
 	return true;
 }
 
-std::vector<Message*>::const_iterator NetworkPacket::GetMessages()
+std::vector<Message*>::iterator NetworkPacket::GetMessages()
 {
-	return _messages.cbegin();
+	return _messages.begin();
 }
 
 void NetworkPacket::ReleaseMessages()

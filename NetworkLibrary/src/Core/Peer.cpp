@@ -6,6 +6,7 @@
 #include "Logger.h"
 #include "Buffer.h"
 #include "RemotePeer.h"
+#include "MessageFactory.h"
 
 bool Peer::Start()
 {
@@ -121,7 +122,7 @@ int Peer::FindFreeRemoteClientSlot() const
 	return -1;
 }
 
-RemotePeer* Peer::GetRemoteClientFromAddress(const Address& address)
+RemotePeer* Peer::GetRemotePeerFromAddress(const Address& address)
 {
 	RemotePeer* result = nullptr;
 	for (unsigned int i = 0; i < _maxConnections; ++i)
@@ -250,9 +251,11 @@ void Peer::ProcessDatagram(Buffer& buffer, const Address& address)
 	NetworkPacket packet = NetworkPacket();
 	packet.Read(buffer);
 
-	//Process ACKs
-	RemotePeer* remotePeer = GetRemoteClientFromAddress(address);
-	if(remotePeer != nullptr)
+	RemotePeer* remotePeer = GetRemotePeerFromAddress(address);
+	bool isPacketFromRemotePeer = (remotePeer != nullptr);
+
+	//Process packet ACKs
+	if(isPacketFromRemotePeer)
 	{
 		uint32_t acks = packet.GetHeader().ackBits;
 		uint16_t lastAckedMessageSequenceNumber = packet.GetHeader().lastAckedSequenceNumber;
@@ -260,36 +263,39 @@ void Peer::ProcessDatagram(Buffer& buffer, const Address& address)
 	}
 
 	//Process packet messages one by one
-	std::vector<Message*>::const_iterator constIterator = packet.GetMessages();
+	std::vector<Message*>::iterator iterator = packet.GetMessages();
 	unsigned int numberOfMessagesInPacket = packet.GetNumberOfMessages();
+	MessageFactory* messageFactory = MessageFactory::GetInstance();
 
 	for (unsigned int i = 0; i < numberOfMessagesInPacket; ++i)
 	{
-		const Message& message = **(constIterator + i);
+		Message* message = *(iterator + i);
 
-		//If it is reliable ACK the message
-		if (remotePeer != nullptr)
+		//If it is reliable, ACK the message
+		if (isPacketFromRemotePeer)
 		{
-			if (message.GetHeader().isReliable)
-			{
-				uint16_t messageSequenceNumber = message.GetHeader().messageSequenceNumber;
-				if (remotePeer->IsMessageDuplicated(messageSequenceNumber))
-				{
-					std::stringstream ss;
-					ss << "The message with ID = " << messageSequenceNumber << " is duplicated. Ignoring it...";
-					LOG_INFO(ss.str());
-					continue;
-				}
-
-				remotePeer->AckReliableMessage(messageSequenceNumber);
-			}
+			remotePeer->AddReceivedMessage(message);
 		}
+		else
+		{
+			ProcessMessage(*message, address);
+			messageFactory->ReleaseMessage(message);
+		}
+	}
 
-		ProcessMessage(message, address);
+	//Process ready to process messages from remote peer
+	if (isPacketFromRemotePeer)
+	{
+		while (remotePeer->ArePendingReadyToProcessMessages())
+		{
+			Message* message = remotePeer->GetPendingReadyToProcessMessage();
+			ProcessMessage(*message, address);
+			messageFactory->ReleaseMessage(message);
+		}
 	}
 
 	//Free memory for those messages in the packet.Read() operation
-	packet.ReleaseMessages();
+	//packet.ReleaseMessages();
 }
 
 void Peer::TickRemotePeers(float elapsedTime)

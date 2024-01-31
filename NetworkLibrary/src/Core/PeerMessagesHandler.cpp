@@ -6,8 +6,9 @@
 #include "MessageFactory.h"
 #include "BitwiseUtils.h"
 #include "Logger.h"
+#include "MessageFactory.h"
 
-PeerMessagesHandler::PeerMessagesHandler() : _reliableMessageEntriesBufferSize(1024), _lastMessageSequenceNumberAcked(0)
+PeerMessagesHandler::PeerMessagesHandler() : _reliableMessageEntriesBufferSize(1024), _lastMessageSequenceNumberAcked(0), _nextOrderedMessageSequenceNumber(0)
 {
 	_pendingMessages.reserve(5);
 	_reliableMessageEntries.reserve(_reliableMessageEntriesBufferSize);
@@ -49,6 +50,135 @@ Message* PeerMessagesHandler::GetPendingACKReliableMessage()
 
 	_sentMessages.push(message);
 	return message;
+}
+
+bool PeerMessagesHandler::AddReceivedMessage(Message* message)
+{
+	if (message == nullptr)
+	{
+		return false;
+	}
+
+	MessageHeader header = message->GetHeader();
+	if (header.isReliable)
+	{
+		uint16_t messageSequenceNumber = header.messageSequenceNumber;
+		if (IsMessageDuplicated(messageSequenceNumber))
+		{
+			std::stringstream ss;
+			ss << "The message with ID = " << messageSequenceNumber << " is duplicated. Ignoring it...";
+			LOG_INFO(ss.str());
+			//TODO Release message
+			MessageFactory* messageFactory = MessageFactory::GetInstance();
+			messageFactory->ReleaseMessage(message);
+			return false;
+		}
+		else
+		{
+			AckReliableMessage(messageSequenceNumber);
+			if (messageSequenceNumber == _nextOrderedMessageSequenceNumber)
+			{
+				_pendingMessagesReadyToProcess.push(message);
+				++_nextOrderedMessageSequenceNumber;
+
+				bool continueProcessing = true;
+				unsigned int index = 0;
+				while (continueProcessing)
+				{
+					if (_reliableUnorderedMessages.empty())
+					{
+						continueProcessing = false;
+					}
+					else if (DoesUnorderedMessagesContainsSequence(_nextOrderedMessageSequenceNumber, index))
+					{
+						std::list<Message*>::iterator it = _reliableUnorderedMessages.begin();
+						std::advance(it, index);
+						_pendingMessagesReadyToProcess.push((*it));
+						_reliableUnorderedMessages.erase(it);
+						++_nextOrderedMessageSequenceNumber;
+					}
+					else
+					{
+						continueProcessing = false;
+					}
+				}
+			}
+			else
+			{
+				AddOrderedMessage(message);
+			}
+		}
+	}
+	else
+	{
+		_pendingMessagesReadyToProcess.push(message);
+	}
+
+	return true;
+}
+
+Message* PeerMessagesHandler::GetPendingReadyToProcessMessage()
+{
+	if (!ArePendingReadyToProcessMessages())
+	{
+		return nullptr;
+	}
+
+	Message* message = nullptr;
+	message = _pendingMessagesReadyToProcess.front();
+	_pendingMessagesReadyToProcess.pop();
+
+	return message;
+}
+
+bool PeerMessagesHandler::DoesUnorderedMessagesContainsSequence(uint16_t sequence, unsigned int& index) const
+{
+	const Message* message = nullptr;
+	unsigned int idx = 0;
+	for (std::list<Message*>::const_iterator cit = _reliableUnorderedMessages.cbegin(); cit != _reliableUnorderedMessages.cend(); ++cit)
+	{
+		message = *cit;
+		if (message->GetHeader().messageSequenceNumber == sequence)
+		{
+			index = idx;
+			return true;
+		}
+
+		++idx;
+	}
+
+	return false;
+}
+
+bool PeerMessagesHandler::AddOrderedMessage(Message* message)
+{
+	_reliableUnorderedMessages.push_back(message);
+	return true;
+
+	std::list<Message*>::iterator it = _reliableUnorderedMessages.begin();
+	if (_reliableUnorderedMessages.empty())
+	{
+		_reliableUnorderedMessages.insert(it, message);
+		return true;
+	}
+
+	bool found = false;
+	while (it != _reliableUnorderedMessages.end() && !found)
+	{
+		uint16_t sequenceNumber = (*it)->GetHeader().messageSequenceNumber;
+		if (sequenceNumber > message->GetHeader().messageSequenceNumber)
+		{
+			found = true;
+		}
+		else
+		{
+			++it;
+		}
+	}
+
+	_reliableUnorderedMessages.insert(it, message);
+
+	return found;
 }
 
 unsigned int PeerMessagesHandler::GetSizeOfNextPendingMessage() const
@@ -128,12 +258,7 @@ void PeerMessagesHandler::ProcessACKs(uint32_t acks, uint16_t lastAckedMessageSe
 	LOG_INFO(ss.str());
 
 	//Check if the last acked is in reliable messages lists
-	int index = -1;
-	index = GetPendingACKReliableMessageIndexFromSequence(lastAckedMessageSequenceNumber);
-	if (index != -1)
-	{
-		DeletePendingACKReliableMessageAtIndex(index);
-	}
+	TryRemovePendingACKReliableMessageFromSequence(lastAckedMessageSequenceNumber);
 
 	//Check for the rest of acked bits
 	uint16_t firstAckSequence = lastAckedMessageSequenceNumber - 1;
@@ -141,11 +266,7 @@ void PeerMessagesHandler::ProcessACKs(uint32_t acks, uint16_t lastAckedMessageSe
 	{
 		if (BitwiseUtils::GetBitAtIndex(acks, i))
 		{
-			index = GetPendingACKReliableMessageIndexFromSequence(firstAckSequence - i);
-			if (index != -1)
-			{
-				DeletePendingACKReliableMessageAtIndex(index);
-			}
+			TryRemovePendingACKReliableMessageFromSequence(firstAckSequence - i);
 		}
 	}
 }
@@ -217,4 +338,18 @@ const ReliableMessageEntry& PeerMessagesHandler::GetReliableMessageEntry(uint16_
 {
 	unsigned int index = GetRollingBufferIndex(sequenceNumber);
 	return _reliableMessageEntries[index];
+}
+
+bool PeerMessagesHandler::TryRemovePendingACKReliableMessageFromSequence(uint16_t sequence)
+{
+	bool result = false;
+
+	int index = GetPendingACKReliableMessageIndexFromSequence(sequence);
+	if (index != -1)
+	{
+		DeletePendingACKReliableMessageAtIndex(index);
+		result = true;
+	}
+
+	return result;
 }

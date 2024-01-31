@@ -57,6 +57,10 @@ public:
 	void ProcessACKs(uint32_t acks, uint16_t lastAckedMessageSequenceNumber) { _messagesHandler.ProcessACKs(acks, lastAckedMessageSequenceNumber); };
 	void AckReliableMessage(uint16_t messageSequenceNumber) { _messagesHandler.AckReliableMessage(messageSequenceNumber); };
 	bool IsMessageDuplicated(uint16_t messageSequenceNumber) const { return _messagesHandler.IsMessageDuplicated(messageSequenceNumber);};
+	bool AddReceivedMessage(Message* message) { return _messagesHandler.AddReceivedMessage(message); };
+
+	bool ArePendingReadyToProcessMessages() const { return _messagesHandler.ArePendingReadyToProcessMessages(); };
+	Message* GetPendingReadyToProcessMessage() { return _messagesHandler.GetPendingReadyToProcessMessage(); };
 
 	/// <summary>
 	/// Disconnect and reset the remote client

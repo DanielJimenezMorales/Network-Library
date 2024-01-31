@@ -114,7 +114,7 @@ void Server::ProcessConnectionRequest(const ConnectionRequestMessage& message, c
 	else if (isAbleToConnectResult == 1)//If the client is already connected just send a connection approved message
 	{
 		//int connectedClientIndex = FindExistingClientIndex(address);
-		RemotePeer* remoteClient = GetRemoteClientFromAddress(address);
+		RemotePeer* remoteClient = GetRemotePeerFromAddress(address);
 		CreateConnectionApprovedMessage(*remoteClient);
 		LOG_INFO("The client is already connected, sending connection approved...");
 	}
@@ -242,7 +242,7 @@ void Server::ProcessConnectionChallengeResponse(const ConnectionChallengeRespons
 	else if (isAbleToConnectResult == 1)//If the client is already connected just send a connection approved message
 	{
 		//Find remote client
-		RemotePeer* remoteClient = GetRemoteClientFromAddress(address);
+		RemotePeer* remoteClient = GetRemotePeerFromAddress(address);
 
 		//Check if data prefix match
 		if (remoteClient->GetDataPrefix() != dataPrefix)
@@ -264,7 +264,7 @@ void Server::ProcessInGame(const InGameMessage& message, const Address& address)
 	ss << "InGame ID: " << message.data;
 	LOG_INFO(ss.str());
 
-	RemotePeer* remotePeer = GetRemoteClientFromAddress(address);
+	RemotePeer* remotePeer = GetRemotePeerFromAddress(address);
 	assert(remotePeer != nullptr);
 
 	CreateInGameResponseMessage(*remotePeer, message.data);

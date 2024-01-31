@@ -37,6 +37,13 @@ public:
 	bool ArePendingACKReliableMessages() const { return !_pendingAckReliableMessages.empty(); };
 	Message* GetPendingACKReliableMessage();
 
+	bool AddReceivedMessage(Message* message);
+	bool ArePendingReadyToProcessMessages() const { return !_pendingMessagesReadyToProcess.empty(); };
+	Message* GetPendingReadyToProcessMessage();
+	bool DoesUnorderedMessagesContainsSequence(uint16_t sequence, unsigned int& index) const;
+
+	bool AddOrderedMessage(Message* message);
+
 	unsigned int GetSizeOfNextPendingMessage() const;
 
 	/// <summary>
@@ -63,7 +70,13 @@ private:
 	unsigned int _reliableMessageEntriesBufferSize;
 	std::vector<ReliableMessageEntry> _reliableMessageEntries;
 
+	unsigned int _nextOrderedMessageSequenceNumber;
+	std::list<Message*> _reliableUnorderedMessages;
+
+	std::queue<Message*> _pendingMessagesReadyToProcess;
+
 	const ReliableMessageEntry& GetReliableMessageEntry(uint16_t sequenceNumber) const;
+	bool TryRemovePendingACKReliableMessageFromSequence(uint16_t sequence);
 	int GetPendingACKReliableMessageIndexFromSequence(uint16_t sequence) const;
 	void DeletePendingACKReliableMessageAtIndex(unsigned int index);
 	unsigned int GetRollingBufferIndex(uint16_t index) const {return index % _reliableMessageEntriesBufferSize;};
