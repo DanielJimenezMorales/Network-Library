@@ -2,7 +2,7 @@
 
 #include "NetworkPacket.h"
 #include "Buffer.h"
-#include "MessageFactory.h"
+#include "Message.h"
 #include "MessageUtils.h"
 
 void NetworkPacketHeader::Write(Buffer& buffer) const
@@ -29,11 +29,10 @@ void NetworkPacket::Write(Buffer& buffer) const
 	uint8_t numberOfMessages = _messages.size();
 	buffer.WriteByte(numberOfMessages);
 
-	std::vector<Message*>::const_iterator iterator = _messages.cbegin();
-	while (iterator != _messages.cend())
+	for (std::vector<Message*>::const_iterator cit = _messages.cbegin(); cit != _messages.cend(); ++cit)
 	{
-		(*iterator)->Write(buffer);
-		++iterator;
+		const Message* message = *cit;
+		message->Write(buffer);
 	}
 }
 
@@ -66,19 +65,6 @@ std::vector<Message*>::iterator NetworkPacket::GetMessages()
 	return _messages.begin();
 }
 
-void NetworkPacket::ReleaseMessages()
-{
-	MessageFactory* messageFactory = MessageFactory::GetInstance();
-	assert(messageFactory != nullptr);
-	
-	for (int i = GetNumberOfMessages() - 1; i >= 0; --i)
-	{
-		Message* message = _messages[i];
-		_messages.erase(_messages.begin() + i);
-		messageFactory->ReleaseMessage(message);
-	}
-}
-
 uint32_t NetworkPacket::Size() const
 {
 	uint32_t packetSize = NetworkPacketHeader::Size();
@@ -97,4 +83,9 @@ uint32_t NetworkPacket::Size() const
 bool NetworkPacket::CanMessageFit(unsigned int sizeOfMessagesInBytes) const
 {
 	return (sizeOfMessagesInBytes + Size() < MaxSize());
+}
+
+NetworkPacket::~NetworkPacket()
+{
+	_messages.clear();
 }

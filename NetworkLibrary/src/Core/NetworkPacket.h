@@ -37,14 +37,14 @@ public:
 	std::vector<Message*>::iterator GetMessages();
 	unsigned int GetNumberOfMessages() const { return _messages.size(); }
 
-	void ReleaseMessages();
-
 	uint32_t Size() const;
 	unsigned int MaxSize() const { return _defaultMTUSizeInBytes; };
 	bool CanMessageFit(unsigned int sizeOfMessagesInBytes) const;
 
 	void SetHeaderACKs(uint32_t acks) { _header.SetACKs(acks); };
 	void SetHeaderLastAcked(uint16_t lastAckedMessage) { _header.SetHeaderLastAcked(lastAckedMessage); };
+
+	~NetworkPacket();
 
 private:
 	const unsigned int _defaultMTUSizeInBytes;

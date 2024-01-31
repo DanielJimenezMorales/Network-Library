@@ -49,10 +49,11 @@ public:
 	bool AddMessage(Message* message);
 	bool ArePendingMessages() const { return _messagesHandler.ArePendingMessages(); }
 	Message* GetPendingMessage();
-	bool ArePendingACKReliableMessages() const { return _messagesHandler.ArePendingACKReliableMessages(); };
+	bool ArePendingACKReliableMessages() const { return _messagesHandler.AreUnackedReliableMessages(); };
 	Message* GetPendingACKReliableMessage();
 	unsigned int GetSizeOfNextPendingMessage() const { return _messagesHandler.GetSizeOfNextPendingMessage(); };
 	void FreeSentMessages();
+	void FreeProcessedMessages() { _messagesHandler.FreeProcessedMessages(); };
 	uint32_t GenerateACKs() const { return _messagesHandler.GenerateACKs(); };
 	void ProcessACKs(uint32_t acks, uint16_t lastAckedMessageSequenceNumber) { _messagesHandler.ProcessACKs(acks, lastAckedMessageSequenceNumber); };
 	void AckReliableMessage(uint16_t messageSequenceNumber) { _messagesHandler.AckReliableMessage(messageSequenceNumber); };
@@ -60,7 +61,7 @@ public:
 	bool AddReceivedMessage(Message* message) { return _messagesHandler.AddReceivedMessage(message); };
 
 	bool ArePendingReadyToProcessMessages() const { return _messagesHandler.ArePendingReadyToProcessMessages(); };
-	Message* GetPendingReadyToProcessMessage() { return _messagesHandler.GetPendingReadyToProcessMessage(); };
+	const Message* GetPendingReadyToProcessMessage() { return _messagesHandler.GetReadyToProcessMessage(); };
 
 	/// <summary>
 	/// Disconnect and reset the remote client

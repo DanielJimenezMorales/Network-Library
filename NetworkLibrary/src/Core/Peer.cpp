@@ -271,7 +271,6 @@ void Peer::ProcessDatagram(Buffer& buffer, const Address& address)
 	{
 		Message* message = *(iterator + i);
 
-		//If it is reliable, ACK the message
 		if (isPacketFromRemotePeer)
 		{
 			remotePeer->AddReceivedMessage(message);
@@ -288,14 +287,12 @@ void Peer::ProcessDatagram(Buffer& buffer, const Address& address)
 	{
 		while (remotePeer->ArePendingReadyToProcessMessages())
 		{
-			Message* message = remotePeer->GetPendingReadyToProcessMessage();
+			const Message* message = remotePeer->GetPendingReadyToProcessMessage();
 			ProcessMessage(*message, address);
-			messageFactory->ReleaseMessage(message);
 		}
-	}
 
-	//Free memory for those messages in the packet.Read() operation
-	//packet.ReleaseMessages();
+		remotePeer->FreeProcessedMessages();
+	}
 }
 
 void Peer::TickRemotePeers(float elapsedTime)

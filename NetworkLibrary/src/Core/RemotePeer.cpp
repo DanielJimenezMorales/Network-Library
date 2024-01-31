@@ -2,7 +2,6 @@
 
 #include "RemotePeer.h"
 #include "Message.h"
-#include "MessageFactory.h"
 #include "Logger.h"
 
 RemotePeer::RemotePeer() :

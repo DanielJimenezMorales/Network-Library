@@ -34,12 +34,12 @@ public:
 	/// <returns>A pointer to a pending message to send</returns>
 	Message* GetPendingMessage();
 
-	bool ArePendingACKReliableMessages() const { return !_pendingAckReliableMessages.empty(); };
+	bool AreUnackedReliableMessages() const { return !_unackedReliableMessages.empty(); };
 	Message* GetPendingACKReliableMessage();
 
 	bool AddReceivedMessage(Message* message);
-	bool ArePendingReadyToProcessMessages() const { return !_pendingMessagesReadyToProcess.empty(); };
-	Message* GetPendingReadyToProcessMessage();
+	bool ArePendingReadyToProcessMessages() const { return !_readyToProcessMessages.empty(); };
+	const Message* GetReadyToProcessMessage();
 	bool DoesUnorderedMessagesContainsSequence(uint16_t sequence, unsigned int& index) const;
 
 	bool AddOrderedMessage(Message* message);
@@ -47,9 +47,13 @@ public:
 	unsigned int GetSizeOfNextPendingMessage() const;
 
 	/// <summary>
-	/// Call this after sending a packet to this client. This will release all the memory related to messages sent (Only if they are non reliable)
+	/// Call this after sending a packet to this peer. This will release all the memory related to messages sent (Only if they are non reliable)
 	/// </summary>
 	void FreeSentMessages();
+	/// <summary>
+	/// Call this after processing all the messages from this peer. This will release all the memory related to messages processed.
+	/// </summary>
+	void FreeProcessedMessages();
 	void ClearMessages();
 
 	uint32_t GenerateACKs() const;
@@ -61,24 +65,38 @@ public:
 	~PeerMessagesHandler();
 
 private:
+	//Collection of messages that are waiting to be sent.
 	std::vector<Message*> _pendingMessages;
-	std::list<Message*> _pendingAckReliableMessages;
+	//Collection of messages that have been sent and are waiting to be released (Used for memory management purposes)
 	std::queue<Message*> _sentMessages;
+	//Collection of received messages ready to be processed
+	std::queue<Message*> _readyToProcessMessages;
+	//Collection of messages that have been processed and are waiting to be released (Used for memory management purposes)
+	std::queue<Message*> _processedMessages;
 
+	//*************************
+	//RELIABLE MESSAGES RELATED
+	//*************************
+	//Collection of reliable messages that have not already been acked
+	std::list<Message*> _unackedReliableMessages;
+	//Last reliable message sequence acked
 	uint16_t _lastMessageSequenceNumberAcked;
-
-	unsigned int _reliableMessageEntriesBufferSize;
+	//Collection of reliable message entries to handle ACKs
 	std::vector<ReliableMessageEntry> _reliableMessageEntries;
+	unsigned int _reliableMessageEntriesBufferSize;
 
+	//*************************
+	//ORDERED MESSAGES RELATED
+	//*************************
+	//Collection of messages waiting for a previous message in order to guarantee ordered delivery
+	std::list<Message*> _orderedMessagesWaitingForPrevious;
+	//Next message sequence number expected to guarantee ordered transmission
 	unsigned int _nextOrderedMessageSequenceNumber;
-	std::list<Message*> _reliableUnorderedMessages;
-
-	std::queue<Message*> _pendingMessagesReadyToProcess;
 
 	const ReliableMessageEntry& GetReliableMessageEntry(uint16_t sequenceNumber) const;
-	bool TryRemovePendingACKReliableMessageFromSequence(uint16_t sequence);
-	int GetPendingACKReliableMessageIndexFromSequence(uint16_t sequence) const;
-	void DeletePendingACKReliableMessageAtIndex(unsigned int index);
+	bool TryRemoveUnackedReliableMessageFromSequence(uint16_t sequence);
+	int GetPendingUnackedReliableMessageIndexFromSequence(uint16_t sequence) const;
+	void DeleteUnackedReliableMessageAtIndex(unsigned int index);
 	unsigned int GetRollingBufferIndex(uint16_t index) const {return index % _reliableMessageEntriesBufferSize;};
 };
 
