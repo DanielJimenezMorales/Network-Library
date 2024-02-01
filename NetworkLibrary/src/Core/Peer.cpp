@@ -6,6 +6,7 @@
 #include "Logger.h"
 #include "Buffer.h"
 #include "RemotePeer.h"
+#include "MessageFactory.h"
 
 bool Peer::Start()
 {
@@ -33,11 +34,14 @@ bool Peer::Start()
 bool Peer::Tick(float elapsedTime)
 {
 	ProcessReceivedData();
+
 	TickRemotePeers(elapsedTime);
 	HandlerRemotePeersInactivity();
 	TickConcrete(elapsedTime);
+
 	SendData();
-	FinishRemotePeersDisconnection(); //Change name to Remote Peer instead of Remote Client
+
+	FinishRemotePeersDisconnection();
 	return true;
 }
 
@@ -88,6 +92,7 @@ void Peer::SendPacketToAddress(const NetworkPacket& packet, const Address& addre
 {
 	Buffer buffer = Buffer(_sendBuffer, packet.Size());
 	packet.Write(buffer);
+
 	_socket.SendTo(_sendBuffer, packet.Size(), address);
 }
 
@@ -117,7 +122,7 @@ int Peer::FindFreeRemoteClientSlot() const
 	return -1;
 }
 
-RemotePeer* Peer::GetRemoteClientFromAddress(const Address& address)
+RemotePeer* Peer::GetRemotePeerFromAddress(const Address& address)
 {
 	RemotePeer* result = nullptr;
 	for (unsigned int i = 0; i < _maxConnections; ++i)
@@ -246,25 +251,48 @@ void Peer::ProcessDatagram(Buffer& buffer, const Address& address)
 	NetworkPacket packet = NetworkPacket();
 	packet.Read(buffer);
 
-	if (_type == PeerType::ServerMode)
+	RemotePeer* remotePeer = GetRemotePeerFromAddress(address);
+	bool isPacketFromRemotePeer = (remotePeer != nullptr);
+
+	//Process packet ACKs
+	if(isPacketFromRemotePeer)
 	{
-		std::stringstream ss;
-		ss << "Packet received. Sequence number equal to " << packet.GetHeader().sequenceNumber;
-		LOG_INFO(ss.str());
+		uint32_t acks = packet.GetHeader().ackBits;
+		uint16_t lastAckedMessageSequenceNumber = packet.GetHeader().lastAckedSequenceNumber;
+		remotePeer->ProcessACKs(acks, lastAckedMessageSequenceNumber);
 	}
 
 	//Process packet messages one by one
-	std::vector<Message*>::const_iterator constIterator = packet.GetMessages();
+	std::vector<Message*>::iterator iterator = packet.GetMessages();
 	unsigned int numberOfMessagesInPacket = packet.GetNumberOfMessages();
-	const Message* message = nullptr;
+	MessageFactory* messageFactory = MessageFactory::GetInstance();
+
 	for (unsigned int i = 0; i < numberOfMessagesInPacket; ++i)
 	{
-		message = *(constIterator + i);
-		ProcessMessage(*message, address);
+		Message* message = *(iterator + i);
+
+		if (isPacketFromRemotePeer)
+		{
+			remotePeer->AddReceivedMessage(message);
+		}
+		else
+		{
+			ProcessMessage(*message, address);
+			messageFactory->ReleaseMessage(message);
+		}
 	}
 
-	//Free memory for those messages in the packet.Read() operation
-	packet.ReleaseMessages();
+	//Process ready to process messages from remote peer
+	if (isPacketFromRemotePeer)
+	{
+		while (remotePeer->ArePendingReadyToProcessMessages())
+		{
+			const Message* message = remotePeer->GetPendingReadyToProcessMessage();
+			ProcessMessage(*message, address);
+		}
+
+		remotePeer->FreeProcessedMessages();
+	}
 }
 
 void Peer::TickRemotePeers(float elapsedTime)
@@ -367,18 +395,59 @@ void Peer::SendPacketToRemotePeer(RemotePeer& remotePeer)
 		return;
 	}
 
-	NetworkPacket packet = NetworkPacket(remotePeer.GetNextPacketSequenceNumber());
+	NetworkPacket packet = NetworkPacket();
 	Message* message = nullptr;
-	do
+
+	//TODO Check somewhere if there is a message larger than the maximum packet size. Log a warning saying that the message will never get sent and delete it.
+	//TODO Include data prefix in packet's header and check if the data prefix is correct when receiving a packet
+
+	bool arePendingMessages = true;
+	bool isThereCapacityLeft = true;
+
+	if (remotePeer.ArePendingACKReliableMessages())
 	{
-		message = remotePeer.GetAMessage();
+		message = remotePeer.GetPendingACKReliableMessage();
 		packet.AddMessage(message);
-	} while (remotePeer.ArePendingMessages());
+	}
+
+	//Check if we should include another message to the packet
+	arePendingMessages = remotePeer.ArePendingMessages();
+	isThereCapacityLeft = packet.CanMessageFit(remotePeer.GetSizeOfNextPendingMessage());
+
+	while (arePendingMessages && isThereCapacityLeft)
+	{
+		//Configure and add message to packet
+		message = remotePeer.GetPendingMessage();
+
+		uint16_t messageSequenceNumber = 0;
+		if (message->GetHeader().isReliable)
+		{
+			messageSequenceNumber = remotePeer.GetNextMessageSequenceNumber();
+			remotePeer.IncreaseMessageSequenceNumber();
+			
+			std::stringstream ss;
+			ss << "Reliable message sequence number: " << messageSequenceNumber << " Message type: " << (int)message->GetHeader().type;
+			LOG_INFO(ss.str());
+		}
+		message->SetHeaderPacketSequenceNumber(messageSequenceNumber);
+
+		packet.AddMessage(message);
+
+		//Check if we should include another message to the packet
+		arePendingMessages = remotePeer.ArePendingMessages();
+		isThereCapacityLeft = packet.CanMessageFit(remotePeer.GetSizeOfNextPendingMessage());
+	}
+
+	//Set packet header fields
+	uint32_t acks = remotePeer.GenerateACKs();
+	packet.SetHeaderACKs(acks);
+
+	uint16_t lastAckedMessageSequenceNumber = remotePeer.GetLastMessageSequenceNumberAcked();
+	packet.SetHeaderLastAcked(lastAckedMessageSequenceNumber);
 
 	SendPacketToAddress(packet, remotePeer.GetAddress());
 
 	remotePeer.FreeSentMessages();
-	remotePeer.IncreaseNextPacketSequenceNumber();
 }
 
 void Peer::SendDataToAddress(const Buffer& buffer, const Address& address) const

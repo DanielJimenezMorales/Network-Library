@@ -10,7 +10,8 @@ void ConnectionRequestMessage::Write(Buffer& buffer) const
 void ConnectionRequestMessage::Read(Buffer& buffer)
 {
 	_header.type = MessageType::ConnectionRequest;
-	//header.Read(buffer);
+	_header.ReadWithoutHeader(buffer);
+
 	clientSalt = buffer.ReadLong();
 }
 
@@ -29,7 +30,8 @@ void ConnectionChallengeMessage::Write(Buffer& buffer) const
 void ConnectionChallengeMessage::Read(Buffer& buffer)
 {
 	_header.type = MessageType::ConnectionChallenge;
-	//header.Read(buffer);
+	_header.ReadWithoutHeader(buffer);
+
 	clientSalt = buffer.ReadLong();
 	serverSalt = buffer.ReadLong();
 }
@@ -48,7 +50,8 @@ void ConnectionChallengeResponseMessage::Write(Buffer& buffer) const
 void ConnectionChallengeResponseMessage::Read(Buffer& buffer)
 {
 	_header.type = MessageType::ConnectionChallengeResponse;
-	//header.Read(buffer);
+	_header.ReadWithoutHeader(buffer);
+
 	prefix = buffer.ReadLong();
 }
 
@@ -67,7 +70,8 @@ void ConnectionAcceptedMessage::Write(Buffer& buffer) const
 void ConnectionAcceptedMessage::Read(Buffer& buffer)
 {
 	_header.type = MessageType::ConnectionAccepted;
-	//header.Read(buffer);
+	_header.ReadWithoutHeader(buffer);
+
 	prefix = buffer.ReadLong();
 	clientIndexAssigned = buffer.ReadShort();
 }
@@ -85,7 +89,7 @@ void ConnectionDeniedMessage::Write(Buffer& buffer) const
 void ConnectionDeniedMessage::Read(Buffer& buffer)
 {
 	_header.type = MessageType::ConnectionDenied;
-	//header.Read(buffer);
+	_header.ReadWithoutHeader(buffer);
 }
 
 uint32_t ConnectionDeniedMessage::Size() const
@@ -102,11 +106,50 @@ void DisconnectionMessage::Write(Buffer& buffer) const
 void DisconnectionMessage::Read(Buffer& buffer)
 {
 	_header.type = MessageType::Disconnection;
-	//header.Read(buffer);
+	_header.ReadWithoutHeader(buffer);
+
 	prefix = buffer.ReadLong();
 }
 
 uint32_t DisconnectionMessage::Size() const
+{
+	return MessageHeader::Size() + sizeof(uint64_t);
+}
+
+void InGameMessage::Write(Buffer& buffer) const
+{
+	_header.Write(buffer);
+	buffer.WriteLong(data);
+}
+
+void InGameMessage::Read(Buffer& buffer)
+{
+	_header.type = MessageType::InGame;
+	_header.ReadWithoutHeader(buffer);
+
+	data = buffer.ReadLong();
+}
+
+uint32_t InGameMessage::Size() const
+{
+	return MessageHeader::Size() + sizeof(uint64_t);
+}
+
+void InGameResponseMessage::Write(Buffer& buffer) const
+{
+	_header.Write(buffer);
+	buffer.WriteLong(data);
+}
+
+void InGameResponseMessage::Read(Buffer& buffer)
+{
+	_header.type = MessageType::InGameResponse;
+	_header.ReadWithoutHeader(buffer);
+
+	data = buffer.ReadLong();
+}
+
+uint32_t InGameResponseMessage::Size() const
 {
 	return MessageHeader::Size() + sizeof(uint64_t);
 }

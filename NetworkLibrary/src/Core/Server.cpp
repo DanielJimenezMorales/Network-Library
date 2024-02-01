@@ -1,4 +1,5 @@
 #include <sstream>
+#include <cassert>
 
 #include "Server.h"
 #include "Logger.h"
@@ -61,6 +62,12 @@ void Server::ProcessMessage(const Message& message, const Address& address)
 		ProcessConnectionChallengeResponse(connectionChallengeResponseMessage, address);
 		break;
 	}
+	case MessageType::InGame:
+	{
+		const InGameMessage& inGameMessage = static_cast<const InGameMessage&>(message);
+		ProcessInGame(inGameMessage, address);
+		break;
+	}
 	default:
 		LOG_WARNING("Invalid Message type, ignoring it...");
 		break;
@@ -107,7 +114,7 @@ void Server::ProcessConnectionRequest(const ConnectionRequestMessage& message, c
 	else if (isAbleToConnectResult == 1)//If the client is already connected just send a connection approved message
 	{
 		//int connectedClientIndex = FindExistingClientIndex(address);
-		RemotePeer* remoteClient = GetRemoteClientFromAddress(address);
+		RemotePeer* remoteClient = GetRemotePeerFromAddress(address);
 		CreateConnectionApprovedMessage(*remoteClient);
 		LOG_INFO("The client is already connected, sending connection approved...");
 	}
@@ -136,6 +143,26 @@ void Server::CreateDisconnectionMessage(RemotePeer& remoteClient)
 	LOG_INFO("Disconnection message created.");
 }
 
+void Server::CreateInGameResponseMessage(RemotePeer& remoteClient, uint64_t data)
+{
+	MessageFactory* messageFactory = MessageFactory::GetInstance();
+	Message* message = messageFactory->LendMessage(MessageType::InGameResponse);
+	if (message == nullptr)
+	{
+		LOG_ERROR("Can't create new in game response Message because the MessageFactory has returned a null message");
+		return;
+	}
+
+	message->SetReliability(true);
+
+	InGameResponseMessage* inGameResponseMessage = static_cast<InGameResponseMessage*>(message);
+
+	inGameResponseMessage->data = data;
+	remoteClient.AddMessage(inGameResponseMessage);
+
+	LOG_INFO("In game response message created.");
+}
+
 void Server::CreateConnectionChallengeMessage(const Address& address, int pendingConnectionIndex)
 {
 	MessageFactory* messageFactory = MessageFactory::GetInstance();
@@ -161,7 +188,7 @@ void Server::SendConnectionDeniedPacket(const Address& address) const
 
 	Message* connectionDeniedMessage = messageFactory->LendMessage(MessageType::ConnectionDenied);
 
-	NetworkPacket packet = NetworkPacket(0);
+	NetworkPacket packet = NetworkPacket();
 	packet.AddMessage(connectionDeniedMessage);
 
 	LOG_INFO("Sending connection denied...");
@@ -215,7 +242,7 @@ void Server::ProcessConnectionChallengeResponse(const ConnectionChallengeRespons
 	else if (isAbleToConnectResult == 1)//If the client is already connected just send a connection approved message
 	{
 		//Find remote client
-		RemotePeer* remoteClient = GetRemoteClientFromAddress(address);
+		RemotePeer* remoteClient = GetRemotePeerFromAddress(address);
 
 		//Check if data prefix match
 		if (remoteClient->GetDataPrefix() != dataPrefix)
@@ -229,6 +256,18 @@ void Server::ProcessConnectionChallengeResponse(const ConnectionChallengeRespons
 	{
 		SendConnectionDeniedPacket(address);
 	}
+}
+
+void Server::ProcessInGame(const InGameMessage& message, const Address& address)
+{
+	std::stringstream ss;
+	ss << "InGame ID: " << message.data;
+	LOG_INFO(ss.str());
+
+	RemotePeer* remotePeer = GetRemotePeerFromAddress(address);
+	assert(remotePeer != nullptr);
+
+	CreateInGameResponseMessage(*remotePeer, message.data);
 }
 
 int Server::IsClientAbleToConnect(const Address& address) const
@@ -263,7 +302,7 @@ void Server::CreateConnectionApprovedMessage(RemotePeer& remoteClient)
 		LOG_ERROR("Can't create new Connection Accepted Message because the MessageFactory has returned a null message");
 		return;
 	}
-
+	
 	ConnectionAcceptedMessage* connectionAcceptedPacket = static_cast<ConnectionAcceptedMessage*>(message);
 	connectionAcceptedPacket->prefix = remoteClient.GetDataPrefix();
 	connectionAcceptedPacket->clientIndexAssigned = remoteClient.GetClientIndex();

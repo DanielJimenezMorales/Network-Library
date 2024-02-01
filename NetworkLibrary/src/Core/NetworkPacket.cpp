@@ -2,24 +2,22 @@
 
 #include "NetworkPacket.h"
 #include "Buffer.h"
-#include "MessageFactory.h"
+#include "Message.h"
 #include "MessageUtils.h"
 
 void NetworkPacketHeader::Write(Buffer& buffer) const
 {
-	buffer.WriteShort(sequenceNumber);
 	buffer.WriteShort(lastAckedSequenceNumber);
 	buffer.WriteInteger(ackBits);
 }
 
 void NetworkPacketHeader::Read(Buffer& buffer)
 {
-	sequenceNumber = buffer.ReadShort();
 	lastAckedSequenceNumber = buffer.ReadShort();
 	ackBits = buffer.ReadInteger();
 }
 
-NetworkPacket::NetworkPacket(uint16_t packetSequenceNumber) : _header(packetSequenceNumber, 0, 0)
+NetworkPacket::NetworkPacket() : _header(0, 0), _defaultMTUSizeInBytes(1500)
 {
 	_messages.reserve(5);
 }
@@ -31,11 +29,10 @@ void NetworkPacket::Write(Buffer& buffer) const
 	uint8_t numberOfMessages = _messages.size();
 	buffer.WriteByte(numberOfMessages);
 
-	std::vector<Message*>::const_iterator iterator = _messages.cbegin();
-	while (iterator != _messages.cend())
+	for (std::vector<Message*>::const_iterator cit = _messages.cbegin(); cit != _messages.cend(); ++cit)
 	{
-		(*iterator)->Write(buffer);
-		++iterator;
+		const Message* message = *cit;
+		message->Write(buffer);
 	}
 }
 
@@ -63,22 +60,9 @@ bool NetworkPacket::AddMessage(Message* message)
 	return true;
 }
 
-std::vector<Message*>::const_iterator NetworkPacket::GetMessages()
+std::vector<Message*>::iterator NetworkPacket::GetMessages()
 {
-	return _messages.cbegin();
-}
-
-void NetworkPacket::ReleaseMessages()
-{
-	MessageFactory* messageFactory = MessageFactory::GetInstance();
-	assert(messageFactory != nullptr);
-	
-	for (int i = GetNumberOfMessages() - 1; i >= 0; --i)
-	{
-		Message* message = _messages[i];
-		_messages.erase(_messages.begin() + i);
-		messageFactory->ReleaseMessage(message);
-	}
+	return _messages.begin();
 }
 
 uint32_t NetworkPacket::Size() const
@@ -94,4 +78,14 @@ uint32_t NetworkPacket::Size() const
 	}
 
 	return packetSize;
+}
+
+bool NetworkPacket::CanMessageFit(unsigned int sizeOfMessagesInBytes) const
+{
+	return (sizeOfMessagesInBytes + Size() < MaxSize());
+}
+
+NetworkPacket::~NetworkPacket()
+{
+	_messages.clear();
 }

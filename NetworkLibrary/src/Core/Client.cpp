@@ -13,7 +13,8 @@ Client::Client(float serverMaxInactivityTimeout) : Peer(PeerType::ClientMode, 1,
 			_serverInactivityTimeLeft(serverMaxInactivityTimeout),
 			_saltNumber(0),
 			_dataPrefix(0),
-			_serverAddress("127.0.0.1", 54000)
+			_serverAddress("127.0.0.1", 54000),
+			inGameMessageID(0)
 {
 }
 
@@ -97,6 +98,13 @@ void Client::ProcessMessage(const Message& message, const Address& address)
 			ProcessDisconnection(disconnectionMessage);
 		}
 		break;
+	case MessageType::InGameResponse:
+		if (_currentState == ClientState::Connected)
+		{
+			const InGameResponseMessage& inGameResponseMessage = static_cast<const InGameResponseMessage&>(message);
+			ProcessInGameResponse(inGameResponseMessage);
+		}
+		break;
 	default:
 		LOG_WARNING("Invalid Message type, ignoring it...");
 		break;
@@ -120,6 +128,11 @@ void Client::TickConcrete(float elapsedTime)
 			_serverInactivityTimeLeft = 0.f;
 			_currentState = ClientState::Disconnected;
 		}
+	}
+
+	if (_currentState == ClientState::Connected)
+	{
+		CreateInGameMessage();
 	}
 }
 
@@ -191,6 +204,13 @@ void Client::ProcessDisconnection(const DisconnectionMessage& message)
 	LOG_INFO("Disconnection message received from server. Disconnecting...");
 }
 
+void Client::ProcessInGameResponse(const InGameResponseMessage& message)
+{
+	std::stringstream ss;
+	ss << "In game response ID = " << message.data;
+	LOG_INFO(ss.str());
+}
+
 void Client::CreateConnectionRequestMessage()
 {
 	MessageFactory* messageFactory = MessageFactory::GetInstance();
@@ -220,8 +240,24 @@ void Client::CreateConnectionChallengeResponse()
 		return;
 	}
 
-	ConnectionChallengeResponseMessage* connectionChallengeResponsePacket = static_cast<ConnectionChallengeResponseMessage*>(message);
-	connectionChallengeResponsePacket->prefix = _dataPrefix;
+	ConnectionChallengeResponseMessage* connectionChallengeResponseMessage = static_cast<ConnectionChallengeResponseMessage*>(message);
+	connectionChallengeResponseMessage->prefix = _dataPrefix;
 
-	_pendingConnections[0].AddMessage(connectionChallengeResponsePacket);
+	_pendingConnections[0].AddMessage(connectionChallengeResponseMessage);
+}
+
+void Client::CreateInGameMessage()
+{
+	MessageFactory* messageFactory = MessageFactory::GetInstance();
+	Message* message = messageFactory->LendMessage(MessageType::InGame);
+	if (message == nullptr)
+	{
+		LOG_ERROR("Can't create new Connection Challenge Response Message because the MessageFactory has returned a null message");
+		return;
+	}
+
+	InGameMessage* inGameMessage = static_cast<InGameMessage*>(message);
+	inGameMessage->data = inGameMessageID;
+	inGameMessageID++;
+	_remotePeers[0].AddMessage(inGameMessage);
 }

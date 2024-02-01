@@ -6,6 +6,8 @@ class Message
 {
 public:
 	MessageHeader GetHeader() const { return _header; }
+	void SetHeaderPacketSequenceNumber(uint16_t packetSequenceNumber) { _header.messageSequenceNumber = packetSequenceNumber; }
+	void SetReliability(bool isReliable) { _header.isReliable = isReliable; };
 
 	virtual void Write(Buffer& buffer) const = 0;
 	//Read it without the message header type
@@ -15,7 +17,7 @@ public:
 	virtual ~Message() {};
 
 protected:
-	Message(MessageType messageType) : _header(MessageHeader(messageType)) {};
+	Message(MessageType messageType) : _header(messageType, 0, false) {};
 
 	MessageHeader _header;
 };
@@ -102,4 +104,32 @@ public:
 	~DisconnectionMessage() override {};
 
 	uint64_t prefix;
+};
+
+class InGameMessage : public Message
+{
+public:
+	InGameMessage() : data(0), Message(MessageType::InGame) {}
+
+	void Write(Buffer& buffer) const override;
+	void Read(Buffer& buffer) override;
+	uint32_t Size() const override;
+
+	~InGameMessage() override {};
+
+	uint64_t data;
+};
+
+class InGameResponseMessage : public Message
+{
+public:
+	InGameResponseMessage() : data(0), Message(MessageType::InGameResponse) {}
+
+	void Write(Buffer& buffer) const override;
+	void Read(Buffer& buffer) override;
+	uint32_t Size() const override;
+
+	~InGameResponseMessage() override {};
+
+	uint64_t data;
 };

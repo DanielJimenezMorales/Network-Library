@@ -8,6 +8,7 @@
 class PendingConnection;
 class ConnectionRequestMessage;
 class ConnectionChallengeResponseMessage;
+class InGameMessage;
 
 class Server : public Peer
 {
@@ -27,6 +28,7 @@ private:
 
 	void ProcessConnectionRequest(const ConnectionRequestMessage& message, const Address& address);
 	void ProcessConnectionChallengeResponse(const ConnectionChallengeResponseMessage& message, const Address& address);
+	void ProcessInGame(const InGameMessage& message, const Address& address);
 
 	/// <summary>
 	/// This method checks if a new client is able to connect to server
@@ -43,6 +45,7 @@ private:
 	void CreateConnectionChallengeMessage(const Address& address, int pendingConnectionIndex);
 	void CreateConnectionApprovedMessage(RemotePeer& remoteClient);
 	void CreateDisconnectionMessage(RemotePeer& remoteClient);
+	void CreateInGameResponseMessage(RemotePeer& remoteClient, uint64_t data);
 	void SendConnectionDeniedPacket(const Address& address) const;
 	void SendPacketToRemoteClient(const RemotePeer& remoteClient, const NetworkPacket& packet) const;
 

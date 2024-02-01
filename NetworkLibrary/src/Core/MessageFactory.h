@@ -1,5 +1,7 @@
 #pragma once
 #include <queue>
+#include <unordered_map>
+
 #include "Message.h"
 
 class MessageFactory
@@ -29,11 +31,6 @@ private:
 	bool _isInitialized;
 	unsigned int _initialSize;
 
-	std::queue<Message*> _connectionRequestMessagePool;
-	std::queue<Message*> _connectionChallengeMessagePool;
-	std::queue<Message*> _connectionChallengeResponseMessagePool;
-	std::queue<Message*> _connectionAcceptedMessagePool;
-	std::queue<Message*> _connectionDeniedMessagePool;
-	std::queue<Message*> _disconnectionMessagePool;
+	std::unordered_map<MessageType, std::queue<Message*>> _messagePools;
 };
 

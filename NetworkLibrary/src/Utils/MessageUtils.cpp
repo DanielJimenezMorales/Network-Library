@@ -1,6 +1,9 @@
+#include <sstream>
+
 #include "MessageUtils.h"
 #include "MessageFactory.h"
 #include "Buffer.h"
+#include "Logger.h"
 
 void MessageUtils::ReadMessage(Buffer& buffer, Message** message)
 {
@@ -32,6 +35,16 @@ void MessageUtils::ReadMessage(Buffer& buffer, Message** message)
 	case MessageType::Disconnection:
 		*message = messageFactory->LendMessage(MessageType::Disconnection);
 		break;
+	case MessageType::InGame:
+		*message = messageFactory->LendMessage(MessageType::InGame);
+		break;
+	case MessageType::InGameResponse:
+		*message = messageFactory->LendMessage(MessageType::InGameResponse);
+		break;
+	default:
+		std::stringstream ss;
+		ss << "Can't read message of type MessageType = " << (int)type << ", ignoring it...";
+		LOG_WARNING(ss.str());
 	}
 
 	if (*message == nullptr)
