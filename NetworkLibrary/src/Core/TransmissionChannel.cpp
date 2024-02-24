@@ -8,6 +8,16 @@ TransmissionChannel::TransmissionChannel(TransmissionChannelType type) : _type(t
 	_unsentMessages.reserve(5);
 }
 
+unsigned int TransmissionChannel::GetSizeOfNextUnsentMessage() const
+{
+	if (!ArePendingMessagesToSend())
+	{
+		return 0;
+	}
+
+	return _unsentMessages.front()->Size();
+}
+
 void TransmissionChannel::FreeSentMessages()
 {
 	MessageFactory* messageFactory = MessageFactory::GetInstance();

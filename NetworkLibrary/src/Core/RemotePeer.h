@@ -55,10 +55,11 @@ public:
 	bool ArePendingMessages() const { return _messagesHandler.ArePendingMessages(); }//This will get unuseful
 	bool ArePendingMessages(TransmissionChannelType channelType) const;
 	Message* GetPendingMessage();//This will get unuseful
-	Message* GetPendingMessage(TransmissionChannelType channelType);//This will get unuseful
-	bool ArePendingACKReliableMessages() const { return _messagesHandler.AreUnackedReliableMessages(); };
-	Message* GetPendingACKReliableMessage();
-	unsigned int GetSizeOfNextPendingMessage() const { return _messagesHandler.GetSizeOfNextPendingMessage(); };
+	Message* GetPendingMessage(TransmissionChannelType channelType);
+	bool ArePendingACKReliableMessages() const { return _messagesHandler.AreUnackedReliableMessages(); };//This will get unuseful
+	Message* GetPendingACKReliableMessage();//This will get unuseful
+	unsigned int GetSizeOfNextPendingMessage() const { return _messagesHandler.GetSizeOfNextPendingMessage(); };//This will get unuseful
+	unsigned int GetSizeOfNextUnsentMessage(TransmissionChannelType channelType) const;
 	void FreeSentMessages();
 	void FreeProcessedMessages();
 	uint32_t GenerateACKs() const { return _messagesHandler.GenerateACKs(); };//This will get unuseful

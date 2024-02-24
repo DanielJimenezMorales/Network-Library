@@ -152,6 +152,19 @@ Message* RemotePeer::GetPendingACKReliableMessage()
 	return _messagesHandler.GetPendingACKReliableMessage();
 }
 
+unsigned int RemotePeer::GetSizeOfNextUnsentMessage(TransmissionChannelType channelType) const
+{
+	unsigned int size = 0;
+
+	std::map<TransmissionChannelType, TransmissionChannel*>::const_iterator cit = _transmissionChannels.find(channelType);
+	if (cit != _transmissionChannels.cend())
+	{
+		size = cit->second->GetSizeOfNextUnsentMessage();
+	}
+
+	return size;
+}
+
 void RemotePeer::FreeSentMessages()
 {
 	_messagesHandler.FreeSentMessages();

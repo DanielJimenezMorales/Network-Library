@@ -21,6 +21,7 @@ public:
 	virtual void AddMessageToSend(Message* message) = 0;
 	virtual bool ArePendingMessagesToSend() const = 0;
 	virtual Message* GetMessageToSend() = 0;
+	unsigned int GetSizeOfNextUnsentMessage() const;
 	void FreeSentMessages();
 
 	virtual void AddReceivedMessage(Message* message) = 0;
