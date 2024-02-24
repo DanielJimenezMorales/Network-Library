@@ -52,21 +52,25 @@ public:
 	bool IsInactive() const { return _inactivityTimeLeft == 0.f; }
 	bool AddMessage(Message* message);
 	TransmissionChannelType GetTransmissionChannelTypeFromHeader(const MessageHeader& messageHeader) const;
-	bool ArePendingMessages() const { return _messagesHandler.ArePendingMessages(); }
-	Message* GetPendingMessage();
+	bool ArePendingMessages() const { return _messagesHandler.ArePendingMessages(); }//This will get unuseful
+	bool ArePendingMessages(TransmissionChannelType channelType) const;
+	Message* GetPendingMessage();//This will get unuseful
+	Message* GetPendingMessage(TransmissionChannelType channelType);//This will get unuseful
 	bool ArePendingACKReliableMessages() const { return _messagesHandler.AreUnackedReliableMessages(); };
 	Message* GetPendingACKReliableMessage();
 	unsigned int GetSizeOfNextPendingMessage() const { return _messagesHandler.GetSizeOfNextPendingMessage(); };
 	void FreeSentMessages();
 	void FreeProcessedMessages();
-	uint32_t GenerateACKs() const { return _messagesHandler.GenerateACKs(); };
-	void ProcessACKs(uint32_t acks, uint16_t lastAckedMessageSequenceNumber) { _messagesHandler.ProcessACKs(acks, lastAckedMessageSequenceNumber); };
-	void AckReliableMessage(uint16_t messageSequenceNumber) { _messagesHandler.AckReliableMessage(messageSequenceNumber); };
-	bool IsMessageDuplicated(uint16_t messageSequenceNumber) const { return _messagesHandler.IsMessageDuplicated(messageSequenceNumber);};
+	uint32_t GenerateACKs() const { return _messagesHandler.GenerateACKs(); };//This will get unuseful
+	uint32_t GenerateACKs(TransmissionChannelType channelType) const;
+	void ProcessACKs(uint32_t acks, uint16_t lastAckedMessageSequenceNumber) { _messagesHandler.ProcessACKs(acks, lastAckedMessageSequenceNumber); };//This will get unuseful
+	void ProcessACKs(uint32_t acks, uint16_t lastAckedMessageSequenceNumber, TransmissionChannelType channelType);
 	bool AddReceivedMessage(Message* message);
 
 	bool ArePendingReadyToProcessMessages() const;
 	const Message* GetPendingReadyToProcessMessage();
+
+	bool GetNumberOfTransmissionChannels() const;
 
 	/// <summary>
 	/// Disconnect and reset the remote client

@@ -116,9 +116,35 @@ TransmissionChannelType RemotePeer::GetTransmissionChannelTypeFromHeader(const M
 	return result;
 }
 
+bool RemotePeer::ArePendingMessages(TransmissionChannelType channelType) const
+{
+	bool arePendingMessages = false;
+
+	std::map<TransmissionChannelType, TransmissionChannel*>::const_iterator cit = _transmissionChannels.find(channelType);
+	if (cit != _transmissionChannels.cend())
+	{
+		arePendingMessages = cit->second->ArePendingMessagesToSend();
+	}
+
+	return arePendingMessages;
+}
+
 Message* RemotePeer::GetPendingMessage()
 {
 	return _messagesHandler.GetPendingMessage();
+}
+
+Message* RemotePeer::GetPendingMessage(TransmissionChannelType channelType)
+{
+	Message* message = nullptr;
+
+	std::map<TransmissionChannelType, TransmissionChannel*>::iterator it = _transmissionChannels.find(channelType);
+	if (it != _transmissionChannels.end())
+	{
+		message = it->second->GetMessageToSend();
+	}
+
+	return message;
 }
 
 Message* RemotePeer::GetPendingACKReliableMessage()
@@ -153,6 +179,27 @@ void RemotePeer::FreeProcessedMessages()
 		it->second->FreeProcessedMessages();
 
 		++it;
+	}
+}
+
+uint32_t RemotePeer::GenerateACKs(TransmissionChannelType channelType) const
+{
+	uint32_t acks = 0;
+	std::map<TransmissionChannelType, TransmissionChannel*>::const_iterator cit = _transmissionChannels.find(channelType);
+	if (cit != _transmissionChannels.cend())
+	{
+		acks = cit->second->GenerateACKs();
+	}
+
+	return acks;
+}
+
+void RemotePeer::ProcessACKs(uint32_t acks, uint16_t lastAckedMessageSequenceNumber, TransmissionChannelType channelType)
+{
+	std::map<TransmissionChannelType, TransmissionChannel*>::iterator it = _transmissionChannels.find(channelType);
+	if (it != _transmissionChannels.cend())
+	{
+		it->second->ProcessACKs(acks, lastAckedMessageSequenceNumber);
 	}
 }
 
@@ -218,6 +265,11 @@ const Message* RemotePeer::GetPendingReadyToProcessMessage()
 	}
 
 	return message;
+}
+
+bool RemotePeer::GetNumberOfTransmissionChannels() const
+{
+	return _transmissionChannels.size();
 }
 
 void RemotePeer::Disconnect()
