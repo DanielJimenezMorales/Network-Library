@@ -37,8 +37,6 @@ public:
 
 	virtual void Update(float deltaTime) = 0;
 
-	uint16_t GetNextMessageSequenceNumber() const { return _nextMessageSequenceNumber; }
-	void IncreaseMessageSequenceNumber() { ++_nextMessageSequenceNumber; };
 	virtual uint16_t GetLastMessageSequenceNumberAcked() const = 0;
 
 	virtual void Reset();
@@ -52,6 +50,9 @@ protected:
 	std::queue<Message*> _processedMessages;
 
 	virtual void FreeSentMessage(MessageFactory& messageFactory, Message* message) = 0;
+
+	uint16_t GetNextMessageSequenceNumber() const { return _nextMessageSequenceNumber; }
+	void IncreaseMessageSequenceNumber() { ++_nextMessageSequenceNumber; };
 
 private:
 	TransmissionChannelType _type;

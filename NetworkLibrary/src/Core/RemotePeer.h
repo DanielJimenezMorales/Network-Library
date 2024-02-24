@@ -22,14 +22,15 @@ private:
 
 	std::map<TransmissionChannelType, TransmissionChannel*> _transmissionChannels;
 
+	TransmissionChannel* GetTransmissionChannelFromType(TransmissionChannelType channelType);
+	const TransmissionChannel* GetTransmissionChannelFromType(TransmissionChannelType channelType) const;
+
 public:
 	RemotePeer();
 	RemotePeer(const sockaddr_in& addressInfo, uint16_t id, float maxInactivityTime, uint64_t dataPrefix);
 	~RemotePeer();
 
-	uint16_t GetNextMessageSequenceNumber(TransmissionChannelType channelType) const;
 	uint16_t GetLastMessageSequenceNumberAcked(TransmissionChannelType channelType) const;
-	void IncreaseMessageSequenceNumber(TransmissionChannelType channelType);
 
 	/// <summary>
 	/// Initializes all the internal systems. You must call this method before performing any other operation. It is also automatically called in
