@@ -261,7 +261,8 @@ void Peer::ProcessDatagram(Buffer& buffer, const Address& address)
 	{
 		uint32_t acks = packet.GetHeader().ackBits;
 		uint16_t lastAckedMessageSequenceNumber = packet.GetHeader().lastAckedSequenceNumber;
-		remotePeer->ProcessACKs(acks, lastAckedMessageSequenceNumber);
+		TransmissionChannelType channelType = static_cast<TransmissionChannelType>(packet.GetHeader().channelType);
+		remotePeer->ProcessACKs(acks, lastAckedMessageSequenceNumber, channelType);
 	}
 
 	//Process packet messages one by one
@@ -396,13 +397,14 @@ void Peer::SendData()
 			continue;
 		}
 
-		SendPacketToRemotePeer(_remotePeers[i]);
+		SendPacketToRemotePeer(_remotePeers[i], TransmissionChannelType::UnreliableUnordered);
+		SendPacketToRemotePeer(_remotePeers[i], TransmissionChannelType::ReliableOrdered);
 	}
 }
 
-void Peer::SendPacketToRemotePeer(RemotePeer& remotePeer)
+void Peer::SendPacketToRemotePeer(RemotePeer& remotePeer, TransmissionChannelType type)
 {
-	if (!remotePeer.ArePendingMessages())
+	if (!remotePeer.ArePendingMessages(type) && !remotePeer.AreUnsentACKs(type))
 	{
 		return;
 	}
@@ -413,52 +415,47 @@ void Peer::SendPacketToRemotePeer(RemotePeer& remotePeer)
 	//TODO Check somewhere if there is a message larger than the maximum packet size. Log a warning saying that the message will never get sent and delete it.
 	//TODO Include data prefix in packet's header and check if the data prefix is correct when receiving a packet
 
-	bool arePendingMessages = true;
-	bool isThereCapacityLeft = true;
 
-	if (remotePeer.ArePendingACKReliableMessages())
-	{
-		message = remotePeer.GetPendingACKReliableMessage();
-		packet.AddMessage(message);
-	}
-
-	//Check if we should include another message to the packet
-	arePendingMessages = remotePeer.ArePendingMessages();
-	isThereCapacityLeft = packet.CanMessageFit(remotePeer.GetSizeOfNextPendingMessage());
+	//Check if we should include a message to the packet
+	bool arePendingMessages = remotePeer.ArePendingMessages(type);
+	bool isThereCapacityLeft = packet.CanMessageFit(remotePeer.GetSizeOfNextUnsentMessage(type));
 
 	while (arePendingMessages && isThereCapacityLeft)
 	{
 		//Configure and add message to packet
-		message = remotePeer.GetPendingMessage();
+		message = remotePeer.GetPendingMessage(type);
 
-		uint16_t messageSequenceNumber = 0;
+		//uint16_t messageSequenceNumber = remotePeer.GetNextMessageSequenceNumber(type);
+		//remotePeer.IncreaseMessageSequenceNumber(type);
+
 		if (message->GetHeader().isReliable)
 		{
-			messageSequenceNumber = remotePeer.GetNextMessageSequenceNumber();
-			remotePeer.IncreaseMessageSequenceNumber();
-			
 			std::stringstream ss;
-			ss << "Reliable message sequence number: " << messageSequenceNumber << " Message type: " << (int)message->GetHeader().type;
+			ss << "Reliable message sequence number: " << message->GetHeader().messageSequenceNumber << " Message type: " << (int)message->GetHeader().type;
 			LOG_INFO(ss.str());
 		}
-		message->SetHeaderPacketSequenceNumber(messageSequenceNumber);
+
+		//message->SetHeaderPacketSequenceNumber(messageSequenceNumber);
 
 		packet.AddMessage(message);
 
 		//Check if we should include another message to the packet
-		arePendingMessages = remotePeer.ArePendingMessages();
-		isThereCapacityLeft = packet.CanMessageFit(remotePeer.GetSizeOfNextPendingMessage());
+		arePendingMessages = remotePeer.ArePendingMessages(type);
+		isThereCapacityLeft = packet.CanMessageFit(remotePeer.GetSizeOfNextUnsentMessage(type));
 	}
 
 	//Set packet header fields
-	uint32_t acks = remotePeer.GenerateACKs();
+	uint32_t acks = remotePeer.GenerateACKs(type);
 	packet.SetHeaderACKs(acks);
 
-	uint16_t lastAckedMessageSequenceNumber = remotePeer.GetLastMessageSequenceNumberAcked();
+	uint16_t lastAckedMessageSequenceNumber = remotePeer.GetLastMessageSequenceNumberAcked(type);
 	packet.SetHeaderLastAcked(lastAckedMessageSequenceNumber);
 
-	SendPacketToAddress(packet, remotePeer.GetAddress());
+	packet.SetHeaderChannelType(type);
 
+	SendPacketToAddress(packet, remotePeer.GetAddress());
+	remotePeer.SeUnsentACKsToFalse(type);
+	//TODO Make this to execute only once per tick and not per channel packet transmission
 	remotePeer.FreeSentMessages();
 }
 

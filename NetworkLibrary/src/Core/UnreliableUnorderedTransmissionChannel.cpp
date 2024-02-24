@@ -29,6 +29,16 @@ Message* UnreliableUnorderedTransmissionChannel::GetMessageToSend()
 	return message;
 }
 
+unsigned int UnreliableUnorderedTransmissionChannel::GetSizeOfNextUnsentMessage() const
+{
+	if (!ArePendingMessagesToSend())
+	{
+		return 0;
+	}
+
+	return _unsentMessages.front()->Size();
+}
+
 void UnreliableUnorderedTransmissionChannel::AddReceivedMessage(Message* message)
 {
 	_readyToProcessMessages.push(message);
@@ -54,6 +64,15 @@ const Message* UnreliableUnorderedTransmissionChannel::GetReadyToProcessMessage(
 	return message;
 }
 
+void UnreliableUnorderedTransmissionChannel::SeUnsentACKsToFalse()
+{
+}
+
+bool UnreliableUnorderedTransmissionChannel::AreUnsentACKs() const
+{
+	return false;
+}
+
 uint32_t UnreliableUnorderedTransmissionChannel::GenerateACKs() const
 {
 	return 0;
@@ -71,6 +90,11 @@ bool UnreliableUnorderedTransmissionChannel::IsMessageDuplicated(uint16_t messag
 
 void UnreliableUnorderedTransmissionChannel::Update(float deltaTime)
 {
+}
+
+uint16_t UnreliableUnorderedTransmissionChannel::GetLastMessageSequenceNumberAcked() const
+{
+	return 0;
 }
 
 UnreliableUnorderedTransmissionChannel::~UnreliableUnorderedTransmissionChannel()

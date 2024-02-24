@@ -1,4 +1,5 @@
 #include <cassert>
+#include <sstream>
 
 #include "RemotePeer.h"
 #include "Message.h"
@@ -53,6 +54,41 @@ RemotePeer::~RemotePeer()
 	_transmissionChannels.clear();
 }
 
+uint16_t RemotePeer::GetNextMessageSequenceNumber(TransmissionChannelType channelType) const
+{
+	uint16_t nextMessageSequenceNumber = 0;
+
+	std::map<TransmissionChannelType, TransmissionChannel*>::const_iterator cit = _transmissionChannels.find(channelType);
+	if (cit != _transmissionChannels.cend())
+	{
+		nextMessageSequenceNumber = cit->second->GetNextMessageSequenceNumber();
+	}
+
+	return nextMessageSequenceNumber;
+}
+
+uint16_t RemotePeer::GetLastMessageSequenceNumberAcked(TransmissionChannelType channelType) const
+{
+	uint16_t lastMessageSequenceNumberAcked = 0;
+
+	std::map<TransmissionChannelType, TransmissionChannel*>::const_iterator cit = _transmissionChannels.find(channelType);
+	if (cit != _transmissionChannels.cend())
+	{
+		lastMessageSequenceNumberAcked = cit->second->GetLastMessageSequenceNumberAcked();
+	}
+
+	return lastMessageSequenceNumberAcked;
+}
+
+void RemotePeer::IncreaseMessageSequenceNumber(TransmissionChannelType channelType)
+{
+	std::map<TransmissionChannelType, TransmissionChannel*>::iterator it = _transmissionChannels.find(channelType);
+	if (it != _transmissionChannels.end())
+	{
+		it->second->IncreaseMessageSequenceNumber();
+	}
+}
+
 void RemotePeer::Connect(const sockaddr_in& addressInfo, uint16_t id, float maxInactivityTime, uint64_t dataPrefix)
 {
 	_address = Address(addressInfo);
@@ -82,8 +118,9 @@ void RemotePeer::Tick(float elapsedTime)
 
 bool RemotePeer::AddMessage(Message* message)
 {
+	/*
 	_messagesHandler.AddMessage(message);
-	return true;
+	return true;*/
 
 	//Quitar lo de arriba y dejar esto
 	TransmissionChannelType transmissionChannelType = GetTransmissionChannelTypeFromHeader(message->GetHeader());
@@ -167,7 +204,7 @@ unsigned int RemotePeer::GetSizeOfNextUnsentMessage(TransmissionChannelType chan
 
 void RemotePeer::FreeSentMessages()
 {
-	_messagesHandler.FreeSentMessages();
+	//_messagesHandler.FreeSentMessages();
 
 	//Quitar lo de arriba después
 	std::map<TransmissionChannelType, TransmissionChannel*>::iterator it = _transmissionChannels.begin();
@@ -182,7 +219,7 @@ void RemotePeer::FreeSentMessages()
 
 void RemotePeer::FreeProcessedMessages()
 {
-	_messagesHandler.FreeProcessedMessages();
+	//_messagesHandler.FreeProcessedMessages();
 
 	//Quitar lo de arriba después
 	std::map<TransmissionChannelType, TransmissionChannel*>::iterator it = _transmissionChannels.begin();
@@ -193,6 +230,28 @@ void RemotePeer::FreeProcessedMessages()
 
 		++it;
 	}
+}
+
+void RemotePeer::SeUnsentACKsToFalse(TransmissionChannelType channelType)
+{
+	std::map<TransmissionChannelType, TransmissionChannel*>::iterator it = _transmissionChannels.find(channelType);
+	if (it != _transmissionChannels.end())
+	{
+		it->second->SeUnsentACKsToFalse();
+	}
+}
+
+bool RemotePeer::AreUnsentACKs(TransmissionChannelType channelType) const
+{
+	bool areUnsentACKs = false;
+
+	std::map<TransmissionChannelType, TransmissionChannel*>::const_iterator cit = _transmissionChannels.find(channelType);
+	if (cit != _transmissionChannels.cend())
+	{
+		areUnsentACKs = cit->second->AreUnsentACKs();
+	}
+
+	return areUnsentACKs;
 }
 
 uint32_t RemotePeer::GenerateACKs(TransmissionChannelType channelType) const
@@ -218,7 +277,7 @@ void RemotePeer::ProcessACKs(uint32_t acks, uint16_t lastAckedMessageSequenceNum
 
 bool RemotePeer::AddReceivedMessage(Message* message)
 {
-	return _messagesHandler.AddReceivedMessage(message);
+	//return _messagesHandler.AddReceivedMessage(message);
 
 	//Quitar lo de arriba después
 	TransmissionChannelType channelType = GetTransmissionChannelTypeFromHeader(message->GetHeader());
@@ -237,7 +296,7 @@ bool RemotePeer::AddReceivedMessage(Message* message)
 
 bool RemotePeer::ArePendingReadyToProcessMessages() const
 {
-	return _messagesHandler.ArePendingReadyToProcessMessages();
+	//return _messagesHandler.ArePendingReadyToProcessMessages();
 
 	//Quitar lo de arriba después
 	bool areReadyToProcessMessages = false;
@@ -260,7 +319,7 @@ bool RemotePeer::ArePendingReadyToProcessMessages() const
 
 const Message* RemotePeer::GetPendingReadyToProcessMessage()
 {
-	return _messagesHandler.GetReadyToProcessMessage();
+	//return _messagesHandler.GetReadyToProcessMessage();
 
 	//Quitar lo de arriba después
 	const Message* message = nullptr;

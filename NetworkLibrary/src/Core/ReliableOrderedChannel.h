@@ -14,16 +14,21 @@ public:
 	void AddMessageToSend(Message* message) override;
 	bool ArePendingMessagesToSend() const override;
 	Message* GetMessageToSend() override;
+	unsigned int GetSizeOfNextUnsentMessage() const override;
 
 	void AddReceivedMessage(Message* message) override;
 	bool ArePendingReadyToProcessMessages() const override;
 	const Message* GetReadyToProcessMessage() override;
 
+	void SeUnsentACKsToFalse() override;
+	bool AreUnsentACKs() const override;
 	uint32_t GenerateACKs() const override;
 	void ProcessACKs(uint32_t acks, uint16_t lastAckedMessageSequenceNumber) override;
 	bool IsMessageDuplicated(uint16_t messageSequenceNumber) const override;
 
 	void Update(float deltaTime) override;
+
+	uint16_t GetLastMessageSequenceNumberAcked() const override;
 
 	~ReliableOrderedChannel();
 
@@ -45,6 +50,8 @@ private:
 	//Next message sequence number expected to guarantee ordered transmission
 	unsigned int _nextOrderedMessageSequenceNumber;
 
+	bool _areUnsentACKs;
+
 	bool AreUnackedMessagesToResend() const;
 	Message* GetUnackedMessageToResend();
 	int GetNextUnackedMessageIndexToResend() const;
@@ -55,7 +62,7 @@ private:
 	bool AddOrderedMessage(Message* message);
 	bool TryRemoveUnackedReliableMessageFromSequence(uint16_t sequence);
 	int GetPendingUnackedReliableMessageIndexFromSequence(uint16_t sequence) const;
-	void DeleteUnackedReliableMessageAtIndex(unsigned int index);
+	Message* DeleteUnackedReliableMessageAtIndex(unsigned int index);
 
 	const ReliableMessageEntry& GetReliableMessageEntry(uint16_t sequenceNumber) const;
 	unsigned int GetRollingBufferIndex(uint16_t index) const { return index % _reliableMessageEntriesBufferSize; };

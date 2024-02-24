@@ -3,19 +3,9 @@
 #include "TransmissionChannel.h"
 #include "MessageFactory.h"
 
-TransmissionChannel::TransmissionChannel(TransmissionChannelType type) : _type(type)
+TransmissionChannel::TransmissionChannel(TransmissionChannelType type) : _type(type), _nextMessageSequenceNumber(0)
 {
 	_unsentMessages.reserve(5);
-}
-
-unsigned int TransmissionChannel::GetSizeOfNextUnsentMessage() const
-{
-	if (!ArePendingMessagesToSend())
-	{
-		return 0;
-	}
-
-	return _unsentMessages.front()->Size();
 }
 
 void TransmissionChannel::FreeSentMessages()

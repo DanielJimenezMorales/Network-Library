@@ -29,9 +29,12 @@ public:
 	RemotePeer(const sockaddr_in& addressInfo, uint16_t id, float maxInactivityTime, uint64_t dataPrefix);
 	~RemotePeer();
 
-	uint16_t GetNextMessageSequenceNumber() const { return _nextPacketSequenceNumber; };
-	uint16_t GetLastMessageSequenceNumberAcked() const { return _messagesHandler.GetLastMessageSequenceNumberAcked(); };
-	void IncreaseMessageSequenceNumber() { ++_nextPacketSequenceNumber; }
+	uint16_t GetNextMessageSequenceNumber() const { return _nextPacketSequenceNumber; };//This will get unuseful
+	uint16_t GetNextMessageSequenceNumber(TransmissionChannelType channelType) const;//This will get unuseful
+	uint16_t GetLastMessageSequenceNumberAcked() const { return _messagesHandler.GetLastMessageSequenceNumberAcked(); };//This will get unuseful
+	uint16_t GetLastMessageSequenceNumberAcked(TransmissionChannelType channelType) const;
+	void IncreaseMessageSequenceNumber() { ++_nextPacketSequenceNumber; }//This will get unuseful
+	void IncreaseMessageSequenceNumber(TransmissionChannelType channelType);
 
 	/// <summary>
 	/// Initializes all the internal systems. You must call this method before performing any other operation. It is also automatically called in
@@ -62,6 +65,8 @@ public:
 	unsigned int GetSizeOfNextUnsentMessage(TransmissionChannelType channelType) const;
 	void FreeSentMessages();
 	void FreeProcessedMessages();
+	void SeUnsentACKsToFalse(TransmissionChannelType channelType);
+	bool AreUnsentACKs(TransmissionChannelType channelType) const;
 	uint32_t GenerateACKs() const { return _messagesHandler.GenerateACKs(); };//This will get unuseful
 	uint32_t GenerateACKs(TransmissionChannelType channelType) const;
 	void ProcessACKs(uint32_t acks, uint16_t lastAckedMessageSequenceNumber) { _messagesHandler.ProcessACKs(acks, lastAckedMessageSequenceNumber); };//This will get unuseful

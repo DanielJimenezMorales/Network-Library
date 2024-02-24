@@ -10,7 +10,8 @@ ReliableOrderedChannel::ReliableOrderedChannel() : TransmissionChannel(Transmiss
 _initialTimeout(0.1f),
 _lastMessageSequenceNumberAcked(0),
 _nextOrderedMessageSequenceNumber(0),
-_reliableMessageEntriesBufferSize(1024)
+_reliableMessageEntriesBufferSize(1024),
+_areUnsentACKs(false)
 {
 	_reliableMessageEntries.reserve(_reliableMessageEntriesBufferSize);
 	for (unsigned int i = 0; i < _reliableMessageEntriesBufferSize; ++i)
@@ -36,15 +37,45 @@ Message* ReliableOrderedChannel::GetMessageToSend()
 	{
 		message = _unsentMessages[0];
 		_unsentMessages.erase(_unsentMessages.begin());
+
+		uint16_t sequenceNumber = GetNextMessageSequenceNumber();
+		IncreaseMessageSequenceNumber();
+
+		message->SetHeaderPacketSequenceNumber(sequenceNumber);
 	}
 	else
 	{
 		message = GetUnackedMessageToResend();
 	}
 
-	//TODO Check that this is not callen when message == nullptr. GetUnackedMessageToResend could return a nullptr (Although it would be an error tbh)
-	AddUnackedReliableMessage(message);
+	//TODO Check that this is not called when message == nullptr. GetUnackedMessageToResend could return a nullptr (Although it would be an error tbh)
+	//AddUnackedReliableMessage(message);
+	_sentMessages.push(message);
+
 	return message;
+}
+
+unsigned int ReliableOrderedChannel::GetSizeOfNextUnsentMessage() const
+{
+	if (!ArePendingMessagesToSend() && !AreUnackedMessagesToResend())
+	{
+		return 0;
+	}
+
+	if (!_unsentMessages.empty())
+	{
+		return _unsentMessages.front()->Size();
+	}
+	else
+	{
+		//Get next unacked message's size
+		int index = GetNextUnackedMessageIndexToResend();
+
+		std::list<Message*>::const_iterator cit = _unackedReliableMessages.cbegin();
+		std::advance(cit, index);
+
+		return (*cit)->Size();
+	}
 }
 
 void ReliableOrderedChannel::AddReceivedMessage(Message* message)
@@ -62,6 +93,7 @@ void ReliableOrderedChannel::AddReceivedMessage(Message* message)
 	}
 	else
 	{
+		LOG_INFO("New message received");
 		AckReliableMessage(messageSequenceNumber);
 		if (messageSequenceNumber == _nextOrderedMessageSequenceNumber)
 		{
@@ -144,15 +176,7 @@ Message* ReliableOrderedChannel::GetUnackedMessageToResend()
 		return nullptr;
 	}
 
-	std::list<Message*>::iterator it = _unackedReliableMessages.begin();
-	std::advance(it, index);
-
-	Message* message = *it;
-	_unackedReliableMessages.erase(it);
-
-	std::list<float>::iterator it2 = _unackedReliableMessageTimeouts.begin();
-	std::advance(it2, index);
-	_unackedReliableMessageTimeouts.erase(it2);
+	Message* message = DeleteUnackedReliableMessageAtIndex(index);
 
 	return message;
 }
@@ -197,6 +221,10 @@ void ReliableOrderedChannel::AckReliableMessage(uint16_t messageSequenceNumber)
 	_reliableMessageEntries[index].isAcked = true;
 
 	_lastMessageSequenceNumberAcked = messageSequenceNumber;
+
+	LOG_INFO("ACKING RELIABLE MESSAGE");
+	//Set this flag to true so in case this peer does not have any relaible messages, force it so send a reliable packet just to notify of new acked messages from remote
+	_areUnsentACKs = true;
 }
 
 bool ReliableOrderedChannel::DoesUnorderedMessagesContainsSequence(uint16_t sequence, unsigned int& index) const
@@ -256,7 +284,12 @@ bool ReliableOrderedChannel::TryRemoveUnackedReliableMessageFromSequence(uint16_
 	int index = GetPendingUnackedReliableMessageIndexFromSequence(sequence);
 	if (index != -1)
 	{
-		DeleteUnackedReliableMessageAtIndex(index);
+		MessageFactory* messageFactory = MessageFactory::GetInstance();
+		assert(messageFactory != nullptr);
+
+		Message* message = DeleteUnackedReliableMessageAtIndex(index);
+
+		messageFactory->ReleaseMessage(message);
 		result = true;
 	}
 
@@ -281,28 +314,39 @@ int ReliableOrderedChannel::GetPendingUnackedReliableMessageIndexFromSequence(ui
 	return resultIndex;
 }
 
-void ReliableOrderedChannel::DeleteUnackedReliableMessageAtIndex(unsigned int index)
+Message* ReliableOrderedChannel::DeleteUnackedReliableMessageAtIndex(unsigned int index)
 {
 	assert(index < _unackedReliableMessages.size());
-
-	MessageFactory* messageFactory = MessageFactory::GetInstance();
-	assert(messageFactory != nullptr);
+	Message* message = nullptr;
 
 	std::list<Message*>::iterator it = _unackedReliableMessages.begin();
 	std::advance(it, index);
-	Message* message = *it;
+	message = *it;
 
 	_unackedReliableMessages.erase(it);
 
-	messageFactory->ReleaseMessage(message);
+	std::list<float>::iterator it2 = _unackedReliableMessageTimeouts.begin();
+	std::advance(it2, index);
+	_unackedReliableMessageTimeouts.erase(it2);
 
-	LOG_INFO("DELETE");
+	return message;
 }
 
 const ReliableMessageEntry& ReliableOrderedChannel::GetReliableMessageEntry(uint16_t sequenceNumber) const
 {
 	unsigned int index = GetRollingBufferIndex(sequenceNumber);
 	return _reliableMessageEntries[index];
+}
+
+void ReliableOrderedChannel::SeUnsentACKsToFalse()
+{
+	LOG_INFO("SETTING TO FALSE");
+	_areUnsentACKs = false;
+}
+
+bool ReliableOrderedChannel::AreUnsentACKs() const
+{
+	return _areUnsentACKs;
 }
 
 uint32_t ReliableOrderedChannel::GenerateACKs() const
@@ -374,6 +418,11 @@ void ReliableOrderedChannel::Update(float deltaTime)
 	}
 }
 
+uint16_t ReliableOrderedChannel::GetLastMessageSequenceNumberAcked() const
+{
+	return _lastMessageSequenceNumberAcked;
+}
+
 ReliableOrderedChannel::~ReliableOrderedChannel()
 {
 	MessageFactory* messageFactory = MessageFactory::GetInstance();
@@ -406,5 +455,5 @@ ReliableOrderedChannel::~ReliableOrderedChannel()
 
 void ReliableOrderedChannel::FreeSentMessage(MessageFactory& messageFactory, Message* message)
 {
-	_unackedReliableMessages.push_back(message);
+	AddUnackedReliableMessage(message);
 }

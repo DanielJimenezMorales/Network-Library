@@ -104,4 +104,8 @@ int main()
 * - Varios clientes van a poder conectarse a él (Hasta un límite)
 * - Por cada tick, el servidor enviará un mensaje a cada cliente.
 * -
+* 
+* 
+* creo que el problema está a la hora de sacar un unsent message del reliable channel. Por alguna razón, el código cree que los mensajes unacked cuyo timeout ha llegado a 0
+* salen como churros y nunca se hacen acked, por lo que es como que nunca se borran y cada vez hay más y más hasta que llega un punto que peta. Investigar ReliableOrderedChannel::GetMessageToSend().
 */
