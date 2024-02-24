@@ -42,6 +42,7 @@ Message* ReliableOrderedChannel::GetMessageToSend()
 		message = GetUnackedMessageToResend();
 	}
 
+	//TODO Check that this is not callen when message == nullptr. GetUnackedMessageToResend could return a nullptr (Although it would be an error tbh)
 	AddUnackedReliableMessage(message);
 	return message;
 }
@@ -221,7 +222,7 @@ bool ReliableOrderedChannel::AddOrderedMessage(Message* message)
 {
 	_orderedMessagesWaitingForPrevious.push_back(message);
 	return true;
-
+	//TODO Ver para qué es esto de abajo y por qué este return de aquí arriba
 	std::list<Message*>::iterator it = _orderedMessagesWaitingForPrevious.begin();
 	if (_orderedMessagesWaitingForPrevious.empty())
 	{

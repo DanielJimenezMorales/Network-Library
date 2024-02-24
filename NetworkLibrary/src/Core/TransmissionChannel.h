@@ -16,6 +16,8 @@ class TransmissionChannel
 public:
 	TransmissionChannel(TransmissionChannelType type);
 
+	TransmissionChannelType GetType() { return _type; }
+
 	virtual void AddMessageToSend(Message* message) = 0;
 	virtual bool ArePendingMessagesToSend() const = 0;
 	virtual Message* GetMessageToSend() = 0;
@@ -29,6 +31,8 @@ public:
 	virtual uint32_t GenerateACKs() const = 0;
 	virtual void ProcessACKs(uint32_t acks, uint16_t lastAckedMessageSequenceNumber) = 0;
 	virtual bool IsMessageDuplicated(uint16_t messageSequenceNumber) const = 0;
+
+	//TODO Create pure virtual Update method for updating unacked message timeouts (Unreliable unordered will not have anything to implement so empty)
 
 	virtual ~TransmissionChannel();
 

@@ -1,10 +1,13 @@
 #pragma once
 #include <cstdint>
+#include <map>
 
 #include "Address.h"
 #include "PeerMessagesHandler.h"
+#include "TransmissionChannel.h"
 
 class Message;
+class MessageHeader;
 
 class RemotePeer
 {
@@ -19,6 +22,7 @@ private:
 	uint16_t _nextPacketSequenceNumber;
 
 	PeerMessagesHandler _messagesHandler;
+	std::map<TransmissionChannelType, TransmissionChannel*> _transmissionChannels;
 
 public:
 	RemotePeer();
@@ -47,6 +51,7 @@ public:
 	bool IsAddressEqual(const Address& other) const { return other == _address; }
 	bool IsInactive() const { return _inactivityTimeLeft == 0.f; }
 	bool AddMessage(Message* message);
+	TransmissionChannelType GetTransmissionChannelTypeFromHeader(const MessageHeader& messageHeader) const;
 	bool ArePendingMessages() const { return _messagesHandler.ArePendingMessages(); }
 	Message* GetPendingMessage();
 	bool ArePendingACKReliableMessages() const { return _messagesHandler.AreUnackedReliableMessages(); };
