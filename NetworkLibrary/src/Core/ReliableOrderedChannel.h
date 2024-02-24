@@ -23,6 +23,10 @@ public:
 	void ProcessACKs(uint32_t acks, uint16_t lastAckedMessageSequenceNumber) override;
 	bool IsMessageDuplicated(uint16_t messageSequenceNumber) const override;
 
+	void Update(float deltaTime) override;
+
+	~ReliableOrderedChannel();
+
 protected:
 	void FreeSentMessage(MessageFactory& messageFactory, Message* message) override;
 

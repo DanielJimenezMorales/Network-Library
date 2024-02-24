@@ -32,7 +32,7 @@ public:
 	virtual void ProcessACKs(uint32_t acks, uint16_t lastAckedMessageSequenceNumber) = 0;
 	virtual bool IsMessageDuplicated(uint16_t messageSequenceNumber) const = 0;
 
-	//TODO Create pure virtual Update method for updating unacked message timeouts (Unreliable unordered will not have anything to implement so empty)
+	virtual void Update(float deltaTime) = 0;
 
 	virtual ~TransmissionChannel();
 

@@ -82,8 +82,8 @@ Peer::Peer(PeerType type, int maxConnections, unsigned int receiveBufferSize, un
 
 		for (size_t i = 0; i < _maxConnections; ++i)
 		{
-			_remotePeerSlots.push_back(false);
-			_remotePeers.push_back(RemotePeer());
+			_remotePeerSlots.push_back(false); //You could use vector.resize in these ones.
+			_remotePeers.emplace_back();
 		}
 	}
 }
@@ -243,6 +243,8 @@ void Peer::ProcessReceivedData()
 			}
 		}
 	} while (arePendingDatagramsToRead);
+
+	ProcessNewRemotePeerMessages();
 }
 
 void Peer::ProcessDatagram(Buffer& buffer, const Address& address)
@@ -281,17 +283,27 @@ void Peer::ProcessDatagram(Buffer& buffer, const Address& address)
 			messageFactory->ReleaseMessage(message);
 		}
 	}
+}
 
-	//Process ready to process messages from remote peer
-	if (isPacketFromRemotePeer)
+void Peer::ProcessNewRemotePeerMessages()
+{
+	for (unsigned int i = 0; i < _remotePeerSlots.size(); ++i)
 	{
-		while (remotePeer->ArePendingReadyToProcessMessages())
+		if(!_remotePeerSlots[i])
 		{
-			const Message* message = remotePeer->GetPendingReadyToProcessMessage();
-			ProcessMessage(*message, address);
+			continue;
 		}
 
-		remotePeer->FreeProcessedMessages();
+		//Process ready to process messages from remote peer
+		RemotePeer& remotePeer = _remotePeers[i];
+
+		while (remotePeer.ArePendingReadyToProcessMessages())
+		{
+			const Message* message = remotePeer.GetPendingReadyToProcessMessage();
+			ProcessMessage(*message, remotePeer.GetAddress());
+		}
+
+		remotePeer.FreeProcessedMessages();
 	}
 }
 

@@ -354,6 +354,56 @@ bool ReliableOrderedChannel::IsMessageDuplicated(uint16_t messageSequenceNumber)
 	return result;
 }
 
+void ReliableOrderedChannel::Update(float deltaTime)
+{
+	//Update unacked message timeouts
+	std::list<float>::iterator it = _unackedReliableMessageTimeouts.begin();
+	while (it != _unackedReliableMessageTimeouts.end())
+	{
+		float timeout = *it;
+		timeout -= deltaTime;
+
+		if (timeout < 0)
+		{
+			timeout = 0;
+		}
+
+		*it = timeout;
+
+		++it;
+	}
+}
+
+ReliableOrderedChannel::~ReliableOrderedChannel()
+{
+	MessageFactory* messageFactory = MessageFactory::GetInstance();
+	assert(messageFactory != nullptr);
+
+	std::list<Message*>::iterator it = _unackedReliableMessages.begin();
+	while (it != _unackedReliableMessages.end())
+	{
+		Message* message = *it;
+		*it = nullptr;
+		messageFactory->ReleaseMessage(message);
+
+		++it;
+	}
+
+	_unackedReliableMessages.clear();
+
+	it = _orderedMessagesWaitingForPrevious.begin();
+	while (it != _orderedMessagesWaitingForPrevious.end())
+	{
+		Message* message = *it;
+		*it = nullptr;
+		messageFactory->ReleaseMessage(message);
+
+		++it;
+	}
+
+	_orderedMessagesWaitingForPrevious.clear();
+}
+
 void ReliableOrderedChannel::FreeSentMessage(MessageFactory& messageFactory, Message* message)
 {
 	_unackedReliableMessages.push_back(message);

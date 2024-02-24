@@ -69,6 +69,14 @@ bool UnreliableUnorderedTransmissionChannel::IsMessageDuplicated(uint16_t messag
 	return false;
 }
 
+void UnreliableUnorderedTransmissionChannel::Update(float deltaTime)
+{
+}
+
+UnreliableUnorderedTransmissionChannel::~UnreliableUnorderedTransmissionChannel()
+{
+}
+
 void UnreliableUnorderedTransmissionChannel::FreeSentMessage(MessageFactory& messageFactory, Message* message)
 {
 	messageFactory.ReleaseMessage(message);

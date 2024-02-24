@@ -61,6 +61,7 @@ private:
 
 	void ProcessReceivedData();
 	void ProcessDatagram(Buffer& buffer, const Address& address);
+	void ProcessNewRemotePeerMessages();
 
 	void TickRemotePeers(float elapsedTime);
 	void HandlerRemotePeersInactivity();

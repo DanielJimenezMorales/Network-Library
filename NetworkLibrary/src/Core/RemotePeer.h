@@ -58,15 +58,15 @@ public:
 	Message* GetPendingACKReliableMessage();
 	unsigned int GetSizeOfNextPendingMessage() const { return _messagesHandler.GetSizeOfNextPendingMessage(); };
 	void FreeSentMessages();
-	void FreeProcessedMessages() { _messagesHandler.FreeProcessedMessages(); };
+	void FreeProcessedMessages();
 	uint32_t GenerateACKs() const { return _messagesHandler.GenerateACKs(); };
 	void ProcessACKs(uint32_t acks, uint16_t lastAckedMessageSequenceNumber) { _messagesHandler.ProcessACKs(acks, lastAckedMessageSequenceNumber); };
 	void AckReliableMessage(uint16_t messageSequenceNumber) { _messagesHandler.AckReliableMessage(messageSequenceNumber); };
 	bool IsMessageDuplicated(uint16_t messageSequenceNumber) const { return _messagesHandler.IsMessageDuplicated(messageSequenceNumber);};
-	bool AddReceivedMessage(Message* message) { return _messagesHandler.AddReceivedMessage(message); };
+	bool AddReceivedMessage(Message* message);
 
-	bool ArePendingReadyToProcessMessages() const { return _messagesHandler.ArePendingReadyToProcessMessages(); };
-	const Message* GetPendingReadyToProcessMessage() { return _messagesHandler.GetReadyToProcessMessage(); };
+	bool ArePendingReadyToProcessMessages() const;
+	const Message* GetPendingReadyToProcessMessage();
 
 	/// <summary>
 	/// Disconnect and reset the remote client

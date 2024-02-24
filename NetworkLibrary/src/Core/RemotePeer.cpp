@@ -39,7 +39,18 @@ RemotePeer::~RemotePeer()
 {
 	Disconnect();
 
-	//TODO Free memory from transmission channels map
+	//Free transmission channel memory
+	std::map<TransmissionChannelType, TransmissionChannel*>::iterator it = _transmissionChannels.begin();
+	while (it != _transmissionChannels.end())
+	{
+		LOG_INFO("destructor");
+		TransmissionChannel* transmissionChannel = it->second;
+		delete transmissionChannel;
+
+		++it;
+	}
+
+	_transmissionChannels.clear();
 }
 
 void RemotePeer::Connect(const sockaddr_in& addressInfo, uint16_t id, float maxInactivityTime, uint64_t dataPrefix)
@@ -59,6 +70,14 @@ void RemotePeer::Tick(float elapsedTime)
 	{
 		_inactivityTimeLeft = 0.f;
 	}
+
+	//Update transmission channels
+	std::map<TransmissionChannelType, TransmissionChannel*>::iterator it = _transmissionChannels.begin();
+	while (it != _transmissionChannels.end())
+	{
+		it->second->Update(elapsedTime);
+		++it;
+	}
 }
 
 bool RemotePeer::AddMessage(Message* message)
@@ -71,7 +90,7 @@ bool RemotePeer::AddMessage(Message* message)
 	std::map<TransmissionChannelType, TransmissionChannel*>::iterator it = _transmissionChannels.find(transmissionChannelType);
 	if (it != _transmissionChannels.end())
 	{
-		(*it).second->AddMessageToSend(message);
+		it->second->AddMessageToSend(message);
 		return true;
 	}
 	else
@@ -110,6 +129,95 @@ Message* RemotePeer::GetPendingACKReliableMessage()
 void RemotePeer::FreeSentMessages()
 {
 	_messagesHandler.FreeSentMessages();
+
+	//Quitar lo de arriba después
+	std::map<TransmissionChannelType, TransmissionChannel*>::iterator it = _transmissionChannels.begin();
+
+	while (it != _transmissionChannels.end())
+	{
+		it->second->FreeSentMessages();
+
+		++it;
+	}
+}
+
+void RemotePeer::FreeProcessedMessages()
+{
+	_messagesHandler.FreeProcessedMessages();
+
+	//Quitar lo de arriba después
+	std::map<TransmissionChannelType, TransmissionChannel*>::iterator it = _transmissionChannels.begin();
+
+	while (it != _transmissionChannels.end())
+	{
+		it->second->FreeProcessedMessages();
+
+		++it;
+	}
+}
+
+bool RemotePeer::AddReceivedMessage(Message* message)
+{
+	return _messagesHandler.AddReceivedMessage(message);
+
+	//Quitar lo de arriba después
+	TransmissionChannelType channelType = GetTransmissionChannelTypeFromHeader(message->GetHeader());
+	std::map<TransmissionChannelType, TransmissionChannel*>::iterator it = _transmissionChannels.find(channelType);
+	if (it != _transmissionChannels.end())
+	{
+		it->second->AddReceivedMessage(message);
+		return true;
+	}
+	else
+	{
+		//En este caso ver qué hacer con el mensaje que nos pasan por parámetro
+		return false;
+	}
+}
+
+bool RemotePeer::ArePendingReadyToProcessMessages() const
+{
+	return _messagesHandler.ArePendingReadyToProcessMessages();
+
+	//Quitar lo de arriba después
+	bool areReadyToProcessMessages = false;
+
+	std::map<TransmissionChannelType, TransmissionChannel*>::const_iterator cit = _transmissionChannels.cbegin();
+
+	while (cit != _transmissionChannels.cend())
+	{
+		if (cit->second->ArePendingReadyToProcessMessages())
+		{
+			areReadyToProcessMessages = true;
+			break;
+		}
+
+		++cit;
+	}
+
+	return areReadyToProcessMessages;
+}
+
+const Message* RemotePeer::GetPendingReadyToProcessMessage()
+{
+	return _messagesHandler.GetReadyToProcessMessage();
+
+	//Quitar lo de arriba después
+	const Message* message = nullptr;
+	std::map<TransmissionChannelType, TransmissionChannel*>::iterator it = _transmissionChannels.begin();
+
+	while (it != _transmissionChannels.end())
+	{
+		if (it->second->ArePendingReadyToProcessMessages())
+		{
+			message = it->second->GetReadyToProcessMessage();
+			break;
+		}
+
+		++it;
+	}
+
+	return message;
 }
 
 void RemotePeer::Disconnect()
