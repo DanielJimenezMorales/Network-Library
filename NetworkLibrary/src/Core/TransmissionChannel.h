@@ -41,6 +41,8 @@ public:
 	void IncreaseMessageSequenceNumber() { ++_nextMessageSequenceNumber; };
 	virtual uint16_t GetLastMessageSequenceNumberAcked() const = 0;
 
+	virtual void Reset();
+
 	virtual ~TransmissionChannel();
 
 protected:

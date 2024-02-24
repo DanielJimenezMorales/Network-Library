@@ -30,6 +30,8 @@ public:
 
 	uint16_t GetLastMessageSequenceNumberAcked() const override;
 
+	void Reset() override;
+
 	~ReliableOrderedChannel();
 
 protected:
@@ -66,5 +68,7 @@ private:
 
 	const ReliableMessageEntry& GetReliableMessageEntry(uint16_t sequenceNumber) const;
 	unsigned int GetRollingBufferIndex(uint16_t index) const { return index % _reliableMessageEntriesBufferSize; };
+
+	void ClearMessages();
 };
 

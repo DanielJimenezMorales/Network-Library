@@ -36,6 +36,12 @@ void TransmissionChannel::FreeProcessedMessages()
 	}
 }
 
+void TransmissionChannel::Reset()
+{
+	ClearMessages();
+	_nextMessageSequenceNumber = 0;
+}
+
 TransmissionChannel::~TransmissionChannel()
 {
 	ClearMessages();

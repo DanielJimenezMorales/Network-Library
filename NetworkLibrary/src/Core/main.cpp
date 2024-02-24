@@ -83,29 +83,3 @@ int main()
 
     return EXIT_SUCCESS;
 }
-
-
-// Run program: Ctrl + F5 or Debug > Start Without Debugging menu
-// Debug program: F5 or Debug > Start Debugging menu
-
-// Tips for Getting Started: 
-//   1. Use the Solution Explorer window to add/manage files
-//   2. Use the Team Explorer window to connect to source control
-//   3. Use the Output window to see build output and other messages
-//   4. Use the Error List window to view errors
-//   5. Go to Project > Add New Item to create new code files, or Project > Add Existing Item to add existing code files to the project
-//   6. In the future, to open this project again, go to File > Open > Project and select the .sln file
-
-/*
-* Clase Cliente:
-* - Solo va a conectarse a un servidor, y mostrar por consola los mensajes que le lleguen del servidor.
-*
-* Clase Server:
-* - Varios clientes van a poder conectarse a él (Hasta un límite)
-* - Por cada tick, el servidor enviará un mensaje a cada cliente.
-* -
-* 
-* 
-* creo que el problema está a la hora de sacar un unsent message del reliable channel. Por alguna razón, el código cree que los mensajes unacked cuyo timeout ha llegado a 0
-* salen como churros y nunca se hacen acked, por lo que es como que nunca se borran y cada vez hay más y más hasta que llega un punto que peta. Investigar ReliableOrderedChannel::GetMessageToSend().
-*/

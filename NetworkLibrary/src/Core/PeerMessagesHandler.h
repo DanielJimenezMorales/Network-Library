@@ -10,6 +10,12 @@ struct ReliableMessageEntry
 {
 	ReliableMessageEntry() : isAcked(false), sequenceNumber(0) {}
 
+	void Reset()
+	{
+		isAcked = false;
+		sequenceNumber = 0;
+	}
+
 	bool isAcked;
 	uint16_t sequenceNumber;
 };

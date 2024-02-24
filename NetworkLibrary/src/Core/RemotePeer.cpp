@@ -12,7 +12,6 @@ RemotePeer::RemotePeer() :
 	_dataPrefix(0),
 	_maxInactivityTime(0),
 	_inactivityTimeLeft(0),
-	_messagesHandler(),
 	_nextPacketSequenceNumber(0)
 {
 	TransmissionChannel* unreliableUnordered = new UnreliableUnorderedTransmissionChannel();
@@ -24,7 +23,6 @@ RemotePeer::RemotePeer() :
 
 RemotePeer::RemotePeer(const sockaddr_in& addressInfo, uint16_t id, float maxInactivityTime, uint64_t dataPrefix) :
 	_address(Address::GetInvalid()),
-	_messagesHandler(),
 	_nextPacketSequenceNumber(0)
 {
 	TransmissionChannel* unreliableUnordered = new UnreliableUnorderedTransmissionChannel();
@@ -118,11 +116,6 @@ void RemotePeer::Tick(float elapsedTime)
 
 bool RemotePeer::AddMessage(Message* message)
 {
-	/*
-	_messagesHandler.AddMessage(message);
-	return true;*/
-
-	//Quitar lo de arriba y dejar esto
 	TransmissionChannelType transmissionChannelType = GetTransmissionChannelTypeFromHeader(message->GetHeader());
 	std::map<TransmissionChannelType, TransmissionChannel*>::iterator it = _transmissionChannels.find(transmissionChannelType);
 	if (it != _transmissionChannels.end())
@@ -132,7 +125,7 @@ bool RemotePeer::AddMessage(Message* message)
 	}
 	else
 	{
-		//En este caso ver qué hacer con el mensaje que nos pasan por parámetro
+		//TODO En este caso ver qué hacer con el mensaje que nos pasan por parámetro
 		return false;
 	}
 }
@@ -166,11 +159,6 @@ bool RemotePeer::ArePendingMessages(TransmissionChannelType channelType) const
 	return arePendingMessages;
 }
 
-Message* RemotePeer::GetPendingMessage()
-{
-	return _messagesHandler.GetPendingMessage();
-}
-
 Message* RemotePeer::GetPendingMessage(TransmissionChannelType channelType)
 {
 	Message* message = nullptr;
@@ -182,11 +170,6 @@ Message* RemotePeer::GetPendingMessage(TransmissionChannelType channelType)
 	}
 
 	return message;
-}
-
-Message* RemotePeer::GetPendingACKReliableMessage()
-{
-	return _messagesHandler.GetPendingACKReliableMessage();
 }
 
 unsigned int RemotePeer::GetSizeOfNextUnsentMessage(TransmissionChannelType channelType) const
@@ -204,9 +187,6 @@ unsigned int RemotePeer::GetSizeOfNextUnsentMessage(TransmissionChannelType chan
 
 void RemotePeer::FreeSentMessages()
 {
-	//_messagesHandler.FreeSentMessages();
-
-	//Quitar lo de arriba después
 	std::map<TransmissionChannelType, TransmissionChannel*>::iterator it = _transmissionChannels.begin();
 
 	while (it != _transmissionChannels.end())
@@ -219,9 +199,6 @@ void RemotePeer::FreeSentMessages()
 
 void RemotePeer::FreeProcessedMessages()
 {
-	//_messagesHandler.FreeProcessedMessages();
-
-	//Quitar lo de arriba después
 	std::map<TransmissionChannelType, TransmissionChannel*>::iterator it = _transmissionChannels.begin();
 
 	while (it != _transmissionChannels.end())
@@ -277,9 +254,6 @@ void RemotePeer::ProcessACKs(uint32_t acks, uint16_t lastAckedMessageSequenceNum
 
 bool RemotePeer::AddReceivedMessage(Message* message)
 {
-	//return _messagesHandler.AddReceivedMessage(message);
-
-	//Quitar lo de arriba después
 	TransmissionChannelType channelType = GetTransmissionChannelTypeFromHeader(message->GetHeader());
 	std::map<TransmissionChannelType, TransmissionChannel*>::iterator it = _transmissionChannels.find(channelType);
 	if (it != _transmissionChannels.end())
@@ -289,16 +263,13 @@ bool RemotePeer::AddReceivedMessage(Message* message)
 	}
 	else
 	{
-		//En este caso ver qué hacer con el mensaje que nos pasan por parámetro
+		//TODO En este caso ver qué hacer con el mensaje que nos pasan por parámetro
 		return false;
 	}
 }
 
 bool RemotePeer::ArePendingReadyToProcessMessages() const
 {
-	//return _messagesHandler.ArePendingReadyToProcessMessages();
-
-	//Quitar lo de arriba después
 	bool areReadyToProcessMessages = false;
 
 	std::map<TransmissionChannelType, TransmissionChannel*>::const_iterator cit = _transmissionChannels.cbegin();
@@ -319,9 +290,6 @@ bool RemotePeer::ArePendingReadyToProcessMessages() const
 
 const Message* RemotePeer::GetPendingReadyToProcessMessage()
 {
-	//return _messagesHandler.GetReadyToProcessMessage();
-
-	//Quitar lo de arriba después
 	const Message* message = nullptr;
 	std::map<TransmissionChannelType, TransmissionChannel*>::iterator it = _transmissionChannels.begin();
 
@@ -346,6 +314,14 @@ bool RemotePeer::GetNumberOfTransmissionChannels() const
 
 void RemotePeer::Disconnect()
 {
-	_messagesHandler.ClearMessages();
+	//Reset transmission channels
+	std::map<TransmissionChannelType, TransmissionChannel*>::iterator it = _transmissionChannels.begin();
+	while (it != _transmissionChannels.end())
+	{
+		it->second->Reset();
+		++it;
+	}
+
+	//Reset address
 	_address = Address::GetInvalid();
 }

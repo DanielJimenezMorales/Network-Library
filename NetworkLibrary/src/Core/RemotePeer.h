@@ -3,7 +3,6 @@
 #include <map>
 
 #include "Address.h"
-#include "PeerMessagesHandler.h"
 #include "TransmissionChannel.h"
 
 class Message;
@@ -21,7 +20,6 @@ private:
 
 	uint16_t _nextPacketSequenceNumber;
 
-	PeerMessagesHandler _messagesHandler;
 	std::map<TransmissionChannelType, TransmissionChannel*> _transmissionChannels;
 
 public:
@@ -29,11 +27,8 @@ public:
 	RemotePeer(const sockaddr_in& addressInfo, uint16_t id, float maxInactivityTime, uint64_t dataPrefix);
 	~RemotePeer();
 
-	uint16_t GetNextMessageSequenceNumber() const { return _nextPacketSequenceNumber; };//This will get unuseful
-	uint16_t GetNextMessageSequenceNumber(TransmissionChannelType channelType) const;//This will get unuseful
-	uint16_t GetLastMessageSequenceNumberAcked() const { return _messagesHandler.GetLastMessageSequenceNumberAcked(); };//This will get unuseful
+	uint16_t GetNextMessageSequenceNumber(TransmissionChannelType channelType) const;
 	uint16_t GetLastMessageSequenceNumberAcked(TransmissionChannelType channelType) const;
-	void IncreaseMessageSequenceNumber() { ++_nextPacketSequenceNumber; }//This will get unuseful
 	void IncreaseMessageSequenceNumber(TransmissionChannelType channelType);
 
 	/// <summary>
@@ -55,21 +50,14 @@ public:
 	bool IsInactive() const { return _inactivityTimeLeft == 0.f; }
 	bool AddMessage(Message* message);
 	TransmissionChannelType GetTransmissionChannelTypeFromHeader(const MessageHeader& messageHeader) const;
-	bool ArePendingMessages() const { return _messagesHandler.ArePendingMessages(); }//This will get unuseful
 	bool ArePendingMessages(TransmissionChannelType channelType) const;
-	Message* GetPendingMessage();//This will get unuseful
 	Message* GetPendingMessage(TransmissionChannelType channelType);
-	bool ArePendingACKReliableMessages() const { return _messagesHandler.AreUnackedReliableMessages(); };//This will get unuseful
-	Message* GetPendingACKReliableMessage();//This will get unuseful
-	unsigned int GetSizeOfNextPendingMessage() const { return _messagesHandler.GetSizeOfNextPendingMessage(); };//This will get unuseful
 	unsigned int GetSizeOfNextUnsentMessage(TransmissionChannelType channelType) const;
 	void FreeSentMessages();
 	void FreeProcessedMessages();
 	void SeUnsentACKsToFalse(TransmissionChannelType channelType);
 	bool AreUnsentACKs(TransmissionChannelType channelType) const;
-	uint32_t GenerateACKs() const { return _messagesHandler.GenerateACKs(); };//This will get unuseful
 	uint32_t GenerateACKs(TransmissionChannelType channelType) const;
-	void ProcessACKs(uint32_t acks, uint16_t lastAckedMessageSequenceNumber) { _messagesHandler.ProcessACKs(acks, lastAckedMessageSequenceNumber); };//This will get unuseful
 	void ProcessACKs(uint32_t acks, uint16_t lastAckedMessageSequenceNumber, TransmissionChannelType channelType);
 	bool AddReceivedMessage(Message* message);
 
