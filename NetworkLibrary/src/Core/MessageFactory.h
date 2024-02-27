@@ -7,12 +7,18 @@
 class MessageFactory
 {
 public:
-	static MessageFactory* GetInstance(unsigned int size = 2);
+	static void CreateInstance(unsigned int size);
+
+	/// <summary>
+	/// Get unique instance. Before calling to this method, be sure to call CreateInstance(unsigned int size) or you will get an error.
+	/// </summary>
+	/// <returns></returns>
+	static MessageFactory& GetInstance();
 
 	Message* LendMessage(MessageType messageType);
 	void ReleaseMessage(Message* message);
 
-	~MessageFactory();
+	static void DeleteInstance();
 
 private:
 	MessageFactory(unsigned int size);
@@ -25,6 +31,8 @@ private:
 	std::queue<Message*>* GetPoolFromType(MessageType messageType);
 	Message* CreateMessage(MessageType messageType);
 	void ReleasePool(std::queue<Message*>& pool);
+
+	~MessageFactory();
 
 	static MessageFactory* _instance;
 

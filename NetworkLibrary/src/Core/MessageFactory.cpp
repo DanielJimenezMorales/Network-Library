@@ -5,14 +5,19 @@
 
 MessageFactory* MessageFactory::_instance = nullptr;
 
-MessageFactory* MessageFactory::GetInstance(unsigned int size)
+void MessageFactory::CreateInstance(unsigned int size)
 {
-    if (_instance == nullptr)
+    if (_instance != nullptr)
     {
-        _instance = new MessageFactory(size);
+        return;
     }
 
-    return _instance;
+    _instance = new MessageFactory(size);
+}
+
+MessageFactory& MessageFactory::GetInstance()
+{
+    return *_instance;
 }
 
 MessageFactory::MessageFactory(unsigned int size)
@@ -69,6 +74,17 @@ void MessageFactory::ReleaseMessage(Message* message)
     {
         delete message;
     }
+}
+
+void MessageFactory::DeleteInstance()
+{
+    if (_instance == nullptr)
+    {
+        return;
+    }
+
+    delete _instance;
+    _instance = nullptr;
 }
 
 MessageFactory::~MessageFactory()

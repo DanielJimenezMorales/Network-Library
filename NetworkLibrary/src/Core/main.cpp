@@ -27,7 +27,7 @@ int main()
     int clientOrServer;
     std::cin >> clientOrServer;
 
-    MessageFactory::GetInstance(1);
+    MessageFactory::CreateInstance(1);
 
     Peer* peer = nullptr;
 
@@ -80,6 +80,8 @@ int main()
 
     delete peer;
     peer = nullptr;
+
+    MessageFactory::DeleteInstance();
 
     return EXIT_SUCCESS;
 }

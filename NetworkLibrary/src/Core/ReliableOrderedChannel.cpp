@@ -86,8 +86,8 @@ void ReliableOrderedChannel::AddReceivedMessage(Message* message)
 		ss << "The message with ID = " << messageSequenceNumber << " is duplicated. Ignoring it...";
 		LOG_INFO(ss.str());
 
-		MessageFactory* messageFactory = MessageFactory::GetInstance();
-		messageFactory->ReleaseMessage(message);
+		MessageFactory& messageFactory = MessageFactory::GetInstance();
+		messageFactory.ReleaseMessage(message);
 		return;
 	}
 	else
@@ -282,12 +282,11 @@ bool ReliableOrderedChannel::TryRemoveUnackedReliableMessageFromSequence(uint16_
 	int index = GetPendingUnackedReliableMessageIndexFromSequence(sequence);
 	if (index != -1)
 	{
-		MessageFactory* messageFactory = MessageFactory::GetInstance();
-		assert(messageFactory != nullptr);
+		MessageFactory& messageFactory = MessageFactory::GetInstance();
 
 		Message* message = DeleteUnackedReliableMessageAtIndex(index);
 
-		messageFactory->ReleaseMessage(message);
+		messageFactory.ReleaseMessage(message);
 		result = true;
 	}
 
@@ -338,15 +337,14 @@ const ReliableMessageEntry& ReliableOrderedChannel::GetReliableMessageEntry(uint
 
 void ReliableOrderedChannel::ClearMessages()
 {
-	MessageFactory* messageFactory = MessageFactory::GetInstance();
-	assert(messageFactory != nullptr);
+	MessageFactory& messageFactory = MessageFactory::GetInstance();
 
 	std::list<Message*>::iterator it = _unackedReliableMessages.begin();
 	while (it != _unackedReliableMessages.end())
 	{
 		Message* message = *it;
 		*it = nullptr;
-		messageFactory->ReleaseMessage(message);
+		messageFactory.ReleaseMessage(message);
 
 		++it;
 	}
@@ -360,7 +358,7 @@ void ReliableOrderedChannel::ClearMessages()
 	{
 		Message* message = *it;
 		*it = nullptr;
-		messageFactory->ReleaseMessage(message);
+		messageFactory.ReleaseMessage(message);
 
 		++it;
 	}

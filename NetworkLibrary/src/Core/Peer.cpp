@@ -268,7 +268,7 @@ void Peer::ProcessDatagram(Buffer& buffer, const Address& address)
 	//Process packet messages one by one
 	std::vector<Message*>::iterator iterator = packet.GetMessages();
 	unsigned int numberOfMessagesInPacket = packet.GetNumberOfMessages();
-	MessageFactory* messageFactory = MessageFactory::GetInstance();
+	MessageFactory& messageFactory = MessageFactory::GetInstance();
 
 	for (unsigned int i = 0; i < numberOfMessagesInPacket; ++i)
 	{
@@ -281,7 +281,7 @@ void Peer::ProcessDatagram(Buffer& buffer, const Address& address)
 		else
 		{
 			ProcessMessage(*message, address);
-			messageFactory->ReleaseMessage(message);
+			messageFactory.ReleaseMessage(message);
 		}
 	}
 }

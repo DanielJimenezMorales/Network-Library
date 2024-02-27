@@ -10,29 +10,27 @@ TransmissionChannel::TransmissionChannel(TransmissionChannelType type) : _type(t
 
 void TransmissionChannel::FreeSentMessages()
 {
-	MessageFactory* messageFactory = MessageFactory::GetInstance();
-	assert(messageFactory != nullptr);
+	MessageFactory& messageFactory = MessageFactory::GetInstance();
 
 	while (!_sentMessages.empty())
 	{
 		Message* message = _sentMessages.front();
 		_sentMessages.pop();
 
-		FreeSentMessage(*messageFactory, message);
+		FreeSentMessage(messageFactory, message);
 	}
 }
 
 void TransmissionChannel::FreeProcessedMessages()
 {
-	MessageFactory* messageFactory = MessageFactory::GetInstance();
-	assert(messageFactory != nullptr);
+	MessageFactory& messageFactory = MessageFactory::GetInstance();
 
 	while (!_processedMessages.empty())
 	{
 		Message* message = _processedMessages.front();
 		_processedMessages.pop();
 
-		messageFactory->ReleaseMessage(message);
+		messageFactory.ReleaseMessage(message);
 	}
 }
 
@@ -49,15 +47,14 @@ TransmissionChannel::~TransmissionChannel()
 
 void TransmissionChannel::ClearMessages()
 {
-	MessageFactory* messageFactory = MessageFactory::GetInstance();
-	assert(messageFactory != nullptr);
+	MessageFactory& messageFactory = MessageFactory::GetInstance();
 
 	while (!_sentMessages.empty())
 	{
 		Message* message = _sentMessages.front();
 		_sentMessages.pop();
 
-		messageFactory->ReleaseMessage(message);
+		messageFactory.ReleaseMessage(message);
 	}
 
 	while (!_processedMessages.empty())
@@ -65,13 +62,13 @@ void TransmissionChannel::ClearMessages()
 		Message* message = _processedMessages.front();
 		_processedMessages.pop();
 
-		messageFactory->ReleaseMessage(message);
+		messageFactory.ReleaseMessage(message);
 	}
 	
 	for (std::vector<Message*>::iterator it = _unsentMessages.begin(); it != _unsentMessages.end(); ++it)
 	{
 		Message* message = *it;
-		messageFactory->ReleaseMessage(message);
+		messageFactory.ReleaseMessage(message);
 		*it = nullptr;
 	}
 

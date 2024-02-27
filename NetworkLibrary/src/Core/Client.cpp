@@ -213,8 +213,9 @@ void Client::ProcessInGameResponse(const InGameResponseMessage& message)
 
 void Client::CreateConnectionRequestMessage()
 {
-	MessageFactory* messageFactory = MessageFactory::GetInstance();
-	Message* message = messageFactory->LendMessage(MessageType::ConnectionRequest);
+	MessageFactory& messageFactory = MessageFactory::GetInstance();
+	Message* message = messageFactory.LendMessage(MessageType::ConnectionRequest);
+
 	if (message == nullptr)
 	{
 		LOG_ERROR("Can't create new Connection Request Message because the MessageFactory has returned a null message");
@@ -232,8 +233,8 @@ void Client::CreateConnectionRequestMessage()
 
 void Client::CreateConnectionChallengeResponse()
 {
-	MessageFactory* messageFactory = MessageFactory::GetInstance();
-	Message* message = messageFactory->LendMessage(MessageType::ConnectionChallengeResponse);
+	MessageFactory& messageFactory = MessageFactory::GetInstance();
+	Message* message = messageFactory.LendMessage(MessageType::ConnectionChallengeResponse);
 	if (message == nullptr)
 	{
 		LOG_ERROR("Can't create new Connection Challenge Response Message because the MessageFactory has returned a null message");
@@ -248,8 +249,8 @@ void Client::CreateConnectionChallengeResponse()
 
 void Client::CreateInGameMessage()
 {
-	MessageFactory* messageFactory = MessageFactory::GetInstance();
-	Message* message = messageFactory->LendMessage(MessageType::InGame);
+	MessageFactory& messageFactory = MessageFactory::GetInstance();
+	Message* message = messageFactory.LendMessage(MessageType::InGame);
 	if (message == nullptr)
 	{
 		LOG_ERROR("Can't create new Connection Challenge Response Message because the MessageFactory has returned a null message");

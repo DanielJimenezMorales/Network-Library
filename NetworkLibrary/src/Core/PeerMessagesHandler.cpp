@@ -69,8 +69,8 @@ bool PeerMessagesHandler::AddReceivedMessage(Message* message)
 			ss << "The message with ID = " << messageSequenceNumber << " is duplicated. Ignoring it...";
 			LOG_INFO(ss.str());
 
-			MessageFactory* messageFactory = MessageFactory::GetInstance();
-			messageFactory->ReleaseMessage(message);
+			MessageFactory& messageFactory = MessageFactory::GetInstance();
+			messageFactory.ReleaseMessage(message);
 			return false;
 		}
 		else
@@ -195,8 +195,7 @@ unsigned int PeerMessagesHandler::GetSizeOfNextPendingMessage() const
 
 void PeerMessagesHandler::FreeSentMessages()
 {
-	MessageFactory* messageFactory = MessageFactory::GetInstance();
-	assert(messageFactory != nullptr);
+	MessageFactory& messageFactory = MessageFactory::GetInstance();
 
 	while (!_sentMessages.empty())
 	{
@@ -209,36 +208,34 @@ void PeerMessagesHandler::FreeSentMessages()
 		}
 		else
 		{
-			messageFactory->ReleaseMessage(message);
+			messageFactory.ReleaseMessage(message);
 		}
 	}
 }
 
 void PeerMessagesHandler::FreeProcessedMessages()
 {
-	MessageFactory* messageFactory = MessageFactory::GetInstance();
-	assert(messageFactory != nullptr);
+	MessageFactory& messageFactory = MessageFactory::GetInstance();
 
 	while (!_processedMessages.empty())
 	{
 		Message* message = _processedMessages.front();
 		_processedMessages.pop();
 
-		messageFactory->ReleaseMessage(message);
+		messageFactory.ReleaseMessage(message);
 	}
 }
 
 void PeerMessagesHandler::ClearMessages()
 {
-	MessageFactory* messageFactory = MessageFactory::GetInstance();
-	assert(messageFactory != nullptr);
+	MessageFactory& messageFactory = MessageFactory::GetInstance();
 
 	while (!_sentMessages.empty())
 	{
 		Message* message = _sentMessages.front();
 		_sentMessages.pop();
 
-		messageFactory->ReleaseMessage(message);
+		messageFactory.ReleaseMessage(message);
 	}
 
 	while (!_processedMessages.empty())
@@ -246,7 +243,7 @@ void PeerMessagesHandler::ClearMessages()
 		Message* message = _processedMessages.front();
 		_processedMessages.pop();
 
-		messageFactory->ReleaseMessage(message);
+		messageFactory.ReleaseMessage(message);
 	}
 
 	for (unsigned int i = 0; i < _pendingMessages.size(); ++i)
@@ -254,7 +251,7 @@ void PeerMessagesHandler::ClearMessages()
 		Message* message = _pendingMessages[i];
 		_pendingMessages[i] = nullptr;
 
-		messageFactory->ReleaseMessage(message);
+		messageFactory.ReleaseMessage(message);
 	}
 
 	_pendingMessages.clear();
@@ -340,8 +337,7 @@ void PeerMessagesHandler::DeleteUnackedReliableMessageAtIndex(unsigned int index
 {
 	assert(index < _unackedReliableMessages.size());
 
-	MessageFactory* messageFactory = MessageFactory::GetInstance();
-	assert(messageFactory != nullptr);
+	MessageFactory& messageFactory = MessageFactory::GetInstance();
 
 	std::list<Message*>::iterator it = _unackedReliableMessages.begin();
 	std::advance(it, index);
@@ -349,7 +345,7 @@ void PeerMessagesHandler::DeleteUnackedReliableMessageAtIndex(unsigned int index
 
 	_unackedReliableMessages.erase(it);
 
-	messageFactory->ReleaseMessage(message);
+	messageFactory.ReleaseMessage(message);
 
 	LOG_INFO("DELETE");
 }
