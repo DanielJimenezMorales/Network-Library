@@ -7,14 +7,27 @@
 #include "UnreliableUnorderedTransmissionChannel.h"
 #include "ReliableOrderedChannel.h"
 
+void RemotePeer::InitTransmissionChannels()
+{
+	TransmissionChannel* unreliableUnordered = new UnreliableUnorderedTransmissionChannel();
+	TransmissionChannel* reliableOrdered = new ReliableOrderedChannel();
+
+	_transmissionChannels.reserve(NUMBER_OF_TRANSMISSION_CHANNELS);
+	_transmissionChannels.push_back(unreliableUnordered);
+	_transmissionChannels.push_back(reliableOrdered);
+}
+
 TransmissionChannel* RemotePeer::GetTransmissionChannelFromType(TransmissionChannelType channelType)
 {
 	TransmissionChannel* transmissionChannel = nullptr;
 
-	std::map<TransmissionChannelType, TransmissionChannel*>::iterator it = _transmissionChannels.find(channelType);
-	if (it != _transmissionChannels.end())
+	for (unsigned int i = 0; i < NUMBER_OF_TRANSMISSION_CHANNELS; ++i)
 	{
-		transmissionChannel = it->second;
+		if (_transmissionChannels[i]->GetType() == channelType)
+		{
+			transmissionChannel = _transmissionChannels[i];
+			break;
+		}
 	}
 
 	return transmissionChannel;
@@ -24,10 +37,13 @@ const TransmissionChannel* RemotePeer::GetTransmissionChannelFromType(Transmissi
 {
 	const TransmissionChannel* transmissionChannel = nullptr;
 
-	std::map<TransmissionChannelType, TransmissionChannel*>::const_iterator cit = _transmissionChannels.find(channelType);
-	if (cit != _transmissionChannels.cend())
+	for (unsigned int i = 0; i < NUMBER_OF_TRANSMISSION_CHANNELS; ++i)
 	{
-		transmissionChannel = cit->second;
+		if (_transmissionChannels[i]->GetType() == channelType)
+		{
+			transmissionChannel = _transmissionChannels[i];
+			break;
+		}
 	}
 
 	return transmissionChannel;
@@ -38,25 +54,18 @@ RemotePeer::RemotePeer() :
 	_dataPrefix(0),
 	_maxInactivityTime(0),
 	_inactivityTimeLeft(0),
-	_nextPacketSequenceNumber(0)
+	_nextPacketSequenceNumber(0),
+	NUMBER_OF_TRANSMISSION_CHANNELS(2)
 {
-	TransmissionChannel* unreliableUnordered = new UnreliableUnorderedTransmissionChannel();
-	TransmissionChannel* reliableOrdered = new ReliableOrderedChannel();
-
-	_transmissionChannels[unreliableUnordered->GetType()] = unreliableUnordered;
-	_transmissionChannels[reliableOrdered->GetType()] = reliableOrdered;
+	InitTransmissionChannels();
 }
 
 RemotePeer::RemotePeer(const sockaddr_in& addressInfo, uint16_t id, float maxInactivityTime, uint64_t dataPrefix) :
 	_address(Address::GetInvalid()),
-	_nextPacketSequenceNumber(0)
+	_nextPacketSequenceNumber(0),
+	NUMBER_OF_TRANSMISSION_CHANNELS(2)
 {
-	TransmissionChannel* unreliableUnordered = new UnreliableUnorderedTransmissionChannel();
-	TransmissionChannel* reliableOrdered = new ReliableOrderedChannel();
-
-	_transmissionChannels[unreliableUnordered->GetType()] = unreliableUnordered;
-	_transmissionChannels[reliableOrdered->GetType()] = reliableOrdered;
-
+	InitTransmissionChannels();
 	Connect(addressInfo, id, maxInactivityTime, dataPrefix);
 }
 
@@ -65,14 +74,11 @@ RemotePeer::~RemotePeer()
 	Disconnect();
 
 	//Free transmission channel memory
-	std::map<TransmissionChannelType, TransmissionChannel*>::iterator it = _transmissionChannels.begin();
-	while (it != _transmissionChannels.end())
+	for (unsigned int i = 0; i < _transmissionChannels.size(); ++i)
 	{
 		LOG_INFO("destructor");
-		TransmissionChannel* transmissionChannel = it->second;
-		delete transmissionChannel;
-
-		++it;
+		delete _transmissionChannels[i];
+		_transmissionChannels[i] = nullptr;
 	}
 
 	_transmissionChannels.clear();
@@ -110,11 +116,9 @@ void RemotePeer::Tick(float elapsedTime)
 	}
 
 	//Update transmission channels
-	std::map<TransmissionChannelType, TransmissionChannel*>::iterator it = _transmissionChannels.begin();
-	while (it != _transmissionChannels.end())
+	for (unsigned int i = 0; i < NUMBER_OF_TRANSMISSION_CHANNELS; ++i)
 	{
-		it->second->Update(elapsedTime);
-		++it;
+		_transmissionChannels[i]->Update(elapsedTime);
 	}
 }
 
@@ -191,23 +195,17 @@ unsigned int RemotePeer::GetSizeOfNextUnsentMessage(TransmissionChannelType chan
 
 void RemotePeer::FreeSentMessages()
 {
-	std::map<TransmissionChannelType, TransmissionChannel*>::iterator it = _transmissionChannels.begin();
-	while (it != _transmissionChannels.end())
+	for (unsigned int i = 0; i < NUMBER_OF_TRANSMISSION_CHANNELS; ++i)
 	{
-		it->second->FreeSentMessages();
-
-		++it;
+		_transmissionChannels[i]->FreeSentMessages();
 	}
 }
 
 void RemotePeer::FreeProcessedMessages()
 {
-	std::map<TransmissionChannelType, TransmissionChannel*>::iterator it = _transmissionChannels.begin();
-	while (it != _transmissionChannels.end())
+	for (unsigned int i = 0; i < NUMBER_OF_TRANSMISSION_CHANNELS; ++i)
 	{
-		it->second->FreeProcessedMessages();
-
-		++it;
+		_transmissionChannels[i]->FreeProcessedMessages();
 	}
 }
 
@@ -276,16 +274,13 @@ bool RemotePeer::ArePendingReadyToProcessMessages() const
 {
 	bool areReadyToProcessMessages = false;
 
-	std::map<TransmissionChannelType, TransmissionChannel*>::const_iterator cit = _transmissionChannels.cbegin();
-	while (cit != _transmissionChannels.cend())
+	for (unsigned int i = 0; i < NUMBER_OF_TRANSMISSION_CHANNELS; ++i)
 	{
-		if (cit->second->ArePendingReadyToProcessMessages())
+		if (_transmissionChannels[i]->ArePendingReadyToProcessMessages())
 		{
 			areReadyToProcessMessages = true;
 			break;
 		}
-
-		++cit;
 	}
 
 	return areReadyToProcessMessages;
@@ -294,17 +289,14 @@ bool RemotePeer::ArePendingReadyToProcessMessages() const
 const Message* RemotePeer::GetPendingReadyToProcessMessage()
 {
 	const Message* message = nullptr;
-	std::map<TransmissionChannelType, TransmissionChannel*>::iterator it = _transmissionChannels.begin();
 
-	while (it != _transmissionChannels.end())
+	for (unsigned int i = 0; i < NUMBER_OF_TRANSMISSION_CHANNELS; ++i)
 	{
-		if (it->second->ArePendingReadyToProcessMessages())
+		if (_transmissionChannels[i]->ArePendingReadyToProcessMessages())
 		{
-			message = it->second->GetReadyToProcessMessage();
+			message = _transmissionChannels[i]->GetReadyToProcessMessage();
 			break;
 		}
-
-		++it;
 	}
 
 	return message;
@@ -312,17 +304,15 @@ const Message* RemotePeer::GetPendingReadyToProcessMessage()
 
 bool RemotePeer::GetNumberOfTransmissionChannels() const
 {
-	return _transmissionChannels.size();
+	return NUMBER_OF_TRANSMISSION_CHANNELS;
 }
 
 void RemotePeer::Disconnect()
 {
 	//Reset transmission channels
-	std::map<TransmissionChannelType, TransmissionChannel*>::iterator it = _transmissionChannels.begin();
-	while (it != _transmissionChannels.end())
+	for (unsigned int i = 0; i < NUMBER_OF_TRANSMISSION_CHANNELS; ++i)
 	{
-		it->second->Reset();
-		++it;
+		_transmissionChannels[i]->Reset();
 	}
 
 	//Reset address

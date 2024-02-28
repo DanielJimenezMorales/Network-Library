@@ -8,7 +8,7 @@
 #include "Address.h"
 #include "PendingConnection.h"
 #include "Socket.h"
-#include "Buffer.h";
+#include "Buffer.h"
 #include "TransmissionChannel.h"
 
 class Message;

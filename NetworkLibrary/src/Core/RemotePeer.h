@@ -20,8 +20,10 @@ private:
 
 	uint16_t _nextPacketSequenceNumber;
 
-	std::map<TransmissionChannelType, TransmissionChannel*> _transmissionChannels;
+	const unsigned int NUMBER_OF_TRANSMISSION_CHANNELS;
+	std::vector<TransmissionChannel*> _transmissionChannels;
 
+	void InitTransmissionChannels();
 	TransmissionChannel* GetTransmissionChannelFromType(TransmissionChannelType channelType);
 	const TransmissionChannel* GetTransmissionChannelFromType(TransmissionChannelType channelType) const;
 
