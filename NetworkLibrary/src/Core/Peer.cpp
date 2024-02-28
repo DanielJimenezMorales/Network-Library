@@ -415,7 +415,6 @@ void Peer::SendPacketToRemotePeer(RemotePeer& remotePeer, TransmissionChannelTyp
 	//TODO Check somewhere if there is a message larger than the maximum packet size. Log a warning saying that the message will never get sent and delete it.
 	//TODO Include data prefix in packet's header and check if the data prefix is correct when receiving a packet
 
-
 	//Check if we should include a message to the packet
 	bool arePendingMessages = remotePeer.ArePendingMessages(type);
 	bool isThereCapacityLeft = packet.CanMessageFit(remotePeer.GetSizeOfNextUnsentMessage(type));
@@ -425,17 +424,12 @@ void Peer::SendPacketToRemotePeer(RemotePeer& remotePeer, TransmissionChannelTyp
 		//Configure and add message to packet
 		message = remotePeer.GetPendingMessage(type);
 
-		//uint16_t messageSequenceNumber = remotePeer.GetNextMessageSequenceNumber(type);
-		//remotePeer.IncreaseMessageSequenceNumber(type);
-
 		if (message->GetHeader().isReliable)
 		{
 			std::stringstream ss;
 			ss << "Reliable message sequence number: " << message->GetHeader().messageSequenceNumber << " Message type: " << (int)message->GetHeader().type;
 			LOG_INFO(ss.str());
 		}
-
-		//message->SetHeaderPacketSequenceNumber(messageSequenceNumber);
 
 		packet.AddMessage(message);
 

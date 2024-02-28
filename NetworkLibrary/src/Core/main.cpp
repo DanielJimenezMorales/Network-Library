@@ -8,6 +8,7 @@
 #include "Client.h"
 #include "Logger.h"
 #include "MessageFactory.h"
+#include "TimeClock.h"
 
 #define DEFAULT_IP "127.0.0.1"
 #define DEFAULT_PORT "27015"
@@ -28,6 +29,7 @@ int main()
     std::cin >> clientOrServer;
 
     MessageFactory::CreateInstance(1);
+    TimeClock::CreateInstance();
 
     Peer* peer = nullptr;
 
@@ -48,13 +50,13 @@ int main()
 
     //GAMELOOP BEGIN
     double time = 0.0;
-    std::chrono::system_clock::time_point lastTime = std::chrono::system_clock::now();
+    std::chrono::steady_clock::time_point lastTime = std::chrono::steady_clock::now();
     double elapsedTime = 0.0;
     double accumulator = 0.0;
 
     while (isRunning)
     {
-        std::chrono::system_clock::time_point current = std::chrono::system_clock::now();
+        std::chrono::steady_clock::time_point current = std::chrono::steady_clock::now();
         std::chrono::duration<double> elapsedTimeInSeconds = current - lastTime;
         time += elapsedTimeInSeconds.count();
         accumulator += elapsedTimeInSeconds.count();
@@ -82,6 +84,7 @@ int main()
     peer = nullptr;
 
     MessageFactory::DeleteInstance();
+    TimeClock::DeleteInstance();
 
     return EXIT_SUCCESS;
 }

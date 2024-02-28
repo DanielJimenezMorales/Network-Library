@@ -5,13 +5,16 @@
 #include "BitwiseUtils.h"
 #include "Logger.h"
 #include "MessageFactory.h"
+#include "TimeClock.h"
+#include "AlgorithmUtils.h"
 
 ReliableOrderedChannel::ReliableOrderedChannel() : TransmissionChannel(TransmissionChannelType::ReliableOrdered),
 _initialTimeout(0.1f),
 _lastMessageSequenceNumberAcked(0),
 _nextOrderedMessageSequenceNumber(0),
 _reliableMessageEntriesBufferSize(1024),
-_areUnsentACKs(false)
+_areUnsentACKs(false),
+_rttMilliseconds(0)
 {
 	_reliableMessageEntries.reserve(_reliableMessageEntriesBufferSize);
 	for (unsigned int i = 0; i < _reliableMessageEntriesBufferSize; ++i)
@@ -211,6 +214,9 @@ void ReliableOrderedChannel::AddUnackedReliableMessage(Message* message)
 {
 	_unackedReliableMessages.push_back(message);
 	_unackedReliableMessageTimeouts.push_back(_initialTimeout);
+
+	const TimeClock& timeClock = TimeClock::GetInstance();
+	_unackedMessagesSendTimes[message->GetHeader().messageSequenceNumber] = timeClock.GetElapsedTimeInMilliseconds();
 }
 
 void ReliableOrderedChannel::AckReliableMessage(uint16_t messageSequenceNumber)
@@ -282,10 +288,18 @@ bool ReliableOrderedChannel::TryRemoveUnackedReliableMessageFromSequence(uint16_
 	int index = GetPendingUnackedReliableMessageIndexFromSequence(sequence);
 	if (index != -1)
 	{
-		MessageFactory& messageFactory = MessageFactory::GetInstance();
-
 		Message* message = DeleteUnackedReliableMessageAtIndex(index);
 
+		//Calculate RTT of acked message
+		const TimeClock& timeClock = TimeClock::GetInstance();
+		uint64_t currentElapsedTime = timeClock.GetElapsedTimeInMilliseconds();
+		uint16_t messageRTT = currentElapsedTime - _unackedMessagesSendTimes[sequence];
+		std::unordered_map<uint16_t, uint16_t>::iterator it = _unackedMessagesSendTimes.find(sequence);
+		_unackedMessagesSendTimes.erase(it);
+		AddMessageRTTValueToProcess(messageRTT);
+
+		//Rekease acked message since we no longer need it
+		MessageFactory& messageFactory = MessageFactory::GetInstance();
 		messageFactory.ReleaseMessage(message);
 		result = true;
 	}
@@ -333,6 +347,34 @@ const ReliableMessageEntry& ReliableOrderedChannel::GetReliableMessageEntry(uint
 {
 	unsigned int index = GetRollingBufferIndex(sequenceNumber);
 	return _reliableMessageEntries[index];
+}
+
+void ReliableOrderedChannel::AddMessageRTTValueToProcess(uint16_t messageRTT)
+{
+	_messagesRTTToProcess.push(messageRTT);
+}
+
+void ReliableOrderedChannel::UpdateRTT()
+{
+	while (!_messagesRTTToProcess.empty())
+	{
+		uint16_t messageRTTValue = _messagesRTTToProcess.front();
+		_messagesRTTToProcess.pop();
+
+		if (_rttMilliseconds == 0)
+		{
+			_rttMilliseconds = messageRTTValue;
+		}
+		else
+		{
+			_rttMilliseconds = AlgorithmUtils::ExponentialMovingAverage(_rttMilliseconds, messageRTTValue, 50);
+		}
+	}
+
+	//TODO Make resend time bigger, or at least dynamic based on RTT
+	std::stringstream ss;
+	ss << "RTT: " << _rttMilliseconds;
+	LOG_INFO(ss.str());
 }
 
 void ReliableOrderedChannel::ClearMessages()
@@ -443,6 +485,9 @@ void ReliableOrderedChannel::Update(float deltaTime)
 
 		++it;
 	}
+
+	//Update RTT
+	UpdateRTT();
 }
 
 uint16_t ReliableOrderedChannel::GetLastMessageSequenceNumberAcked() const

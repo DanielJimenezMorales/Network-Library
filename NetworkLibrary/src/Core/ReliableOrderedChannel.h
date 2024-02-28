@@ -1,5 +1,6 @@
 #pragma once
 #include <list>
+#include <unordered_map>
 
 #include "TransmissionChannel.h"
 #include "PeerMessagesHandler.h"
@@ -47,6 +48,10 @@ private:
 	std::vector<ReliableMessageEntry> _reliableMessageEntries;
 	unsigned int _reliableMessageEntriesBufferSize;
 
+	std::unordered_map<uint16_t, uint16_t> _unackedMessagesSendTimes;
+	std::queue<uint16_t> _messagesRTTToProcess;
+	uint16_t _rttMilliseconds;
+
 	//Collection of messages waiting for a previous message in order to guarantee ordered delivery
 	std::list<Message*> _orderedMessagesWaitingForPrevious;
 	//Next message sequence number expected to guarantee ordered transmission
@@ -68,6 +73,9 @@ private:
 
 	const ReliableMessageEntry& GetReliableMessageEntry(uint16_t sequenceNumber) const;
 	unsigned int GetRollingBufferIndex(uint16_t index) const { return index % _reliableMessageEntriesBufferSize; };
+
+	void AddMessageRTTValueToProcess(uint16_t messageRTT);
+	void UpdateRTT();
 
 	void ClearMessages();
 };
