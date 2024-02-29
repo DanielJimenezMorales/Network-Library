@@ -25,6 +25,8 @@ public:
 
 	uint16_t GetLastMessageSequenceNumberAcked() const override;
 
+	unsigned int GetRTTMilliseconds() const override;
+
 	~UnreliableUnorderedTransmissionChannel();
 
 protected:

@@ -213,7 +213,10 @@ int ReliableOrderedChannel::GetNextUnackedMessageIndexToResend() const
 void ReliableOrderedChannel::AddUnackedReliableMessage(Message* message)
 {
 	_unackedReliableMessages.push_back(message);
-	_unackedReliableMessageTimeouts.push_back(_initialTimeout);
+	std::stringstream ss;
+	ss << "Retransmission Timeout: " << GetRetransmissionTimeout();
+	LOG_INFO(ss.str());
+	_unackedReliableMessageTimeouts.push_back(GetRetransmissionTimeout());
 
 	const TimeClock& timeClock = TimeClock::GetInstance();
 	_unackedMessagesSendTimes[message->GetHeader().messageSequenceNumber] = timeClock.GetElapsedTimeInMilliseconds();
@@ -367,7 +370,7 @@ void ReliableOrderedChannel::UpdateRTT()
 		}
 		else
 		{
-			_rttMilliseconds = AlgorithmUtils::ExponentialMovingAverage(_rttMilliseconds, messageRTTValue, 50);
+			_rttMilliseconds = AlgorithmUtils::ExponentialMovingAverage(_rttMilliseconds, messageRTTValue, 20);
 		}
 	}
 
@@ -375,6 +378,16 @@ void ReliableOrderedChannel::UpdateRTT()
 	std::stringstream ss;
 	ss << "RTT: " << _rttMilliseconds;
 	LOG_INFO(ss.str());
+}
+
+float ReliableOrderedChannel::GetRetransmissionTimeout() const
+{
+	if (_rttMilliseconds == 0)
+	{
+		return _initialTimeout;
+	}
+
+	return (float)_rttMilliseconds / 1000 * 2;
 }
 
 void ReliableOrderedChannel::ClearMessages()
@@ -507,6 +520,11 @@ void ReliableOrderedChannel::Reset()
 	{
 		_reliableMessageEntries[i].Reset();
 	}
+}
+
+unsigned int ReliableOrderedChannel::GetRTTMilliseconds() const
+{
+	return _rttMilliseconds;
 }
 
 ReliableOrderedChannel::~ReliableOrderedChannel()

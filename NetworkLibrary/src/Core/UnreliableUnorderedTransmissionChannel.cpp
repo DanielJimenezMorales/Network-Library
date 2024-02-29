@@ -97,6 +97,11 @@ uint16_t UnreliableUnorderedTransmissionChannel::GetLastMessageSequenceNumberAck
 	return 0;
 }
 
+unsigned int UnreliableUnorderedTransmissionChannel::GetRTTMilliseconds() const
+{
+	return 0;
+}
+
 UnreliableUnorderedTransmissionChannel::~UnreliableUnorderedTransmissionChannel()
 {
 }

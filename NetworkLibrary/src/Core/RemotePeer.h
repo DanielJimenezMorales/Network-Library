@@ -67,6 +67,8 @@ public:
 	bool ArePendingReadyToProcessMessages() const;
 	const Message* GetPendingReadyToProcessMessage();
 
+	unsigned int GetRTTMilliseconds() const;
+
 	bool GetNumberOfTransmissionChannels() const;
 
 	/// <summary>

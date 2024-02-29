@@ -33,6 +33,8 @@ public:
 
 	void Reset() override;
 
+	unsigned int GetRTTMilliseconds() const override;
+
 	~ReliableOrderedChannel();
 
 protected:
@@ -76,6 +78,7 @@ private:
 
 	void AddMessageRTTValueToProcess(uint16_t messageRTT);
 	void UpdateRTT();
+	float GetRetransmissionTimeout() const;
 
 	void ClearMessages();
 };

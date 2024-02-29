@@ -307,6 +307,29 @@ bool RemotePeer::GetNumberOfTransmissionChannels() const
 	return NUMBER_OF_TRANSMISSION_CHANNELS;
 }
 
+unsigned int RemotePeer::GetRTTMilliseconds() const
+{
+	unsigned int rtt = 0;
+	unsigned int numberOfTransmissionChannels = 0;
+
+	for (unsigned int i = 0; i < NUMBER_OF_TRANSMISSION_CHANNELS; ++i)
+	{
+		unsigned int transmissionChannelRTT = _transmissionChannels[i]->GetRTTMilliseconds();
+		if (transmissionChannelRTT > 0)
+		{
+			rtt += transmissionChannelRTT;
+			++numberOfTransmissionChannels;
+		}
+	}
+
+	if (numberOfTransmissionChannels > 0)
+	{
+		rtt /= numberOfTransmissionChannels;
+	}
+
+	return rtt;
+}
+
 void RemotePeer::Disconnect()
 {
 	//Reset transmission channels

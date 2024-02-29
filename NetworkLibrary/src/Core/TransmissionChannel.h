@@ -41,6 +41,8 @@ public:
 
 	virtual void Reset();
 
+	virtual unsigned int GetRTTMilliseconds() const = 0;
+
 	virtual ~TransmissionChannel();
 
 protected:
