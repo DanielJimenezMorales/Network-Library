@@ -97,15 +97,13 @@ void Server::ProcessConnectionRequest(const ConnectionRequestMessage& message, c
 
 		if (pendingConnectionIndex == -1) //If no pending connection was found create one!
 		{
-			PendingConnection newPendingConnection(address);
-			newPendingConnection.SetClientSalt(clientSalt);
-			newPendingConnection.SetServerSalt(GenerateServerSalt());
-			_pendingConnections.push_back(newPendingConnection);
-
+			_pendingConnections.emplace_back(address);
 			pendingConnectionIndex = _pendingConnections.size() - 1;
+			_pendingConnections[pendingConnectionIndex].SetClientSalt(clientSalt);
+			_pendingConnections[pendingConnectionIndex].SetServerSalt(GenerateServerSalt());
 
 			std::stringstream ss;
-			ss << "Creating a pending connection entry. Client salt: " << clientSalt << " Server salt: " << newPendingConnection.GetServerSalt();
+			ss << "Creating a pending connection entry. Client salt: " << clientSalt << " Server salt: " << _pendingConnections[pendingConnectionIndex].GetServerSalt();
 			LOG_INFO(ss.str());
 		}
 

@@ -3,9 +3,22 @@
 #include <unordered_map>
 
 #include "TransmissionChannel.h"
-#include "PeerMessagesHandler.h"
 
 class Message;
+
+struct ReliableMessageEntry
+{
+	ReliableMessageEntry() : isAcked(false), sequenceNumber(0) {}
+
+	void Reset()
+	{
+		isAcked = false;
+		sequenceNumber = 0;
+	}
+
+	bool isAcked;
+	uint16_t sequenceNumber;
+};
 
 class ReliableOrderedChannel : public TransmissionChannel
 {
@@ -50,7 +63,6 @@ private:
 	const float _initialTimeout;
 	//Flag to check if are there pending ACKs to send
 	bool _areUnsentACKs;
-
 	//Last reliable message sequence acked
 	uint16_t _lastMessageSequenceNumberAcked;
 	//Collection of reliable message entries to handle ACKs

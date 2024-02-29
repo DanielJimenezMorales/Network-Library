@@ -50,7 +50,7 @@ bool Client::StartConcrete()
 	_serverInactivityTimeLeft = _serverMaxInactivityTimeout;
 
 	GenerateClientSaltNumber();
-	_pendingConnections.push_back(PendingConnection(_serverAddress));
+	_pendingConnections.emplace_back(_serverAddress);
 
 	LOG_INFO("Client started succesfully!");
 

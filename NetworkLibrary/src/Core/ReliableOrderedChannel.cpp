@@ -9,7 +9,7 @@
 #include "AlgorithmUtils.h"
 
 ReliableOrderedChannel::ReliableOrderedChannel() : TransmissionChannel(TransmissionChannelType::ReliableOrdered),
-_initialTimeout(0.1f),
+_initialTimeout(0.5f),
 _lastMessageSequenceNumberAcked(0),
 _nextOrderedMessageSequenceNumber(0),
 _reliableMessageEntriesBufferSize(1024),

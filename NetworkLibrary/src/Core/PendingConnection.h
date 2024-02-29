@@ -3,7 +3,7 @@
 #include <vector>
 #include <queue>
 #include "Address.h"
-#include "PeerMessagesHandler.h"
+#include "TransmissionChannel.h"
 
 class Message;
 
@@ -12,7 +12,7 @@ class PendingConnection
 public:
 	PendingConnection(const Address& addr);
 
-	bool ArePendingMessages() const { return _messagesHandler.ArePendingMessages(); }
+	bool ArePendingMessages() const;
 	bool AddMessage(Message* message);
 	Message* GetAMessage();
 	void FreeSentMessages();
@@ -33,5 +33,5 @@ private:
 	uint64_t _clientSalt;
 	uint64_t _serverSalt;
 
-	PeerMessagesHandler _messagesHandler;
+	TransmissionChannel* _transmissionChannel;
 };
