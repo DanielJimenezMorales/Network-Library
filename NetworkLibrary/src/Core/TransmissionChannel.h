@@ -46,9 +46,13 @@ public:
 	virtual ~TransmissionChannel();
 
 protected:
+	//Collection of messages that are waiting to be sent.
 	std::vector<Message*> _unsentMessages;
+	//Collection of messages that have been sent and are waiting to be released (Used for memory management purposes)
 	std::queue<Message*> _sentMessages;
+	//Collection of received messages ready to be processed
 	std::queue<Message*> _readyToProcessMessages;
+	//Collection of messages that have been processed and are waiting to be released (Used for memory management purposes)
 	std::queue<Message*> _processedMessages;
 
 	virtual void FreeSentMessage(MessageFactory& messageFactory, Message* message) = 0;

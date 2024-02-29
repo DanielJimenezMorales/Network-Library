@@ -41,25 +41,35 @@ protected:
 	void FreeSentMessage(MessageFactory& messageFactory, Message* message) override;
 
 private:
+	//RELIABLE RELATED
+	//Collection of reliable messages that have not already been acked
 	std::list<Message*> _unackedReliableMessages;
+	//Timeouts of _unackedReliableMessages
 	std::list<float> _unackedReliableMessageTimeouts;
+	//Retransmission timeout when RTT is zero
 	const float _initialTimeout;
+	//Flag to check if are there pending ACKs to send
+	bool _areUnsentACKs;
 
+	//Last reliable message sequence acked
 	uint16_t _lastMessageSequenceNumberAcked;
 	//Collection of reliable message entries to handle ACKs
 	std::vector<ReliableMessageEntry> _reliableMessageEntries;
 	unsigned int _reliableMessageEntriesBufferSize;
-
+	//Elapsed time since start of the program that each reliable message was sent (For RTT purposes)
 	std::unordered_map<uint16_t, uint16_t> _unackedMessagesSendTimes;
+
+	//RTT RELATED
+	//Message RTT values waiting to be added to the current RTT value
 	std::queue<uint16_t> _messagesRTTToProcess;
+	//Current RTT value in milliseconds
 	uint16_t _rttMilliseconds;
 
+	//ORDERED RELATED
 	//Collection of messages waiting for a previous message in order to guarantee ordered delivery
 	std::list<Message*> _orderedMessagesWaitingForPrevious;
 	//Next message sequence number expected to guarantee ordered transmission
 	unsigned int _nextOrderedMessageSequenceNumber;
-
-	bool _areUnsentACKs;
 
 	bool AreUnackedMessagesToResend() const;
 	Message* GetUnackedMessageToResend();
