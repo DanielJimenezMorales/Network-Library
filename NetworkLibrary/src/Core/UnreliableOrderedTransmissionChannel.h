@@ -1,10 +1,10 @@
 #pragma once
 #include "TransmissionChannel.h"
 
-class UnreliableUnorderedTransmissionChannel : public TransmissionChannel
+class UnreliableOrderedTransmissionChannel : public TransmissionChannel
 {
 public:
-	UnreliableUnorderedTransmissionChannel();
+	UnreliableOrderedTransmissionChannel();
 
 	void AddMessageToSend(Message* message) override;
 	bool ArePendingMessagesToSend() const override;
@@ -27,9 +27,12 @@ public:
 
 	unsigned int GetRTTMilliseconds() const override;
 
-	~UnreliableUnorderedTransmissionChannel();
+	~UnreliableOrderedTransmissionChannel();
 
 protected:
 	void FreeSentMessage(MessageFactory& messageFactory, Message* message) override;
+
+private:
+	uint32_t _lastMessageSequenceNumberReceived;
 };
 

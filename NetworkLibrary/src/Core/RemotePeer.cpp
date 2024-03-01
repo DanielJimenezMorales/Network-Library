@@ -4,12 +4,12 @@
 #include "RemotePeer.h"
 #include "Message.h"
 #include "Logger.h"
-#include "UnreliableUnorderedTransmissionChannel.h"
+#include "UnreliableOrderedTransmissionChannel.h"
 #include "ReliableOrderedChannel.h"
 
 void RemotePeer::InitTransmissionChannels()
 {
-	TransmissionChannel* unreliableUnordered = new UnreliableUnorderedTransmissionChannel();
+	TransmissionChannel* unreliableUnordered = new UnreliableOrderedTransmissionChannel();
 	TransmissionChannel* reliableOrdered = new ReliableOrderedChannel();
 
 	_transmissionChannels.reserve(NUMBER_OF_TRANSMISSION_CHANNELS);

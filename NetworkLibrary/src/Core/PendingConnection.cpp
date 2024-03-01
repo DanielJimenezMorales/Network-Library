@@ -1,12 +1,12 @@
 #include "PendingConnection.h"
 #include "Message.h"
 #include "MessageFactory.h"
-#include "UnreliableUnorderedTransmissionChannel.h"
+#include "UnreliableOrderedTransmissionChannel.h"
 #include "Logger.h"
 
 PendingConnection::PendingConnection(const Address& addr) : _address(Address(addr.GetInfo())), _clientSalt(0), _serverSalt(0)
 {
-	_transmissionChannel = new UnreliableUnorderedTransmissionChannel();
+	_transmissionChannel = new UnreliableOrderedTransmissionChannel();
 }
 
 bool PendingConnection::ArePendingMessages() const
