@@ -7,19 +7,21 @@ class Message;
 
 struct NetworkPacketHeader
 {
-	NetworkPacketHeader() : lastAckedSequenceNumber(0), ackBits(0) {}
-	NetworkPacketHeader(uint16_t ack, uint32_t ack_bits) : lastAckedSequenceNumber(ack), ackBits(ack_bits){}
+	NetworkPacketHeader() : lastAckedSequenceNumber(0), ackBits(0), channelType(0) {}
+	NetworkPacketHeader(uint16_t ack, uint32_t ack_bits, uint8_t channel_type) : lastAckedSequenceNumber(ack), ackBits(ack_bits), channelType(channel_type){}
 
 	void Write(Buffer& buffer) const;
 	void Read(Buffer& buffer);
 
-	static uint32_t Size() { return sizeof(uint16_t) + sizeof(uint32_t); };
+	static uint32_t Size() { return sizeof(uint16_t) + sizeof(uint32_t) + sizeof(uint8_t); };
 
 	void SetACKs(uint32_t acks) { ackBits = acks; };
 	void SetHeaderLastAcked(uint16_t lastAckedMessage) { lastAckedSequenceNumber = lastAckedMessage; };
+	void SetChannelType(uint8_t type) { channelType = type; };
 
 	uint16_t lastAckedSequenceNumber;
 	uint32_t ackBits;
+	uint8_t channelType;
 };
 
 class NetworkPacket
@@ -43,6 +45,7 @@ public:
 
 	void SetHeaderACKs(uint32_t acks) { _header.SetACKs(acks); };
 	void SetHeaderLastAcked(uint16_t lastAckedMessage) { _header.SetHeaderLastAcked(lastAckedMessage); };
+	void SetHeaderChannelType(uint8_t channelType) { _header.SetChannelType(channelType); };
 
 	~NetworkPacket();
 

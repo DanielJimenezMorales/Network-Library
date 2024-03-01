@@ -8,7 +8,8 @@
 #include "Address.h"
 #include "PendingConnection.h"
 #include "Socket.h"
-#include "Buffer.h";
+#include "Buffer.h"
+#include "TransmissionChannel.h"
 
 class Message;
 class NetworkPacket;
@@ -61,6 +62,7 @@ private:
 
 	void ProcessReceivedData();
 	void ProcessDatagram(Buffer& buffer, const Address& address);
+	void ProcessNewRemotePeerMessages();
 
 	void TickRemotePeers(float elapsedTime);
 	void HandlerRemotePeersInactivity();
@@ -69,7 +71,7 @@ private:
 	int GetRemotePeerIndexFromAddress(const Address& address) const;
 
 	void SendData();
-	void SendPacketToRemotePeer(RemotePeer& remotePeer);
+	void SendPacketToRemotePeer(RemotePeer& remotePeer, TransmissionChannelType type);
 	void SendDataToAddress(const Buffer& buffer, const Address& address) const;
 
 	void StartDisconnectingRemotePeer(unsigned int index);

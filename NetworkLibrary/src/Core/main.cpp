@@ -8,6 +8,7 @@
 #include "Client.h"
 #include "Logger.h"
 #include "MessageFactory.h"
+#include "TimeClock.h"
 
 #define DEFAULT_IP "127.0.0.1"
 #define DEFAULT_PORT "27015"
@@ -27,7 +28,8 @@ int main()
     int clientOrServer;
     std::cin >> clientOrServer;
 
-    MessageFactory::GetInstance(1);
+    MessageFactory::CreateInstance(1);
+    TimeClock::CreateInstance();
 
     Peer* peer = nullptr;
 
@@ -48,13 +50,13 @@ int main()
 
     //GAMELOOP BEGIN
     double time = 0.0;
-    std::chrono::system_clock::time_point lastTime = std::chrono::system_clock::now();
+    std::chrono::steady_clock::time_point lastTime = std::chrono::steady_clock::now();
     double elapsedTime = 0.0;
     double accumulator = 0.0;
 
     while (isRunning)
     {
-        std::chrono::system_clock::time_point current = std::chrono::system_clock::now();
+        std::chrono::steady_clock::time_point current = std::chrono::steady_clock::now();
         std::chrono::duration<double> elapsedTimeInSeconds = current - lastTime;
         time += elapsedTimeInSeconds.count();
         accumulator += elapsedTimeInSeconds.count();
@@ -81,27 +83,8 @@ int main()
     delete peer;
     peer = nullptr;
 
+    MessageFactory::DeleteInstance();
+    TimeClock::DeleteInstance();
+
     return EXIT_SUCCESS;
 }
-
-
-// Run program: Ctrl + F5 or Debug > Start Without Debugging menu
-// Debug program: F5 or Debug > Start Debugging menu
-
-// Tips for Getting Started: 
-//   1. Use the Solution Explorer window to add/manage files
-//   2. Use the Team Explorer window to connect to source control
-//   3. Use the Output window to see build output and other messages
-//   4. Use the Error List window to view errors
-//   5. Go to Project > Add New Item to create new code files, or Project > Add Existing Item to add existing code files to the project
-//   6. In the future, to open this project again, go to File > Open > Project and select the .sln file
-
-/*
-* Clase Cliente:
-* - Solo va a conectarse a un servidor, y mostrar por consola los mensajes que le lleguen del servidor.
-*
-* Clase Server:
-* - Varios clientes van a poder conectarse a él (Hasta un límite)
-* - Por cada tick, el servidor enviará un mensaje a cada cliente.
-* -
-*/

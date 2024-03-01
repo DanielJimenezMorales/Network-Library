@@ -5,7 +5,6 @@
 #define NOMINMAX
 #include "Peer.h"
 #include "Address.h"
-#include "PeerMessagesHandler.h"
 
 class Message;
 class ConnectionChallengeMessage;

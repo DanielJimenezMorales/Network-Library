@@ -97,15 +97,13 @@ void Server::ProcessConnectionRequest(const ConnectionRequestMessage& message, c
 
 		if (pendingConnectionIndex == -1) //If no pending connection was found create one!
 		{
-			PendingConnection newPendingConnection(address);
-			newPendingConnection.SetClientSalt(clientSalt);
-			newPendingConnection.SetServerSalt(GenerateServerSalt());
-			_pendingConnections.push_back(newPendingConnection);
-
+			_pendingConnections.emplace_back(address);
 			pendingConnectionIndex = _pendingConnections.size() - 1;
+			_pendingConnections[pendingConnectionIndex].SetClientSalt(clientSalt);
+			_pendingConnections[pendingConnectionIndex].SetServerSalt(GenerateServerSalt());
 
 			std::stringstream ss;
-			ss << "Creating a pending connection entry. Client salt: " << clientSalt << " Server salt: " << newPendingConnection.GetServerSalt();
+			ss << "Creating a pending connection entry. Client salt: " << clientSalt << " Server salt: " << _pendingConnections[pendingConnectionIndex].GetServerSalt();
 			LOG_INFO(ss.str());
 		}
 
@@ -127,8 +125,8 @@ void Server::ProcessConnectionRequest(const ConnectionRequestMessage& message, c
 
 void Server::CreateDisconnectionMessage(RemotePeer& remoteClient)
 {
-	MessageFactory* messageFactory = MessageFactory::GetInstance();
-	Message* message = messageFactory->LendMessage(MessageType::Disconnection);
+	MessageFactory& messageFactory = MessageFactory::GetInstance();
+	Message* message = messageFactory.LendMessage(MessageType::Disconnection);
 	if (message == nullptr)
 	{
 		LOG_ERROR("Can't create new Disconnection Message because the MessageFactory has returned a null message");
@@ -145,8 +143,8 @@ void Server::CreateDisconnectionMessage(RemotePeer& remoteClient)
 
 void Server::CreateInGameResponseMessage(RemotePeer& remoteClient, uint64_t data)
 {
-	MessageFactory* messageFactory = MessageFactory::GetInstance();
-	Message* message = messageFactory->LendMessage(MessageType::InGameResponse);
+	MessageFactory& messageFactory = MessageFactory::GetInstance();
+	Message* message = messageFactory.LendMessage(MessageType::InGameResponse);
 	if (message == nullptr)
 	{
 		LOG_ERROR("Can't create new in game response Message because the MessageFactory has returned a null message");
@@ -165,9 +163,9 @@ void Server::CreateInGameResponseMessage(RemotePeer& remoteClient, uint64_t data
 
 void Server::CreateConnectionChallengeMessage(const Address& address, int pendingConnectionIndex)
 {
-	MessageFactory* messageFactory = MessageFactory::GetInstance();
+	MessageFactory& messageFactory = MessageFactory::GetInstance();
 
-	Message* message = messageFactory->LendMessage(MessageType::ConnectionChallenge);
+	Message* message = messageFactory.LendMessage(MessageType::ConnectionChallenge);
 	if (message == nullptr)
 	{
 		LOG_ERROR("Can't create new Connection Challenge Message because the MessageFactory has returned a null message");
@@ -184,9 +182,9 @@ void Server::CreateConnectionChallengeMessage(const Address& address, int pendin
 
 void Server::SendConnectionDeniedPacket(const Address& address) const
 {
-	MessageFactory* messageFactory = MessageFactory::GetInstance();
+	MessageFactory& messageFactory = MessageFactory::GetInstance();
 
-	Message* connectionDeniedMessage = messageFactory->LendMessage(MessageType::ConnectionDenied);
+	Message* connectionDeniedMessage = messageFactory.LendMessage(MessageType::ConnectionDenied);
 
 	NetworkPacket packet = NetworkPacket();
 	packet.AddMessage(connectionDeniedMessage);
@@ -194,7 +192,7 @@ void Server::SendConnectionDeniedPacket(const Address& address) const
 	LOG_INFO("Sending connection denied...");
 	SendPacketToAddress(packet, address);
 
-	messageFactory->ReleaseMessage(connectionDeniedMessage);
+	messageFactory.ReleaseMessage(connectionDeniedMessage);
 }
 
 void Server::ProcessConnectionChallengeResponse(const ConnectionChallengeResponseMessage& message, const Address& address)
@@ -295,8 +293,8 @@ void Server::AddNewRemoteClient(int remoteClientSlotIndex, const Address& addres
 
 void Server::CreateConnectionApprovedMessage(RemotePeer& remoteClient)
 {
-	MessageFactory* messageFactory = MessageFactory::GetInstance();
-	Message* message = messageFactory->LendMessage(MessageType::ConnectionAccepted);
+	MessageFactory& messageFactory = MessageFactory::GetInstance();
+	Message* message = messageFactory.LendMessage(MessageType::ConnectionAccepted);
 	if (message == nullptr)
 	{
 		LOG_ERROR("Can't create new Connection Accepted Message because the MessageFactory has returned a null message");

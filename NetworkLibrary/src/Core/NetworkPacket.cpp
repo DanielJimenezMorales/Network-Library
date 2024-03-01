@@ -9,15 +9,17 @@ void NetworkPacketHeader::Write(Buffer& buffer) const
 {
 	buffer.WriteShort(lastAckedSequenceNumber);
 	buffer.WriteInteger(ackBits);
+	buffer.WriteByte(channelType);
 }
 
 void NetworkPacketHeader::Read(Buffer& buffer)
 {
 	lastAckedSequenceNumber = buffer.ReadShort();
 	ackBits = buffer.ReadInteger();
+	channelType = buffer.ReadByte();
 }
 
-NetworkPacket::NetworkPacket() : _header(0, 0), _defaultMTUSizeInBytes(1500)
+NetworkPacket::NetworkPacket() : _header(0, 0, 0), _defaultMTUSizeInBytes(1500)
 {
 	_messages.reserve(5);
 }

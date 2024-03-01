@@ -1,10 +1,12 @@
 #pragma once
 #include <cstdint>
+#include <map>
 
 #include "Address.h"
-#include "PeerMessagesHandler.h"
+#include "TransmissionChannel.h"
 
 class Message;
+class MessageHeader;
 
 class RemotePeer
 {
@@ -18,16 +20,19 @@ private:
 
 	uint16_t _nextPacketSequenceNumber;
 
-	PeerMessagesHandler _messagesHandler;
+	const unsigned int NUMBER_OF_TRANSMISSION_CHANNELS;
+	std::vector<TransmissionChannel*> _transmissionChannels;
+
+	void InitTransmissionChannels();
+	TransmissionChannel* GetTransmissionChannelFromType(TransmissionChannelType channelType);
+	const TransmissionChannel* GetTransmissionChannelFromType(TransmissionChannelType channelType) const;
 
 public:
 	RemotePeer();
 	RemotePeer(const sockaddr_in& addressInfo, uint16_t id, float maxInactivityTime, uint64_t dataPrefix);
 	~RemotePeer();
 
-	uint16_t GetNextMessageSequenceNumber() const { return _nextPacketSequenceNumber; };
-	uint16_t GetLastMessageSequenceNumberAcked() const { return _messagesHandler.GetLastMessageSequenceNumberAcked(); };
-	void IncreaseMessageSequenceNumber() { ++_nextPacketSequenceNumber; }
+	uint16_t GetLastMessageSequenceNumberAcked(TransmissionChannelType channelType) const;
 
 	/// <summary>
 	/// Initializes all the internal systems. You must call this method before performing any other operation. It is also automatically called in
@@ -47,21 +52,24 @@ public:
 	bool IsAddressEqual(const Address& other) const { return other == _address; }
 	bool IsInactive() const { return _inactivityTimeLeft == 0.f; }
 	bool AddMessage(Message* message);
-	bool ArePendingMessages() const { return _messagesHandler.ArePendingMessages(); }
-	Message* GetPendingMessage();
-	bool ArePendingACKReliableMessages() const { return _messagesHandler.AreUnackedReliableMessages(); };
-	Message* GetPendingACKReliableMessage();
-	unsigned int GetSizeOfNextPendingMessage() const { return _messagesHandler.GetSizeOfNextPendingMessage(); };
+	TransmissionChannelType GetTransmissionChannelTypeFromHeader(const MessageHeader& messageHeader) const;
+	bool ArePendingMessages(TransmissionChannelType channelType) const;
+	Message* GetPendingMessage(TransmissionChannelType channelType);
+	unsigned int GetSizeOfNextUnsentMessage(TransmissionChannelType channelType) const;
 	void FreeSentMessages();
-	void FreeProcessedMessages() { _messagesHandler.FreeProcessedMessages(); };
-	uint32_t GenerateACKs() const { return _messagesHandler.GenerateACKs(); };
-	void ProcessACKs(uint32_t acks, uint16_t lastAckedMessageSequenceNumber) { _messagesHandler.ProcessACKs(acks, lastAckedMessageSequenceNumber); };
-	void AckReliableMessage(uint16_t messageSequenceNumber) { _messagesHandler.AckReliableMessage(messageSequenceNumber); };
-	bool IsMessageDuplicated(uint16_t messageSequenceNumber) const { return _messagesHandler.IsMessageDuplicated(messageSequenceNumber);};
-	bool AddReceivedMessage(Message* message) { return _messagesHandler.AddReceivedMessage(message); };
+	void FreeProcessedMessages();
+	void SeUnsentACKsToFalse(TransmissionChannelType channelType);
+	bool AreUnsentACKs(TransmissionChannelType channelType) const;
+	uint32_t GenerateACKs(TransmissionChannelType channelType) const;
+	void ProcessACKs(uint32_t acks, uint16_t lastAckedMessageSequenceNumber, TransmissionChannelType channelType);
+	bool AddReceivedMessage(Message* message);
 
-	bool ArePendingReadyToProcessMessages() const { return _messagesHandler.ArePendingReadyToProcessMessages(); };
-	const Message* GetPendingReadyToProcessMessage() { return _messagesHandler.GetReadyToProcessMessage(); };
+	bool ArePendingReadyToProcessMessages() const;
+	const Message* GetPendingReadyToProcessMessage();
+
+	unsigned int GetRTTMilliseconds() const;
+
+	bool GetNumberOfTransmissionChannels() const;
 
 	/// <summary>
 	/// Disconnect and reset the remote client
