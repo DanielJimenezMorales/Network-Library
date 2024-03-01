@@ -47,7 +47,7 @@ unsigned int UnreliableOrderedTransmissionChannel::GetSizeOfNextUnsentMessage() 
 
 void UnreliableOrderedTransmissionChannel::AddReceivedMessage(Message* message)
 {
-	if (message->GetHeader().messageSequenceNumber <= _lastMessageSequenceNumberReceived)
+	if (!IsSequenceNumberNewerThanLastReceived(message->GetHeader().messageSequenceNumber))
 	{
 		MessageFactory& messageFactory = MessageFactory::GetInstance();
 		messageFactory.ReleaseMessage(message);
@@ -123,4 +123,17 @@ UnreliableOrderedTransmissionChannel::~UnreliableOrderedTransmissionChannel()
 void UnreliableOrderedTransmissionChannel::FreeSentMessage(MessageFactory& messageFactory, Message* message)
 {
 	messageFactory.ReleaseMessage(message);
+}
+
+bool UnreliableOrderedTransmissionChannel::IsSequenceNumberNewerThanLastReceived(uint32_t sequenceNumber) const
+{
+	//The second part of the if is to support the case when sequence number reaches its limit value and wraps around
+	if (sequenceNumber > _lastMessageSequenceNumberReceived || (_lastMessageSequenceNumberReceived - sequenceNumber) >= UINT32_HALF)
+	{
+		return true;
+	}
+	else
+	{
+		return false;
+	}
 }

@@ -1,6 +1,8 @@
 #pragma once
 #include "TransmissionChannel.h"
 
+#define UINT32_HALF 2147483647
+
 class UnreliableOrderedTransmissionChannel : public TransmissionChannel
 {
 public:
@@ -34,5 +36,7 @@ protected:
 
 private:
 	uint32_t _lastMessageSequenceNumberReceived;
+
+	bool IsSequenceNumberNewerThanLastReceived(uint32_t sequenceNumber) const;
 };
 
