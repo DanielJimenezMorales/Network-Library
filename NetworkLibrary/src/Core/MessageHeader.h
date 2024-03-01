@@ -17,7 +17,6 @@ enum MessageType : uint8_t
 
 struct MessageHeader
 {
-	MessageHeader() {}
 	MessageHeader(MessageType messageType, uint16_t packetSequenceNumber, bool isReliable) : type(messageType), messageSequenceNumber(packetSequenceNumber), isReliable(isReliable) {}
 
 	MessageHeader(const MessageHeader& other) : type(other.type), messageSequenceNumber(other.messageSequenceNumber), isReliable(other.isReliable) {}

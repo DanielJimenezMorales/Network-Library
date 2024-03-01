@@ -374,7 +374,6 @@ void ReliableOrderedChannel::UpdateRTT()
 		}
 	}
 
-	//TODO Make resend time bigger, or at least dynamic based on RTT
 	std::stringstream ss;
 	ss << "RTT: " << _rttMilliseconds;
 	LOG_INFO(ss.str());
