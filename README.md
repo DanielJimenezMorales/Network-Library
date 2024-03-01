@@ -2,8 +2,11 @@
 Network library for realtime multiplayer games written in C++
 
 Features:
-1. Connection pipeline (DONE)
-2. Reliable packets support (RUDP) (V1)
-   - Unreliable unordered transmission support (DONE)
-   - Reliable ordered transmission support (DONE)
-   - Reliable unordered transmission support (SOON)
+1. Connection pipeline
+2. Transmission channels support
+   - Unreliable ordered transmission support
+   - Reliable ordered transmission support
+3. Reliability:
+   - Message level ACKs
+   - Dynamic retransmission timeout based on connection's RTT
+4. Time sync (SOON)
