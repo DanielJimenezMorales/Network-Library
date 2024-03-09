@@ -1,4 +1,5 @@
 #include <sstream>
+#include <memory>
 
 #include "Client.h"
 #include "Message.h"
@@ -214,7 +215,7 @@ void Client::ProcessInGameResponse(const InGameResponseMessage& message)
 void Client::CreateConnectionRequestMessage()
 {
 	MessageFactory& messageFactory = MessageFactory::GetInstance();
-	Message* message = messageFactory.LendMessage(MessageType::ConnectionRequest);
+	std::unique_ptr<Message> message = messageFactory.LendMessage(MessageType::ConnectionRequest);
 
 	if (message == nullptr)
 	{
@@ -222,7 +223,7 @@ void Client::CreateConnectionRequestMessage()
 		return;
 	}
 
-	ConnectionRequestMessage* connectionRequestMessage = static_cast<ConnectionRequestMessage*>(message);
+	ConnectionRequestMessage* connectionRequestMessage = static_cast<ConnectionRequestMessage*>(message.release());
 
 	connectionRequestMessage->clientSalt = _saltNumber;
 
@@ -234,14 +235,14 @@ void Client::CreateConnectionRequestMessage()
 void Client::CreateConnectionChallengeResponse()
 {
 	MessageFactory& messageFactory = MessageFactory::GetInstance();
-	Message* message = messageFactory.LendMessage(MessageType::ConnectionChallengeResponse);
+	std::unique_ptr<Message> message = messageFactory.LendMessage(MessageType::ConnectionChallengeResponse);
 	if (message == nullptr)
 	{
 		LOG_ERROR("Can't create new Connection Challenge Response Message because the MessageFactory has returned a null message");
 		return;
 	}
 
-	ConnectionChallengeResponseMessage* connectionChallengeResponseMessage = static_cast<ConnectionChallengeResponseMessage*>(message);
+	ConnectionChallengeResponseMessage* connectionChallengeResponseMessage = static_cast<ConnectionChallengeResponseMessage*>(message.release());
 	connectionChallengeResponseMessage->prefix = _dataPrefix;
 
 	_pendingConnections[0].AddMessage(connectionChallengeResponseMessage);
@@ -250,14 +251,14 @@ void Client::CreateConnectionChallengeResponse()
 void Client::CreateInGameMessage()
 {
 	MessageFactory& messageFactory = MessageFactory::GetInstance();
-	Message* message = messageFactory.LendMessage(MessageType::InGame);
+	std::unique_ptr<Message> message = messageFactory.LendMessage(MessageType::InGame);
 	if (message == nullptr)
 	{
 		LOG_ERROR("Can't create new Connection Challenge Response Message because the MessageFactory has returned a null message");
 		return;
 	}
 
-	InGameMessage* inGameMessage = static_cast<InGameMessage*>(message);
+	InGameMessage* inGameMessage = static_cast<InGameMessage*>(message.release());
 	inGameMessage->data = inGameMessageID;
 	inGameMessageID++;
 	_remotePeers[0].AddMessage(inGameMessage);

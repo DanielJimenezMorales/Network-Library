@@ -1,3 +1,5 @@
+#include <memory>
+
 #include "UnreliableOrderedTransmissionChannel.h"
 #include "MessageFactory.h"
 #include "Logger.h"
@@ -47,15 +49,16 @@ unsigned int UnreliableOrderedTransmissionChannel::GetSizeOfNextUnsentMessage() 
 
 void UnreliableOrderedTransmissionChannel::AddReceivedMessage(Message* message)
 {
+	std::unique_ptr<Message> messageHandler(message);
 	if (!IsSequenceNumberNewerThanLastReceived(message->GetHeader().messageSequenceNumber))
 	{
 		MessageFactory& messageFactory = MessageFactory::GetInstance();
-		messageFactory.ReleaseMessage(message);
+		messageFactory.ReleaseMessage(std::move(messageHandler));
 		return;
 	}
 
 	_lastMessageSequenceNumberReceived = message->GetHeader().messageSequenceNumber;
-	_readyToProcessMessages.push(message);
+	_readyToProcessMessages.push(messageHandler.release());
 }
 
 bool UnreliableOrderedTransmissionChannel::ArePendingReadyToProcessMessages() const
@@ -122,7 +125,8 @@ UnreliableOrderedTransmissionChannel::~UnreliableOrderedTransmissionChannel()
 
 void UnreliableOrderedTransmissionChannel::FreeSentMessage(MessageFactory& messageFactory, Message* message)
 {
-	messageFactory.ReleaseMessage(message);
+	std::unique_ptr<Message> messageHandler(message);
+	messageFactory.ReleaseMessage(std::move(messageHandler));
 }
 
 bool UnreliableOrderedTransmissionChannel::IsSequenceNumberNewerThanLastReceived(uint32_t sequenceNumber) const

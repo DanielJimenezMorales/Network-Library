@@ -1,4 +1,5 @@
 #include <sstream>
+#include <memory>
 
 #include "MessageUtils.h"
 #include "MessageFactory.h"
@@ -14,28 +15,28 @@ void MessageUtils::ReadMessage(Buffer& buffer, Message** message)
 	switch (type)
 	{
 	case MessageType::ConnectionRequest:
-		*message = messageFactory.LendMessage(MessageType::ConnectionRequest);
+		*message = messageFactory.LendMessage(MessageType::ConnectionRequest).release();
 		break;
 	case MessageType::ConnectionAccepted:
-		*message = messageFactory.LendMessage(MessageType::ConnectionAccepted);
+		*message = messageFactory.LendMessage(MessageType::ConnectionAccepted).release();
 		break;
 	case MessageType::ConnectionDenied:
-		*message = messageFactory.LendMessage(MessageType::ConnectionDenied);
+		*message = messageFactory.LendMessage(MessageType::ConnectionDenied).release();
 		break;
 	case MessageType::ConnectionChallenge:
-		*message = messageFactory.LendMessage(MessageType::ConnectionChallenge);
+		*message = messageFactory.LendMessage(MessageType::ConnectionChallenge).release();
 		break;
 	case MessageType::ConnectionChallengeResponse:
-		*message = messageFactory.LendMessage(MessageType::ConnectionChallengeResponse);
+		*message = messageFactory.LendMessage(MessageType::ConnectionChallengeResponse).release();
 		break;
 	case MessageType::Disconnection:
-		*message = messageFactory.LendMessage(MessageType::Disconnection);
+		*message = messageFactory.LendMessage(MessageType::Disconnection).release();
 		break;
 	case MessageType::InGame:
-		*message = messageFactory.LendMessage(MessageType::InGame);
+		*message = messageFactory.LendMessage(MessageType::InGame).release();
 		break;
 	case MessageType::InGameResponse:
-		*message = messageFactory.LendMessage(MessageType::InGameResponse);
+		*message = messageFactory.LendMessage(MessageType::InGameResponse).release();
 		break;
 	default:
 		std::stringstream ss;

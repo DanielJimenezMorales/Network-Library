@@ -1,4 +1,5 @@
 #include <cassert>
+#include <memory>
 
 #include "TransmissionChannel.h"
 #include "MessageFactory.h"
@@ -27,10 +28,10 @@ void TransmissionChannel::FreeProcessedMessages()
 
 	while (!_processedMessages.empty())
 	{
-		Message* message = _processedMessages.front();
+		std::unique_ptr<Message> message(_processedMessages.front());
 		_processedMessages.pop();
 
-		messageFactory.ReleaseMessage(message);
+		messageFactory.ReleaseMessage(std::move(message));
 	}
 }
 
@@ -51,24 +52,24 @@ void TransmissionChannel::ClearMessages()
 
 	while (!_sentMessages.empty())
 	{
-		Message* message = _sentMessages.front();
+		std::unique_ptr<Message> message(_sentMessages.front());
 		_sentMessages.pop();
 
-		messageFactory.ReleaseMessage(message);
+		messageFactory.ReleaseMessage(std::move(message));
 	}
 
 	while (!_processedMessages.empty())
 	{
-		Message* message = _processedMessages.front();
+		std::unique_ptr<Message> message(_processedMessages.front());
 		_processedMessages.pop();
 
-		messageFactory.ReleaseMessage(message);
+		messageFactory.ReleaseMessage(std::move(message));
 	}
 	
 	for (std::vector<Message*>::iterator it = _unsentMessages.begin(); it != _unsentMessages.end(); ++it)
 	{
-		Message* message = *it;
-		messageFactory.ReleaseMessage(message);
+		std::unique_ptr<Message> message(*it);
+		messageFactory.ReleaseMessage(std::move(message));
 		*it = nullptr;
 	}
 

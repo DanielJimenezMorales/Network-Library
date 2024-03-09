@@ -1,4 +1,5 @@
 #include <sstream>
+#include <memory>
 
 #include "Peer.h"
 #include "NetworkPacket.h"
@@ -272,16 +273,16 @@ void Peer::ProcessDatagram(Buffer& buffer, const Address& address)
 
 	for (unsigned int i = 0; i < numberOfMessagesInPacket; ++i)
 	{
-		Message* message = *(iterator + i);
+		std::unique_ptr<Message> message(*(iterator + i));
 
 		if (isPacketFromRemotePeer)
 		{
-			remotePeer->AddReceivedMessage(message);
+			remotePeer->AddReceivedMessage(message.release());
 		}
 		else
 		{
 			ProcessMessage(*message, address);
-			messageFactory.ReleaseMessage(message);
+			messageFactory.ReleaseMessage(std::move(message));
 		}
 	}
 }

@@ -1,4 +1,5 @@
 #include <sstream>
+#include <memory>
 
 #include "ReliableOrderedChannel.h"
 #include "Message.h"
@@ -90,7 +91,8 @@ void ReliableOrderedChannel::AddReceivedMessage(Message* message)
 		LOG_INFO(ss.str());
 
 		MessageFactory& messageFactory = MessageFactory::GetInstance();
-		messageFactory.ReleaseMessage(message);
+		std::unique_ptr<Message> messageHolder(message);
+		messageFactory.ReleaseMessage(std::move(messageHolder));
 		return;
 	}
 	else
@@ -301,9 +303,10 @@ bool ReliableOrderedChannel::TryRemoveUnackedReliableMessageFromSequence(uint16_
 		_unackedMessagesSendTimes.erase(it);
 		AddMessageRTTValueToProcess(messageRTT);
 
-		//Rekease acked message since we no longer need it
+		//Release acked message since we no longer need it
 		MessageFactory& messageFactory = MessageFactory::GetInstance();
-		messageFactory.ReleaseMessage(message);
+		std::unique_ptr<Message>messageHolder(message);
+		messageFactory.ReleaseMessage(std::move(messageHolder));
 		result = true;
 	}
 
@@ -396,9 +399,9 @@ void ReliableOrderedChannel::ClearMessages()
 	std::list<Message*>::iterator it = _unackedReliableMessages.begin();
 	while (it != _unackedReliableMessages.end())
 	{
-		Message* message = *it;
+		std::unique_ptr<Message>message(*it);
 		*it = nullptr;
-		messageFactory.ReleaseMessage(message);
+		messageFactory.ReleaseMessage(std::move(message));
 
 		++it;
 	}
@@ -410,9 +413,9 @@ void ReliableOrderedChannel::ClearMessages()
 	it = _orderedMessagesWaitingForPrevious.begin();
 	while (it != _orderedMessagesWaitingForPrevious.end())
 	{
-		Message* message = *it;
+		std::unique_ptr<Message>message(*it);
 		*it = nullptr;
-		messageFactory.ReleaseMessage(message);
+		messageFactory.ReleaseMessage(std::move(message));
 
 		++it;
 	}
