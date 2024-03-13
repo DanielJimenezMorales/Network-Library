@@ -75,11 +75,22 @@ private:
 	int GetRemotePeerIndexFromAddress(const Address& address) const;
 
 	void SendData();
+	/// <summary>
+	/// Sends pending data to all the active pending connections
+	/// </summary>
+	void SendDataToPendingConnections();
+	void SendDataToPendingConnection(PendingConnection& pendingConnection);
+	/// <summary>
+	/// Sends pending data to all the connected remote peers
+	/// </summary>
+	void SendDataToRemotePeers();
+	void SendDataToRemotePeer(RemotePeer& remotePeer);
 	void SendPacketToRemotePeer(RemotePeer& remotePeer, TransmissionChannelType type);
+
 	void SendDataToAddress(const Buffer& buffer, const Address& address) const;
 
-	void StartDisconnectingRemotePeer(unsigned int index);
 
+	void StartDisconnectingRemotePeer(unsigned int index);
 	void FinishRemotePeersDisconnection();
 
 	PeerType _type;

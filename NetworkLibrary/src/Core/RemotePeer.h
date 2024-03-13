@@ -22,7 +22,6 @@ private:
 
 	uint16_t _nextPacketSequenceNumber;
 
-	unsigned int numberOfTransmissionChannels;
 	std::vector<TransmissionChannel*> _transmissionChannels;
 
 	void InitTransmissionChannels();
@@ -76,7 +75,8 @@ public:
 
 	unsigned int GetRTTMilliseconds() const;
 
-	bool GetNumberOfTransmissionChannels() const;
+	std::vector<TransmissionChannelType> GetAvailableTransmissionChannelTypes() const;
+	unsigned int GetNumberOfTransmissionChannels() const;
 
 	/// <summary>
 	/// Disconnect and reset the remote client
