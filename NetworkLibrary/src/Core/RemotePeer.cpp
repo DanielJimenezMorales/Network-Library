@@ -1,5 +1,6 @@
 #include <cassert>
 #include <sstream>
+#include <memory>
 
 #include "RemotePeer.h"
 #include "Message.h"
@@ -12,7 +13,7 @@ void RemotePeer::InitTransmissionChannels()
 	TransmissionChannel* unreliableUnordered = new UnreliableOrderedTransmissionChannel();
 	TransmissionChannel* reliableOrdered = new ReliableOrderedChannel();
 
-	_transmissionChannels.reserve(NUMBER_OF_TRANSMISSION_CHANNELS);
+	_transmissionChannels.reserve(numberOfTransmissionChannels);
 	_transmissionChannels.push_back(unreliableUnordered);
 	_transmissionChannels.push_back(reliableOrdered);
 }
@@ -21,7 +22,7 @@ TransmissionChannel* RemotePeer::GetTransmissionChannelFromType(TransmissionChan
 {
 	TransmissionChannel* transmissionChannel = nullptr;
 
-	for (unsigned int i = 0; i < NUMBER_OF_TRANSMISSION_CHANNELS; ++i)
+	for (unsigned int i = 0; i < numberOfTransmissionChannels; ++i)
 	{
 		if (_transmissionChannels[i]->GetType() == channelType)
 		{
@@ -37,7 +38,7 @@ const TransmissionChannel* RemotePeer::GetTransmissionChannelFromType(Transmissi
 {
 	const TransmissionChannel* transmissionChannel = nullptr;
 
-	for (unsigned int i = 0; i < NUMBER_OF_TRANSMISSION_CHANNELS; ++i)
+	for (unsigned int i = 0; i < numberOfTransmissionChannels; ++i)
 	{
 		if (_transmissionChannels[i]->GetType() == channelType)
 		{
@@ -55,7 +56,7 @@ RemotePeer::RemotePeer() :
 	_maxInactivityTime(0),
 	_inactivityTimeLeft(0),
 	_nextPacketSequenceNumber(0),
-	NUMBER_OF_TRANSMISSION_CHANNELS(2)
+	numberOfTransmissionChannels(2)
 {
 	InitTransmissionChannels();
 }
@@ -63,7 +64,7 @@ RemotePeer::RemotePeer() :
 RemotePeer::RemotePeer(const sockaddr_in& addressInfo, uint16_t id, float maxInactivityTime, uint64_t dataPrefix) :
 	_address(Address::GetInvalid()),
 	_nextPacketSequenceNumber(0),
-	NUMBER_OF_TRANSMISSION_CHANNELS(2)
+	numberOfTransmissionChannels(2)
 {
 	InitTransmissionChannels();
 	Connect(addressInfo, id, maxInactivityTime, dataPrefix);
@@ -116,20 +117,21 @@ void RemotePeer::Tick(float elapsedTime)
 	}
 
 	//Update transmission channels
-	for (unsigned int i = 0; i < NUMBER_OF_TRANSMISSION_CHANNELS; ++i)
+	for (unsigned int i = 0; i < numberOfTransmissionChannels; ++i)
 	{
 		_transmissionChannels[i]->Update(elapsedTime);
 	}
 }
 
-bool RemotePeer::AddMessage(Message* message)
+bool RemotePeer::AddMessage(std::unique_ptr<Message> message)
 {
 	TransmissionChannelType channelType = GetTransmissionChannelTypeFromHeader(message->GetHeader());
 
 	TransmissionChannel* transmissionChannel = GetTransmissionChannelFromType(channelType);
 	if (transmissionChannel != nullptr)
 	{
-		transmissionChannel->AddMessageToSend(message); return true;
+		transmissionChannel->AddMessageToSend(std::move(message));
+		return true;
 	}
 	else
 	{
@@ -195,7 +197,7 @@ unsigned int RemotePeer::GetSizeOfNextUnsentMessage(TransmissionChannelType chan
 
 void RemotePeer::FreeSentMessages()
 {
-	for (unsigned int i = 0; i < NUMBER_OF_TRANSMISSION_CHANNELS; ++i)
+	for (unsigned int i = 0; i < numberOfTransmissionChannels; ++i)
 	{
 		_transmissionChannels[i]->FreeSentMessages();
 	}
@@ -203,7 +205,7 @@ void RemotePeer::FreeSentMessages()
 
 void RemotePeer::FreeProcessedMessages()
 {
-	for (unsigned int i = 0; i < NUMBER_OF_TRANSMISSION_CHANNELS; ++i)
+	for (unsigned int i = 0; i < numberOfTransmissionChannels; ++i)
 	{
 		_transmissionChannels[i]->FreeProcessedMessages();
 	}
@@ -253,14 +255,14 @@ void RemotePeer::ProcessACKs(uint32_t acks, uint16_t lastAckedMessageSequenceNum
 	}
 }
 
-bool RemotePeer::AddReceivedMessage(Message* message)
+bool RemotePeer::AddReceivedMessage(std::unique_ptr<Message> message)
 {
 	TransmissionChannelType channelType = GetTransmissionChannelTypeFromHeader(message->GetHeader());
 
 	TransmissionChannel* transmissionChannel = GetTransmissionChannelFromType(channelType);
 	if (transmissionChannel != nullptr)
 	{
-		transmissionChannel->AddReceivedMessage(message);
+		transmissionChannel->AddReceivedMessage(std::move(message));
 		return true;
 	}
 	else
@@ -274,7 +276,7 @@ bool RemotePeer::ArePendingReadyToProcessMessages() const
 {
 	bool areReadyToProcessMessages = false;
 
-	for (unsigned int i = 0; i < NUMBER_OF_TRANSMISSION_CHANNELS; ++i)
+	for (unsigned int i = 0; i < numberOfTransmissionChannels; ++i)
 	{
 		if (_transmissionChannels[i]->ArePendingReadyToProcessMessages())
 		{
@@ -290,7 +292,7 @@ const Message* RemotePeer::GetPendingReadyToProcessMessage()
 {
 	const Message* message = nullptr;
 
-	for (unsigned int i = 0; i < NUMBER_OF_TRANSMISSION_CHANNELS; ++i)
+	for (unsigned int i = 0; i < numberOfTransmissionChannels; ++i)
 	{
 		if (_transmissionChannels[i]->ArePendingReadyToProcessMessages())
 		{
@@ -304,7 +306,7 @@ const Message* RemotePeer::GetPendingReadyToProcessMessage()
 
 bool RemotePeer::GetNumberOfTransmissionChannels() const
 {
-	return NUMBER_OF_TRANSMISSION_CHANNELS;
+	return numberOfTransmissionChannels;
 }
 
 unsigned int RemotePeer::GetRTTMilliseconds() const
@@ -312,7 +314,7 @@ unsigned int RemotePeer::GetRTTMilliseconds() const
 	unsigned int rtt = 0;
 	unsigned int numberOfTransmissionChannels = 0;
 
-	for (unsigned int i = 0; i < NUMBER_OF_TRANSMISSION_CHANNELS; ++i)
+	for (unsigned int i = 0; i < numberOfTransmissionChannels; ++i)
 	{
 		unsigned int transmissionChannelRTT = _transmissionChannels[i]->GetRTTMilliseconds();
 		if (transmissionChannelRTT > 0)
@@ -333,7 +335,7 @@ unsigned int RemotePeer::GetRTTMilliseconds() const
 void RemotePeer::Disconnect()
 {
 	//Reset transmission channels
-	for (unsigned int i = 0; i < NUMBER_OF_TRANSMISSION_CHANNELS; ++i)
+	for (unsigned int i = 0; i < numberOfTransmissionChannels; ++i)
 	{
 		_transmissionChannels[i]->Reset();
 	}

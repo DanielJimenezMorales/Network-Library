@@ -2,6 +2,8 @@
 #include <cstdint>
 #include <vector>
 #include <queue>
+#include <memory>
+
 #include "Address.h"
 #include "TransmissionChannel.h"
 
@@ -11,9 +13,14 @@ class PendingConnection
 {
 public:
 	PendingConnection(const Address& addr);
+	PendingConnection(const PendingConnection&) = delete;
+	PendingConnection(PendingConnection&& other) noexcept;
+
+	PendingConnection& operator=(const PendingConnection&) = delete;
+	PendingConnection& operator=(PendingConnection&& other) noexcept;
 
 	bool ArePendingMessages() const;
-	bool AddMessage(Message* message);
+	bool AddMessage(std::unique_ptr<Message> message);
 	Message* GetAMessage();
 	void FreeSentMessages();
 

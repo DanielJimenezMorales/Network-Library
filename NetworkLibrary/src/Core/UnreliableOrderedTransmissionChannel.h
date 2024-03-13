@@ -7,13 +7,18 @@ class UnreliableOrderedTransmissionChannel : public TransmissionChannel
 {
 public:
 	UnreliableOrderedTransmissionChannel();
+	UnreliableOrderedTransmissionChannel(const UnreliableOrderedTransmissionChannel&) = delete;
+	UnreliableOrderedTransmissionChannel(UnreliableOrderedTransmissionChannel&& other) noexcept;
 
-	void AddMessageToSend(Message* message) override;
+	UnreliableOrderedTransmissionChannel& operator=(const UnreliableOrderedTransmissionChannel&) = delete;
+	UnreliableOrderedTransmissionChannel& operator=(UnreliableOrderedTransmissionChannel&& other) noexcept;
+
+	void AddMessageToSend(std::unique_ptr<Message> message) override;
 	bool ArePendingMessagesToSend() const override;
 	Message* GetMessageToSend() override;
 	unsigned int GetSizeOfNextUnsentMessage() const override;
 
-	void AddReceivedMessage(Message* message) override;
+	void AddReceivedMessage(std::unique_ptr<Message> message) override;
 	bool ArePendingReadyToProcessMessages() const override;
 	const Message* GetReadyToProcessMessage() override;
 
@@ -32,7 +37,7 @@ public:
 	~UnreliableOrderedTransmissionChannel();
 
 protected:
-	void FreeSentMessage(MessageFactory& messageFactory, Message* message) override;
+	void FreeSentMessage(MessageFactory& messageFactory, std::unique_ptr<Message> message) override;
 
 private:
 	uint32_t _lastMessageSequenceNumberReceived;

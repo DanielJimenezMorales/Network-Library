@@ -10,7 +10,6 @@
 #include "AlgorithmUtils.h"
 
 ReliableOrderedChannel::ReliableOrderedChannel() : TransmissionChannel(TransmissionChannelType::ReliableOrdered),
-_initialTimeout(0.5f),
 _lastMessageSequenceNumberAcked(0),
 _nextOrderedMessageSequenceNumber(0),
 _reliableMessageEntriesBufferSize(1024),
@@ -24,9 +23,47 @@ _rttMilliseconds(0)
 	}
 }
 
-void ReliableOrderedChannel::AddMessageToSend(Message* message)
+ReliableOrderedChannel::ReliableOrderedChannel(ReliableOrderedChannel&& other) noexcept :
+	TransmissionChannel(std::move(other)),
+	_lastMessageSequenceNumberAcked(std::move(other._lastMessageSequenceNumberAcked)),		//unnecessary move, just in case I change that type
+	_nextOrderedMessageSequenceNumber(std::move(other._nextOrderedMessageSequenceNumber)),	//unnecessary move, just in case I change that type
+	_reliableMessageEntriesBufferSize(std::move(other._reliableMessageEntriesBufferSize)),	//unnecessary move, just in case I change that type
+	_areUnsentACKs(std::move(other._areUnsentACKs)),											//unnecessary move, just in case I change that type
+	_rttMilliseconds(std::move(other._rttMilliseconds)),										//unnecessary move, just in case I change that type
+	_unackedReliableMessages(std::move(other._unackedReliableMessages)),
+	_unackedReliableMessageTimeouts(std::move(other._unackedReliableMessageTimeouts)),
+	_reliableMessageEntries(std::move(other._reliableMessageEntries)),
+	_unackedMessagesSendTimes(std::move(other._unackedMessagesSendTimes)),
+	_messagesRTTToProcess(std::move(other._messagesRTTToProcess)),
+	_orderedMessagesWaitingForPrevious(std::move(other._orderedMessagesWaitingForPrevious))
 {
-	_unsentMessages.push_back(message);
+}
+
+ReliableOrderedChannel& ReliableOrderedChannel::operator=(ReliableOrderedChannel&& other) noexcept
+{
+	//Release old messages
+	ClearMessages();
+
+	//Move data from other to this
+	_lastMessageSequenceNumberAcked = std::move(other._lastMessageSequenceNumberAcked);			//unnecessary move, just in case I change that type
+	_nextOrderedMessageSequenceNumber = std::move(other._nextOrderedMessageSequenceNumber);		//unnecessary move, just in case I change that type
+	_reliableMessageEntriesBufferSize = std::move(other._reliableMessageEntriesBufferSize);		//unnecessary move, just in case I change that type
+	_areUnsentACKs = std::move(other._areUnsentACKs);											//unnecessary move, just in case I change that type
+	_rttMilliseconds = std::move(other._rttMilliseconds);										//unnecessary move, just in case I change that type
+	_unackedReliableMessages = std::move(other._unackedReliableMessages);
+	_unackedReliableMessageTimeouts = std::move(other._unackedReliableMessageTimeouts);
+	_reliableMessageEntries = std::move(other._reliableMessageEntries);
+	_unackedMessagesSendTimes = std::move(other._unackedMessagesSendTimes);
+	_messagesRTTToProcess = std::move(other._messagesRTTToProcess);
+	_orderedMessagesWaitingForPrevious = std::move(other._orderedMessagesWaitingForPrevious);
+
+	TransmissionChannel::operator=(std::move(other));
+	return *this;
+}
+
+void ReliableOrderedChannel::AddMessageToSend(std::unique_ptr<Message> message)
+{
+	_unsentMessages.push_back(std::move(message));
 }
 
 bool ReliableOrderedChannel::ArePendingMessagesToSend() const
@@ -36,10 +73,10 @@ bool ReliableOrderedChannel::ArePendingMessagesToSend() const
 
 Message* ReliableOrderedChannel::GetMessageToSend()
 {
-	Message* message = nullptr;
+	std::unique_ptr<Message> message = nullptr;
 	if (!_unsentMessages.empty())
 	{
-		message = _unsentMessages[0];
+		message = std::move(_unsentMessages[0]);
 		_unsentMessages.erase(_unsentMessages.begin());
 
 		uint16_t sequenceNumber = GetNextMessageSequenceNumber();
@@ -53,9 +90,10 @@ Message* ReliableOrderedChannel::GetMessageToSend()
 	}
 
 	//TODO Check that this is not called when message == nullptr. GetUnackedMessageToResend could return a nullptr (Although it would be an error tbh)
-	_sentMessages.push(message);
+	Message* messageToReturn = message.get();
+	_sentMessages.push(std::move(message));
 
-	return message;
+	return messageToReturn;
 }
 
 unsigned int ReliableOrderedChannel::GetSizeOfNextUnsentMessage() const
@@ -74,14 +112,14 @@ unsigned int ReliableOrderedChannel::GetSizeOfNextUnsentMessage() const
 		//Get next unacked message's size
 		int index = GetNextUnackedMessageIndexToResend();
 
-		std::list<Message*>::const_iterator cit = _unackedReliableMessages.cbegin();
+		std::list<std::unique_ptr<Message>>::const_iterator cit = _unackedReliableMessages.cbegin();
 		std::advance(cit, index);
 
 		return (*cit)->Size();
 	}
 }
 
-void ReliableOrderedChannel::AddReceivedMessage(Message* message)
+void ReliableOrderedChannel::AddReceivedMessage(std::unique_ptr<Message> message)
 {
 	uint16_t messageSequenceNumber = message->GetHeader().messageSequenceNumber;
 	if (IsMessageDuplicated(messageSequenceNumber))
@@ -91,8 +129,7 @@ void ReliableOrderedChannel::AddReceivedMessage(Message* message)
 		LOG_INFO(ss.str());
 
 		MessageFactory& messageFactory = MessageFactory::GetInstance();
-		std::unique_ptr<Message> messageHolder(message);
-		messageFactory.ReleaseMessage(std::move(messageHolder));
+		messageFactory.ReleaseMessage(std::move(message));
 		return;
 	}
 	else
@@ -101,7 +138,7 @@ void ReliableOrderedChannel::AddReceivedMessage(Message* message)
 		AckReliableMessage(messageSequenceNumber);
 		if (messageSequenceNumber == _nextOrderedMessageSequenceNumber)
 		{
-			_readyToProcessMessages.push(message);
+			_readyToProcessMessages.push(std::move(message));
 			++_nextOrderedMessageSequenceNumber;
 
 			bool continueProcessing = true;
@@ -114,9 +151,11 @@ void ReliableOrderedChannel::AddReceivedMessage(Message* message)
 				}
 				else if (DoesUnorderedMessagesContainsSequence(_nextOrderedMessageSequenceNumber, index))
 				{
-					std::list<Message*>::iterator it = _orderedMessagesWaitingForPrevious.begin();
+					std::list<std::unique_ptr<Message>>::iterator it = _orderedMessagesWaitingForPrevious.begin();
 					std::advance(it, index);
-					_readyToProcessMessages.push((*it));
+
+					std::unique_ptr<Message> readyToProcessMessage(std::move(*it));
+					_readyToProcessMessages.push(std::move(readyToProcessMessage));
 					_orderedMessagesWaitingForPrevious.erase(it);
 					++_nextOrderedMessageSequenceNumber;
 				}
@@ -128,7 +167,7 @@ void ReliableOrderedChannel::AddReceivedMessage(Message* message)
 		}
 		else
 		{
-			AddOrderedMessage(message);
+			AddOrderedMessage(std::move(message));
 		}
 	}
 }
@@ -145,13 +184,13 @@ const Message* ReliableOrderedChannel::GetReadyToProcessMessage()
 		return nullptr;
 	}
 
-	Message* message = nullptr;
-	message = _readyToProcessMessages.front();
+	std::unique_ptr<Message> message(std::move(_readyToProcessMessages.front()));
 	_readyToProcessMessages.pop();
 
-	_processedMessages.push(message);
+	Message* messageToReturn = message.get();
+	_processedMessages.push(std::move(message));
 
-	return message;
+	return messageToReturn;
 }
 
 bool ReliableOrderedChannel::AreUnackedMessagesToResend() const
@@ -172,7 +211,7 @@ bool ReliableOrderedChannel::AreUnackedMessagesToResend() const
 	return found;
 }
 
-Message* ReliableOrderedChannel::GetUnackedMessageToResend()
+std::unique_ptr<Message> ReliableOrderedChannel::GetUnackedMessageToResend()
 {
 	int index = GetNextUnackedMessageIndexToResend();
 	if (index == -1)
@@ -180,9 +219,9 @@ Message* ReliableOrderedChannel::GetUnackedMessageToResend()
 		return nullptr;
 	}
 
-	Message* message = DeleteUnackedReliableMessageAtIndex(index);
+	std::unique_ptr<Message> message = DeleteUnackedReliableMessageAtIndex(index);
 
-	return message;
+	return std::move(message);
 }
 
 int ReliableOrderedChannel::GetNextUnackedMessageIndexToResend() const
@@ -212,16 +251,16 @@ int ReliableOrderedChannel::GetNextUnackedMessageIndexToResend() const
 	return index;
 }
 
-void ReliableOrderedChannel::AddUnackedReliableMessage(Message* message)
+void ReliableOrderedChannel::AddUnackedReliableMessage(std::unique_ptr<Message> message)
 {
-	_unackedReliableMessages.push_back(message);
+	const TimeClock& timeClock = TimeClock::GetInstance();
+	_unackedMessagesSendTimes[message->GetHeader().messageSequenceNumber] = timeClock.GetElapsedTimeInMilliseconds();
+
+	_unackedReliableMessages.push_back(std::move(message));
 	std::stringstream ss;
 	ss << "Retransmission Timeout: " << GetRetransmissionTimeout();
 	LOG_INFO(ss.str());
 	_unackedReliableMessageTimeouts.push_back(GetRetransmissionTimeout());
-
-	const TimeClock& timeClock = TimeClock::GetInstance();
-	_unackedMessagesSendTimes[message->GetHeader().messageSequenceNumber] = timeClock.GetElapsedTimeInMilliseconds();
 }
 
 void ReliableOrderedChannel::AckReliableMessage(uint16_t messageSequenceNumber)
@@ -240,9 +279,9 @@ bool ReliableOrderedChannel::DoesUnorderedMessagesContainsSequence(uint16_t sequ
 {
 	const Message* message = nullptr;
 	unsigned int idx = 0;
-	for (std::list<Message*>::const_iterator cit = _orderedMessagesWaitingForPrevious.cbegin(); cit != _orderedMessagesWaitingForPrevious.cend(); ++cit)
+	for (std::list<std::unique_ptr<Message>>::const_iterator cit = _orderedMessagesWaitingForPrevious.cbegin(); cit != _orderedMessagesWaitingForPrevious.cend(); ++cit)
 	{
-		message = *cit;
+		message = (*cit).get();
 		if (message->GetHeader().messageSequenceNumber == sequence)
 		{
 			index = idx;
@@ -255,15 +294,16 @@ bool ReliableOrderedChannel::DoesUnorderedMessagesContainsSequence(uint16_t sequ
 	return false;
 }
 
-bool ReliableOrderedChannel::AddOrderedMessage(Message* message)
+bool ReliableOrderedChannel::AddOrderedMessage(std::unique_ptr<Message> message)
 {
-	_orderedMessagesWaitingForPrevious.push_back(message);
+	_orderedMessagesWaitingForPrevious.push_back(std::move(message));
 	return true;
+
 	//TODO Ver para qué es esto de abajo y por qué este return de aquí arriba
-	std::list<Message*>::iterator it = _orderedMessagesWaitingForPrevious.begin();
+	std::list<std::unique_ptr<Message>>::iterator it = _orderedMessagesWaitingForPrevious.begin();
 	if (_orderedMessagesWaitingForPrevious.empty())
 	{
-		_orderedMessagesWaitingForPrevious.insert(it, message);
+		_orderedMessagesWaitingForPrevious.insert(it, std::move(message));
 		return true;
 	}
 
@@ -281,7 +321,7 @@ bool ReliableOrderedChannel::AddOrderedMessage(Message* message)
 		}
 	}
 
-	_orderedMessagesWaitingForPrevious.insert(it, message);
+	_orderedMessagesWaitingForPrevious.insert(it, std::move(message));
 
 	return found;
 }
@@ -293,7 +333,7 @@ bool ReliableOrderedChannel::TryRemoveUnackedReliableMessageFromSequence(uint16_
 	int index = GetPendingUnackedReliableMessageIndexFromSequence(sequence);
 	if (index != -1)
 	{
-		Message* message = DeleteUnackedReliableMessageAtIndex(index);
+		std::unique_ptr<Message> message = DeleteUnackedReliableMessageAtIndex(index);
 
 		//Calculate RTT of acked message
 		const TimeClock& timeClock = TimeClock::GetInstance();
@@ -305,8 +345,7 @@ bool ReliableOrderedChannel::TryRemoveUnackedReliableMessageFromSequence(uint16_
 
 		//Release acked message since we no longer need it
 		MessageFactory& messageFactory = MessageFactory::GetInstance();
-		std::unique_ptr<Message>messageHolder(message);
-		messageFactory.ReleaseMessage(std::move(messageHolder));
+		messageFactory.ReleaseMessage(std::move(message));
 		result = true;
 	}
 
@@ -317,7 +356,7 @@ int ReliableOrderedChannel::GetPendingUnackedReliableMessageIndexFromSequence(ui
 {
 	int resultIndex = -1;
 	unsigned int currentIndex = 0;
-	for (std::list<Message*>::const_iterator it = _unackedReliableMessages.cbegin(); it != _unackedReliableMessages.cend(); ++it)
+	for (std::list<std::unique_ptr<Message>>::const_iterator it = _unackedReliableMessages.cbegin(); it != _unackedReliableMessages.cend(); ++it)
 	{
 		if ((*it)->GetHeader().messageSequenceNumber == sequence)
 		{
@@ -331,14 +370,13 @@ int ReliableOrderedChannel::GetPendingUnackedReliableMessageIndexFromSequence(ui
 	return resultIndex;
 }
 
-Message* ReliableOrderedChannel::DeleteUnackedReliableMessageAtIndex(unsigned int index)
+std::unique_ptr<Message> ReliableOrderedChannel::DeleteUnackedReliableMessageAtIndex(unsigned int index)
 {
 	assert(index < _unackedReliableMessages.size());
-	Message* message = nullptr;
 
-	std::list<Message*>::iterator it = _unackedReliableMessages.begin();
+	std::list<std::unique_ptr<Message>>::iterator it = _unackedReliableMessages.begin();
 	std::advance(it, index);
-	message = *it;
+	std::unique_ptr<Message> message(std::move(*it));
 
 	_unackedReliableMessages.erase(it);
 
@@ -346,7 +384,7 @@ Message* ReliableOrderedChannel::DeleteUnackedReliableMessageAtIndex(unsigned in
 	std::advance(it2, index);
 	_unackedReliableMessageTimeouts.erase(it2);
 
-	return message;
+	return std::move(message);
 }
 
 const ReliableMessageEntry& ReliableOrderedChannel::GetReliableMessageEntry(uint16_t sequenceNumber) const
@@ -396,11 +434,10 @@ void ReliableOrderedChannel::ClearMessages()
 {
 	MessageFactory& messageFactory = MessageFactory::GetInstance();
 
-	std::list<Message*>::iterator it = _unackedReliableMessages.begin();
+	std::list<std::unique_ptr<Message>>::iterator it = _unackedReliableMessages.begin();
 	while (it != _unackedReliableMessages.end())
 	{
-		std::unique_ptr<Message>message(*it);
-		*it = nullptr;
+		std::unique_ptr<Message>message(std::move(*it));
 		messageFactory.ReleaseMessage(std::move(message));
 
 		++it;
@@ -413,8 +450,7 @@ void ReliableOrderedChannel::ClearMessages()
 	it = _orderedMessagesWaitingForPrevious.begin();
 	while (it != _orderedMessagesWaitingForPrevious.end())
 	{
-		std::unique_ptr<Message>message(*it);
-		*it = nullptr;
+		std::unique_ptr<Message>message(std::move(*it));
 		messageFactory.ReleaseMessage(std::move(message));
 
 		++it;
@@ -534,7 +570,7 @@ ReliableOrderedChannel::~ReliableOrderedChannel()
 	ClearMessages();
 }
 
-void ReliableOrderedChannel::FreeSentMessage(MessageFactory& messageFactory, Message* message)
+void ReliableOrderedChannel::FreeSentMessage(MessageFactory& messageFactory, std::unique_ptr<Message> message)
 {
-	AddUnackedReliableMessage(message);
+	AddUnackedReliableMessage(std::move(message));
 }

@@ -14,6 +14,10 @@ class Server : public Peer
 {
 public:
 	Server(int maxConnections);
+	Server(const Server&) = delete;
+
+	Server& operator=(const Server&) = delete;
+
 	~Server() override;
 
 protected:

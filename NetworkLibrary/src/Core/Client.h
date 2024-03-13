@@ -25,6 +25,10 @@ class Client : public Peer
 {
 public:
 	Client(float serverMaxInactivityTimeout);
+	Client(const Client&) = delete;
+
+	Client& operator=(const Client&) = delete;
+
 	~Client() override;
 	
 protected:

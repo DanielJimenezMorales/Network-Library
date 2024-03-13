@@ -138,10 +138,10 @@ void Server::CreateDisconnectionMessage(RemotePeer& remoteClient)
 		return;
 	}
 
-	DisconnectionMessage* disconnectionMessage = static_cast<DisconnectionMessage*>(message.release());
+	std::unique_ptr<DisconnectionMessage> disconnectionMessage(static_cast<DisconnectionMessage*>(message.release()));
 
 	disconnectionMessage->prefix = remoteClient.GetDataPrefix();
-	remoteClient.AddMessage(disconnectionMessage);
+	remoteClient.AddMessage(std::move(disconnectionMessage));
 
 	LOG_INFO("Disconnection message created.");
 }
@@ -158,10 +158,10 @@ void Server::CreateInGameResponseMessage(RemotePeer& remoteClient, uint64_t data
 
 	message->SetReliability(true);
 
-	InGameResponseMessage* inGameResponseMessage = static_cast<InGameResponseMessage*>(message.release());
+	std::unique_ptr<InGameResponseMessage> inGameResponseMessage(static_cast<InGameResponseMessage*>(message.release()));
 
 	inGameResponseMessage->data = data;
-	remoteClient.AddMessage(inGameResponseMessage);
+	remoteClient.AddMessage(std::move(inGameResponseMessage));
 
 	LOG_INFO("In game response message created.");
 }
@@ -177,10 +177,10 @@ void Server::CreateConnectionChallengeMessage(const Address& address, int pendin
 		return;
 	}
 
-	ConnectionChallengeMessage* connectionChallengePacket = static_cast<ConnectionChallengeMessage*>(message.release());
+	std::unique_ptr<ConnectionChallengeMessage> connectionChallengePacket(static_cast<ConnectionChallengeMessage*>(message.release()));
 	connectionChallengePacket->clientSalt = _pendingConnections[pendingConnectionIndex].GetClientSalt();
 	connectionChallengePacket->serverSalt = _pendingConnections[pendingConnectionIndex].GetServerSalt();
-	_pendingConnections[pendingConnectionIndex].AddMessage(connectionChallengePacket);
+	_pendingConnections[pendingConnectionIndex].AddMessage(std::move(connectionChallengePacket));
 
 	LOG_INFO("Connection challenge message created.");
 }
@@ -307,10 +307,10 @@ void Server::CreateConnectionApprovedMessage(RemotePeer& remoteClient)
 		return;
 	}
 	
-	ConnectionAcceptedMessage* connectionAcceptedPacket = static_cast<ConnectionAcceptedMessage*>(message.release());
+	std::unique_ptr<ConnectionAcceptedMessage> connectionAcceptedPacket(static_cast<ConnectionAcceptedMessage*>(message.release()));
 	connectionAcceptedPacket->prefix = remoteClient.GetDataPrefix();
 	connectionAcceptedPacket->clientIndexAssigned = remoteClient.GetClientIndex();
-	remoteClient.AddMessage(connectionAcceptedPacket);
+	remoteClient.AddMessage(std::move(connectionAcceptedPacket));
 }
 
 void Server::SendPacketToRemoteClient(const RemotePeer& remoteClient, const NetworkPacket& packet) const

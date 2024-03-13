@@ -277,7 +277,7 @@ void Peer::ProcessDatagram(Buffer& buffer, const Address& address)
 
 		if (isPacketFromRemotePeer)
 		{
-			remotePeer->AddReceivedMessage(message.release());
+			remotePeer->AddReceivedMessage(std::move(message));
 		}
 		else
 		{

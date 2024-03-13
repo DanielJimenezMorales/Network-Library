@@ -1,3 +1,5 @@
+#include <memory>
+
 #include "PendingConnection.h"
 #include "Message.h"
 #include "MessageFactory.h"
@@ -9,19 +11,43 @@ PendingConnection::PendingConnection(const Address& addr) : _address(Address(add
 	_transmissionChannel = new UnreliableOrderedTransmissionChannel();
 }
 
+PendingConnection::PendingConnection(PendingConnection&& other) noexcept:
+	_address(std::move(other._address)),
+	_clientSalt(std::move(other._clientSalt)),						//unnecessary move, just in case I change that type
+	_serverSalt(std::move(other._serverSalt)),						//unnecessary move, just in case I change that type
+	_transmissionChannel(std::move(other._transmissionChannel))		//unnecessary move, just in case I change that type
+{
+	other._transmissionChannel = nullptr;
+}
+
+PendingConnection& PendingConnection::operator=(PendingConnection&& other) noexcept
+{
+	//Clear current data
+	delete _transmissionChannel;
+	_transmissionChannel = nullptr;
+
+	//Assign new data
+	_address = std::move(other._address);
+	_clientSalt = std::move(other._clientSalt);						//unnecessary move, just in case I change that type
+	_serverSalt = std::move(other._serverSalt);						//unnecessary move, just in case I change that type
+	_transmissionChannel = std::move(other._transmissionChannel);	//unnecessary move, just in case I change that type
+	other._transmissionChannel = nullptr;
+	return *this;
+}
+
 bool PendingConnection::ArePendingMessages() const
 {
 	return _transmissionChannel->ArePendingMessagesToSend();
 }
 
-bool PendingConnection::AddMessage(Message* message)
+bool PendingConnection::AddMessage(std::unique_ptr<Message> message)
 {
 	if (message == nullptr)
 	{
 		return false;
 	}
 
-	_transmissionChannel->AddMessageToSend(message);
+	_transmissionChannel->AddMessageToSend(std::move(message));
 	return true;
 }
 

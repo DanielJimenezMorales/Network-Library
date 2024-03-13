@@ -4,13 +4,29 @@
 #include "MessageFactory.h"
 #include "Logger.h"
 
-UnreliableOrderedTransmissionChannel::UnreliableOrderedTransmissionChannel() : _lastMessageSequenceNumberReceived(0), TransmissionChannel(TransmissionChannelType::UnreliableUnordered)
+UnreliableOrderedTransmissionChannel::UnreliableOrderedTransmissionChannel() :
+	TransmissionChannel(TransmissionChannelType::UnreliableUnordered),
+	_lastMessageSequenceNumberReceived(0)
 {
 }
 
-void UnreliableOrderedTransmissionChannel::AddMessageToSend(Message* message)
+UnreliableOrderedTransmissionChannel::UnreliableOrderedTransmissionChannel(UnreliableOrderedTransmissionChannel&& other) noexcept :
+	TransmissionChannel(std::move(other)),
+	_lastMessageSequenceNumberReceived(std::move(other._lastMessageSequenceNumberReceived)) //unnecessary move, just in case I change that type
 {
-	_unsentMessages.push_back(message);
+}
+
+UnreliableOrderedTransmissionChannel& UnreliableOrderedTransmissionChannel::operator=(UnreliableOrderedTransmissionChannel&& other) noexcept
+{
+	_lastMessageSequenceNumberReceived = std::move(other._lastMessageSequenceNumberReceived); //unnecessary move, just in case I change that type
+
+	TransmissionChannel::operator=(std::move(other));
+	return *this;
+}
+
+void UnreliableOrderedTransmissionChannel::AddMessageToSend(std::unique_ptr<Message> message)
+{
+	_unsentMessages.push_back(std::move(message));
 }
 
 bool UnreliableOrderedTransmissionChannel::ArePendingMessagesToSend() const
@@ -25,7 +41,7 @@ Message* UnreliableOrderedTransmissionChannel::GetMessageToSend()
 		return nullptr;
 	}
 
-	Message* message = _unsentMessages[0];
+	std::unique_ptr<Message> message(std::move(_unsentMessages[0]));
 	_unsentMessages.erase(_unsentMessages.begin());
 
 	uint16_t sequenceNumber = GetNextMessageSequenceNumber();
@@ -33,8 +49,10 @@ Message* UnreliableOrderedTransmissionChannel::GetMessageToSend()
 
 	message->SetHeaderPacketSequenceNumber(sequenceNumber);
 
-	_sentMessages.push(message);
-	return message;
+	Message* messageToReturn = message.get();
+	_sentMessages.push(std::move(message));
+
+	return messageToReturn;
 }
 
 unsigned int UnreliableOrderedTransmissionChannel::GetSizeOfNextUnsentMessage() const
@@ -47,18 +65,17 @@ unsigned int UnreliableOrderedTransmissionChannel::GetSizeOfNextUnsentMessage() 
 	return _unsentMessages.front()->Size();
 }
 
-void UnreliableOrderedTransmissionChannel::AddReceivedMessage(Message* message)
+void UnreliableOrderedTransmissionChannel::AddReceivedMessage(std::unique_ptr<Message> message)
 {
-	std::unique_ptr<Message> messageHandler(message);
 	if (!IsSequenceNumberNewerThanLastReceived(message->GetHeader().messageSequenceNumber))
 	{
 		MessageFactory& messageFactory = MessageFactory::GetInstance();
-		messageFactory.ReleaseMessage(std::move(messageHandler));
+		messageFactory.ReleaseMessage(std::move(message));
 		return;
 	}
 
 	_lastMessageSequenceNumberReceived = message->GetHeader().messageSequenceNumber;
-	_readyToProcessMessages.push(messageHandler.release());
+	_readyToProcessMessages.push(std::move(message));
 }
 
 bool UnreliableOrderedTransmissionChannel::ArePendingReadyToProcessMessages() const
@@ -73,12 +90,13 @@ const Message* UnreliableOrderedTransmissionChannel::GetReadyToProcessMessage()
 		return nullptr;
 	}
 
-	Message* message = nullptr;
-	message = _readyToProcessMessages.front();
+	std::unique_ptr<Message> message(std::move(_readyToProcessMessages.front()));
 	_readyToProcessMessages.pop();
 
-	_processedMessages.push(message);
-	return message;
+	Message* messageToReturn = message.get();
+	_processedMessages.push(std::move(message));
+
+	return messageToReturn;
 }
 
 void UnreliableOrderedTransmissionChannel::SeUnsentACKsToFalse()
@@ -123,10 +141,9 @@ UnreliableOrderedTransmissionChannel::~UnreliableOrderedTransmissionChannel()
 {
 }
 
-void UnreliableOrderedTransmissionChannel::FreeSentMessage(MessageFactory& messageFactory, Message* message)
+void UnreliableOrderedTransmissionChannel::FreeSentMessage(MessageFactory& messageFactory, std::unique_ptr<Message> message)
 {
-	std::unique_ptr<Message> messageHandler(message);
-	messageFactory.ReleaseMessage(std::move(messageHandler));
+	messageFactory.ReleaseMessage(std::move(message));
 }
 
 bool UnreliableOrderedTransmissionChannel::IsSequenceNumberNewerThanLastReceived(uint32_t sequenceNumber) const

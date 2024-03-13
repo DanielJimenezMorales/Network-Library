@@ -223,11 +223,11 @@ void Client::CreateConnectionRequestMessage()
 		return;
 	}
 
-	ConnectionRequestMessage* connectionRequestMessage = static_cast<ConnectionRequestMessage*>(message.release());
+	std::unique_ptr<ConnectionRequestMessage> connectionRequestMessage(static_cast<ConnectionRequestMessage*>(message.release()));
 
 	connectionRequestMessage->clientSalt = _saltNumber;
 
-	_pendingConnections[0].AddMessage(connectionRequestMessage);
+	_pendingConnections[0].AddMessage(std::move(connectionRequestMessage));
 
 	LOG_INFO("Connection request created.");
 }
@@ -242,10 +242,10 @@ void Client::CreateConnectionChallengeResponse()
 		return;
 	}
 
-	ConnectionChallengeResponseMessage* connectionChallengeResponseMessage = static_cast<ConnectionChallengeResponseMessage*>(message.release());
+	std::unique_ptr<ConnectionChallengeResponseMessage> connectionChallengeResponseMessage(static_cast<ConnectionChallengeResponseMessage*>(message.release()));
 	connectionChallengeResponseMessage->prefix = _dataPrefix;
 
-	_pendingConnections[0].AddMessage(connectionChallengeResponseMessage);
+	_pendingConnections[0].AddMessage(std::move(connectionChallengeResponseMessage));
 }
 
 void Client::CreateInGameMessage()
@@ -258,8 +258,8 @@ void Client::CreateInGameMessage()
 		return;
 	}
 
-	InGameMessage* inGameMessage = static_cast<InGameMessage*>(message.release());
+	std::unique_ptr<InGameMessage> inGameMessage(static_cast<InGameMessage*>(message.release()));
 	inGameMessage->data = inGameMessageID;
 	inGameMessageID++;
-	_remotePeers[0].AddMessage(inGameMessage);
+	_remotePeers[0].AddMessage(std::move(inGameMessage));
 }
