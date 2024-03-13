@@ -1,6 +1,7 @@
 #pragma once
 #include <cstdint>
-#include <vector>
+#include <deque>
+#include <memory>
 
 class Buffer;
 class Message;
@@ -29,14 +30,19 @@ class NetworkPacket
 public:
 	//NetworkPacket() : _defaultMTUSizeInBytes(1500) {};
 	NetworkPacket();
+	NetworkPacket(const NetworkPacket&) = delete;
+	NetworkPacket(NetworkPacket&& other) noexcept = default;
+
+	NetworkPacket& operator=(const NetworkPacket&) = delete;
+	NetworkPacket& operator=(NetworkPacket&& other) noexcept;
 
 	void Write(Buffer& buffer) const;
 	void Read(Buffer& buffer);
 
 	const NetworkPacketHeader& GetHeader() const { return _header; };
 
-	bool AddMessage(Message* message);
-	std::vector<Message*>::iterator GetMessages();
+	bool AddMessage(std::unique_ptr<Message> message);
+	std::unique_ptr<Message> GetMessages();
 	unsigned int GetNumberOfMessages() const { return _messages.size(); }
 
 	uint32_t Size() const;
@@ -52,5 +58,7 @@ public:
 private:
 	const unsigned int _defaultMTUSizeInBytes;
 	NetworkPacketHeader _header;
-	std::vector<Message*> _messages;
+	std::deque<std::unique_ptr<Message>> _messages;
+
+	void CleanMessages();
 };

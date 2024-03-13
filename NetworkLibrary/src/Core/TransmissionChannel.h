@@ -1,6 +1,7 @@
 #pragma once
 #include <queue>
 #include <vector>
+#include <memory>
 
 class Message;
 class MessageFactory;
@@ -15,16 +16,22 @@ class TransmissionChannel
 {
 public:
 	TransmissionChannel(TransmissionChannelType type);
+	TransmissionChannel(const TransmissionChannel&) = delete;
+	TransmissionChannel(TransmissionChannel&& other) noexcept;
+
+	TransmissionChannel& operator=(const TransmissionChannel&) = delete;
+	TransmissionChannel& operator=(TransmissionChannel&& other) noexcept;
 
 	TransmissionChannelType GetType() { return _type; }
 
-	virtual void AddMessageToSend(Message* message) = 0;
+	virtual void AddMessageToSend(std::unique_ptr<Message> message) = 0;
 	virtual bool ArePendingMessagesToSend() const = 0;
-	virtual Message* GetMessageToSend() = 0;
+	virtual std::unique_ptr<Message> GetMessageToSend() = 0;
 	virtual unsigned int GetSizeOfNextUnsentMessage() const = 0;
+	void AddSentMessage(std::unique_ptr<Message> message);
 	void FreeSentMessages();
 
-	virtual void AddReceivedMessage(Message* message) = 0;
+	virtual void AddReceivedMessage(std::unique_ptr<Message> message) = 0;
 	virtual bool ArePendingReadyToProcessMessages() const = 0;
 	virtual const Message* GetReadyToProcessMessage() = 0;
 	void FreeProcessedMessages();
@@ -47,15 +54,15 @@ public:
 
 protected:
 	//Collection of messages that are waiting to be sent.
-	std::vector<Message*> _unsentMessages;
+	std::vector<std::unique_ptr<Message>> _unsentMessages;
 	//Collection of messages that have been sent and are waiting to be released (Used for memory management purposes)
-	std::queue<Message*> _sentMessages;
+	std::queue<std::unique_ptr<Message>> _sentMessages;
 	//Collection of received messages ready to be processed
-	std::queue<Message*> _readyToProcessMessages;
+	std::queue<std::unique_ptr<Message>> _readyToProcessMessages;
 	//Collection of messages that have been processed and are waiting to be released (Used for memory management purposes)
-	std::queue<Message*> _processedMessages;
+	std::queue<std::unique_ptr<Message>> _processedMessages;
 
-	virtual void FreeSentMessage(MessageFactory& messageFactory, Message* message) = 0;
+	virtual void FreeSentMessage(MessageFactory& messageFactory, std::unique_ptr<Message> message) = 0;
 
 	uint16_t GetNextMessageSequenceNumber() const { return _nextMessageSequenceNumber; }
 	void IncreaseMessageSequenceNumber() { ++_nextMessageSequenceNumber; };

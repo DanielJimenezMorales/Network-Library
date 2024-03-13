@@ -1,9 +1,11 @@
 #pragma once
 #include <cstdint>
 #include <map>
+#include <memory>
 
 #include "Address.h"
 #include "TransmissionChannel.h"
+#include "Logger.h"
 
 class Message;
 class MessageHeader;
@@ -20,7 +22,7 @@ private:
 
 	uint16_t _nextPacketSequenceNumber;
 
-	const unsigned int NUMBER_OF_TRANSMISSION_CHANNELS;
+	unsigned int numberOfTransmissionChannels;
 	std::vector<TransmissionChannel*> _transmissionChannels;
 
 	void InitTransmissionChannels();
@@ -30,6 +32,10 @@ private:
 public:
 	RemotePeer();
 	RemotePeer(const sockaddr_in& addressInfo, uint16_t id, float maxInactivityTime, uint64_t dataPrefix);
+	RemotePeer(const RemotePeer&) = delete;
+	RemotePeer(RemotePeer&& other) = default; //This must be here since Peer.h has a std::vector<RemotePeer> and vector<T> requires T to be MoveAssignable
+
+	RemotePeer& operator=(const RemotePeer&) = delete;
 	~RemotePeer();
 
 	uint16_t GetLastMessageSequenceNumberAcked(TransmissionChannelType channelType) const;
@@ -51,18 +57,19 @@ public:
 	uint64_t GetDataPrefix() const { return _dataPrefix; }
 	bool IsAddressEqual(const Address& other) const { return other == _address; }
 	bool IsInactive() const { return _inactivityTimeLeft == 0.f; }
-	bool AddMessage(Message* message);
+	bool AddMessage(std::unique_ptr<Message> message);
 	TransmissionChannelType GetTransmissionChannelTypeFromHeader(const MessageHeader& messageHeader) const;
 	bool ArePendingMessages(TransmissionChannelType channelType) const;
-	Message* GetPendingMessage(TransmissionChannelType channelType);
+	std::unique_ptr<Message> GetPendingMessage(TransmissionChannelType channelType);
 	unsigned int GetSizeOfNextUnsentMessage(TransmissionChannelType channelType) const;
+	void AddSentMessage(std::unique_ptr<Message> message, TransmissionChannelType channelType);
 	void FreeSentMessages();
 	void FreeProcessedMessages();
 	void SeUnsentACKsToFalse(TransmissionChannelType channelType);
 	bool AreUnsentACKs(TransmissionChannelType channelType) const;
 	uint32_t GenerateACKs(TransmissionChannelType channelType) const;
 	void ProcessACKs(uint32_t acks, uint16_t lastAckedMessageSequenceNumber, TransmissionChannelType channelType);
-	bool AddReceivedMessage(Message* message);
+	bool AddReceivedMessage(std::unique_ptr<Message> message);
 
 	bool ArePendingReadyToProcessMessages() const;
 	const Message* GetPendingReadyToProcessMessage();

@@ -1,6 +1,7 @@
 #pragma once
 #include <queue>
 #include <unordered_map>
+#include <memory>
 
 #include "Message.h"
 
@@ -15,8 +16,8 @@ public:
 	/// <returns></returns>
 	static MessageFactory& GetInstance();
 
-	Message* LendMessage(MessageType messageType);
-	void ReleaseMessage(Message* message);
+	std::unique_ptr<Message> LendMessage(MessageType messageType);
+	void ReleaseMessage(std::unique_ptr<Message> message);
 
 	static void DeleteInstance();
 
@@ -27,10 +28,10 @@ private:
 	MessageFactory& operator=(const MessageFactory&) = delete;
 
 	void InitializePools();
-	void InitializePool(std::queue<Message*>& pool, MessageType messageType);
-	std::queue<Message*>* GetPoolFromType(MessageType messageType);
-	Message* CreateMessage(MessageType messageType);
-	void ReleasePool(std::queue<Message*>& pool);
+	void InitializePool(std::queue<std::unique_ptr<Message>>& pool, MessageType messageType);
+	std::queue<std::unique_ptr<Message>>* GetPoolFromType(MessageType messageType);
+	std::unique_ptr<Message> CreateMessage(MessageType messageType);
+	void ReleasePool(std::queue<std::unique_ptr<Message>>& pool);
 
 	~MessageFactory();
 
@@ -39,6 +40,6 @@ private:
 	bool _isInitialized;
 	unsigned int _initialSize;
 
-	std::unordered_map<MessageType, std::queue<Message*>> _messagePools;
+	std::unordered_map<MessageType, std::queue<std::unique_ptr<Message>>> _messagePools;
 };
 

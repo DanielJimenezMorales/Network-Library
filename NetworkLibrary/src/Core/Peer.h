@@ -35,6 +35,10 @@ public:
 
 protected:
 	Peer(PeerType type, int maxConnections, unsigned int receiveBufferSize, unsigned int sendBufferSize);
+	Peer(const Peer&) = delete;
+
+	Peer& operator=(const Peer&) = delete;
+
 	virtual bool StartConcrete() = 0;
 	virtual void ProcessMessage(const Message& message, const Address& address) = 0;
 	virtual void TickConcrete(float elapsedTime) = 0;

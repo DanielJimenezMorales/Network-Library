@@ -8,16 +8,46 @@ TransmissionChannel::TransmissionChannel(TransmissionChannelType type) : _type(t
 	_unsentMessages.reserve(5);
 }
 
+TransmissionChannel::TransmissionChannel(TransmissionChannel&& other) noexcept :
+	_type(std::move(other._type)),												//unnecessary move, just in case I change that type
+	_nextMessageSequenceNumber(std::move(other._nextMessageSequenceNumber)),	//unnecessary move, just in case I change that type
+	_unsentMessages(std::move(other._unsentMessages)),
+	_sentMessages(std::move(other._sentMessages)),
+	_readyToProcessMessages(std::move(other._readyToProcessMessages)),
+	_processedMessages(std::move(other._processedMessages))
+{
+}
+
+TransmissionChannel& TransmissionChannel::operator=(TransmissionChannel&& other) noexcept
+{
+	//Release old messages
+	ClearMessages();
+
+	//Move data from other to this
+	_type = std::move(other._type);												//unnecessary move, just in case I change that type
+	_nextMessageSequenceNumber = std::move(other._nextMessageSequenceNumber);	//unnecessary move, just in case I change that type
+	_unsentMessages = std::move(other._unsentMessages);
+	_sentMessages = std::move(other._sentMessages);
+	_readyToProcessMessages = std::move(other._readyToProcessMessages);
+	_processedMessages = std::move(other._processedMessages);
+	return *this;
+}
+
+void TransmissionChannel::AddSentMessage(std::unique_ptr<Message> message)
+{
+	_sentMessages.push(std::move(message));
+}
+
 void TransmissionChannel::FreeSentMessages()
 {
 	MessageFactory& messageFactory = MessageFactory::GetInstance();
 
 	while (!_sentMessages.empty())
 	{
-		Message* message = _sentMessages.front();
+		std::unique_ptr<Message> message(std::move(_sentMessages.front()));
 		_sentMessages.pop();
 
-		FreeSentMessage(messageFactory, message);
+		FreeSentMessage(messageFactory, std::move(message));
 	}
 }
 
@@ -27,10 +57,10 @@ void TransmissionChannel::FreeProcessedMessages()
 
 	while (!_processedMessages.empty())
 	{
-		Message* message = _processedMessages.front();
+		std::unique_ptr<Message> message(std::move(_processedMessages.front()));
 		_processedMessages.pop();
 
-		messageFactory.ReleaseMessage(message);
+		messageFactory.ReleaseMessage(std::move(message));
 	}
 }
 
@@ -51,24 +81,32 @@ void TransmissionChannel::ClearMessages()
 
 	while (!_sentMessages.empty())
 	{
-		Message* message = _sentMessages.front();
+		std::unique_ptr<Message> message(std::move(_sentMessages.front()));
 		_sentMessages.pop();
 
-		messageFactory.ReleaseMessage(message);
+		messageFactory.ReleaseMessage(std::move(message));
+	}
+
+	while (!_readyToProcessMessages.empty())
+	{
+		std::unique_ptr<Message> message(std::move(_readyToProcessMessages.front()));
+		_readyToProcessMessages.pop();
+
+		messageFactory.ReleaseMessage(std::move(message));
 	}
 
 	while (!_processedMessages.empty())
 	{
-		Message* message = _processedMessages.front();
+		std::unique_ptr<Message> message(std::move(_processedMessages.front()));
 		_processedMessages.pop();
 
-		messageFactory.ReleaseMessage(message);
+		messageFactory.ReleaseMessage(std::move(message));
 	}
 	
-	for (std::vector<Message*>::iterator it = _unsentMessages.begin(); it != _unsentMessages.end(); ++it)
+	for (std::vector<std::unique_ptr<Message>>::iterator it = _unsentMessages.begin(); it != _unsentMessages.end(); ++it)
 	{
-		Message* message = *it;
-		messageFactory.ReleaseMessage(message);
+		std::unique_ptr<Message> message(std::move(*it));
+		messageFactory.ReleaseMessage(std::move(message));
 		*it = nullptr;
 	}
 
