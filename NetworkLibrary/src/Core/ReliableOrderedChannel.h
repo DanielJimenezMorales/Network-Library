@@ -32,7 +32,7 @@ public:
 
 	void AddMessageToSend(std::unique_ptr<Message> message) override;
 	bool ArePendingMessagesToSend() const override;
-	Message* GetMessageToSend() override;
+	std::unique_ptr<Message> GetMessageToSend() override;
 	unsigned int GetSizeOfNextUnsentMessage() const override;
 
 	void AddReceivedMessage(std::unique_ptr<Message> message) override;

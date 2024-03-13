@@ -33,6 +33,11 @@ TransmissionChannel& TransmissionChannel::operator=(TransmissionChannel&& other)
 	return *this;
 }
 
+void TransmissionChannel::AddSentMessage(std::unique_ptr<Message> message)
+{
+	_sentMessages.push(std::move(message));
+}
+
 void TransmissionChannel::FreeSentMessages()
 {
 	MessageFactory& messageFactory = MessageFactory::GetInstance();

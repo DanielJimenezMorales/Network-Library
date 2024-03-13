@@ -34,7 +34,7 @@ bool UnreliableOrderedTransmissionChannel::ArePendingMessagesToSend() const
 	return (!_unsentMessages.empty());
 }
 
-Message* UnreliableOrderedTransmissionChannel::GetMessageToSend()
+std::unique_ptr<Message> UnreliableOrderedTransmissionChannel::GetMessageToSend()
 {
 	if (!ArePendingMessagesToSend())
 	{
@@ -49,10 +49,7 @@ Message* UnreliableOrderedTransmissionChannel::GetMessageToSend()
 
 	message->SetHeaderPacketSequenceNumber(sequenceNumber);
 
-	Message* messageToReturn = message.get();
-	_sentMessages.push(std::move(message));
-
-	return messageToReturn;
+	return std::move(message);
 }
 
 unsigned int UnreliableOrderedTransmissionChannel::GetSizeOfNextUnsentMessage() const

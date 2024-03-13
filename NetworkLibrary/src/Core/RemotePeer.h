@@ -60,8 +60,9 @@ public:
 	bool AddMessage(std::unique_ptr<Message> message);
 	TransmissionChannelType GetTransmissionChannelTypeFromHeader(const MessageHeader& messageHeader) const;
 	bool ArePendingMessages(TransmissionChannelType channelType) const;
-	Message* GetPendingMessage(TransmissionChannelType channelType);
+	std::unique_ptr<Message> GetPendingMessage(TransmissionChannelType channelType);
 	unsigned int GetSizeOfNextUnsentMessage(TransmissionChannelType channelType) const;
+	void AddSentMessage(std::unique_ptr<Message> message, TransmissionChannelType channelType);
 	void FreeSentMessages();
 	void FreeProcessedMessages();
 	void SeUnsentACKsToFalse(TransmissionChannelType channelType);

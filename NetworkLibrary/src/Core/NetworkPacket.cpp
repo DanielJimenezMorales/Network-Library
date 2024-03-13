@@ -4,6 +4,7 @@
 #include "Buffer.h"
 #include "Message.h"
 #include "MessageUtils.h"
+#include "MessageFactory.h"
 
 void NetworkPacketHeader::Write(Buffer& buffer) const
 {
@@ -21,7 +22,16 @@ void NetworkPacketHeader::Read(Buffer& buffer)
 
 NetworkPacket::NetworkPacket() : _header(0, 0, 0), _defaultMTUSizeInBytes(1500)
 {
-	_messages.reserve(5);
+}
+
+NetworkPacket& NetworkPacket::operator=(NetworkPacket&& other) noexcept
+{
+	CleanMessages();
+
+	_header = std::move(other._header);
+	_messages = std::move(other._messages);
+
+	return *this;
 }
 
 void NetworkPacket::Write(Buffer& buffer) const
@@ -31,9 +41,9 @@ void NetworkPacket::Write(Buffer& buffer) const
 	uint8_t numberOfMessages = _messages.size();
 	buffer.WriteByte(numberOfMessages);
 
-	for (std::vector<Message*>::const_iterator cit = _messages.cbegin(); cit != _messages.cend(); ++cit)
+	for (std::deque<std::unique_ptr<Message>>::const_iterator cit = _messages.cbegin(); cit != _messages.cend(); ++cit)
 	{
-		const Message* message = *cit;
+		const Message* message = (*cit).get();
 		message->Write(buffer);
 	}
 }
@@ -43,28 +53,33 @@ void NetworkPacket::Read(Buffer& buffer)
 	_header.Read(buffer);
 
 	uint8_t numberOfMessages = buffer.ReadByte();
-	_messages.reserve(numberOfMessages);
 
-	Message* message = nullptr;
 	for (unsigned int i = 0; i < numberOfMessages; ++i)
 	{
-		MessageUtils::ReadMessage(buffer, &message);
+		std::unique_ptr<Message> message = MessageUtils::ReadMessage(buffer);
 		if (message != nullptr)
 		{
-			AddMessage(message);
+			AddMessage(std::move(message));
 		}
 	}
 }
 
-bool NetworkPacket::AddMessage(Message* message)
+bool NetworkPacket::AddMessage(std::unique_ptr<Message> message)
 {
-	_messages.push_back(message);
+	_messages.push_back(std::move(message));
 	return true;
 }
 
-std::vector<Message*>::iterator NetworkPacket::GetMessages()
+std::unique_ptr<Message> NetworkPacket::GetMessages()
 {
-	return _messages.begin();
+	if (GetNumberOfMessages() == 0)
+	{
+		return nullptr;
+	}
+
+	std::unique_ptr<Message> message = std::move(_messages.front());
+	_messages.pop_front();
+	return std::move(message);
 }
 
 uint32_t NetworkPacket::Size() const
@@ -72,7 +87,7 @@ uint32_t NetworkPacket::Size() const
 	uint32_t packetSize = NetworkPacketHeader::Size();
 	packetSize += 1; //We store in 1 byte the number of messages that this packet contains
 
-	std::vector<Message*>::const_iterator iterator = _messages.cbegin();
+	std::deque<std::unique_ptr<Message>>::const_iterator iterator = _messages.cbegin();
 	while (iterator != _messages.cend())
 	{
 		packetSize += (*iterator)->Size();
@@ -89,5 +104,19 @@ bool NetworkPacket::CanMessageFit(unsigned int sizeOfMessagesInBytes) const
 
 NetworkPacket::~NetworkPacket()
 {
+	CleanMessages();
+}
+
+void NetworkPacket::CleanMessages()
+{
+	MessageFactory& messageFactory = MessageFactory::GetInstance();
+
+	std::deque<std::unique_ptr<Message>>::iterator it = _messages.begin();
+	for (it; it != _messages.end(); ++it)
+	{
+		std::unique_ptr<Message> message = std::move(*it);
+		messageFactory.ReleaseMessage(std::move(message));
+	}
+
 	_messages.clear();
 }

@@ -169,9 +169,9 @@ bool RemotePeer::ArePendingMessages(TransmissionChannelType channelType) const
 	return arePendingMessages;
 }
 
-Message* RemotePeer::GetPendingMessage(TransmissionChannelType channelType)
+std::unique_ptr<Message> RemotePeer::GetPendingMessage(TransmissionChannelType channelType)
 {
-	Message* message = nullptr;
+	std::unique_ptr<Message> message = nullptr;
 
 	TransmissionChannel* transmissionChannel = GetTransmissionChannelFromType(channelType);
 	if (transmissionChannel != nullptr)
@@ -179,7 +179,7 @@ Message* RemotePeer::GetPendingMessage(TransmissionChannelType channelType)
 		message = transmissionChannel->GetMessageToSend();
 	}
 
-	return message;
+	return std::move(message);
 }
 
 unsigned int RemotePeer::GetSizeOfNextUnsentMessage(TransmissionChannelType channelType) const
@@ -200,6 +200,15 @@ void RemotePeer::FreeSentMessages()
 	for (unsigned int i = 0; i < numberOfTransmissionChannels; ++i)
 	{
 		_transmissionChannels[i]->FreeSentMessages();
+	}
+}
+
+void RemotePeer::AddSentMessage(std::unique_ptr<Message> message, TransmissionChannelType channelType)
+{
+	TransmissionChannel* transmissionChannel = GetTransmissionChannelFromType(channelType);
+	if (transmissionChannel != nullptr)
+	{
+		transmissionChannel->AddSentMessage(std::move(message));
 	}
 }
 

@@ -71,7 +71,7 @@ bool ReliableOrderedChannel::ArePendingMessagesToSend() const
 	return (!_unsentMessages.empty() || AreUnackedMessagesToResend());
 }
 
-Message* ReliableOrderedChannel::GetMessageToSend()
+std::unique_ptr<Message> ReliableOrderedChannel::GetMessageToSend()
 {
 	std::unique_ptr<Message> message = nullptr;
 	if (!_unsentMessages.empty())
@@ -90,10 +90,8 @@ Message* ReliableOrderedChannel::GetMessageToSend()
 	}
 
 	//TODO Check that this is not called when message == nullptr. GetUnackedMessageToResend could return a nullptr (Although it would be an error tbh)
-	Message* messageToReturn = message.get();
-	_sentMessages.push(std::move(message));
 
-	return messageToReturn;
+	return std::move(message);
 }
 
 unsigned int ReliableOrderedChannel::GetSizeOfNextUnsentMessage() const

@@ -26,8 +26,9 @@ public:
 
 	virtual void AddMessageToSend(std::unique_ptr<Message> message) = 0;
 	virtual bool ArePendingMessagesToSend() const = 0;
-	virtual Message* GetMessageToSend() = 0;
+	virtual std::unique_ptr<Message> GetMessageToSend() = 0;
 	virtual unsigned int GetSizeOfNextUnsentMessage() const = 0;
+	void AddSentMessage(std::unique_ptr<Message> message);
 	void FreeSentMessages();
 
 	virtual void AddReceivedMessage(std::unique_ptr<Message> message) = 0;

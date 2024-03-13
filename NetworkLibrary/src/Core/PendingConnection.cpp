@@ -1,5 +1,3 @@
-#include <memory>
-
 #include "PendingConnection.h"
 #include "Message.h"
 #include "MessageFactory.h"
@@ -51,9 +49,18 @@ bool PendingConnection::AddMessage(std::unique_ptr<Message> message)
 	return true;
 }
 
-Message* PendingConnection::GetAMessage()
+
+std::unique_ptr<Message> PendingConnection::GetAMessage()
 {
-	return _transmissionChannel->GetMessageToSend();
+	return std::move(_transmissionChannel->GetMessageToSend());
+}
+
+void PendingConnection::AddSentMessage(std::unique_ptr<Message> message)
+{
+	if (message != nullptr)
+	{
+		_transmissionChannel->AddSentMessage(std::move(message));
+	}
 }
 
 void PendingConnection::FreeSentMessages()

@@ -170,7 +170,7 @@ void Server::CreateConnectionChallengeMessage(const Address& address, int pendin
 {
 	MessageFactory& messageFactory = MessageFactory::GetInstance();
 
-	std::unique_ptr<Message>message = messageFactory.LendMessage(MessageType::ConnectionChallenge);
+	std::unique_ptr<Message> message = messageFactory.LendMessage(MessageType::ConnectionChallenge);
 	if (message == nullptr)
 	{
 		LOG_ERROR("Can't create new Connection Challenge Message because the MessageFactory has returned a null message");
@@ -189,16 +189,18 @@ void Server::SendConnectionDeniedPacket(const Address& address) const
 {
 	MessageFactory& messageFactory = MessageFactory::GetInstance();
 
-	std::unique_ptr<Message>message = messageFactory.LendMessage(MessageType::ConnectionDenied);
-	Message* m = message.release();
+	std::unique_ptr<Message> message = messageFactory.LendMessage(MessageType::ConnectionDenied);
 	NetworkPacket packet = NetworkPacket();
-	packet.AddMessage(m);
+	packet.AddMessage(std::move(message));
 
 	LOG_INFO("Sending connection denied...");
 	SendPacketToAddress(packet, address);
 
-	std::unique_ptr<Message>messageToReturn(m);
-	messageFactory.ReleaseMessage(std::move(messageToReturn));
+	while (packet.GetNumberOfMessages() > 0)
+	{
+		std::unique_ptr<Message> messageToReturn = packet.GetMessages();
+		messageFactory.ReleaseMessage(std::move(messageToReturn));
+	}
 }
 
 void Server::ProcessConnectionChallengeResponse(const ConnectionChallengeResponseMessage& message, const Address& address)

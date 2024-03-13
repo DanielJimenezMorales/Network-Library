@@ -21,7 +21,8 @@ public:
 
 	bool ArePendingMessages() const;
 	bool AddMessage(std::unique_ptr<Message> message);
-	Message* GetAMessage();
+	std::unique_ptr<Message> GetAMessage();
+	void AddSentMessage(std::unique_ptr<Message> message);
 	void FreeSentMessages();
 
 	uint64_t GetPrefix() const { return _clientSalt ^ _serverSalt; }
