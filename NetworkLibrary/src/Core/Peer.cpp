@@ -368,33 +368,49 @@ int Peer::GetRemotePeerIndexFromAddress(const Address& address) const
 
 void Peer::SendData()
 {
+	SendDataToPendingConnections();
+	SendDataToRemotePeers();
+}
+
+void Peer::SendDataToPendingConnections()
+{
 	for (unsigned int i = 0; i < _pendingConnections.size(); ++i)
 	{
-		//TODO make this a method like "SendPacketToPendingConnection" or something like that
-		if (!_pendingConnections[i].ArePendingMessages())
-		{
-			continue;
-		}
+		SendDataToPendingConnection(_pendingConnections[i]);
+	}
+}
 
-		NetworkPacket packet = NetworkPacket();
-		do
-		{
-			std::unique_ptr<Message> message = _pendingConnections[i].GetAMessage();
-			packet.AddMessage(std::move(message));
-		} while (_pendingConnections[i].ArePendingMessages());
-
-		SendPacketToAddress(packet, _pendingConnections[i].GetAddress());
-
-		//Send messages ownership back to pending connection
-		while (packet.GetNumberOfMessages() > 0)
-		{
-			std::unique_ptr<Message> message = packet.GetMessages();
-			_pendingConnections[i].AddSentMessage(std::move(message));
-		}
-
-		_pendingConnections[i].FreeSentMessages();
+void Peer::SendDataToPendingConnection(PendingConnection& pendingConnection)
+{
+	if (!pendingConnection.ArePendingMessages())
+	{
+		return;
 	}
 
+	//Create and populate packet
+	NetworkPacket packet = NetworkPacket();
+	do
+	{
+		std::unique_ptr<Message> message = pendingConnection.GetAMessage();
+		packet.AddMessage(std::move(message));
+	} while (pendingConnection.ArePendingMessages());
+
+	//Send packet
+	SendPacketToAddress(packet, pendingConnection.GetAddress());
+
+	//Send messages ownership back to pending connection
+	while (packet.GetNumberOfMessages() > 0)
+	{
+		std::unique_ptr<Message> message = packet.GetMessages();
+		pendingConnection.AddSentMessage(std::move(message));
+	}
+	
+	//Release sent messages
+	pendingConnection.FreeSentMessages();
+}
+
+void Peer::SendDataToRemotePeers()
+{
 	for (unsigned int i = 0; i < _remotePeerSlots.size(); ++i)
 	{
 		if (!_remotePeerSlots[i])
@@ -402,10 +418,22 @@ void Peer::SendData()
 			continue;
 		}
 
-		//TODO Refactor this spaguetti code. Create a method to get all the possible channel types and encapsulate that on a new method called "SendPacketsToRemotePeer" for example
-		SendPacketToRemotePeer(_remotePeers[i], TransmissionChannelType::UnreliableUnordered);
-		SendPacketToRemotePeer(_remotePeers[i], TransmissionChannelType::ReliableOrdered);
+		SendDataToRemotePeer(_remotePeers[i]);
 	}
+}
+
+void Peer::SendDataToRemotePeer(RemotePeer& remotePeer)
+{
+	//Send one packet per Remote peer transmission channel
+	std::vector<TransmissionChannelType> channelTypes = remotePeer.GetAvailableTransmissionChannelTypes();
+	std::vector<TransmissionChannelType>::const_iterator cit = channelTypes.cbegin();
+	for (cit; cit != channelTypes.cend(); ++cit)
+	{
+		TransmissionChannelType channelType = *cit;
+		SendPacketToRemotePeer(remotePeer, channelType);
+	}
+
+	remotePeer.FreeSentMessages();
 }
 
 void Peer::SendPacketToRemotePeer(RemotePeer& remotePeer, TransmissionChannelType type)
@@ -461,9 +489,6 @@ void Peer::SendPacketToRemotePeer(RemotePeer& remotePeer, TransmissionChannelTyp
 		std::unique_ptr<Message> message = packet.GetMessages();
 		remotePeer.AddSentMessage(std::move(message), type);
 	}
-
-	//TODO Make this to execute only once per tick and not per channel packet transmission
-	remotePeer.FreeSentMessages();
 }
 
 void Peer::SendDataToAddress(const Buffer& buffer, const Address& address) const
