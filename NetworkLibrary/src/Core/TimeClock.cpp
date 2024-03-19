@@ -24,14 +24,27 @@ void TimeClock::DeleteInstance()
 	}
 }
 
-uint64_t TimeClock::GetElapsedTimeInMilliseconds() const
+uint64_t TimeClock::GetElapsedTimeSinceStartMilliseconds() const
 {
 	auto currentTime = std::chrono::steady_clock::now();
-	auto duration = currentTime - _startTime;
-	uint64_t durationInMilliseconds = std::chrono::duration_cast<std::chrono::milliseconds>(duration).count();
-	return durationInMilliseconds;
+	std::chrono::duration<long long, std::milli> duration = std::chrono::round<std::chrono::milliseconds>(currentTime - _startTime);
+	return duration.count();
 }
 
-TimeClock::TimeClock() : _startTime(std::chrono::steady_clock::now())
+double TimeClock::GetElapsedTimeSeconds() const
+{
+	std::chrono::duration<double> elapsedTimeSeconds = _elapsedTimeNanoseconds;
+	return elapsedTimeSeconds.count();
+}
+
+void TimeClock::UpdateLocalTime()
+{
+	std::chrono::time_point<std::chrono::steady_clock> current = std::chrono::steady_clock::now();
+	_elapsedTimeNanoseconds = std::chrono::round<std::chrono::nanoseconds>(current - _lastTimeUpdate);
+
+	_lastTimeUpdate = current;
+}
+
+TimeClock::TimeClock() : _startTime(std::chrono::steady_clock::now()), _lastTimeUpdate(std::chrono::steady_clock::now())
 {
 }

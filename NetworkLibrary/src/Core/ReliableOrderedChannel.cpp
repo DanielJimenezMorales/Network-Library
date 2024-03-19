@@ -252,7 +252,7 @@ int ReliableOrderedChannel::GetNextUnackedMessageIndexToResend() const
 void ReliableOrderedChannel::AddUnackedReliableMessage(std::unique_ptr<Message> message)
 {
 	const TimeClock& timeClock = TimeClock::GetInstance();
-	_unackedMessagesSendTimes[message->GetHeader().messageSequenceNumber] = timeClock.GetElapsedTimeInMilliseconds();
+	_unackedMessagesSendTimes[message->GetHeader().messageSequenceNumber] = timeClock.GetElapsedTimeSinceStartMilliseconds();
 
 	_unackedReliableMessages.push_back(std::move(message));
 	std::stringstream ss;
@@ -335,7 +335,7 @@ bool ReliableOrderedChannel::TryRemoveUnackedReliableMessageFromSequence(uint16_
 
 		//Calculate RTT of acked message
 		const TimeClock& timeClock = TimeClock::GetInstance();
-		uint64_t currentElapsedTime = timeClock.GetElapsedTimeInMilliseconds();
+		uint64_t currentElapsedTime = timeClock.GetElapsedTimeSinceStartMilliseconds();
 		uint16_t messageRTT = currentElapsedTime - _unackedMessagesSendTimes[sequence];
 		std::unordered_map<uint16_t, uint16_t>::iterator it = _unackedMessagesSendTimes.find(sequence);
 		_unackedMessagesSendTimes.erase(it);
@@ -409,7 +409,7 @@ void ReliableOrderedChannel::UpdateRTT()
 		}
 		else
 		{
-			_rttMilliseconds = AlgorithmUtils::ExponentialMovingAverage(_rttMilliseconds, messageRTTValue, 20);
+			_rttMilliseconds = AlgorithmUtils::ExponentialMovingAverage(_rttMilliseconds, messageRTTValue, 10);
 		}
 	}
 

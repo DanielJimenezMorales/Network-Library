@@ -3,6 +3,7 @@
 
 #include <iostream>
 #include <chrono>
+#include <sstream>
 
 #include "Server.h"
 #include "Client.h"
@@ -49,17 +50,13 @@ int main()
     }
 
     //GAMELOOP BEGIN
-    double time = 0.0;
-    std::chrono::steady_clock::time_point lastTime = std::chrono::steady_clock::now();
-    double elapsedTime = 0.0;
+    TimeClock& timeClock = TimeClock::GetInstance();
     double accumulator = 0.0;
 
     while (isRunning)
     {
-        std::chrono::steady_clock::time_point current = std::chrono::steady_clock::now();
-        std::chrono::duration<double> elapsedTimeInSeconds = current - lastTime;
-        time += elapsedTimeInSeconds.count();
-        accumulator += elapsedTimeInSeconds.count();
+        timeClock.UpdateLocalTime();
+        accumulator += timeClock.GetElapsedTimeSeconds();
 
         //game.HandleEvents();
 
@@ -69,8 +66,6 @@ int main()
 
             accumulator -= FIXED_FRAME_TARGET_DURATION;
         }
-
-        lastTime = current;
     }
     //GAMELOOP END
 
