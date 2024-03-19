@@ -116,6 +116,46 @@ uint32_t DisconnectionMessage::Size() const
 	return MessageHeader::Size() + sizeof(uint64_t);
 }
 
+void TimeRequestMessage::Write(Buffer& buffer) const
+{
+	_header.Write(buffer);
+	buffer.WriteInteger(remoteTime);
+}
+
+void TimeRequestMessage::Read(Buffer& buffer)
+{
+	_header.type = MessageType::TimeRequest;
+	_header.ReadWithoutHeader(buffer);
+
+	remoteTime = buffer.ReadInteger();
+}
+
+uint32_t TimeRequestMessage::Size() const
+{
+	return MessageHeader::Size() + sizeof(uint32_t);
+}
+
+void TimeResponseMessage::Write(Buffer& buffer) const
+{
+	_header.Write(buffer);
+	buffer.WriteInteger(remoteTime);
+	buffer.WriteInteger(serverTime);
+}
+
+void TimeResponseMessage::Read(Buffer& buffer)
+{
+	_header.type = MessageType::TimeResponse;
+	_header.ReadWithoutHeader(buffer);
+
+	remoteTime = buffer.ReadInteger();
+	serverTime = buffer.ReadInteger();
+}
+
+uint32_t TimeResponseMessage::Size() const
+{
+	return MessageHeader::Size() + (2 * sizeof(uint32_t));
+}
+
 void InGameMessage::Write(Buffer& buffer) const
 {
 	_header.Write(buffer);
