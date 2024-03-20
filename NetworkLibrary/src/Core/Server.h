@@ -8,6 +8,7 @@
 class PendingConnection;
 class ConnectionRequestMessage;
 class ConnectionChallengeResponseMessage;
+class TimeRequestMessage;
 class InGameMessage;
 
 class Server : public Peer
@@ -32,6 +33,7 @@ private:
 
 	void ProcessConnectionRequest(const ConnectionRequestMessage& message, const Address& address);
 	void ProcessConnectionChallengeResponse(const ConnectionChallengeResponseMessage& message, const Address& address);
+	void ProcessTimeRequest(const TimeRequestMessage& message, const Address& address);
 	void ProcessInGame(const InGameMessage& message, const Address& address);
 
 	/// <summary>

@@ -3,7 +3,7 @@
 #include "TransmissionChannel.h"
 #include "MessageFactory.h"
 
-TransmissionChannel::TransmissionChannel(TransmissionChannelType type) : _type(type), _nextMessageSequenceNumber(0)
+TransmissionChannel::TransmissionChannel(TransmissionChannelType type) : _type(type), _nextMessageSequenceNumber(1)
 {
 	_unsentMessages.reserve(5);
 }
@@ -67,7 +67,7 @@ void TransmissionChannel::FreeProcessedMessages()
 void TransmissionChannel::Reset()
 {
 	ClearMessages();
-	_nextMessageSequenceNumber = 0;
+	_nextMessageSequenceNumber = 1;
 }
 
 TransmissionChannel::~TransmissionChannel()

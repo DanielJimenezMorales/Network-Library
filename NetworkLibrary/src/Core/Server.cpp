@@ -8,6 +8,7 @@
 #include "Message.h"
 #include "PendingConnection.h"
 #include "MessageFactory.h"
+#include "TimeClock.h"
 
 #define SERVER_PORT 54000
 
@@ -64,6 +65,12 @@ void Server::ProcessMessage(const Message& message, const Address& address)
 	{
 		const ConnectionChallengeResponseMessage& connectionChallengeResponseMessage = static_cast<const ConnectionChallengeResponseMessage&>(message);
 		ProcessConnectionChallengeResponse(connectionChallengeResponseMessage, address);
+		break;
+	}
+	case MessageType::TimeRequest:
+	{
+		const TimeRequestMessage& timeRequestMessage = static_cast<const TimeRequestMessage&>(message);
+		ProcessTimeRequest(timeRequestMessage, address);
 		break;
 	}
 	case MessageType::InGame:
@@ -262,6 +269,24 @@ void Server::ProcessConnectionChallengeResponse(const ConnectionChallengeRespons
 	{
 		SendConnectionDeniedPacket(address);
 	}
+}
+
+//REFACTOR THIS METHOD
+void Server::ProcessTimeRequest(const TimeRequestMessage& message, const Address& address)
+{
+	LOG_INFO("PROCESSING TIME REQUEST");
+	MessageFactory& messageFactory = MessageFactory::GetInstance();
+	std::unique_ptr<Message> timeResponseMessage(messageFactory.LendMessage(MessageType::TimeResponse));
+
+	std::unique_ptr<TimeResponseMessage> timeResponse(static_cast<TimeResponseMessage*>(timeResponseMessage.release()));
+	timeResponse->remoteTime = message.remoteTime;
+
+	TimeClock& timeClock = TimeClock::GetInstance();
+	timeResponse->serverTime = timeClock.GetElapsedTimeSinceStartMilliseconds();
+
+	//Find remote client
+	RemotePeer* remoteClient = GetRemotePeerFromAddress(address);
+	remoteClient->AddMessage(std::move(timeResponse));
 }
 
 void Server::ProcessInGame(const InGameMessage& message, const Address& address)

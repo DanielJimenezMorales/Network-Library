@@ -113,6 +113,12 @@ void MessageFactory::InitializePools()
     _messagePools[MessageType::Disconnection] = std::queue<std::unique_ptr<Message>>();
     InitializePool(_messagePools[MessageType::Disconnection], MessageType::Disconnection);
 
+    _messagePools[MessageType::TimeRequest] = std::queue<std::unique_ptr<Message>>();
+    InitializePool(_messagePools[MessageType::TimeRequest], MessageType::TimeRequest);
+
+    _messagePools[MessageType::TimeResponse] = std::queue<std::unique_ptr<Message>>();
+    InitializePool(_messagePools[MessageType::TimeResponse], MessageType::TimeResponse);
+
     _messagePools[MessageType::InGame] = std::queue<std::unique_ptr<Message>>();
     InitializePool(_messagePools[MessageType::InGame], MessageType::InGame);
 
@@ -168,6 +174,12 @@ std::unique_ptr<Message> MessageFactory::CreateMessage(MessageType messageType)
         break;
     case MessageType::Disconnection:
         resultMessage = std::make_unique<DisconnectionMessage>();
+        break;
+    case MessageType::TimeRequest:
+        resultMessage = std::make_unique<TimeRequestMessage>();
+        break;
+    case MessageType::TimeResponse:
+        resultMessage = std::make_unique<TimeResponseMessage>();
         break;
     case MessageType::InGame:
         resultMessage = std::make_unique<InGameMessage>();

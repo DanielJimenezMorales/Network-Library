@@ -11,7 +11,7 @@
 
 ReliableOrderedChannel::ReliableOrderedChannel() : TransmissionChannel(TransmissionChannelType::ReliableOrdered),
 _lastMessageSequenceNumberAcked(0),
-_nextOrderedMessageSequenceNumber(0),
+_nextOrderedMessageSequenceNumber(1),
 _reliableMessageEntriesBufferSize(1024),
 _areUnsentACKs(false),
 _rttMilliseconds(0)
@@ -549,7 +549,7 @@ void ReliableOrderedChannel::Reset()
 	TransmissionChannel::Reset();
 	ClearMessages();
 	_lastMessageSequenceNumberAcked = 0;
-	_nextOrderedMessageSequenceNumber = 0;
+	_nextOrderedMessageSequenceNumber = 1;
 	_areUnsentACKs = false;
 
 	for (unsigned int i = 0; i < _reliableMessageEntriesBufferSize; ++i)

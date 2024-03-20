@@ -11,6 +11,7 @@ class ConnectionChallengeMessage;
 class ConnectionAcceptedMessage;
 class ConnectionDeniedMessage;
 class DisconnectionMessage;
+class TimeResponseMessage;
 class InGameResponseMessage;
 
 enum ClientState
@@ -44,6 +45,7 @@ private:
 	void ProcessConnectionRequestAccepted(const ConnectionAcceptedMessage& message);
 	void ProcessConnectionRequestDenied(const ConnectionDeniedMessage& message);
 	void ProcessDisconnection(const DisconnectionMessage& message);
+	void ProcessTimeResponse(const TimeResponseMessage& message);
 	void ProcessInGameResponse(const InGameResponseMessage& message);
 
 	void CreateConnectionRequestMessage();

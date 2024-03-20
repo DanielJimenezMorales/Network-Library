@@ -1,4 +1,5 @@
 #include <memory>
+#include <sstream>
 
 #include "UnreliableOrderedTransmissionChannel.h"
 #include "MessageFactory.h"
@@ -66,6 +67,15 @@ void UnreliableOrderedTransmissionChannel::AddReceivedMessage(std::unique_ptr<Me
 {
 	if (!IsSequenceNumberNewerThanLastReceived(message->GetHeader().messageSequenceNumber))
 	{
+		std::stringstream ss;
+		ss << "Time req seq num: " << message->GetHeader().messageSequenceNumber << "last: " << _lastMessageSequenceNumberReceived;
+		LOG_INFO(ss.str());
+		if (message->GetHeader().type == MessageType::TimeRequest)
+		{
+			std::stringstream ss;
+			ss << "Time req seq num: " << message->GetHeader().messageSequenceNumber << "last: " << _lastMessageSequenceNumberReceived;
+			LOG_INFO(ss.str());
+		}
 		MessageFactory& messageFactory = MessageFactory::GetInstance();
 		messageFactory.ReleaseMessage(std::move(message));
 		return;

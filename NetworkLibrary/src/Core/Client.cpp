@@ -8,6 +8,7 @@
 #include "MessageFactory.h"
 #include "RemotePeer.h"
 #include "PendingConnection.h"
+#include "TimeClock.h"
 
 Client::Client(float serverMaxInactivityTimeout) : Peer(PeerType::ClientMode, 1, 1024, 1024),
 			_serverMaxInactivityTimeout(serverMaxInactivityTimeout),
@@ -99,6 +100,13 @@ void Client::ProcessMessage(const Message& message, const Address& address)
 			ProcessDisconnection(disconnectionMessage);
 		}
 		break;
+	case MessageType::TimeResponse:
+		if (_currentState == ClientState::Connected)
+		{
+			const TimeResponseMessage& timeResponseMessage = static_cast<const TimeResponseMessage&>(message);
+			ProcessTimeResponse(timeResponseMessage);
+		}
+		break;
 	case MessageType::InGameResponse:
 		if (_currentState == ClientState::Connected)
 		{
@@ -184,6 +192,13 @@ void Client::ProcessConnectionRequestAccepted(const ConnectionAcceptedMessage& m
 	_clientIndex = message.clientIndexAssigned;
 	_currentState = ClientState::Connected;
 	LOG_INFO("Connection accepted!");
+
+	MessageFactory& messageFactory = MessageFactory::GetInstance();
+	std::unique_ptr<Message> lendMessage(messageFactory.LendMessage(MessageType::TimeRequest));
+	std::unique_ptr<TimeRequestMessage> timeRequestMessage(static_cast<TimeRequestMessage*>(lendMessage.release()));
+	TimeClock& timeClock = TimeClock::GetInstance();
+	timeRequestMessage->remoteTime = timeClock.GetElapsedTimeSinceStartMilliseconds();
+	_remotePeers[0].AddMessage(std::move(timeRequestMessage));
 }
 
 void Client::ProcessConnectionRequestDenied(const ConnectionDeniedMessage& message)
@@ -203,6 +218,11 @@ void Client::ProcessDisconnection(const DisconnectionMessage& message)
 
 	_currentState = ClientState::Disconnected();
 	LOG_INFO("Disconnection message received from server. Disconnecting...");
+}
+
+void Client::ProcessTimeResponse(const TimeResponseMessage& message)
+{
+	LOG_INFO("PROCESSING TIME RESPONSE");
 }
 
 void Client::ProcessInGameResponse(const InGameResponseMessage& message)
