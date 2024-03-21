@@ -123,8 +123,8 @@ void Server::ProcessConnectionRequest(const ConnectionRequestMessage& message, c
 	else if (isAbleToConnectResult == 1)//If the client is already connected just send a connection approved message
 	{
 		//int connectedClientIndex = FindExistingClientIndex(address);
-		RemotePeer* remoteClient = GetRemotePeerFromAddress(address);
-		CreateConnectionApprovedMessage(*remoteClient);
+		RemotePeer* remotePeer = GetRemotePeerFromAddress(address);
+		CreateConnectionApprovedMessage(*remotePeer);
 		LOG_INFO("The client is already connected, sending connection approved...");
 	}
 	else if (isAbleToConnectResult == -1)//If all the client slots are full deny the connection
@@ -134,7 +134,7 @@ void Server::ProcessConnectionRequest(const ConnectionRequestMessage& message, c
 	}
 }
 
-void Server::CreateDisconnectionMessage(RemotePeer& remoteClient)
+void Server::CreateDisconnectionMessage(RemotePeer& remotePeer)
 {
 	MessageFactory& messageFactory = MessageFactory::GetInstance();
 
@@ -147,13 +147,29 @@ void Server::CreateDisconnectionMessage(RemotePeer& remoteClient)
 
 	std::unique_ptr<DisconnectionMessage> disconnectionMessage(static_cast<DisconnectionMessage*>(message.release()));
 
-	disconnectionMessage->prefix = remoteClient.GetDataPrefix();
-	remoteClient.AddMessage(std::move(disconnectionMessage));
+	disconnectionMessage->prefix = remotePeer.GetDataPrefix();
+	remotePeer.AddMessage(std::move(disconnectionMessage));
 
 	LOG_INFO("Disconnection message created.");
 }
 
-void Server::CreateInGameResponseMessage(RemotePeer& remoteClient, uint64_t data)
+void Server::CreateTimeResponseMessage(RemotePeer& remotePeer, const TimeRequestMessage& timeRequest)
+{
+	MessageFactory& messageFactory = MessageFactory::GetInstance();
+	std::unique_ptr<Message> message(messageFactory.LendMessage(MessageType::TimeResponse));
+
+	std::unique_ptr<TimeResponseMessage> timeResponseMessage(static_cast<TimeResponseMessage*>(message.release()));
+	timeResponseMessage->SetOrdered(true);
+	timeResponseMessage->remoteTime = timeRequest.remoteTime;
+
+	TimeClock& timeClock = TimeClock::GetInstance();
+	timeResponseMessage->serverTime = timeClock.GetElapsedTimeSinceStartMilliseconds();
+
+	//Find remote client
+	remotePeer.AddMessage(std::move(timeResponseMessage));
+}
+
+void Server::CreateInGameResponseMessage(RemotePeer& remotePeer, uint64_t data)
 {
 	MessageFactory& messageFactory = MessageFactory::GetInstance();
 	std::unique_ptr<Message>message = messageFactory.LendMessage(MessageType::InGameResponse);
@@ -164,11 +180,12 @@ void Server::CreateInGameResponseMessage(RemotePeer& remoteClient, uint64_t data
 	}
 
 	message->SetReliability(true);
+	message->SetOrdered(true);
 
 	std::unique_ptr<InGameResponseMessage> inGameResponseMessage(static_cast<InGameResponseMessage*>(message.release()));
 
 	inGameResponseMessage->data = data;
-	remoteClient.AddMessage(std::move(inGameResponseMessage));
+	remotePeer.AddMessage(std::move(inGameResponseMessage));
 
 	LOG_INFO("In game response message created.");
 }
@@ -241,8 +258,8 @@ void Server::ProcessConnectionChallengeResponse(const ConnectionChallengeRespons
 		else
 		{
 			//Create remote client
-			int availableClientSlot = FindFreeRemoteClientSlot();
-			AddNewRemoteClient(availableClientSlot, address, dataPrefix);
+			int availableClientSlot = FindFreeRemotePeerSlot();
+			AddNewRemotePeer(availableClientSlot, address, dataPrefix);
 
 			//Delete pending connection since we have accepted
 			_pendingConnections.erase(_pendingConnections.begin() + pendingConnectionIndex);
@@ -255,15 +272,15 @@ void Server::ProcessConnectionChallengeResponse(const ConnectionChallengeRespons
 	else if (isAbleToConnectResult == 1)//If the client is already connected just send a connection approved message
 	{
 		//Find remote client
-		RemotePeer* remoteClient = GetRemotePeerFromAddress(address);
+		RemotePeer* remotePeer = GetRemotePeerFromAddress(address);
 
 		//Check if data prefix match
-		if (remoteClient->GetDataPrefix() != dataPrefix)
+		if (remotePeer->GetDataPrefix() != dataPrefix)
 		{
 			return;
 		}
 
-		CreateConnectionApprovedMessage(*remoteClient);
+		CreateConnectionApprovedMessage(*remotePeer);
 	}
 	else if (isAbleToConnectResult == -1)//If all the client slots are full deny the connection
 	{
@@ -275,18 +292,8 @@ void Server::ProcessConnectionChallengeResponse(const ConnectionChallengeRespons
 void Server::ProcessTimeRequest(const TimeRequestMessage& message, const Address& address)
 {
 	LOG_INFO("PROCESSING TIME REQUEST");
-	MessageFactory& messageFactory = MessageFactory::GetInstance();
-	std::unique_ptr<Message> timeResponseMessage(messageFactory.LendMessage(MessageType::TimeResponse));
-
-	std::unique_ptr<TimeResponseMessage> timeResponse(static_cast<TimeResponseMessage*>(timeResponseMessage.release()));
-	timeResponse->remoteTime = message.remoteTime;
-
-	TimeClock& timeClock = TimeClock::GetInstance();
-	timeResponse->serverTime = timeClock.GetElapsedTimeSinceStartMilliseconds();
-
-	//Find remote client
-	RemotePeer* remoteClient = GetRemotePeerFromAddress(address);
-	remoteClient->AddMessage(std::move(timeResponse));
+	RemotePeer* remotePeer = GetRemotePeerFromAddress(address);
+	CreateTimeResponseMessage(*remotePeer, message);
 }
 
 void Server::ProcessInGame(const InGameMessage& message, const Address& address)
@@ -308,7 +315,7 @@ int Server::IsClientAbleToConnect(const Address& address) const
 		return 1;
 	}
 
-	int availableClientSlot = FindFreeRemoteClientSlot();
+	int availableClientSlot = FindFreeRemotePeerSlot();
 	if (availableClientSlot == -1)
 	{
 		return -1;
@@ -317,14 +324,14 @@ int Server::IsClientAbleToConnect(const Address& address) const
 	return 0;
 }
 
-void Server::AddNewRemoteClient(int remoteClientSlotIndex, const Address& address, uint64_t dataPrefix)
+void Server::AddNewRemotePeer(int remotePeerSlotIndex, const Address& address, uint64_t dataPrefix)
 {
-	_remotePeerSlots[remoteClientSlotIndex] = true;
-	_remotePeers[remoteClientSlotIndex].Connect(address.GetInfo(), _nextAssignedRemoteClientID, REMOTE_CLIENT_INACTIVITY_TIME, dataPrefix);
-	++_nextAssignedRemoteClientID;
+	_remotePeerSlots[remotePeerSlotIndex] = true;
+	_remotePeers[remotePeerSlotIndex].Connect(address.GetInfo(), _nextAssignedRemotePeerID, REMOTE_CLIENT_INACTIVITY_TIME, dataPrefix);
+	++_nextAssignedRemotePeerID;
 }
 
-void Server::CreateConnectionApprovedMessage(RemotePeer& remoteClient)
+void Server::CreateConnectionApprovedMessage(RemotePeer& remotePeer)
 {
 	MessageFactory& messageFactory = MessageFactory::GetInstance();
 	std::unique_ptr<Message> message = messageFactory.LendMessage(MessageType::ConnectionAccepted);
@@ -335,14 +342,14 @@ void Server::CreateConnectionApprovedMessage(RemotePeer& remoteClient)
 	}
 	
 	std::unique_ptr<ConnectionAcceptedMessage> connectionAcceptedPacket(static_cast<ConnectionAcceptedMessage*>(message.release()));
-	connectionAcceptedPacket->prefix = remoteClient.GetDataPrefix();
-	connectionAcceptedPacket->clientIndexAssigned = remoteClient.GetClientIndex();
-	remoteClient.AddMessage(std::move(connectionAcceptedPacket));
+	connectionAcceptedPacket->prefix = remotePeer.GetDataPrefix();
+	connectionAcceptedPacket->clientIndexAssigned = remotePeer.GetClientIndex();
+	remotePeer.AddMessage(std::move(connectionAcceptedPacket));
 }
 
-void Server::SendPacketToRemoteClient(const RemotePeer& remoteClient, const NetworkPacket& packet) const
+void Server::SendPacketToRemotePeer(const RemotePeer& remotePeer, const NetworkPacket& packet) const
 {
-	SendPacketToAddress(packet, remoteClient.GetAddress());
+	SendPacketToAddress(packet, remotePeer.GetAddress());
 }
 
 void Server::DisconnectRemotePeerConcrete(RemotePeer& remotePeer)

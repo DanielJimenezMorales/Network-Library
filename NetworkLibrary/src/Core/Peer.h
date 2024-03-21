@@ -47,7 +47,7 @@ protected:
 
 	void SendPacketToAddress(const NetworkPacket& packet, const Address& address) const;
 	bool AddRemoteClient(const Address& addressInfo, uint16_t id, uint64_t dataPrefix);
-	int FindFreeRemoteClientSlot() const;
+	int FindFreeRemotePeerSlot() const;
 	RemotePeer* GetRemotePeerFromAddress(const Address& address);
 	bool IsRemotePeerAlreadyConnected(const Address& address) const;
 	PendingConnection* GetPendingConnectionFromAddress(const Address& address);

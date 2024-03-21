@@ -193,12 +193,7 @@ void Client::ProcessConnectionRequestAccepted(const ConnectionAcceptedMessage& m
 	_currentState = ClientState::Connected;
 	LOG_INFO("Connection accepted!");
 
-	MessageFactory& messageFactory = MessageFactory::GetInstance();
-	std::unique_ptr<Message> lendMessage(messageFactory.LendMessage(MessageType::TimeRequest));
-	std::unique_ptr<TimeRequestMessage> timeRequestMessage(static_cast<TimeRequestMessage*>(lendMessage.release()));
-	TimeClock& timeClock = TimeClock::GetInstance();
-	timeRequestMessage->remoteTime = timeClock.GetElapsedTimeSinceStartMilliseconds();
-	_remotePeers[0].AddMessage(std::move(timeRequestMessage));
+	CreateTimeRequestMessage();
 }
 
 void Client::ProcessConnectionRequestDenied(const ConnectionDeniedMessage& message)
@@ -268,6 +263,20 @@ void Client::CreateConnectionChallengeResponse()
 	_pendingConnections[0].AddMessage(std::move(connectionChallengeResponseMessage));
 }
 
+void Client::CreateTimeRequestMessage()
+{
+	MessageFactory& messageFactory = MessageFactory::GetInstance();
+	std::unique_ptr<Message> lendMessage(messageFactory.LendMessage(MessageType::TimeRequest));
+
+	std::unique_ptr<TimeRequestMessage> timeRequestMessage(static_cast<TimeRequestMessage*>(lendMessage.release()));
+
+	timeRequestMessage->SetOrdered(true);
+	TimeClock& timeClock = TimeClock::GetInstance();
+	timeRequestMessage->remoteTime = timeClock.GetElapsedTimeSinceStartMilliseconds();
+
+	_remotePeers[0].AddMessage(std::move(timeRequestMessage));
+}
+
 void Client::CreateInGameMessage()
 {
 	MessageFactory& messageFactory = MessageFactory::GetInstance();
@@ -279,6 +288,7 @@ void Client::CreateInGameMessage()
 	}
 
 	std::unique_ptr<InGameMessage> inGameMessage(static_cast<InGameMessage*>(message.release()));
+	inGameMessage->SetOrdered(true);
 	inGameMessage->data = inGameMessageID;
 	inGameMessageID++;
 	_remotePeers[0].AddMessage(std::move(inGameMessage));

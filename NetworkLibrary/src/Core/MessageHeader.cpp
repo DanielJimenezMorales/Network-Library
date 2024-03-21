@@ -13,6 +13,11 @@ void MessageHeader::Write(Buffer& buffer) const
 		BitwiseUtils::SetBitAtIndex(flags, 0);
 	}
 
+	if (isOrdered)
+	{
+		BitwiseUtils::SetBitAtIndex(flags, 1);
+	}
+
 	buffer.WriteByte(flags);
 }
 
@@ -27,4 +32,5 @@ void MessageHeader::ReadWithoutHeader(Buffer& buffer)
 	messageSequenceNumber = buffer.ReadShort();
 	uint8_t flags = buffer.ReadByte();
 	isReliable = BitwiseUtils::GetBitAtIndex(flags, 0);
+	isOrdered = BitwiseUtils::GetBitAtIndex(flags, 1);
 }

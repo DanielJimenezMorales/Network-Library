@@ -50,6 +50,7 @@ private:
 
 	void CreateConnectionRequestMessage();
 	void CreateConnectionChallengeResponse();
+	void CreateTimeRequestMessage();
 	void CreateInGameMessage();
 
 	Address _serverAddress;

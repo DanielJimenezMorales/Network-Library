@@ -6,13 +6,16 @@
 #include "Message.h"
 #include "Logger.h"
 #include "UnreliableOrderedTransmissionChannel.h"
+#include "UnreliableUnorderedTransmissionChannel.h"
 #include "ReliableOrderedChannel.h"
 
 void RemotePeer::InitTransmissionChannels()
 {
-	TransmissionChannel* unreliableUnordered = new UnreliableOrderedTransmissionChannel();
+	TransmissionChannel* unreliableOrdered = new UnreliableOrderedTransmissionChannel();
+	TransmissionChannel* unreliableUnordered = new UnreliableUnorderedTransmissionChannel();
 	TransmissionChannel* reliableOrdered = new ReliableOrderedChannel();
 
+	_transmissionChannels.push_back(unreliableOrdered);
 	_transmissionChannels.push_back(unreliableUnordered);
 	_transmissionChannels.push_back(reliableOrdered);
 }
@@ -141,11 +144,15 @@ TransmissionChannelType RemotePeer::GetTransmissionChannelTypeFromHeader(const M
 {
 	TransmissionChannelType result;
 
-	if (messageHeader.isReliable)
+	if (messageHeader.isReliable && messageHeader.isOrdered)
 	{
 		result = TransmissionChannelType::ReliableOrdered;
 	}
-	else
+	else if(!messageHeader.isReliable && messageHeader.isOrdered)
+	{
+		result = TransmissionChannelType::UnreliableOrdered;
+	}
+	else if (!messageHeader.isReliable && !messageHeader.isOrdered)
 	{
 		result = TransmissionChannelType::UnreliableUnordered;
 	}
