@@ -16,7 +16,9 @@ Client::Client(float serverMaxInactivityTimeout) : Peer(PeerType::ClientMode, 1,
 			_saltNumber(0),
 			_dataPrefix(0),
 			_serverAddress("127.0.0.1", 54000),
-			inGameMessageID(0)
+			inGameMessageID(0),
+			_timeSinceLastTimeRequest(0.0f),
+			_numberOfInitialTimeRequestBurstLeft(NUMBER_OF_INITIAL_TIME_REQUESTS_BURST)
 {
 }
 
@@ -141,6 +143,7 @@ void Client::TickConcrete(float elapsedTime)
 
 	if (_currentState == ClientState::Connected)
 	{
+		UpdateTimeRequestsElapsedTime(elapsedTime);
 		CreateInGameMessage();
 	}
 }
@@ -192,8 +195,6 @@ void Client::ProcessConnectionRequestAccepted(const ConnectionAcceptedMessage& m
 	_clientIndex = message.clientIndexAssigned;
 	_currentState = ClientState::Connected;
 	LOG_INFO("Connection accepted!");
-
-	CreateTimeRequestMessage();
 }
 
 void Client::ProcessConnectionRequestDenied(const ConnectionDeniedMessage& message)
@@ -218,6 +219,55 @@ void Client::ProcessDisconnection(const DisconnectionMessage& message)
 void Client::ProcessTimeResponse(const TimeResponseMessage& message)
 {
 	LOG_INFO("PROCESSING TIME RESPONSE");
+
+	//Add new RTT to buffer
+	TimeClock& timeClock = TimeClock::GetInstance();
+	unsigned int rtt = timeClock.GetLocalTimeMilliseconds() - message.remoteTime;
+	_timeRequestRTTs.push_back(rtt);
+
+	if (_timeRequestRTTs.size() == TIME_REQUEST_RTT_BUFFER_SIZE + 1)
+	{
+		_timeRequestRTTs.pop_front();
+	}
+
+	//Get RTT to adjust server's clock elapsed time
+	unsigned int meanRTT = 0;
+	if (_timeRequestRTTs.size() == TIME_REQUEST_RTT_BUFFER_SIZE)
+	{
+		//Sort RTTs and remove the smallest and biggest values (They are considered outliers!)
+		std::list<unsigned int> sortedTimeRequestRTTs = _timeRequestRTTs;
+		sortedTimeRequestRTTs.sort();
+
+		//Remove potential outliers
+		for (unsigned int i = 0; i < NUMBER_OF_RTTS_CONSIDERED_OUTLIERS_PER_SIDE; ++i)
+		{
+			sortedTimeRequestRTTs.pop_back();
+			sortedTimeRequestRTTs.pop_front();
+		}
+
+		std::list<unsigned int>::const_iterator cit = sortedTimeRequestRTTs.cbegin();
+		for (; cit != sortedTimeRequestRTTs.cend(); ++cit)
+		{
+			meanRTT += *cit;
+		}
+
+		const unsigned int NUMBER_OF_VALID_RTT_TO_AVERAGE = TIME_REQUEST_RTT_BUFFER_SIZE - (2 * NUMBER_OF_RTTS_CONSIDERED_OUTLIERS_PER_SIDE);
+
+		meanRTT /= NUMBER_OF_VALID_RTT_TO_AVERAGE;
+	}
+	else
+	{
+		meanRTT = rtt;
+	}
+
+	//Calculate server clock delta time
+	unsigned int serverClockElapsedTimeMilliseconds = message.serverTime - message.remoteTime - (meanRTT / 2);
+	double serverClockElapsedTimeSeconds = static_cast<double>(serverClockElapsedTimeMilliseconds) / 1000;
+	timeClock.SetServerClockTimeDelta(serverClockElapsedTimeSeconds);
+
+	std::stringstream ss;
+	ss << "SERVER TIME UPDATED. Local time: " << timeClock.GetLocalTimeSeconds() << "s, Server time: " << timeClock.GetServerTimeSeconds() << "s";
+	LOG_INFO(ss.str());
 }
 
 void Client::ProcessInGameResponse(const InGameResponseMessage& message)
@@ -265,6 +315,7 @@ void Client::CreateConnectionChallengeResponse()
 
 void Client::CreateTimeRequestMessage()
 {
+	LOG_INFO("TIME REQUEST CREATED");
 	MessageFactory& messageFactory = MessageFactory::GetInstance();
 	std::unique_ptr<Message> lendMessage(messageFactory.LendMessage(MessageType::TimeRequest));
 
@@ -272,7 +323,7 @@ void Client::CreateTimeRequestMessage()
 
 	timeRequestMessage->SetOrdered(true);
 	TimeClock& timeClock = TimeClock::GetInstance();
-	timeRequestMessage->remoteTime = timeClock.GetElapsedTimeSinceStartMilliseconds();
+	timeRequestMessage->remoteTime = timeClock.GetLocalTimeMilliseconds();
 
 	_remotePeers[0].AddMessage(std::move(timeRequestMessage));
 }
@@ -292,4 +343,21 @@ void Client::CreateInGameMessage()
 	inGameMessage->data = inGameMessageID;
 	inGameMessageID++;
 	_remotePeers[0].AddMessage(std::move(inGameMessage));
+}
+
+void Client::UpdateTimeRequestsElapsedTime(float elapsedTime)
+{
+	if (_numberOfInitialTimeRequestBurstLeft > 0)
+	{
+		--_numberOfInitialTimeRequestBurstLeft;
+		CreateTimeRequestMessage();
+		return;
+	}
+
+	_timeSinceLastTimeRequest += elapsedTime;
+	if (_timeSinceLastTimeRequest >= TIME_REQUESTS_FREQUENCY_SECONDS)
+	{
+		_timeSinceLastTimeRequest = 0;
+		CreateTimeRequestMessage();
+	}
 }

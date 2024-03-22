@@ -163,7 +163,7 @@ void Server::CreateTimeResponseMessage(RemotePeer& remotePeer, const TimeRequest
 	timeResponseMessage->remoteTime = timeRequest.remoteTime;
 
 	TimeClock& timeClock = TimeClock::GetInstance();
-	timeResponseMessage->serverTime = timeClock.GetElapsedTimeSinceStartMilliseconds();
+	timeResponseMessage->serverTime = timeClock.GetLocalTimeMilliseconds();
 
 	//Find remote client
 	remotePeer.AddMessage(std::move(timeResponseMessage));
