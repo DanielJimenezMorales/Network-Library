@@ -99,7 +99,7 @@ void Peer::SendPacketToAddress(const NetworkPacket& packet, const Address& addre
 
 bool Peer::AddRemoteClient(const Address& addressInfo, uint16_t id, uint64_t dataPrefix)
 {
-	int slotIndex = FindFreeRemoteClientSlot();
+	int slotIndex = FindFreeRemotePeerSlot();
 	if(slotIndex == -1)
 	{
 		return false;
@@ -110,7 +110,7 @@ bool Peer::AddRemoteClient(const Address& addressInfo, uint16_t id, uint64_t dat
 	return true;
 }
 
-int Peer::FindFreeRemoteClientSlot() const
+int Peer::FindFreeRemotePeerSlot() const
 {
 	for (int i = 0; i < _maxConnections; ++i)
 	{

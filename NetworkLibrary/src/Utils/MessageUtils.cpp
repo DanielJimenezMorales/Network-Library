@@ -32,6 +32,12 @@ std::unique_ptr<Message> MessageUtils::ReadMessage(Buffer& buffer)
 	case MessageType::Disconnection:
 		message = messageFactory.LendMessage(MessageType::Disconnection);
 		break;
+	case MessageType::TimeRequest:
+		message = messageFactory.LendMessage(MessageType::TimeRequest);
+		break;
+	case MessageType::TimeResponse:
+		message = messageFactory.LendMessage(MessageType::TimeResponse);
+		break;
 	case MessageType::InGame:
 		message = messageFactory.LendMessage(MessageType::InGame);
 		break;

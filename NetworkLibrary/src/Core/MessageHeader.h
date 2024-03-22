@@ -12,14 +12,16 @@ enum MessageType : uint8_t
 	ConnectionChallengeResponse = 4,
 	Disconnection = 5,
 	InGame = 6,
-	InGameResponse = 7
+	InGameResponse = 7,
+	TimeRequest = 8,
+	TimeResponse = 9
 };
 
 struct MessageHeader
 {
-	MessageHeader(MessageType messageType, uint16_t packetSequenceNumber, bool isReliable) : type(messageType), messageSequenceNumber(packetSequenceNumber), isReliable(isReliable) {}
+	MessageHeader(MessageType messageType, uint16_t packetSequenceNumber, bool isReliable, bool isOrdered) : type(messageType), messageSequenceNumber(packetSequenceNumber), isReliable(isReliable), isOrdered(isOrdered) {}
 
-	MessageHeader(const MessageHeader& other) : type(other.type), messageSequenceNumber(other.messageSequenceNumber), isReliable(other.isReliable) {}
+	MessageHeader(const MessageHeader& other) : type(other.type), messageSequenceNumber(other.messageSequenceNumber), isReliable(other.isReliable), isOrdered(other.isOrdered) {}
 
 	void Write(Buffer& buffer) const;
 	void Read(Buffer& buffer);
@@ -31,4 +33,5 @@ struct MessageHeader
 	MessageType type;
 	uint16_t messageSequenceNumber;
 	bool isReliable;
+	bool isOrdered;
 };

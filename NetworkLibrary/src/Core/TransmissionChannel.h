@@ -8,8 +8,9 @@ class MessageFactory;
 
 enum TransmissionChannelType : uint8_t
 {
-	UnreliableUnordered = 0,
-	ReliableOrdered = 1
+	UnreliableOrdered = 0,
+	ReliableOrdered = 1,
+	UnreliableUnordered = 2
 };
 
 class TransmissionChannel

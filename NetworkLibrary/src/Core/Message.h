@@ -8,6 +8,7 @@ public:
 	MessageHeader GetHeader() const { return _header; }
 	void SetHeaderPacketSequenceNumber(uint16_t packetSequenceNumber) { _header.messageSequenceNumber = packetSequenceNumber; }
 	void SetReliability(bool isReliable) { _header.isReliable = isReliable; };
+	void SetOrdered(bool isOrdered) { _header.isOrdered = isOrdered; }
 
 	virtual void Write(Buffer& buffer) const = 0;
 	//Read it without the message header type
@@ -17,7 +18,7 @@ public:
 	virtual ~Message() {};
 
 protected:
-	Message(MessageType messageType) : _header(messageType, 0, false) {};
+	Message(MessageType messageType) : _header(messageType, 0, false, false) {};
 
 	MessageHeader _header;
 };
@@ -104,6 +105,35 @@ public:
 	~DisconnectionMessage() override {};
 
 	uint64_t prefix;
+};
+
+class TimeRequestMessage : public Message
+{
+public:
+	TimeRequestMessage() : remoteTime(0), Message(MessageType::TimeRequest) {}
+
+	void Write(Buffer& buffer) const override;
+	void Read(Buffer& buffer) override;
+	uint32_t Size() const override;
+
+	~TimeRequestMessage() override {};
+
+	uint32_t remoteTime;
+};
+
+class TimeResponseMessage : public Message
+{
+public:
+	TimeResponseMessage() : remoteTime(0), serverTime(0), Message(MessageType::TimeResponse) {}
+
+	void Write(Buffer& buffer) const override;
+	void Read(Buffer& buffer) override;
+	uint32_t Size() const override;
+
+	~TimeResponseMessage() override {};
+
+	uint32_t remoteTime;
+	uint32_t serverTime;
 };
 
 class InGameMessage : public Message

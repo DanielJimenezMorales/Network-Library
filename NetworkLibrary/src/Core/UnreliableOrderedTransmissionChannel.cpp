@@ -2,10 +2,9 @@
 
 #include "UnreliableOrderedTransmissionChannel.h"
 #include "MessageFactory.h"
-#include "Logger.h"
 
 UnreliableOrderedTransmissionChannel::UnreliableOrderedTransmissionChannel() :
-	TransmissionChannel(TransmissionChannelType::UnreliableUnordered),
+	TransmissionChannel(TransmissionChannelType::UnreliableOrdered),
 	_lastMessageSequenceNumberReceived(0)
 {
 }

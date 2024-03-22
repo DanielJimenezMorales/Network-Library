@@ -8,6 +8,7 @@
 class PendingConnection;
 class ConnectionRequestMessage;
 class ConnectionChallengeResponseMessage;
+class TimeRequestMessage;
 class InGameMessage;
 
 class Server : public Peer
@@ -32,6 +33,7 @@ private:
 
 	void ProcessConnectionRequest(const ConnectionRequestMessage& message, const Address& address);
 	void ProcessConnectionChallengeResponse(const ConnectionChallengeResponseMessage& message, const Address& address);
+	void ProcessTimeRequest(const TimeRequestMessage& message, const Address& address);
 	void ProcessInGame(const InGameMessage& message, const Address& address);
 
 	/// <summary>
@@ -44,15 +46,16 @@ private:
 	/// -1 = Unable to connect, the server has reached its maximum connections.
 	/// </returns>
 	int IsClientAbleToConnect(const Address& address) const;
-	void AddNewRemoteClient(int remoteClientSlotIndex, const Address& address, uint64_t dataPrefix);
+	void AddNewRemotePeer(int remotePeerSlotIndex, const Address& address, uint64_t dataPrefix);
 
 	void CreateConnectionChallengeMessage(const Address& address, int pendingConnectionIndex);
-	void CreateConnectionApprovedMessage(RemotePeer& remoteClient);
-	void CreateDisconnectionMessage(RemotePeer& remoteClient);
-	void CreateInGameResponseMessage(RemotePeer& remoteClient, uint64_t data);
+	void CreateConnectionApprovedMessage(RemotePeer& remotePeer);
+	void CreateDisconnectionMessage(RemotePeer& remotePeer);
+	void CreateTimeResponseMessage(RemotePeer& remotePeer, const TimeRequestMessage& timeRequest);
+	void CreateInGameResponseMessage(RemotePeer& remotePeer, uint64_t data);
 	void SendConnectionDeniedPacket(const Address& address) const;
-	void SendPacketToRemoteClient(const RemotePeer& remoteClient, const NetworkPacket& packet) const;
+	void SendPacketToRemotePeer(const RemotePeer& remotePeer, const NetworkPacket& packet) const;
 
-	unsigned int _nextAssignedRemoteClientID = 1;
+	unsigned int _nextAssignedRemotePeerID = 1;
 };
 
