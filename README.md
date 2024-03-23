@@ -10,4 +10,4 @@ Features:
 3. Reliability:
    - Message level ACKs
    - Dynamic retransmission timeout based on connection's RTT
-4. Time sync (SOON)
+4. Time sync
