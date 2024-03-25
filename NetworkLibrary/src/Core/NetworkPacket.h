@@ -3,62 +3,65 @@
 #include <deque>
 #include <memory>
 
-class Buffer;
-class Message;
-
-struct NetworkPacketHeader
+namespace NetLib
 {
-	NetworkPacketHeader() : lastAckedSequenceNumber(0), ackBits(0), channelType(0) {}
-	NetworkPacketHeader(uint16_t ack, uint32_t ack_bits, uint8_t channel_type) : lastAckedSequenceNumber(ack), ackBits(ack_bits), channelType(channel_type){}
+	class Buffer;
+	class Message;
 
-	void Write(Buffer& buffer) const;
-	void Read(Buffer& buffer);
+	struct NetworkPacketHeader
+	{
+		NetworkPacketHeader() : lastAckedSequenceNumber(0), ackBits(0), channelType(0) {}
+		NetworkPacketHeader(uint16_t ack, uint32_t ack_bits, uint8_t channel_type) : lastAckedSequenceNumber(ack), ackBits(ack_bits), channelType(channel_type) {}
 
-	static uint32_t Size() { return sizeof(uint16_t) + sizeof(uint32_t) + sizeof(uint8_t); };
+		void Write(Buffer& buffer) const;
+		void Read(Buffer& buffer);
 
-	void SetACKs(uint32_t acks) { ackBits = acks; };
-	void SetHeaderLastAcked(uint16_t lastAckedMessage) { lastAckedSequenceNumber = lastAckedMessage; };
-	void SetChannelType(uint8_t type) { channelType = type; };
+		static uint32_t Size() { return sizeof(uint16_t) + sizeof(uint32_t) + sizeof(uint8_t); };
 
-	uint16_t lastAckedSequenceNumber;
-	uint32_t ackBits;
-	uint8_t channelType;
-};
+		void SetACKs(uint32_t acks) { ackBits = acks; };
+		void SetHeaderLastAcked(uint16_t lastAckedMessage) { lastAckedSequenceNumber = lastAckedMessage; };
+		void SetChannelType(uint8_t type) { channelType = type; };
 
-class NetworkPacket
-{
-public:
-	//NetworkPacket() : _defaultMTUSizeInBytes(1500) {};
-	NetworkPacket();
-	NetworkPacket(const NetworkPacket&) = delete;
-	NetworkPacket(NetworkPacket&& other) noexcept = default;
+		uint16_t lastAckedSequenceNumber;
+		uint32_t ackBits;
+		uint8_t channelType;
+	};
 
-	NetworkPacket& operator=(const NetworkPacket&) = delete;
-	NetworkPacket& operator=(NetworkPacket&& other) noexcept;
+	class NetworkPacket
+	{
+	public:
+		//NetworkPacket() : _defaultMTUSizeInBytes(1500) {};
+		NetworkPacket();
+		NetworkPacket(const NetworkPacket&) = delete;
+		NetworkPacket(NetworkPacket&& other) noexcept = default;
 
-	void Write(Buffer& buffer) const;
-	void Read(Buffer& buffer);
+		NetworkPacket& operator=(const NetworkPacket&) = delete;
+		NetworkPacket& operator=(NetworkPacket&& other) noexcept;
 
-	const NetworkPacketHeader& GetHeader() const { return _header; };
+		void Write(Buffer& buffer) const;
+		void Read(Buffer& buffer);
 
-	bool AddMessage(std::unique_ptr<Message> message);
-	std::unique_ptr<Message> GetMessages();
-	unsigned int GetNumberOfMessages() const { return _messages.size(); }
+		const NetworkPacketHeader& GetHeader() const { return _header; };
 
-	uint32_t Size() const;
-	unsigned int MaxSize() const { return _defaultMTUSizeInBytes; };
-	bool CanMessageFit(unsigned int sizeOfMessagesInBytes) const;
+		bool AddMessage(std::unique_ptr<Message> message);
+		std::unique_ptr<Message> GetMessages();
+		unsigned int GetNumberOfMessages() const { return _messages.size(); }
 
-	void SetHeaderACKs(uint32_t acks) { _header.SetACKs(acks); };
-	void SetHeaderLastAcked(uint16_t lastAckedMessage) { _header.SetHeaderLastAcked(lastAckedMessage); };
-	void SetHeaderChannelType(uint8_t channelType) { _header.SetChannelType(channelType); };
+		uint32_t Size() const;
+		unsigned int MaxSize() const { return _defaultMTUSizeInBytes; };
+		bool CanMessageFit(unsigned int sizeOfMessagesInBytes) const;
 
-	~NetworkPacket();
+		void SetHeaderACKs(uint32_t acks) { _header.SetACKs(acks); };
+		void SetHeaderLastAcked(uint16_t lastAckedMessage) { _header.SetHeaderLastAcked(lastAckedMessage); };
+		void SetHeaderChannelType(uint8_t channelType) { _header.SetChannelType(channelType); };
 
-private:
-	const unsigned int _defaultMTUSizeInBytes;
-	NetworkPacketHeader _header;
-	std::deque<std::unique_ptr<Message>> _messages;
+		~NetworkPacket();
 
-	void CleanMessages();
-};
+	private:
+		const unsigned int _defaultMTUSizeInBytes;
+		NetworkPacketHeader _header;
+		std::deque<std::unique_ptr<Message>> _messages;
+
+		void CleanMessages();
+	};
+}

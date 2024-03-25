@@ -29,28 +29,28 @@ int main()
     int clientOrServer;
     std::cin >> clientOrServer;
 
-    MessageFactory::CreateInstance(1);
-    TimeClock::CreateInstance();
+    NetLib::MessageFactory::CreateInstance(1);
+    NetLib::TimeClock::CreateInstance();
 
-    Peer* peer = nullptr;
+    NetLib::Peer* peer = nullptr;
 
     if (clientOrServer == 0)
     {
-        peer = new Server(2);
+        peer = new NetLib::Server(2);
     }
     else if (clientOrServer == 1)
     {
-        peer = new Client(5);
+        peer = new NetLib::Client(5);
     }
 
     bool result = peer->Start();
     if (!result)
     {
-        LOG_ERROR("Peer startup failed");
+        NetLib::LOG_ERROR("Peer startup failed");
     }
 
     //GAMELOOP BEGIN
-    TimeClock& timeClock = TimeClock::GetInstance();
+    NetLib::TimeClock& timeClock = NetLib::TimeClock::GetInstance();
     double accumulator = 0.0;
 
     while (isRunning)
@@ -72,14 +72,14 @@ int main()
     result = peer->Stop();
     if (!result)
     {
-        LOG_ERROR("Peer stop failed");
+        NetLib::LOG_ERROR("Peer stop failed");
     }
 
     delete peer;
     peer = nullptr;
 
-    MessageFactory::DeleteInstance();
-    TimeClock::DeleteInstance();
+    NetLib::MessageFactory::DeleteInstance();
+    NetLib::TimeClock::DeleteInstance();
 
     return EXIT_SUCCESS;
 }

@@ -14,35 +14,37 @@
 #define LOG_ERROR(message)
 #endif
 
-class Logger
+namespace NetLib
 {
-public:
-	static void Info(const std::string& message)
+	class Logger
 	{
-		Print("Info", message);
-	}
+	public:
+		static void Info(const std::string& message)
+		{
+			Print("Info", message);
+		}
 
-	static void Warning(const std::string& message)
-	{
-		Print("Warn", message);
-	}
+		static void Warning(const std::string& message)
+		{
+			Print("Warn", message);
+		}
 
-	static void Error(const std::string& message)
-	{
-		Print("Error", message);
-	}
+		static void Error(const std::string& message)
+		{
+			Print("Error", message);
+		}
 
-private:
-	static void Print(const std::string& prefix, const std::string& message)
-	{
-		std::time_t currentTime;
-		std::time(&currentTime);
-		std::tm timeInfo;
-		localtime_s(&timeInfo, &currentTime);
-		char timeBuffer[80];
-		std::strftime(timeBuffer, sizeof(timeBuffer), TIME_FORMAT, &timeInfo);
+	private:
+		static void Print(const std::string& prefix, const std::string& message)
+		{
+			std::time_t currentTime;
+			std::time(&currentTime);
+			std::tm timeInfo;
+			localtime_s(&timeInfo, &currentTime);
+			char timeBuffer[80];
+			std::strftime(timeBuffer, sizeof(timeBuffer), TIME_FORMAT, &timeInfo);
 
-		std::cout << "[" << timeBuffer << " | " << prefix << "]\t" << message << std::endl;
-	}
-};
-
+			std::cout << "[" << timeBuffer << " | " << prefix << "]\t" << message << std::endl;
+		}
+	};
+}

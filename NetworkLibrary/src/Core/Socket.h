@@ -3,36 +3,38 @@
 #include <winsock2.h>
 #include <ws2tcpip.h>
 
-class Address;
-
-enum SocketResult : uint8_t
+namespace NetLib
 {
-	ERR = 0,
-	SUCCESS = 1,
-	WOULDBLOCK = 2,
-	CONNRESET = 3
-};
+	class Address;
 
-class Socket
-{
-public:
-	Socket();
+	enum SocketResult : uint8_t
+	{
+		ERR = 0,
+		SUCCESS = 1,
+		WOULDBLOCK = 2,
+		CONNRESET = 3
+	};
 
-	SocketResult Start();
-	SocketResult Bind(const Address& address) const;
-	SocketResult ReceiveFrom(uint8_t* incomingDataBuffer, unsigned int incomingDataBufferSize, Address* remoteAddress, unsigned int& numberOfBytesRead) const;
-	SocketResult SendTo(const uint8_t* dataBuffer, unsigned int dataBufferSize, const Address& remoteAddress) const;
-	SocketResult Close();
+	class Socket
+	{
+	public:
+		Socket();
 
-	~Socket();
+		SocketResult Start();
+		SocketResult Bind(const Address& address) const;
+		SocketResult ReceiveFrom(uint8_t* incomingDataBuffer, unsigned int incomingDataBufferSize, Address* remoteAddress, unsigned int& numberOfBytesRead) const;
+		SocketResult SendTo(const uint8_t* dataBuffer, unsigned int dataBufferSize, const Address& remoteAddress) const;
+		SocketResult Close();
 
-private:
-	int GetLastError() const;
-	bool IsValid() const;
-	SocketResult SetBlockingMode(bool status);
-	SocketResult Create();
+		~Socket();
 
-	unsigned int _defaultMTUSize;
-	SOCKET _listenSocket;
-};
+	private:
+		int GetLastError() const;
+		bool IsValid() const;
+		SocketResult SetBlockingMode(bool status);
+		SocketResult Create();
 
+		unsigned int _defaultMTUSize;
+		SOCKET _listenSocket;
+	};
+}

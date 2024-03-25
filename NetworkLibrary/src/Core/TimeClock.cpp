@@ -3,72 +3,75 @@
 #include "TimeClock.h"
 #include "Logger.h"
 
-TimeClock* TimeClock::_instance = nullptr;
-
-void TimeClock::CreateInstance()
+namespace NetLib
 {
-	if (_instance == nullptr)
+	TimeClock* TimeClock::_instance = nullptr;
+
+	void TimeClock::CreateInstance()
 	{
-		_instance = new TimeClock();
+		if (_instance == nullptr)
+		{
+			_instance = new TimeClock();
+		}
 	}
-}
 
-TimeClock& TimeClock::GetInstance()
-{
-	return *_instance;
-}
-
-void TimeClock::DeleteInstance()
-{
-	if (_instance != nullptr)
+	TimeClock& TimeClock::GetInstance()
 	{
-		delete _instance;
-		_instance = nullptr;
+		return *_instance;
 	}
-}
 
-uint64_t TimeClock::GetLocalTimeMilliseconds() const
-{
-	auto currentTime = std::chrono::steady_clock::now();
-	std::chrono::duration<long long, std::milli> duration = std::chrono::round<std::chrono::milliseconds>(currentTime - _startTime);
-	return duration.count();
-}
+	void TimeClock::DeleteInstance()
+	{
+		if (_instance != nullptr)
+		{
+			delete _instance;
+			_instance = nullptr;
+		}
+	}
 
-double TimeClock::GetLocalTimeSeconds() const
-{
-	auto currentTime = std::chrono::steady_clock::now();
-	std::chrono::duration<double> duration = currentTime - _startTime;
-	return duration.count();
-}
+	uint64_t TimeClock::GetLocalTimeMilliseconds() const
+	{
+		auto currentTime = std::chrono::steady_clock::now();
+		std::chrono::duration<long long, std::milli> duration = std::chrono::round<std::chrono::milliseconds>(currentTime - _startTime);
+		return duration.count();
+	}
 
-double TimeClock::GetServerTimeSeconds() const
-{
-	return GetLocalTimeSeconds() + _serverClockTimeDeltaSeconds;
-}
+	double TimeClock::GetLocalTimeSeconds() const
+	{
+		auto currentTime = std::chrono::steady_clock::now();
+		std::chrono::duration<double> duration = currentTime - _startTime;
+		return duration.count();
+	}
 
-double TimeClock::GetElapsedTimeSeconds() const
-{
-	std::chrono::duration<double> elapsedTimeSeconds = _elapsedTimeNanoseconds;
-	return elapsedTimeSeconds.count();
-}
+	double TimeClock::GetServerTimeSeconds() const
+	{
+		return GetLocalTimeSeconds() + _serverClockTimeDeltaSeconds;
+	}
 
-void TimeClock::UpdateLocalTime()
-{
-	std::chrono::time_point<std::chrono::steady_clock> current = std::chrono::steady_clock::now();
-	_elapsedTimeNanoseconds = std::chrono::round<std::chrono::nanoseconds>(current - _lastTimeUpdate);
+	double TimeClock::GetElapsedTimeSeconds() const
+	{
+		std::chrono::duration<double> elapsedTimeSeconds = _elapsedTimeNanoseconds;
+		return elapsedTimeSeconds.count();
+	}
 
-	_lastTimeUpdate = current;
-}
+	void TimeClock::UpdateLocalTime()
+	{
+		std::chrono::time_point<std::chrono::steady_clock> current = std::chrono::steady_clock::now();
+		_elapsedTimeNanoseconds = std::chrono::round<std::chrono::nanoseconds>(current - _lastTimeUpdate);
 
-void TimeClock::SetServerClockTimeDelta(double newValue)
-{
-	std::stringstream ss;
-	ss << "Adjusting Server's clock time delta. Old value: " << _serverClockTimeDeltaSeconds << "s, New value: " << newValue << "s, Difference: " << _serverClockTimeDeltaSeconds - newValue << "s";
-	LOG_INFO(ss.str());
+		_lastTimeUpdate = current;
+	}
 
-	_serverClockTimeDeltaSeconds = newValue;
-}
+	void TimeClock::SetServerClockTimeDelta(double newValue)
+	{
+		std::stringstream ss;
+		ss << "Adjusting Server's clock time delta. Old value: " << _serverClockTimeDeltaSeconds << "s, New value: " << newValue << "s, Difference: " << _serverClockTimeDeltaSeconds - newValue << "s";
+		LOG_INFO(ss.str());
 
-TimeClock::TimeClock() : _startTime(std::chrono::steady_clock::now()), _lastTimeUpdate(std::chrono::steady_clock::now()), _serverClockTimeDeltaSeconds(0.0f)
-{
+		_serverClockTimeDeltaSeconds = newValue;
+	}
+
+	TimeClock::TimeClock() : _startTime(std::chrono::steady_clock::now()), _lastTimeUpdate(std::chrono::steady_clock::now()), _serverClockTimeDeltaSeconds(0.0f)
+	{
+	}
 }

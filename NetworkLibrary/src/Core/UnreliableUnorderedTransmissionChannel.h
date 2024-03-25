@@ -4,43 +4,45 @@
 #include "TransmissionChannel.h"
 #include "Message.h"
 
-class MessageFactory;
-
-class UnreliableUnorderedTransmissionChannel : public TransmissionChannel
+namespace NetLib
 {
-public:
-	UnreliableUnorderedTransmissionChannel();
-	UnreliableUnorderedTransmissionChannel(const UnreliableUnorderedTransmissionChannel&) = delete;
-	UnreliableUnorderedTransmissionChannel(UnreliableUnorderedTransmissionChannel&& other) noexcept;
+	class MessageFactory;
 
-	UnreliableUnorderedTransmissionChannel& operator=(const UnreliableUnorderedTransmissionChannel&) = delete;
-	UnreliableUnorderedTransmissionChannel& operator=(UnreliableUnorderedTransmissionChannel&& other) noexcept;
+	class UnreliableUnorderedTransmissionChannel : public TransmissionChannel
+	{
+	public:
+		UnreliableUnorderedTransmissionChannel();
+		UnreliableUnorderedTransmissionChannel(const UnreliableUnorderedTransmissionChannel&) = delete;
+		UnreliableUnorderedTransmissionChannel(UnreliableUnorderedTransmissionChannel&& other) noexcept;
 
-	void AddMessageToSend(std::unique_ptr<Message> message) override;
-	bool ArePendingMessagesToSend() const override;
-	std::unique_ptr<Message> GetMessageToSend() override;
-	unsigned int GetSizeOfNextUnsentMessage() const override;
+		UnreliableUnorderedTransmissionChannel& operator=(const UnreliableUnorderedTransmissionChannel&) = delete;
+		UnreliableUnorderedTransmissionChannel& operator=(UnreliableUnorderedTransmissionChannel&& other) noexcept;
 
-	void AddReceivedMessage(std::unique_ptr<Message> message) override;
-	bool ArePendingReadyToProcessMessages() const override;
-	const Message* GetReadyToProcessMessage() override;
+		void AddMessageToSend(std::unique_ptr<Message> message) override;
+		bool ArePendingMessagesToSend() const override;
+		std::unique_ptr<Message> GetMessageToSend() override;
+		unsigned int GetSizeOfNextUnsentMessage() const override;
 
-	void SeUnsentACKsToFalse() override;
-	bool AreUnsentACKs() const override;
-	uint32_t GenerateACKs() const override;
-	void ProcessACKs(uint32_t acks, uint16_t lastAckedMessageSequenceNumber) override;
-	bool IsMessageDuplicated(uint16_t messageSequenceNumber) const override;
+		void AddReceivedMessage(std::unique_ptr<Message> message) override;
+		bool ArePendingReadyToProcessMessages() const override;
+		const Message* GetReadyToProcessMessage() override;
 
-	void Update(float deltaTime) override;
+		void SeUnsentACKsToFalse() override;
+		bool AreUnsentACKs() const override;
+		uint32_t GenerateACKs() const override;
+		void ProcessACKs(uint32_t acks, uint16_t lastAckedMessageSequenceNumber) override;
+		bool IsMessageDuplicated(uint16_t messageSequenceNumber) const override;
 
-	uint16_t GetLastMessageSequenceNumberAcked() const override;
-	unsigned int GetRTTMilliseconds() const override;
+		void Update(float deltaTime) override;
 
-	~UnreliableUnorderedTransmissionChannel();
+		uint16_t GetLastMessageSequenceNumberAcked() const override;
+		unsigned int GetRTTMilliseconds() const override;
 
-protected:
-	void FreeSentMessage(MessageFactory& messageFactory, std::unique_ptr<Message> message) override;
+		~UnreliableUnorderedTransmissionChannel();
 
-private:
-};
+	protected:
+		void FreeSentMessage(MessageFactory& messageFactory, std::unique_ptr<Message> message) override;
 
+	private:
+	};
+}
