@@ -1,6 +1,4 @@
 #pragma once
-#include <winsock2.h>
-#include <ws2tcpip.h>
 #include <cstdint>
 #include <vector>
 #include <queue>
@@ -64,8 +62,6 @@ namespace NetLib
 		std::vector<RemotePeer> _remotePeers;
 
 	private:
-		bool InitializeSocketsLibrary();
-
 		void ProcessReceivedData();
 		void ProcessDatagram(Buffer& buffer, const Address& address);
 		void ProcessNewRemotePeerMessages();

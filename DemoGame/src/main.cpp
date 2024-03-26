@@ -8,7 +8,6 @@
 #include "Server.h"
 #include "Client.h"
 #include "Logger.h"
-#include "MessageFactory.h"
 #include "TimeClock.h"
 
 #define DEFAULT_IP "127.0.0.1"
@@ -29,7 +28,6 @@ int main()
     int clientOrServer;
     std::cin >> clientOrServer;
 
-    NetLib::MessageFactory::CreateInstance(1);
     NetLib::TimeClock::CreateInstance();
 
     NetLib::Peer* peer = nullptr;
@@ -78,7 +76,6 @@ int main()
     delete peer;
     peer = nullptr;
 
-    NetLib::MessageFactory::DeleteInstance();
     NetLib::TimeClock::DeleteInstance();
 
     return EXIT_SUCCESS;

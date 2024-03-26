@@ -11,6 +11,19 @@ namespace NetLib
 
 	}
 
+	SocketResult Socket::InitializeSocketsLibrary()
+	{
+		WSADATA wsaData;
+		int iResult = WSAStartup(MAKEWORD(2, 2), &wsaData);//Init WS. You need to pass it the version (1.0, 1.1, 2.2...) and a pointer to WSADATA which contains info about the WS impl.
+		if (iResult != 0)
+		{
+			LOG_ERROR("WSAStartup failed: " + iResult);
+			return SocketResult::ERR;
+		}
+
+		return SocketResult::SUCCESS;
+	}
+
 	int Socket::GetLastError() const
 	{
 		return WSAGetLastError();
@@ -89,12 +102,28 @@ namespace NetLib
 			return SocketResult::ERR;
 		}
 
+		iResult = WSACleanup();
+		if (iResult == SOCKET_ERROR)
+		{
+			std::stringstream ss;
+			ss << "Socket error. Error while closing the sockets library, error code " << GetLastError();
+			LOG_ERROR(ss.str());
+			return SocketResult::ERR;
+		}
+
 		return SocketResult::SUCCESS;
 	}
 
 	SocketResult Socket::Start()
 	{
 		SocketResult result = SocketResult::SUCCESS;
+
+		result = InitializeSocketsLibrary();
+		if (result != SocketResult::SUCCESS)
+		{
+			LOG_ERROR("Error while starting the sockets library, aborting operation...");
+			return result;
+		}
 
 		result = Create();
 		if (result != SocketResult::SUCCESS)

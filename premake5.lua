@@ -8,10 +8,11 @@ workspace "NetworkLibrary"
 	}
 
 project "NetworkLibrary"
-	kind "ConsoleApp"
+	kind "StaticLib"
 	location "NetworkLibrary"
 	language "C++"
-	targetdir "bin/%{cfg.buildcfg}"
+	targetdir "%{prj.name}/bin"
+	targetname "%{prj.name}_%{cfg.buildcfg}"
 
 	files
 	{
@@ -32,6 +33,48 @@ project "NetworkLibrary"
 		{
 			"Ws2_32"
 		}
+
+	filter "configurations:Debug"
+		defines
+		{
+			"LOG_ENABLED"
+		}
+		symbols "On"
+
+	filter "configurations:Release"
+		optimize "On"
+
+project "DemoGame"
+	kind "ConsoleApp"
+	location "DemoGame"
+	language "C++"
+	targetdir "%{prj.name}/bin"
+	targetname "%{prj.name}_%{cfg.buildcfg}"
+
+	files
+	{
+		"%{prj.name}/src/**.h",
+		"%{prj.name}/src/**.cpp"
+	}
+
+	includedirs
+	{
+		"%{prj.name}/src/",
+		"NetworkLibrary/src/Core/",
+		"NetworkLibrary/src/Utils/"
+	}
+
+	dependson {"NetworkLibrary"}
+
+	libdirs
+	{
+		"NetworkLibrary/bin"
+	}
+
+	links
+	{
+		"NetworkLibrary_%{cfg.buildcfg}"
+	}
 
 	filter "configurations:Debug"
 		defines

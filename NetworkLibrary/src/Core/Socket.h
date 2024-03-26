@@ -29,6 +29,7 @@ namespace NetLib
 		~Socket();
 
 	private:
+		SocketResult InitializeSocketsLibrary();
 		int GetLastError() const;
 		bool IsValid() const;
 		SocketResult SetBlockingMode(bool status);

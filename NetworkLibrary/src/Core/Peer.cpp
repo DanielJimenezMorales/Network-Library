@@ -13,12 +13,6 @@ namespace NetLib
 {
 	bool Peer::Start()
 	{
-		if (!InitializeSocketsLibrary())
-		{
-			LOG_ERROR("Error while starting peer, aborting operation...");
-			return false;
-		}
-
 		if (_socket.Start() != SocketResult::SUCCESS)
 		{
 			LOG_ERROR("Error while starting peer, aborting operation...");
@@ -30,6 +24,8 @@ namespace NetLib
 			LOG_ERROR("Error while starting peer, aborting operation...");
 			return false;
 		}
+
+		MessageFactory::CreateInstance(3);
 
 		return true;
 	}
@@ -52,7 +48,8 @@ namespace NetLib
 	{
 		StopConcrete();
 		_socket.Close();
-		WSACleanup();
+
+		MessageFactory::DeleteInstance();
 
 		return true;
 	}
@@ -196,19 +193,6 @@ namespace NetLib
 		SocketResult result = _socket.Bind(address);
 		if (result != SocketResult::SUCCESS)
 		{
-			return false;
-		}
-
-		return true;
-	}
-
-	bool Peer::InitializeSocketsLibrary()
-	{
-		WSADATA wsaData;
-		int iResult = WSAStartup(MAKEWORD(2, 2), &wsaData);//Init WS. You need to pass it the version (1.0, 1.1, 2.2...) and a pointer to WSADATA which contains info about the WS impl.
-		if (iResult != 0)
-		{
-			LOG_ERROR("WSAStartup failed: " + iResult);
 			return false;
 		}
 
