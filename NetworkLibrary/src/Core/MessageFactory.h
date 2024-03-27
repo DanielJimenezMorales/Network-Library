@@ -5,41 +5,43 @@
 
 #include "Message.h"
 
-class MessageFactory
+namespace NetLib
 {
-public:
-	static void CreateInstance(unsigned int size);
+	class MessageFactory
+	{
+	public:
+		static void CreateInstance(unsigned int size);
 
-	/// <summary>
-	/// Get unique instance. Before calling to this method, be sure to call CreateInstance(unsigned int size) or you will get an error.
-	/// </summary>
-	/// <returns></returns>
-	static MessageFactory& GetInstance();
+		/// <summary>
+		/// Get unique instance. Before calling to this method, be sure to call CreateInstance(unsigned int size) or you will get an error.
+		/// </summary>
+		/// <returns></returns>
+		static MessageFactory& GetInstance();
 
-	std::unique_ptr<Message> LendMessage(MessageType messageType);
-	void ReleaseMessage(std::unique_ptr<Message> message);
+		std::unique_ptr<Message> LendMessage(MessageType messageType);
+		void ReleaseMessage(std::unique_ptr<Message> message);
 
-	static void DeleteInstance();
+		static void DeleteInstance();
 
-private:
-	MessageFactory(unsigned int size);
-	MessageFactory(const MessageFactory&) = delete;
+	private:
+		MessageFactory(unsigned int size);
+		MessageFactory(const MessageFactory&) = delete;
 
-	MessageFactory& operator=(const MessageFactory&) = delete;
+		MessageFactory& operator=(const MessageFactory&) = delete;
 
-	void InitializePools();
-	void InitializePool(std::queue<std::unique_ptr<Message>>& pool, MessageType messageType);
-	std::queue<std::unique_ptr<Message>>* GetPoolFromType(MessageType messageType);
-	std::unique_ptr<Message> CreateMessage(MessageType messageType);
-	void ReleasePool(std::queue<std::unique_ptr<Message>>& pool);
+		void InitializePools();
+		void InitializePool(std::queue<std::unique_ptr<Message>>& pool, MessageType messageType);
+		std::queue<std::unique_ptr<Message>>* GetPoolFromType(MessageType messageType);
+		std::unique_ptr<Message> CreateMessage(MessageType messageType);
+		void ReleasePool(std::queue<std::unique_ptr<Message>>& pool);
 
-	~MessageFactory();
+		~MessageFactory();
 
-	static MessageFactory* _instance;
+		static MessageFactory* _instance;
 
-	bool _isInitialized;
-	unsigned int _initialSize;
+		bool _isInitialized;
+		unsigned int _initialSize;
 
-	std::unordered_map<MessageType, std::queue<std::unique_ptr<Message>>> _messagePools;
-};
-
+		std::unordered_map<MessageType, std::queue<std::unique_ptr<Message>>> _messagePools;
+	};
+}

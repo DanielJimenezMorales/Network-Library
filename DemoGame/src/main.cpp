@@ -8,7 +8,6 @@
 #include "Server.h"
 #include "Client.h"
 #include "Logger.h"
-#include "MessageFactory.h"
 #include "TimeClock.h"
 
 #define DEFAULT_IP "127.0.0.1"
@@ -20,6 +19,20 @@ const float FIXED_FRAME_TARGET_DURATION = 1.0f / FIXED_FRAMES_PER_SECOND;
 bool isRunning = true;
 
 //TODO Add a maximum size to each packet and add as many messages as possible until reaching the max size
+class DelegateSubscriber
+{
+public:
+    void OnPeerConnectedConsequences()
+    {
+        Common::LOG_INFO("ON PEER SUCCESFULLY CONNECTED!");
+    }
+
+    void Subscribe(NetLib::Peer& peer)
+    {
+        auto callback = std::bind(&DelegateSubscriber::OnPeerConnectedConsequences, this);
+        peer.SubscribeToOnPeerConnected(callback);
+    }
+};
 
 //#pragma comment(lib, "Ws2_32.lib") //Added to Properties/Linker/Input/Additional Dependencies
 int main()
@@ -29,28 +42,33 @@ int main()
     int clientOrServer;
     std::cin >> clientOrServer;
 
-    MessageFactory::CreateInstance(1);
-    TimeClock::CreateInstance();
+    NetLib::TimeClock::CreateInstance();
 
-    Peer* peer = nullptr;
+    NetLib::Peer* peer = nullptr;
 
     if (clientOrServer == 0)
     {
-        peer = new Server(2);
+        peer = new NetLib::Server(2);
     }
     else if (clientOrServer == 1)
     {
-        peer = new Client(5);
+        peer = new NetLib::Client(5);
+    }
+
+    if (peer != nullptr)
+    {
+        DelegateSubscriber subscriber;
+        subscriber.Subscribe(*peer);
     }
 
     bool result = peer->Start();
     if (!result)
     {
-        LOG_ERROR("Peer startup failed");
+        Common::LOG_ERROR("Peer startup failed");
     }
 
     //GAMELOOP BEGIN
-    TimeClock& timeClock = TimeClock::GetInstance();
+    NetLib::TimeClock& timeClock = NetLib::TimeClock::GetInstance();
     double accumulator = 0.0;
 
     while (isRunning)
@@ -72,14 +90,13 @@ int main()
     result = peer->Stop();
     if (!result)
     {
-        LOG_ERROR("Peer stop failed");
+        Common::LOG_ERROR("Peer stop failed");
     }
 
     delete peer;
     peer = nullptr;
 
-    MessageFactory::DeleteInstance();
-    TimeClock::DeleteInstance();
+    NetLib::TimeClock::DeleteInstance();
 
     return EXIT_SUCCESS;
 }

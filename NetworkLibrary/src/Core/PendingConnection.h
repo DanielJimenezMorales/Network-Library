@@ -7,39 +7,42 @@
 #include "Address.h"
 #include "TransmissionChannel.h"
 
-class Message;
-
-class PendingConnection
+namespace NetLib
 {
-public:
-	PendingConnection(const Address& addr);
-	PendingConnection(const PendingConnection&) = delete;
-	PendingConnection(PendingConnection&& other) noexcept;
+	class Message;
 
-	PendingConnection& operator=(const PendingConnection&) = delete;
-	PendingConnection& operator=(PendingConnection&& other) noexcept;
+	class PendingConnection
+	{
+	public:
+		PendingConnection(const Address& addr);
+		PendingConnection(const PendingConnection&) = delete;
+		PendingConnection(PendingConnection&& other) noexcept;
 
-	bool ArePendingMessages() const;
-	bool AddMessage(std::unique_ptr<Message> message);
-	std::unique_ptr<Message> GetAMessage();
-	void AddSentMessage(std::unique_ptr<Message> message);
-	void FreeSentMessages();
+		PendingConnection& operator=(const PendingConnection&) = delete;
+		PendingConnection& operator=(PendingConnection&& other) noexcept;
 
-	uint64_t GetPrefix() const { return _clientSalt ^ _serverSalt; }
-	uint64_t GetClientSalt() const { return _clientSalt; }
-	uint64_t GetServerSalt() const { return _serverSalt; }
-	const Address& GetAddress() const { return _address; }
-	bool IsAddressEqual(const Address& address) const { return this->_address == address; }
+		bool ArePendingMessages() const;
+		bool AddMessage(std::unique_ptr<Message> message);
+		std::unique_ptr<Message> GetAMessage();
+		void AddSentMessage(std::unique_ptr<Message> message);
+		void FreeSentMessages();
 
-	void SetClientSalt(uint64_t newValue) { _clientSalt = newValue; }
-	void SetServerSalt(uint64_t newValue) { _serverSalt = newValue; }
+		uint64_t GetPrefix() const { return _clientSalt ^ _serverSalt; }
+		uint64_t GetClientSalt() const { return _clientSalt; }
+		uint64_t GetServerSalt() const { return _serverSalt; }
+		const Address& GetAddress() const { return _address; }
+		bool IsAddressEqual(const Address& address) const { return this->_address == address; }
 
-	~PendingConnection();
+		void SetClientSalt(uint64_t newValue) { _clientSalt = newValue; }
+		void SetServerSalt(uint64_t newValue) { _serverSalt = newValue; }
 
-private:
-	Address _address;
-	uint64_t _clientSalt;
-	uint64_t _serverSalt;
+		~PendingConnection();
 
-	TransmissionChannel* _transmissionChannel;
-};
+	private:
+		Address _address;
+		uint64_t _clientSalt;
+		uint64_t _serverSalt;
+
+		TransmissionChannel* _transmissionChannel;
+	};
+}
