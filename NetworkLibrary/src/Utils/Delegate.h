@@ -6,6 +6,7 @@
 
 namespace NetLib
 {
+	//This is a no allocation multicast delegate. It works like a C# Action delegate so it always return void and it receives from 0 to X parameters :)
 	//TODO make this class thread-safe
 	template<typename... Parameters>
 	class Delegate

@@ -196,7 +196,9 @@ namespace NetLib
 
 		_clientIndex = message.clientIndexAssigned;
 		_currentState = ClientState::Connected;
+
 		LOG_INFO("Connection accepted!");
+		ExecuteOnPeerConnected();
 	}
 
 	void Client::ProcessConnectionRequestDenied(const ConnectionDeniedMessage& message)

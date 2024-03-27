@@ -110,4 +110,11 @@ namespace NetLib
 
 		Delegate<> _onPeerConnected;
 	};
+
+
+	template<typename Functor>
+	inline unsigned int Peer::SubscribeToOnPeerConnected(Functor&& functor)
+	{
+		return _onPeerConnected.AddSubscriber(std::forward<Functor>(functor));
+	}
 }

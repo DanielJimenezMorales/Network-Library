@@ -205,12 +205,6 @@ namespace NetLib
 		_onPeerConnected.Execute();
 	}
 
-	template<typename Functor>
-	unsigned int Peer::SubscribeToOnPeerConnected(Functor&& functor)
-	{
-		return _onPeerConnected.AddSubscriber(std::forward<Functor>(functor));
-	}
-
 	void Peer::UnsubscribeToOnPeerConnected(unsigned int id)
 	{
 		_onPeerConnected.DeleteSubscriber(id);

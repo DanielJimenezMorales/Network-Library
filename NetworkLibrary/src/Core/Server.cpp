@@ -31,8 +31,9 @@ namespace NetLib
 		serverHint.sin_port = htons(SERVER_PORT); // Convert from little to big endian
 		Address address = Address(serverHint);
 		BindSocket(address);
-
 		LOG_INFO("Server started succesfully!");
+
+		ExecuteOnPeerConnected();
 		return true;
 	}
 
