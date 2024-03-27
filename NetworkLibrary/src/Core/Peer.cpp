@@ -70,7 +70,8 @@ namespace NetLib
 		_maxConnections(maxConnections),
 		_receiveBufferSize(receiveBufferSize),
 		_sendBufferSize(sendBufferSize),
-		_onPeerConnected()
+		_onPeerConnected(),
+		_onPeerDisconnected()
 	{
 		_receiveBuffer = new uint8_t[_receiveBufferSize];
 		_sendBuffer = new uint8_t[_sendBufferSize];
@@ -205,9 +206,19 @@ namespace NetLib
 		_onPeerConnected.Execute();
 	}
 
+	void Peer::ExecuteOnPeerDisconnected()
+	{
+		_onPeerDisconnected.Execute();
+	}
+
 	void Peer::UnsubscribeToOnPeerConnected(unsigned int id)
 	{
 		_onPeerConnected.DeleteSubscriber(id);
+	}
+
+	void Peer::UnsubscribeToOnPeerDisconnected(unsigned int id)
+	{
+		_onPeerDisconnected.DeleteSubscriber(id);
 	}
 
 	void Peer::ProcessReceivedData()

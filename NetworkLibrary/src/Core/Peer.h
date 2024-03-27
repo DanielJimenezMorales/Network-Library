@@ -36,6 +36,9 @@ namespace NetLib
 		template<typename Functor>
 		unsigned int SubscribeToOnPeerConnected(Functor&& functor);
 		void UnsubscribeToOnPeerConnected(unsigned int id);
+		template<typename Functor>
+		unsigned int SubscribeToOnPeerDisconnected(Functor&& functor);
+		void UnsubscribeToOnPeerDisconnected(unsigned int id);
 
 		virtual ~Peer();
 
@@ -63,6 +66,7 @@ namespace NetLib
 
 		//Delegates related
 		void ExecuteOnPeerConnected();
+		void ExecuteOnPeerDisconnected();
 
 		std::queue<unsigned int> _remotePeerSlotIDsToDisconnect;
 		std::vector<PendingConnection> _pendingConnections;
@@ -109,6 +113,7 @@ namespace NetLib
 		uint8_t* _sendBuffer;
 
 		Common::Delegate<> _onPeerConnected;
+		Common::Delegate<> _onPeerDisconnected;
 	};
 
 
@@ -116,5 +121,11 @@ namespace NetLib
 	inline unsigned int Peer::SubscribeToOnPeerConnected(Functor&& functor)
 	{
 		return _onPeerConnected.AddSubscriber(std::forward<Functor>(functor));
+	}
+
+	template<typename Functor>
+	inline unsigned int Peer::SubscribeToOnPeerDisconnected(Functor&& functor)
+	{
+		return _onPeerDisconnected.AddSubscriber(std::forward<Functor>(functor));
 	}
 }

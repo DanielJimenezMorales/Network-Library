@@ -218,6 +218,8 @@ namespace NetLib
 
 		_currentState = ClientState::Disconnected();
 		Common::LOG_INFO("Disconnection message received from server. Disconnecting...");
+
+		ExecuteOnPeerDisconnected();
 	}
 
 	void Client::ProcessTimeResponse(const TimeResponseMessage& message)

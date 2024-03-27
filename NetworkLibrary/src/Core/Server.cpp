@@ -363,6 +363,8 @@ namespace NetLib
 	bool Server::StopConcrete()
 	{
 		//TODO: Send disconnect packet to all the connected clients
+
+		ExecuteOnPeerDisconnected();
 		return true;
 	}
 }
