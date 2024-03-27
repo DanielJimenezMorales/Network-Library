@@ -7,6 +7,35 @@ workspace "NetworkLibrary"
 		"Release"
 	}
 
+project "Common"
+	kind "StaticLib"
+	location "Common"
+	language "C++"
+	targetdir "%{prj.name}/bin"
+	targetname "%{prj.name}_%{cfg.buildcfg}"
+
+	files
+	{
+		"%{prj.name}/src/**.h",
+		"%{prj.name}/src/**.cpp",
+		"%{prj.name}/src/**.hpp"
+	}
+
+	includedirs
+	{
+		"%{prj.name}/src/"
+	}
+
+	filter "configurations:Debug"
+		defines
+		{
+			"LOG_ENABLED"
+		}
+		symbols "On"
+
+	filter "configurations:Release"
+		optimize "On"
+
 project "NetworkLibrary"
 	kind "StaticLib"
 	location "NetworkLibrary"
@@ -24,8 +53,24 @@ project "NetworkLibrary"
 
 	includedirs
 	{
+		"Common/src/",
 		"%{prj.name}/src/Core/",
 		"%{prj.name}/src/Utils/"
+	}
+
+	dependson
+	{
+		"Common"
+	}
+
+	libdirs
+	{
+		"Common/bin"
+	}
+
+	links
+	{
+		"Common_%{cfg.buildcfg}"
 	}
 
 	filter "system:Windows"
@@ -59,20 +104,27 @@ project "DemoGame"
 
 	includedirs
 	{
-		"%{prj.name}/src/",
+		"Common/src/",
 		"NetworkLibrary/src/Core/",
-		"NetworkLibrary/src/Utils/"
+		"NetworkLibrary/src/Utils/",
+		"%{prj.name}/src/"
 	}
 
-	dependson {"NetworkLibrary"}
+	dependson
+	{
+		"Common",
+		"NetworkLibrary"
+	}
 
 	libdirs
 	{
+		"Common/bin",
 		"NetworkLibrary/bin"
 	}
 
 	links
 	{
+		"Common_%{cfg.buildcfg}",
 		"NetworkLibrary_%{cfg.buildcfg}"
 	}
 

@@ -2,7 +2,7 @@
 
 #include "AlgorithmUtils.h"
 
-namespace NetLib
+namespace Common
 {
     uint16_t AlgorithmUtils::ExponentialMovingAverage(uint16_t previousValue, uint16_t currentValue, unsigned int alfa)
     {

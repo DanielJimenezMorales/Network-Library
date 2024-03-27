@@ -79,7 +79,6 @@ namespace NetLib
 		//Free transmission channel memory
 		for (unsigned int i = 0; i < _transmissionChannels.size(); ++i)
 		{
-			LOG_INFO("destructor");
 			delete _transmissionChannels[i];
 			_transmissionChannels[i] = nullptr;
 		}

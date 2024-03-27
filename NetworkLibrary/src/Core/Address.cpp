@@ -12,11 +12,11 @@ namespace NetLib
 		int iResult = inet_pton(AF_INET, ip.c_str(), &_addressInfo.sin_addr);
 		if (iResult == -1)
 		{
-			LOG_ERROR("Error at converting IP string into address. Error code: " + WSAGetLastError());
+			Common::LOG_ERROR("Error at converting IP string into address. Error code: " + WSAGetLastError());
 		}
 		else if (iResult == 0)
 		{
-			LOG_ERROR("The IP string: " + ip + " is not valid");
+			Common::LOG_ERROR("The IP string: " + ip + " is not valid");
 		}
 	}
 

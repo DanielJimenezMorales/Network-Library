@@ -17,7 +17,7 @@ namespace NetLib
 		int iResult = WSAStartup(MAKEWORD(2, 2), &wsaData);//Init WS. You need to pass it the version (1.0, 1.1, 2.2...) and a pointer to WSADATA which contains info about the WS impl.
 		if (iResult != 0)
 		{
-			LOG_ERROR("WSAStartup failed: " + iResult);
+			Common::LOG_ERROR("WSAStartup failed: " + iResult);
 			return SocketResult::ERR;
 		}
 
@@ -47,7 +47,7 @@ namespace NetLib
 		{
 			std::stringstream ss;
 			ss << "Socket error. Error while setting blocking mode, to " << listenSocketBlockingMode << ". error code " << GetLastError();
-			LOG_ERROR(ss.str());
+			Common::LOG_ERROR(ss.str());
 			return SocketResult::ERR;
 		}
 
@@ -61,7 +61,7 @@ namespace NetLib
 		{
 			std::stringstream ss;
 			ss << "Socket error. Error while creating the socket, error code " << GetLastError();
-			LOG_ERROR(ss.str());
+			Common::LOG_ERROR(ss.str());
 			return SocketResult::ERR;
 		}
 
@@ -79,7 +79,7 @@ namespace NetLib
 		{
 			std::stringstream ss;
 			ss << "Socket error. Error while binding the listen socket, error code " << GetLastError();
-			LOG_ERROR(ss.str());
+			Common::LOG_ERROR(ss.str());
 			return SocketResult::ERR;
 		}
 
@@ -98,7 +98,7 @@ namespace NetLib
 		{
 			std::stringstream ss;
 			ss << "Socket error. Error while closing the socket, error code " << GetLastError();
-			LOG_ERROR(ss.str());
+			Common::LOG_ERROR(ss.str());
 			return SocketResult::ERR;
 		}
 
@@ -107,7 +107,7 @@ namespace NetLib
 		{
 			std::stringstream ss;
 			ss << "Socket error. Error while closing the sockets library, error code " << GetLastError();
-			LOG_ERROR(ss.str());
+			Common::LOG_ERROR(ss.str());
 			return SocketResult::ERR;
 		}
 
@@ -121,7 +121,7 @@ namespace NetLib
 		result = InitializeSocketsLibrary();
 		if (result != SocketResult::SUCCESS)
 		{
-			LOG_ERROR("Error while starting the sockets library, aborting operation...");
+			Common::LOG_ERROR("Error while starting the sockets library, aborting operation...");
 			return result;
 		}
 
@@ -158,7 +158,7 @@ namespace NetLib
 
 			if (error == WSAEMSGSIZE)
 			{
-				LOG_ERROR("Socket error. The message received does not fit inside the buffer.");
+				Common::LOG_ERROR("Socket error. The message received does not fit inside the buffer.");
 				return SocketResult::ERR;
 			}
 			else if (error == WSAEWOULDBLOCK)
@@ -167,14 +167,14 @@ namespace NetLib
 			}
 			else if (error == WSAECONNRESET)
 			{
-				LOG_WARNING("Socket warning. The remote socket has been closed unexpectly.");
+				Common::LOG_WARNING("Socket warning. The remote socket has been closed unexpectly.");
 				return SocketResult::CONNRESET;
 			}
 			else
 			{
 				std::stringstream ss;
 				ss << "Socket error. Error while receiving a message, error code: " << error;
-				LOG_ERROR(ss.str());
+				Common::LOG_ERROR(ss.str());
 				return SocketResult::ERR;
 			}
 		}
@@ -196,7 +196,7 @@ namespace NetLib
 		{
 			std::stringstream ss;
 			ss << "Socket warning. Trying to send a packet bigger than the MTU size theshold. This could result in Packet Fragmentation and as a consequence worse network conditions. Packet size: " << dataBufferSize << ", MTU size threshold: " << _defaultMTUSize;
-			LOG_WARNING(ss.str());
+			Common::LOG_WARNING(ss.str());
 		}
 
 		int addressSize = sizeof(remoteAddress.GetInfo());
@@ -206,7 +206,7 @@ namespace NetLib
 		{
 			std::stringstream ss;
 			ss << "Socket error. Error while sending data, error code " << GetLastError();
-			LOG_ERROR(ss.str());
+			Common::LOG_ERROR(ss.str());
 			return SocketResult::ERR;
 		}
 

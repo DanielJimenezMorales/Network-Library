@@ -126,7 +126,7 @@ namespace NetLib
 		{
 			std::stringstream ss;
 			ss << "The message with ID = " << messageSequenceNumber << " is duplicated. Ignoring it...";
-			LOG_INFO(ss.str());
+			Common::LOG_INFO(ss.str());
 
 			MessageFactory& messageFactory = MessageFactory::GetInstance();
 			messageFactory.ReleaseMessage(std::move(message));
@@ -134,7 +134,7 @@ namespace NetLib
 		}
 		else
 		{
-			LOG_INFO("New message received");
+			Common::LOG_INFO("New message received");
 			AckReliableMessage(messageSequenceNumber);
 			if (messageSequenceNumber == _nextOrderedMessageSequenceNumber)
 			{
@@ -259,7 +259,7 @@ namespace NetLib
 		_unackedReliableMessages.push_back(std::move(message));
 		std::stringstream ss;
 		ss << "Retransmission Timeout: " << GetRetransmissionTimeout();
-		LOG_INFO(ss.str());
+		Common::LOG_INFO(ss.str());
 		_unackedReliableMessageTimeouts.push_back(GetRetransmissionTimeout());
 	}
 
@@ -411,13 +411,13 @@ namespace NetLib
 			}
 			else
 			{
-				_rttMilliseconds = AlgorithmUtils::ExponentialMovingAverage(_rttMilliseconds, messageRTTValue, 10);
+				_rttMilliseconds = Common::AlgorithmUtils::ExponentialMovingAverage(_rttMilliseconds, messageRTTValue, 10);
 			}
 		}
 
 		std::stringstream ss;
 		ss << "RTT: " << _rttMilliseconds;
-		LOG_INFO(ss.str());
+		Common::LOG_INFO(ss.str());
 	}
 
 	float ReliableOrderedChannel::GetRetransmissionTimeout() const
@@ -489,7 +489,7 @@ namespace NetLib
 	{
 		std::stringstream ss;
 		ss << "Last acked from client = " << lastAckedMessageSequenceNumber;
-		LOG_INFO(ss.str());
+		Common::LOG_INFO(ss.str());
 
 		//Check if the last acked is in reliable messages lists
 		TryRemoveUnackedReliableMessageFromSequence(lastAckedMessageSequenceNumber);

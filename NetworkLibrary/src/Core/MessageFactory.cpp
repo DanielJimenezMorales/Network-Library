@@ -50,7 +50,7 @@ namespace NetLib
         {
             std::stringstream ss;
             ss << "The message pool of type " << (unsigned int)messageType << " is empty. Creating a new message... Consider increasing pool size. Current init size: " << _initialSize;
-            LOG_WARNING(ss.str());
+            Common::LOG_WARNING(ss.str());
 
             message = CreateMessage(messageType);
         }
@@ -190,7 +190,7 @@ namespace NetLib
             resultMessage = std::make_unique<InGameResponseMessage>();
             break;
         default:
-            LOG_ERROR("Can't create a new message. Invalid message type");
+            Common::LOG_ERROR("Can't create a new message. Invalid message type");
             break;
         }
 

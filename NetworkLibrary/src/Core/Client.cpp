@@ -40,13 +40,13 @@ namespace NetLib
 		{
 			std::stringstream ss;
 			ss << "Error at converting IP string into address. Error code: " << WSAGetLastError();
-			LOG_ERROR(ss.str());
+			Common::LOG_ERROR(ss.str());
 		}
 		else if (iResult == 0)
 		{
 			std::stringstream ss;
 			ss << "The IP string: " << ip << " is not valid";
-			LOG_ERROR(ss.str());
+			Common::LOG_ERROR(ss.str());
 		}
 
 		Address address = Address(addressInfo);
@@ -58,7 +58,7 @@ namespace NetLib
 		GenerateClientSaltNumber();
 		_pendingConnections.emplace_back(_serverAddress);
 
-		LOG_INFO("Client started succesfully!");
+		Common::LOG_INFO("Client started succesfully!");
 
 		return true;
 	}
@@ -119,7 +119,7 @@ namespace NetLib
 			}
 			break;
 		default:
-			LOG_WARNING("Invalid Message type, ignoring it...");
+			Common::LOG_WARNING("Invalid Message type, ignoring it...");
 			break;
 		}
 	}
@@ -137,7 +137,7 @@ namespace NetLib
 
 			if (_serverInactivityTimeLeft <= 0.f)
 			{
-				LOG_INFO("Server inactivity timeout reached. Disconnecting client...");
+				Common::LOG_INFO("Server inactivity timeout reached. Disconnecting client...");
 				_serverInactivityTimeLeft = 0.f;
 				_currentState = ClientState::Disconnected;
 			}
@@ -161,13 +161,13 @@ namespace NetLib
 
 	void Client::ProcessConnectionChallenge(const ConnectionChallengeMessage& message)
 	{
-		LOG_INFO("Challenge packet received from server");
+		Common::LOG_INFO("Challenge packet received from server");
 
 		uint64_t clientSalt = message.clientSalt;
 		uint64_t serverSalt = message.serverSalt;
 		if (_saltNumber != clientSalt)
 		{
-			LOG_WARNING("The generated salt number does not match the server's challenge client salt number. Aborting operation");
+			Common::LOG_WARNING("The generated salt number does not match the server's challenge client salt number. Aborting operation");
 			return;
 		}
 
@@ -177,7 +177,7 @@ namespace NetLib
 
 		CreateConnectionChallengeResponse();
 
-		LOG_INFO("Sending challenge response packet to server...");
+		Common::LOG_INFO("Sending challenge response packet to server...");
 	}
 
 	void Client::ProcessConnectionRequestAccepted(const ConnectionAcceptedMessage& message)
@@ -185,7 +185,7 @@ namespace NetLib
 		uint64_t dataPrefix = message.prefix;
 		if (dataPrefix != _dataPrefix)
 		{
-			LOG_WARNING("Packet prefix does not match. Skipping packet...");
+			Common::LOG_WARNING("Packet prefix does not match. Skipping packet...");
 			return;
 		}
 
@@ -197,14 +197,14 @@ namespace NetLib
 		_clientIndex = message.clientIndexAssigned;
 		_currentState = ClientState::Connected;
 
-		LOG_INFO("Connection accepted!");
+		Common::LOG_INFO("Connection accepted!");
 		ExecuteOnPeerConnected();
 	}
 
 	void Client::ProcessConnectionRequestDenied(const ConnectionDeniedMessage& message)
 	{
 		_currentState = ClientState::Disconnected;
-		LOG_INFO("Connection denied");
+		Common::LOG_INFO("Connection denied");
 	}
 
 	void Client::ProcessDisconnection(const DisconnectionMessage& message)
@@ -212,17 +212,17 @@ namespace NetLib
 		uint64_t dataPrefix = message.prefix;
 		if (dataPrefix != _dataPrefix)
 		{
-			LOG_WARNING("Packet prefix does not match. Skipping packet...");
+			Common::LOG_WARNING("Packet prefix does not match. Skipping packet...");
 			return;
 		}
 
 		_currentState = ClientState::Disconnected();
-		LOG_INFO("Disconnection message received from server. Disconnecting...");
+		Common::LOG_INFO("Disconnection message received from server. Disconnecting...");
 	}
 
 	void Client::ProcessTimeResponse(const TimeResponseMessage& message)
 	{
-		LOG_INFO("PROCESSING TIME RESPONSE");
+		Common::LOG_INFO("PROCESSING TIME RESPONSE");
 
 		//Add new RTT to buffer
 		TimeClock& timeClock = TimeClock::GetInstance();
@@ -271,14 +271,14 @@ namespace NetLib
 
 		std::stringstream ss;
 		ss << "SERVER TIME UPDATED. Local time: " << timeClock.GetLocalTimeSeconds() << "s, Server time: " << timeClock.GetServerTimeSeconds() << "s";
-		LOG_INFO(ss.str());
+		Common::LOG_INFO(ss.str());
 	}
 
 	void Client::ProcessInGameResponse(const InGameResponseMessage& message)
 	{
 		std::stringstream ss;
 		ss << "In game response ID = " << message.data;
-		LOG_INFO(ss.str());
+		Common::LOG_INFO(ss.str());
 	}
 
 	void Client::CreateConnectionRequestMessage()
@@ -288,7 +288,7 @@ namespace NetLib
 
 		if (message == nullptr)
 		{
-			LOG_ERROR("Can't create new Connection Request Message because the MessageFactory has returned a null message");
+			Common::LOG_ERROR("Can't create new Connection Request Message because the MessageFactory has returned a null message");
 			return;
 		}
 
@@ -298,7 +298,7 @@ namespace NetLib
 
 		_pendingConnections[0].AddMessage(std::move(connectionRequestMessage));
 
-		LOG_INFO("Connection request created.");
+		Common::LOG_INFO("Connection request created.");
 	}
 
 	void Client::CreateConnectionChallengeResponse()
@@ -307,7 +307,7 @@ namespace NetLib
 		std::unique_ptr<Message> message = messageFactory.LendMessage(MessageType::ConnectionChallengeResponse);
 		if (message == nullptr)
 		{
-			LOG_ERROR("Can't create new Connection Challenge Response Message because the MessageFactory has returned a null message");
+			Common::LOG_ERROR("Can't create new Connection Challenge Response Message because the MessageFactory has returned a null message");
 			return;
 		}
 
@@ -319,7 +319,7 @@ namespace NetLib
 
 	void Client::CreateTimeRequestMessage()
 	{
-		LOG_INFO("TIME REQUEST CREATED");
+		Common::LOG_INFO("TIME REQUEST CREATED");
 		MessageFactory& messageFactory = MessageFactory::GetInstance();
 		std::unique_ptr<Message> lendMessage(messageFactory.LendMessage(MessageType::TimeRequest));
 
@@ -338,7 +338,7 @@ namespace NetLib
 		std::unique_ptr<Message> message = messageFactory.LendMessage(MessageType::InGame);
 		if (message == nullptr)
 		{
-			LOG_ERROR("Can't create new Connection Challenge Response Message because the MessageFactory has returned a null message");
+			Common::LOG_ERROR("Can't create new Connection Challenge Response Message because the MessageFactory has returned a null message");
 			return;
 		}
 

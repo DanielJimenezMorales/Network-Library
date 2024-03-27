@@ -15,13 +15,13 @@ namespace NetLib
 	{
 		if (_socket.Start() != SocketResult::SUCCESS)
 		{
-			LOG_ERROR("Error while starting peer, aborting operation...");
+			Common::LOG_ERROR("Error while starting peer, aborting operation...");
 			return false;
 		}
 
 		if (!StartConcrete())
 		{
-			LOG_ERROR("Error while starting peer, aborting operation...");
+			Common::LOG_ERROR("Error while starting peer, aborting operation...");
 			return false;
 		}
 
@@ -458,7 +458,7 @@ namespace NetLib
 			{
 				std::stringstream ss;
 				ss << "Reliable message sequence number: " << message->GetHeader().messageSequenceNumber << " Message type: " << (int)message->GetHeader().type;
-				LOG_INFO(ss.str());
+				Common::LOG_INFO(ss.str());
 			}
 
 			packet.AddMessage(std::move(message));

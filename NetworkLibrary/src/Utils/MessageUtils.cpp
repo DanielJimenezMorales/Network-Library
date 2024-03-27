@@ -49,7 +49,7 @@ namespace NetLib
 		default:
 			std::stringstream ss;
 			ss << "Can't read message of type MessageType = " << (int)type << ", ignoring it...";
-			LOG_WARNING(ss.str());
+			Common::LOG_WARNING(ss.str());
 		}
 
 		if (message != nullptr)

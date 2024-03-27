@@ -108,7 +108,7 @@ namespace NetLib
 		unsigned int _sendBufferSize;
 		uint8_t* _sendBuffer;
 
-		Delegate<> _onPeerConnected;
+		Common::Delegate<> _onPeerConnected;
 	};
 
 

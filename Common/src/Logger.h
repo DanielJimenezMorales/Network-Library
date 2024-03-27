@@ -14,7 +14,7 @@
 #define LOG_ERROR(message)
 #endif
 
-namespace NetLib
+namespace Common
 {
 	class Logger
 	{

@@ -24,7 +24,7 @@ class DelegateSubscriber
 public:
     void OnPeerConnectedConsequences()
     {
-        NetLib::LOG_INFO("ON PEER SUCCESFULLY CONNECTED!");
+        Common::LOG_INFO("ON PEER SUCCESFULLY CONNECTED!");
     }
 
     void Subscribe(NetLib::Peer& peer)
@@ -64,7 +64,7 @@ int main()
     bool result = peer->Start();
     if (!result)
     {
-        NetLib::LOG_ERROR("Peer startup failed");
+        Common::LOG_ERROR("Peer startup failed");
     }
 
     //GAMELOOP BEGIN
@@ -90,7 +90,7 @@ int main()
     result = peer->Stop();
     if (!result)
     {
-        NetLib::LOG_ERROR("Peer stop failed");
+        Common::LOG_ERROR("Peer stop failed");
     }
 
     delete peer;

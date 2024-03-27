@@ -31,7 +31,7 @@ namespace NetLib
 		serverHint.sin_port = htons(SERVER_PORT); // Convert from little to big endian
 		Address address = Address(serverHint);
 		BindSocket(address);
-		LOG_INFO("Server started succesfully!");
+		Common::LOG_INFO("Server started succesfully!");
 
 		ExecuteOnPeerConnected();
 		return true;
@@ -54,7 +54,7 @@ namespace NetLib
 		MessageType messageType = message.GetHeader().type;
 		std::stringstream ss;
 		ss << "Me proceso type " << static_cast<int>(messageType);
-		LOG_INFO(ss.str());
+		Common::LOG_INFO(ss.str());
 
 		switch (messageType)
 		{
@@ -83,7 +83,7 @@ namespace NetLib
 			break;
 		}
 		default:
-			LOG_WARNING("Invalid Message type, ignoring it...");
+			Common::LOG_WARNING("Invalid Message type, ignoring it...");
 			break;
 		}
 	}
@@ -92,7 +92,7 @@ namespace NetLib
 	{
 		std::stringstream ss;
 		ss << "Processing connection request from [IP: " << address.GetIP() << ", Port: " << address.GetPort() << "]";
-		LOG_INFO(ss.str());
+		Common::LOG_INFO(ss.str());
 
 		int isAbleToConnectResult = IsClientAbleToConnect(address);
 
@@ -118,7 +118,7 @@ namespace NetLib
 
 				std::stringstream ss;
 				ss << "Creating a pending connection entry. Client salt: " << clientSalt << " Server salt: " << _pendingConnections[pendingConnectionIndex].GetServerSalt();
-				LOG_INFO(ss.str());
+				Common::LOG_INFO(ss.str());
 			}
 
 			CreateConnectionChallengeMessage(address, pendingConnectionIndex);
@@ -128,12 +128,12 @@ namespace NetLib
 			//int connectedClientIndex = FindExistingClientIndex(address);
 			RemotePeer* remotePeer = GetRemotePeerFromAddress(address);
 			CreateConnectionApprovedMessage(*remotePeer);
-			LOG_INFO("The client is already connected, sending connection approved...");
+			Common::LOG_INFO("The client is already connected, sending connection approved...");
 		}
 		else if (isAbleToConnectResult == -1)//If all the client slots are full deny the connection
 		{
 			SendConnectionDeniedPacket(address);
-			LOG_WARNING("All available connection slots are full. Denying incoming connection...");
+			Common::LOG_WARNING("All available connection slots are full. Denying incoming connection...");
 		}
 	}
 
@@ -144,7 +144,7 @@ namespace NetLib
 		std::unique_ptr<Message>message = messageFactory.LendMessage(MessageType::Disconnection);
 		if (message == nullptr)
 		{
-			LOG_ERROR("Can't create new Disconnection Message because the MessageFactory has returned a null message");
+			Common::LOG_ERROR("Can't create new Disconnection Message because the MessageFactory has returned a null message");
 			return;
 		}
 
@@ -153,7 +153,7 @@ namespace NetLib
 		disconnectionMessage->prefix = remotePeer.GetDataPrefix();
 		remotePeer.AddMessage(std::move(disconnectionMessage));
 
-		LOG_INFO("Disconnection message created.");
+		Common::LOG_INFO("Disconnection message created.");
 	}
 
 	void Server::CreateTimeResponseMessage(RemotePeer& remotePeer, const TimeRequestMessage& timeRequest)
@@ -178,7 +178,7 @@ namespace NetLib
 		std::unique_ptr<Message>message = messageFactory.LendMessage(MessageType::InGameResponse);
 		if (message == nullptr)
 		{
-			LOG_ERROR("Can't create new in game response Message because the MessageFactory has returned a null message");
+			Common::LOG_ERROR("Can't create new in game response Message because the MessageFactory has returned a null message");
 			return;
 		}
 
@@ -190,7 +190,7 @@ namespace NetLib
 		inGameResponseMessage->data = data;
 		remotePeer.AddMessage(std::move(inGameResponseMessage));
 
-		LOG_INFO("In game response message created.");
+		Common::LOG_INFO("In game response message created.");
 	}
 
 	void Server::CreateConnectionChallengeMessage(const Address& address, int pendingConnectionIndex)
@@ -200,7 +200,7 @@ namespace NetLib
 		std::unique_ptr<Message> message = messageFactory.LendMessage(MessageType::ConnectionChallenge);
 		if (message == nullptr)
 		{
-			LOG_ERROR("Can't create new Connection Challenge Message because the MessageFactory has returned a null message");
+			Common::LOG_ERROR("Can't create new Connection Challenge Message because the MessageFactory has returned a null message");
 			return;
 		}
 
@@ -209,7 +209,7 @@ namespace NetLib
 		connectionChallengePacket->serverSalt = _pendingConnections[pendingConnectionIndex].GetServerSalt();
 		_pendingConnections[pendingConnectionIndex].AddMessage(std::move(connectionChallengePacket));
 
-		LOG_INFO("Connection challenge message created.");
+		Common::LOG_INFO("Connection challenge message created.");
 	}
 
 	void Server::SendConnectionDeniedPacket(const Address& address) const
@@ -220,7 +220,7 @@ namespace NetLib
 		NetworkPacket packet = NetworkPacket();
 		packet.AddMessage(std::move(message));
 
-		LOG_INFO("Sending connection denied...");
+		Common::LOG_INFO("Sending connection denied...");
 		SendPacketToAddress(packet, address);
 
 		while (packet.GetNumberOfMessages() > 0)
@@ -234,7 +234,7 @@ namespace NetLib
 	{
 		std::stringstream ss;
 		ss << "Processing connection challenge response from [IP: " << address.GetIP() << ", Port: " << address.GetPort() << "]";
-		LOG_INFO(ss.str());
+		Common::LOG_INFO(ss.str());
 
 		uint64_t dataPrefix = message.prefix;
 
@@ -255,7 +255,7 @@ namespace NetLib
 
 			if (pendingConnectionIndex == -1)
 			{
-				LOG_INFO("Connection denied due to not pending connection found.");
+				Common::LOG_INFO("Connection denied due to not pending connection found.");
 				SendConnectionDeniedPacket(address);
 			}
 			else
@@ -269,7 +269,7 @@ namespace NetLib
 
 				//Send connection approved packet
 				CreateConnectionApprovedMessage(_remotePeers[availableClientSlot]);
-				LOG_INFO("Connection approved");
+				Common::LOG_INFO("Connection approved");
 			}
 		}
 		else if (isAbleToConnectResult == 1)//If the client is already connected just send a connection approved message
@@ -294,7 +294,7 @@ namespace NetLib
 	//REFACTOR THIS METHOD
 	void Server::ProcessTimeRequest(const TimeRequestMessage& message, const Address& address)
 	{
-		LOG_INFO("PROCESSING TIME REQUEST");
+		Common::LOG_INFO("PROCESSING TIME REQUEST");
 		RemotePeer* remotePeer = GetRemotePeerFromAddress(address);
 		CreateTimeResponseMessage(*remotePeer, message);
 	}
@@ -303,7 +303,7 @@ namespace NetLib
 	{
 		std::stringstream ss;
 		ss << "InGame ID: " << message.data;
-		LOG_INFO(ss.str());
+		Common::LOG_INFO(ss.str());
 
 		RemotePeer* remotePeer = GetRemotePeerFromAddress(address);
 		assert(remotePeer != nullptr);
@@ -340,7 +340,7 @@ namespace NetLib
 		std::unique_ptr<Message> message = messageFactory.LendMessage(MessageType::ConnectionAccepted);
 		if (message == nullptr)
 		{
-			LOG_ERROR("Can't create new Connection Accepted Message because the MessageFactory has returned a null message");
+			Common::LOG_ERROR("Can't create new Connection Accepted Message because the MessageFactory has returned a null message");
 			return;
 		}
 

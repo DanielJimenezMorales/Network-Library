@@ -66,7 +66,7 @@ namespace NetLib
 	{
 		std::stringstream ss;
 		ss << "Adjusting Server's clock time delta. Old value: " << _serverClockTimeDeltaSeconds << "s, New value: " << newValue << "s, Difference: " << _serverClockTimeDeltaSeconds - newValue << "s";
-		LOG_INFO(ss.str());
+		Common::LOG_INFO(ss.str());
 
 		_serverClockTimeDeltaSeconds = newValue;
 	}

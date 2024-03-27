@@ -1,7 +1,7 @@
 #pragma once
 #include <cstdint>
 
-namespace NetLib
+namespace Common
 {
 	class AlgorithmUtils
 	{
