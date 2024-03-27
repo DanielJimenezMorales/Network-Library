@@ -69,7 +69,8 @@ namespace NetLib
 		_address(Address::GetInvalid()),
 		_maxConnections(maxConnections),
 		_receiveBufferSize(receiveBufferSize),
-		_sendBufferSize(sendBufferSize)
+		_sendBufferSize(sendBufferSize),
+		_onPeerConnected()
 	{
 		_receiveBuffer = new uint8_t[_receiveBufferSize];
 		_sendBuffer = new uint8_t[_sendBufferSize];
@@ -197,6 +198,22 @@ namespace NetLib
 		}
 
 		return true;
+	}
+
+	void Peer::ExecuteOnPeerConnected()
+	{
+		_onPeerConnected.Execute();
+	}
+
+	template<typename Functor>
+	unsigned int Peer::SubscribeToOnPeerConnected(Functor&& functor)
+	{
+		return _onPeerConnected.AddSubscriber(std::forward<Functor>(functor));
+	}
+
+	void Peer::UnsubscribeToOnPeerConnected(unsigned int id)
+	{
+		_onPeerConnected.DeleteSubscriber(id);
 	}
 
 	void Peer::ProcessReceivedData()

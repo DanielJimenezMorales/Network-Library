@@ -8,6 +8,7 @@
 #include "Socket.h"
 #include "Buffer.h"
 #include "TransmissionChannel.h"
+#include "Delegate.h"
 
 namespace NetLib
 {
@@ -30,6 +31,11 @@ namespace NetLib
 		bool Start();
 		bool Tick(float elapsedTime);
 		bool Stop();
+
+		//Delegates related
+		template<typename Functor>
+		unsigned int SubscribeToOnPeerConnected(Functor&& functor);
+		void UnsubscribeToOnPeerConnected(unsigned int id);
 
 		virtual ~Peer();
 
@@ -54,6 +60,9 @@ namespace NetLib
 		bool IsPendingConnectionAlreadyAdded(const Address& address) const;
 		void RemovePendingConnection(const Address& address);
 		bool BindSocket(const Address& address) const;
+
+		//Delegates related
+		void ExecuteOnPeerConnected();
 
 		std::queue<unsigned int> _remotePeerSlotIDsToDisconnect;
 		std::vector<PendingConnection> _pendingConnections;
@@ -87,7 +96,6 @@ namespace NetLib
 
 		void SendDataToAddress(const Buffer& buffer, const Address& address) const;
 
-
 		void StartDisconnectingRemotePeer(unsigned int index);
 		void FinishRemotePeersDisconnection();
 
@@ -99,5 +107,7 @@ namespace NetLib
 		uint8_t* _receiveBuffer;
 		unsigned int _sendBufferSize;
 		uint8_t* _sendBuffer;
+
+		Delegate<> _onPeerConnected;
 	};
 }
