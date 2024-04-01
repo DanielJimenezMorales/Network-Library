@@ -4,7 +4,6 @@
 
 namespace NetLib
 {
-
 	Address::Address(const std::string& ip, unsigned int port)
 	{
 		_addressInfo.sin_family = AF_INET;

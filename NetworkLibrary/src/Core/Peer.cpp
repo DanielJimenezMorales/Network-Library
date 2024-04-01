@@ -34,6 +34,7 @@ namespace NetLib
 	{
 		ProcessReceivedData();
 
+		TickPendingConnections(elapsedTime);
 		TickRemotePeers(elapsedTime);
 		HandlerRemotePeersInactivity();
 		TickConcrete(elapsedTime);
@@ -80,7 +81,16 @@ namespace NetLib
 		{
 			_remotePeerSlots.reserve(_maxConnections);
 			_remotePeers.reserve(_maxConnections);
-			_pendingConnections.reserve(_maxConnections * 2); //There could be more pending connections than clients
+
+			const unsigned int maxPendingConnections = _maxConnections * 2;
+			_pendingConnectionSlots.reserve(maxPendingConnections);
+			_pendingConnections.reserve(maxPendingConnections); //There could be more pending connections than clients
+
+			for (size_t i = 0; i < maxPendingConnections; ++i)
+			{
+				_pendingConnectionSlots.push_back(false);
+				_pendingConnections.emplace_back();
+			}
 
 			for (size_t i = 0; i < _maxConnections; ++i)
 			{
@@ -176,6 +186,17 @@ namespace NetLib
 		return result;
 	}
 
+	PendingConnection* Peer::GetPendingConnectionFromIndex(unsigned int index)
+	{
+		PendingConnection* result = nullptr;
+		if (_pendingConnectionSlots[index])
+		{
+			result = &_pendingConnections[index];
+		}
+
+		return result;
+	}
+
 	void Peer::RemovePendingConnection(const Address& address)
 	{
 		int index = GetPendingConnectionIndexFromAddress(address);
@@ -201,6 +222,36 @@ namespace NetLib
 		return true;
 	}
 
+	int Peer::AddPendingConnection(const Address& addr, float timeoutSeconds)
+	{
+		int index = -1;
+		for (unsigned int i = 0; i < _pendingConnections.size(); ++i)
+		{
+			if (!_pendingConnectionSlots[i])
+			{
+				_pendingConnectionSlots[i] = true;
+				_pendingConnections[i].Initialize(addr, timeoutSeconds);
+				index = i;
+				break;
+			}
+		}
+
+		return index;
+	}
+
+	bool Peer::DeletePendingConnectionAtIndex(unsigned int index)
+	{
+		if (_pendingConnectionSlots[index])
+		{
+			_pendingConnectionSlots[index] = false;
+			_pendingConnections[index].Reset();
+
+			return true;
+		}
+
+		return false;
+	}
+
 	void Peer::ExecuteOnPeerConnected()
 	{
 		_onPeerConnected.Execute();
@@ -209,6 +260,11 @@ namespace NetLib
 	void Peer::ExecuteOnPeerDisconnected()
 	{
 		_onPeerDisconnected.Execute();
+	}
+
+	void Peer::ExecuteOnLocalConnectionFailed(ConnectionFailedReasonType reason)
+	{
+		_onLocalConnectionFailed.Execute(reason);
 	}
 
 	void Peer::UnsubscribeToOnPeerConnected(unsigned int id)
@@ -314,6 +370,20 @@ namespace NetLib
 		}
 	}
 
+	void Peer::TickPendingConnections(float elapsedTime)
+	{
+		unsigned int numberOfPendingConnections = _pendingConnections.size();
+		for (unsigned int i = 0; i < numberOfPendingConnections; ++i)
+		{
+			if (_pendingConnectionSlots[i])
+			{
+				_pendingConnections[i].Tick(elapsedTime);
+			}
+		}
+
+		//TODO Delete inactive pending connections
+	}
+
 	void Peer::TickRemotePeers(float elapsedTime)
 	{
 		for (unsigned int i = 0; i < _maxConnections; ++i)
@@ -344,10 +414,13 @@ namespace NetLib
 		int index = -1;
 		for (unsigned int i = 0; i < _pendingConnections.size(); ++i)
 		{
-			if (_pendingConnections[i].GetAddress() == address)
+			if (_pendingConnectionSlots[i])
 			{
-				index = i;
-				break;
+				if (_pendingConnections[i].GetAddress() == address)
+				{
+					index = i;
+					break;
+				}
 			}
 		}
 
@@ -384,7 +457,10 @@ namespace NetLib
 	{
 		for (unsigned int i = 0; i < _pendingConnections.size(); ++i)
 		{
-			SendDataToPendingConnection(_pendingConnections[i]);
+			if (_pendingConnectionSlots[i])
+			{
+				SendDataToPendingConnection(_pendingConnections[i]);
+			}
 		}
 	}
 

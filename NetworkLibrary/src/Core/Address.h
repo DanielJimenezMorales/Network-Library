@@ -5,7 +5,6 @@
 
 namespace NetLib
 {
-
 	class Address
 	{
 	private:

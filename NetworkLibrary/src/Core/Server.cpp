@@ -99,29 +99,32 @@ namespace NetLib
 		if (isAbleToConnectResult == 0)//If there is green light keep with the connection pipeline.
 		{
 			uint64_t clientSalt = message.clientSalt;
-			int pendingConnectionIndex = -1;
+			PendingConnection* pendingConnection = nullptr;
 			for (unsigned int i = 0; i < _pendingConnections.size(); ++i)
 			{
-				if (_pendingConnections[i].IsAddressEqual(address) && _pendingConnections[i].GetClientSalt() == clientSalt)
+				if (_pendingConnectionSlots[i])
 				{
-					pendingConnectionIndex = i;
-					break;
+					if (_pendingConnections[i].IsAddressEqual(address) && _pendingConnections[i].GetClientSalt() == clientSalt)
+					{
+						pendingConnection = GetPendingConnectionFromIndex(i);
+						break;
+					}
 				}
 			}
 
-			if (pendingConnectionIndex == -1) //If no pending connection was found create one!
+			if (pendingConnection == nullptr) //If no pending connection was found create one!
 			{
-				_pendingConnections.emplace_back(address);
-				pendingConnectionIndex = _pendingConnections.size() - 1;
-				_pendingConnections[pendingConnectionIndex].SetClientSalt(clientSalt);
-				_pendingConnections[pendingConnectionIndex].SetServerSalt(GenerateServerSalt());
+				int pendingConnectionIndex = AddPendingConnection(address, 1.f);
+				pendingConnection = GetPendingConnectionFromIndex(pendingConnectionIndex);
+				pendingConnection->SetClientSalt(clientSalt);
+				pendingConnection->SetServerSalt(GenerateServerSalt());
 
 				std::stringstream ss;
-				ss << "Creating a pending connection entry. Client salt: " << clientSalt << " Server salt: " << _pendingConnections[pendingConnectionIndex].GetServerSalt();
+				ss << "Creating a pending connection entry. Client salt: " << clientSalt << " Server salt: " << pendingConnection->GetServerSalt();
 				Common::LOG_INFO(ss.str());
 			}
 
-			CreateConnectionChallengeMessage(address, pendingConnectionIndex);
+			CreateConnectionChallengeMessage(address, *pendingConnection);
 		}
 		else if (isAbleToConnectResult == 1)//If the client is already connected just send a connection approved message
 		{
@@ -132,7 +135,7 @@ namespace NetLib
 		}
 		else if (isAbleToConnectResult == -1)//If all the client slots are full deny the connection
 		{
-			SendConnectionDeniedPacket(address);
+			SendConnectionDeniedPacket(address, ConnectionFailedReasonType::CFR_SERVER_FULL);
 			Common::LOG_WARNING("All available connection slots are full. Denying incoming connection...");
 		}
 	}
@@ -193,7 +196,7 @@ namespace NetLib
 		Common::LOG_INFO("In game response message created.");
 	}
 
-	void Server::CreateConnectionChallengeMessage(const Address& address, int pendingConnectionIndex)
+	void Server::CreateConnectionChallengeMessage(const Address& address, PendingConnection& pendingConnection)
 	{
 		MessageFactory& messageFactory = MessageFactory::GetInstance();
 
@@ -205,20 +208,23 @@ namespace NetLib
 		}
 
 		std::unique_ptr<ConnectionChallengeMessage> connectionChallengePacket(static_cast<ConnectionChallengeMessage*>(message.release()));
-		connectionChallengePacket->clientSalt = _pendingConnections[pendingConnectionIndex].GetClientSalt();
-		connectionChallengePacket->serverSalt = _pendingConnections[pendingConnectionIndex].GetServerSalt();
-		_pendingConnections[pendingConnectionIndex].AddMessage(std::move(connectionChallengePacket));
+		connectionChallengePacket->clientSalt = pendingConnection.GetClientSalt();
+		connectionChallengePacket->serverSalt = pendingConnection.GetServerSalt();
+		pendingConnection.AddMessage(std::move(connectionChallengePacket));
 
 		Common::LOG_INFO("Connection challenge message created.");
 	}
 
-	void Server::SendConnectionDeniedPacket(const Address& address) const
+	void Server::SendConnectionDeniedPacket(const Address& address, ConnectionFailedReasonType reason) const
 	{
 		MessageFactory& messageFactory = MessageFactory::GetInstance();
 
 		std::unique_ptr<Message> message = messageFactory.LendMessage(MessageType::ConnectionDenied);
+		std::unique_ptr<ConnectionDeniedMessage> connectionDeniedMessage(static_cast<ConnectionDeniedMessage*>(message.release()));
+		connectionDeniedMessage->reason = reason;
+
 		NetworkPacket packet = NetworkPacket();
-		packet.AddMessage(std::move(message));
+		packet.AddMessage(std::move(connectionDeniedMessage));
 
 		Common::LOG_INFO("Sending connection denied...");
 		SendPacketToAddress(packet, address);
@@ -246,17 +252,20 @@ namespace NetLib
 			int pendingConnectionIndex = -1;
 			for (unsigned int i = 0; i < _pendingConnections.size(); ++i)
 			{
-				if (_pendingConnections[i].GetPrefix() == dataPrefix && _pendingConnections[i].IsAddressEqual(address))
+				if (_pendingConnectionSlots[i])
 				{
-					pendingConnectionIndex = i;
-					break;
+					if (_pendingConnections[i].GetPrefix() == dataPrefix && _pendingConnections[i].IsAddressEqual(address))
+					{
+						pendingConnectionIndex = i;
+						break;
+					}
 				}
 			}
 
 			if (pendingConnectionIndex == -1)
 			{
 				Common::LOG_INFO("Connection denied due to not pending connection found.");
-				SendConnectionDeniedPacket(address);
+				SendConnectionDeniedPacket(address, ConnectionFailedReasonType::CFR_UNKNOWN);
 			}
 			else
 			{
@@ -265,7 +274,7 @@ namespace NetLib
 				AddNewRemotePeer(availableClientSlot, address, dataPrefix);
 
 				//Delete pending connection since we have accepted
-				_pendingConnections.erase(_pendingConnections.begin() + pendingConnectionIndex);
+				DeletePendingConnectionAtIndex(pendingConnectionIndex);
 
 				//Send connection approved packet
 				CreateConnectionApprovedMessage(_remotePeers[availableClientSlot]);
@@ -287,7 +296,7 @@ namespace NetLib
 		}
 		else if (isAbleToConnectResult == -1)//If all the client slots are full deny the connection
 		{
-			SendConnectionDeniedPacket(address);
+			SendConnectionDeniedPacket(address, ConnectionFailedReasonType::CFR_SERVER_FULL);
 		}
 	}
 

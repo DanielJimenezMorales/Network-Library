@@ -14,12 +14,18 @@ namespace NetLib
 	class PendingConnection
 	{
 	public:
-		PendingConnection(const Address& addr);
+		PendingConnection();
 		PendingConnection(const PendingConnection&) = delete;
 		PendingConnection(PendingConnection&& other) noexcept;
 
 		PendingConnection& operator=(const PendingConnection&) = delete;
 		PendingConnection& operator=(PendingConnection&& other) noexcept;
+
+		void Initialize(const Address& addr, float timeoutSeconds);
+
+		void Tick(float deltaTime);
+
+		bool IsInactive() const { return _timeoutLeft == 0.f; }
 
 		bool ArePendingMessages() const;
 		bool AddMessage(std::unique_ptr<Message> message);
@@ -36,12 +42,16 @@ namespace NetLib
 		void SetClientSalt(uint64_t newValue) { _clientSalt = newValue; }
 		void SetServerSalt(uint64_t newValue) { _serverSalt = newValue; }
 
+		void Reset();
+
 		~PendingConnection();
 
 	private:
 		Address _address;
 		uint64_t _clientSalt;
 		uint64_t _serverSalt;
+		float _maxTimeout;
+		float _timeoutLeft;
 
 		TransmissionChannel* _transmissionChannel;
 	};

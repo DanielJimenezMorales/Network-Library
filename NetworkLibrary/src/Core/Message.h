@@ -86,13 +86,15 @@ namespace NetLib
 	class ConnectionDeniedMessage : public Message
 	{
 	public:
-		ConnectionDeniedMessage() : Message(MessageType::ConnectionDenied) {}
+		ConnectionDeniedMessage() : Message(MessageType::ConnectionDenied), reason(0) {}
 
 		void Write(Buffer& buffer) const override;
 		void Read(Buffer& buffer) override;
 		uint32_t Size() const override;
 
 		~ConnectionDeniedMessage() override {};
+
+		uint8_t reason;
 	};
 
 	class DisconnectionMessage : public Message

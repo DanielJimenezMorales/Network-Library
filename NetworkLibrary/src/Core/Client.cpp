@@ -56,7 +56,7 @@ namespace NetLib
 		_serverInactivityTimeLeft = _serverMaxInactivityTimeout;
 
 		GenerateClientSaltNumber();
-		_pendingConnections.emplace_back(_serverAddress);
+		AddPendingConnection(_serverAddress, 1.f);
 
 		Common::LOG_INFO("Client started succesfully!");
 
@@ -189,7 +189,7 @@ namespace NetLib
 			return;
 		}
 
-		_pendingConnections.erase(_pendingConnections.begin());
+		DeletePendingConnectionAtIndex(0);
 
 		_remotePeerSlots[0] = true;
 		_remotePeers[0].Connect(_serverAddress.GetInfo(), 0, 5, dataPrefix);
@@ -205,6 +205,8 @@ namespace NetLib
 	{
 		_currentState = ClientState::Disconnected;
 		Common::LOG_INFO("Connection denied");
+
+		ExecuteOnLocalConnectionFailed(static_cast<ConnectionFailedReasonType>(message.reason));
 	}
 
 	void Client::ProcessDisconnection(const DisconnectionMessage& message)
@@ -285,6 +287,7 @@ namespace NetLib
 
 	void Client::CreateConnectionRequestMessage()
 	{
+		//Get a connection request message
 		MessageFactory& messageFactory = MessageFactory::GetInstance();
 		std::unique_ptr<Message> message = messageFactory.LendMessage(MessageType::ConnectionRequest);
 
@@ -296,15 +299,30 @@ namespace NetLib
 
 		std::unique_ptr<ConnectionRequestMessage> connectionRequestMessage(static_cast<ConnectionRequestMessage*>(message.release()));
 
+		//Set connection request fields
 		connectionRequestMessage->clientSalt = _saltNumber;
 
-		_pendingConnections[0].AddMessage(std::move(connectionRequestMessage));
+		//Store message in server's pending connection in order to send it
+		const unsigned int serverPendingConnectionIndex = 0;
+		PendingConnection* pendingConnection = GetPendingConnectionFromIndex(serverPendingConnectionIndex);
+		if (pendingConnection == nullptr)
+		{
+			messageFactory.ReleaseMessage(std::move(connectionRequestMessage));
+
+			std::stringstream ss;
+			ss << "Can't create new Connection Request Message because the PendingConnection at index " << serverPendingConnectionIndex << " is null";
+			Common::LOG_ERROR(ss.str());
+			return;
+		}
+
+		pendingConnection->AddMessage(std::move(connectionRequestMessage));
 
 		Common::LOG_INFO("Connection request created.");
 	}
 
 	void Client::CreateConnectionChallengeResponse()
 	{
+		//Get a connection challenge message
 		MessageFactory& messageFactory = MessageFactory::GetInstance();
 		std::unique_ptr<Message> message = messageFactory.LendMessage(MessageType::ConnectionChallengeResponse);
 		if (message == nullptr)
@@ -314,9 +332,24 @@ namespace NetLib
 		}
 
 		std::unique_ptr<ConnectionChallengeResponseMessage> connectionChallengeResponseMessage(static_cast<ConnectionChallengeResponseMessage*>(message.release()));
+		
+		//Set connection challenge fields
 		connectionChallengeResponseMessage->prefix = _dataPrefix;
 
-		_pendingConnections[0].AddMessage(std::move(connectionChallengeResponseMessage));
+		//Store message in server's pending connection in order to send it
+		const unsigned int serverPendingConnectionIndex = 0;
+		PendingConnection* pendingConnection = GetPendingConnectionFromIndex(serverPendingConnectionIndex);
+		if (pendingConnection == nullptr)
+		{
+			messageFactory.ReleaseMessage(std::move(connectionChallengeResponseMessage));
+
+			std::stringstream ss;
+			ss << "Can't create new Connection Request Message because the PendingConnection at index " << serverPendingConnectionIndex << " is null";
+			Common::LOG_ERROR(ss.str());
+			return;
+		}
+
+		pendingConnection->AddMessage(std::move(connectionChallengeResponseMessage));
 	}
 
 	void Client::CreateTimeRequestMessage()

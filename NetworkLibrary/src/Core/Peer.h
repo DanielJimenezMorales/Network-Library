@@ -18,6 +18,13 @@ namespace NetLib
 
 #define REMOTE_CLIENT_INACTIVITY_TIME 5.0f
 
+	enum ConnectionFailedReasonType : uint8_t
+	{
+		CFR_UNKNOWN = 0,
+		CFR_TIMEOUT = 1,
+		CFR_SERVER_FULL = 2
+	};
+
 	enum PeerType : uint8_t
 	{
 		None = 0,
@@ -54,21 +61,29 @@ namespace NetLib
 		virtual void DisconnectRemotePeerConcrete(RemotePeer& remotePeer) = 0;
 		virtual bool StopConcrete() = 0;
 
+		//Pending connection related
+		int AddPendingConnection(const Address& addr, float timeoutSeconds);
+		bool DeletePendingConnectionAtIndex(unsigned int index);
+		PendingConnection* GetPendingConnectionFromAddress(const Address& address);
+		PendingConnection* GetPendingConnectionFromIndex(unsigned int index);
+
 		void SendPacketToAddress(const NetworkPacket& packet, const Address& address) const;
 		bool AddRemoteClient(const Address& addressInfo, uint16_t id, uint64_t dataPrefix);
 		int FindFreeRemotePeerSlot() const;
 		RemotePeer* GetRemotePeerFromAddress(const Address& address);
 		bool IsRemotePeerAlreadyConnected(const Address& address) const;
-		PendingConnection* GetPendingConnectionFromAddress(const Address& address);
-		bool IsPendingConnectionAlreadyAdded(const Address& address) const;
+		bool IsPendingConnectionAlreadyAdded(const Address& address) const;//TODO Delete this one, it is not being used
 		void RemovePendingConnection(const Address& address);
 		bool BindSocket(const Address& address) const;
 
 		//Delegates related
 		void ExecuteOnPeerConnected();
 		void ExecuteOnPeerDisconnected();
+		void ExecuteOnLocalConnectionFailed(ConnectionFailedReasonType reason);
 
 		std::queue<unsigned int> _remotePeerSlotIDsToDisconnect;
+		//TODO Create slots for handle fixed-size number of maximum connections
+		std::vector<bool> _pendingConnectionSlots;
 		std::vector<PendingConnection> _pendingConnections;
 		const int _maxConnections;
 		std::vector<bool> _remotePeerSlots;
@@ -79,6 +94,8 @@ namespace NetLib
 		void ProcessDatagram(Buffer& buffer, const Address& address);
 		void ProcessNewRemotePeerMessages();
 
+		void TickPendingConnections(float elapsedTime);
+		void HandlerPendingConnectionsInactivity();
 		void TickRemotePeers(float elapsedTime);
 		void HandlerRemotePeersInactivity();
 
@@ -114,6 +131,8 @@ namespace NetLib
 
 		Common::Delegate<> _onPeerConnected;
 		Common::Delegate<> _onPeerDisconnected;
+		//This should only be called in client-side since the server is not connecting to anything.
+		Common::Delegate<ConnectionFailedReasonType> _onLocalConnectionFailed;
 	};
 
 

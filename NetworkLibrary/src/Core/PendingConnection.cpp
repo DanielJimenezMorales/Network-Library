@@ -6,7 +6,7 @@
 
 namespace NetLib
 {
-	PendingConnection::PendingConnection(const Address& addr) : _address(Address(addr.GetInfo())), _clientSalt(0), _serverSalt(0)
+	PendingConnection::PendingConnection() : _address(Address::GetInvalid()), _maxTimeout(0), _timeoutLeft(0), _clientSalt(0), _serverSalt(0)
 	{
 		_transmissionChannel = new UnreliableOrderedTransmissionChannel();
 	}
@@ -15,6 +15,8 @@ namespace NetLib
 		_address(std::move(other._address)),
 		_clientSalt(std::move(other._clientSalt)),						//unnecessary move, just in case I change that type
 		_serverSalt(std::move(other._serverSalt)),						//unnecessary move, just in case I change that type
+		_maxTimeout(std::move(other._maxTimeout)),						//unnecessary move, just in case I change that type
+		_timeoutLeft(std::move(other._timeoutLeft)),					//unnecessary move, just in case I change that type
 		_transmissionChannel(std::move(other._transmissionChannel))		//unnecessary move, just in case I change that type
 	{
 		other._transmissionChannel = nullptr;
@@ -30,9 +32,29 @@ namespace NetLib
 		_address = std::move(other._address);
 		_clientSalt = std::move(other._clientSalt);						//unnecessary move, just in case I change that type
 		_serverSalt = std::move(other._serverSalt);						//unnecessary move, just in case I change that type
+		_maxTimeout = std::move(other._maxTimeout);						//unnecessary move, just in case I change that type
+		_timeoutLeft = std::move(other._timeoutLeft);					//unnecessary move, just in case I change that type
 		_transmissionChannel = std::move(other._transmissionChannel);	//unnecessary move, just in case I change that type
 		other._transmissionChannel = nullptr;
 		return *this;
+	}
+
+	void PendingConnection::Initialize(const Address& addr, float timeoutSeconds)
+	{
+		_address = addr;
+		_maxTimeout = timeoutSeconds;
+		_timeoutLeft = timeoutSeconds;
+	}
+
+	void PendingConnection::Tick(float deltaTime)
+	{
+		_timeoutLeft -= deltaTime;
+		if (_timeoutLeft < 0.f)
+		{
+			_timeoutLeft = 0.f;
+		}
+
+		_transmissionChannel->Update(deltaTime);
 	}
 
 	bool PendingConnection::ArePendingMessages() const
@@ -68,6 +90,17 @@ namespace NetLib
 	void PendingConnection::FreeSentMessages()
 	{
 		_transmissionChannel->FreeSentMessages();
+	}
+
+	void PendingConnection::Reset()
+	{
+		_address = Address::GetInvalid();
+		_maxTimeout = 0;
+		_timeoutLeft = 0;
+		_clientSalt = 0;
+		_serverSalt = 0;
+
+		_transmissionChannel->Reset();
 	}
 
 	PendingConnection::~PendingConnection()

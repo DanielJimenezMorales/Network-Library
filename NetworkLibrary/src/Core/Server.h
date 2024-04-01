@@ -50,12 +50,12 @@ namespace NetLib
 		int IsClientAbleToConnect(const Address& address) const;
 		void AddNewRemotePeer(int remotePeerSlotIndex, const Address& address, uint64_t dataPrefix);
 
-		void CreateConnectionChallengeMessage(const Address& address, int pendingConnectionIndex);
+		void CreateConnectionChallengeMessage(const Address& address, PendingConnection& pendingConnection);
 		void CreateConnectionApprovedMessage(RemotePeer& remotePeer);
 		void CreateDisconnectionMessage(RemotePeer& remotePeer);
 		void CreateTimeResponseMessage(RemotePeer& remotePeer, const TimeRequestMessage& timeRequest);
 		void CreateInGameResponseMessage(RemotePeer& remotePeer, uint64_t data);
-		void SendConnectionDeniedPacket(const Address& address) const;
+		void SendConnectionDeniedPacket(const Address& address, ConnectionFailedReasonType reason) const;
 		void SendPacketToRemotePeer(const RemotePeer& remotePeer, const NetworkPacket& packet) const;
 
 		unsigned int _nextAssignedRemotePeerID = 1;
