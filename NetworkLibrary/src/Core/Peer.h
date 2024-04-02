@@ -22,7 +22,8 @@ namespace NetLib
 	{
 		CFR_UNKNOWN = 0,
 		CFR_TIMEOUT = 1,
-		CFR_SERVER_FULL = 2
+		CFR_SERVER_FULL = 2,
+		CFR_PEER_SHUT_DOWN = 3
 	};
 
 	enum PeerType : uint8_t
@@ -32,6 +33,7 @@ namespace NetLib
 		ServerMode = 2
 	};
 
+	//TODO Think how to handle connection timed out on client and disconnection on both client and server in order to make it work correctly
 	class Peer
 	{
 	public:
@@ -68,15 +70,23 @@ namespace NetLib
 		PendingConnection* GetPendingConnectionFromIndex(unsigned int index);
 
 		void SendPacketToAddress(const NetworkPacket& packet, const Address& address) const;
-		bool AddRemoteClient(const Address& addressInfo, uint16_t id, uint64_t dataPrefix);
+		bool AddRemotePeer(const Address& addressInfo, uint16_t id, uint64_t dataPrefix);
 		int FindFreeRemotePeerSlot() const;
 		RemotePeer* GetRemotePeerFromAddress(const Address& address);
 		bool IsRemotePeerAlreadyConnected(const Address& address) const;
 		bool IsPendingConnectionAlreadyAdded(const Address& address) const;//TODO Delete this one, it is not being used
-		void RemovePendingConnection(const Address& address);
+		void RemovePendingConnection(const Address& address);//TODO Rewrite this method
 		bool BindSocket(const Address& address) const;
 
+		void RemoveAllRemotePeers(ConnectionFailedReasonType reason);
+		void RemoveRemotePeer(unsigned int remotePeerIndex, ConnectionFailedReasonType reason);
+		void CreateDisconnectionPacket(const RemotePeer& remotePeer, ConnectionFailedReasonType reason);
+
 		//Delegates related
+		template<typename Functor>
+		unsigned int SubscribeToOnPendingConnectionTimedOut(Functor&& functor);
+		void UnsubscribeToOnPendingConnectionTimedOut(unsigned int id);
+
 		void ExecuteOnPeerConnected();
 		void ExecuteOnPeerDisconnected();
 		void ExecuteOnLocalConnectionFailed(ConnectionFailedReasonType reason);
@@ -95,9 +105,7 @@ namespace NetLib
 		void ProcessNewRemotePeerMessages();
 
 		void TickPendingConnections(float elapsedTime);
-		void HandlerPendingConnectionsInactivity();
 		void TickRemotePeers(float elapsedTime);
-		void HandlerRemotePeersInactivity();
 
 		int GetPendingConnectionIndexFromAddress(const Address& address) const;
 		int GetRemotePeerIndexFromAddress(const Address& address) const;
@@ -120,6 +128,12 @@ namespace NetLib
 		void StartDisconnectingRemotePeer(unsigned int index);
 		void FinishRemotePeersDisconnection();
 
+		void StopInternal(ConnectionFailedReasonType reason);
+		void ResetPendingConnections();
+
+		//Delegates related
+		void ExecuteOnPendingConnectionTimedOut(const Address& address);
+
 		PeerType _type;
 		Address _address;
 		Socket _socket;
@@ -133,6 +147,7 @@ namespace NetLib
 		Common::Delegate<> _onPeerDisconnected;
 		//This should only be called in client-side since the server is not connecting to anything.
 		Common::Delegate<ConnectionFailedReasonType> _onLocalConnectionFailed;
+		Common::Delegate<const Address&> _onPendingConnectionTimedOut;
 	};
 
 
@@ -146,5 +161,11 @@ namespace NetLib
 	inline unsigned int Peer::SubscribeToOnPeerDisconnected(Functor&& functor)
 	{
 		return _onPeerDisconnected.AddSubscriber(std::forward<Functor>(functor));
+	}
+
+	template<typename Functor>
+	inline unsigned int Peer::SubscribeToOnPendingConnectionTimedOut(Functor&& functor)
+	{
+		return _onPendingConnectionTimedOut.AddSubscriber(std::forward<Functor>(functor));
 	}
 }

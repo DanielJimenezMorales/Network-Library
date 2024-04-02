@@ -105,6 +105,7 @@ namespace NetLib
 	{
 		_header.Write(buffer);
 		buffer.WriteLong(prefix);
+		buffer.WriteByte(reason);
 	}
 
 	void DisconnectionMessage::Read(Buffer& buffer)
@@ -113,11 +114,12 @@ namespace NetLib
 		_header.ReadWithoutHeader(buffer);
 
 		prefix = buffer.ReadLong();
+		reason = buffer.ReadByte();
 	}
 
 	uint32_t DisconnectionMessage::Size() const
 	{
-		return MessageHeader::Size() + sizeof(uint64_t);
+		return MessageHeader::Size() + sizeof(uint64_t) + sizeof(uint8_t);
 	}
 
 	void TimeRequestMessage::Write(Buffer& buffer) const

@@ -111,6 +111,9 @@ namespace NetLib
 			return SocketResult::ERR;
 		}
 
+		_listenSocket = INVALID_SOCKET;
+
+		Common::LOG_INFO("Socket succesfully closed");
 		return SocketResult::SUCCESS;
 	}
 

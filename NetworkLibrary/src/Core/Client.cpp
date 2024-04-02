@@ -15,8 +15,6 @@ namespace NetLib
 	Client::Client(float serverMaxInactivityTimeout) : Peer(PeerType::ClientMode, 1, 1024, 1024),
 		_serverMaxInactivityTimeout(serverMaxInactivityTimeout),
 		_serverInactivityTimeLeft(serverMaxInactivityTimeout),
-		_saltNumber(0),
-		_dataPrefix(0),
 		_serverAddress("127.0.0.1", 54000),
 		inGameMessageID(0),
 		_timeSinceLastTimeRequest(0.0f),
@@ -55,19 +53,20 @@ namespace NetLib
 		_currentState = ClientState::SendingConnectionRequest;
 		_serverInactivityTimeLeft = _serverMaxInactivityTimeout;
 
-		GenerateClientSaltNumber();
-		AddPendingConnection(_serverAddress, 1.f);
+		uint64_t clientSalt = GenerateClientSaltNumber();
+		int index = AddPendingConnection(_serverAddress, 1.f);
+		GetPendingConnectionFromIndex(index)->SetClientSalt(clientSalt);
 
 		Common::LOG_INFO("Client started succesfully!");
 
 		return true;
 	}
 
-	void Client::GenerateClientSaltNumber()
+	uint64_t Client::GenerateClientSaltNumber()
 	{
 		//TODO Change this for a better generator. rand is not generating a full 64bit integer since its maximum is roughly 32767. I have tried to use mt19937_64 but I think I get a conflict with winsocks and std::uniform_int_distribution
 		srand(time(NULL));
-		_saltNumber = rand();
+		return rand();
 	}
 
 	void Client::ProcessMessage(const Message& message, const Address& address)
@@ -80,14 +79,14 @@ namespace NetLib
 			if (_currentState == ClientState::SendingConnectionRequest || _currentState == ClientState::SendingConnectionChallengeResponse)
 			{
 				const ConnectionChallengeMessage& connectionChallengeMessage = static_cast<const ConnectionChallengeMessage&>(message);
-				ProcessConnectionChallenge(connectionChallengeMessage);
+				ProcessConnectionChallenge(connectionChallengeMessage, address);
 			}
 			break;
 		case MessageType::ConnectionAccepted:
 			if (_currentState == ClientState::SendingConnectionChallengeResponse)
 			{
 				const ConnectionAcceptedMessage& connectionAcceptedMessage = static_cast<const ConnectionAcceptedMessage&>(message);
-				ProcessConnectionRequestAccepted(connectionAcceptedMessage);
+				ProcessConnectionRequestAccepted(connectionAcceptedMessage, address);
 			}
 			break;
 		case MessageType::ConnectionDenied:
@@ -101,7 +100,7 @@ namespace NetLib
 			if (_currentState == ClientState::Connected)
 			{
 				const DisconnectionMessage& disconnectionMessage = static_cast<const DisconnectionMessage&>(message);
-				ProcessDisconnection(disconnectionMessage);
+				ProcessDisconnection(disconnectionMessage, address);
 			}
 			break;
 		case MessageType::TimeResponse:
@@ -128,7 +127,16 @@ namespace NetLib
 	{
 		if (_currentState == ClientState::SendingConnectionRequest || _currentState == ClientState::SendingConnectionChallengeResponse)
 		{
-			CreateConnectionRequestMessage();
+			PendingConnection* pendingConnection = GetPendingConnectionFromAddress(_serverAddress);
+			if (pendingConnection == nullptr)
+			{
+				std::stringstream ss;
+				ss << "Can't create new Connection Request Message because there is no PendingConnection corresponding to IP: " << _serverAddress.GetIP();
+				Common::LOG_ERROR(ss.str());
+				return;
+			}
+
+			CreateConnectionRequestMessage(*pendingConnection);
 		}
 
 		if (_currentState != ClientState::Disconnected)
@@ -146,7 +154,16 @@ namespace NetLib
 		if (_currentState == ClientState::Connected)
 		{
 			UpdateTimeRequestsElapsedTime(elapsedTime);
-			CreateInGameMessage();
+
+			RemotePeer* remotePeer = GetRemotePeerFromAddress(_serverAddress);
+			if (remotePeer == nullptr)
+			{
+				std::stringstream ss;
+				ss << "There is no Remote peer corresponding to IP: " << _serverAddress.GetIP();
+				Common::LOG_ERROR(ss.str());
+				return;
+			}
+			CreateInGameMessage(*remotePeer);
 		}
 	}
 
@@ -156,43 +173,64 @@ namespace NetLib
 
 	bool Client::StopConcrete()
 	{
+		_currentState = ClientState::Disconnected();
 		return true;
 	}
 
-	void Client::ProcessConnectionChallenge(const ConnectionChallengeMessage& message)
+	void Client::ProcessConnectionChallenge(const ConnectionChallengeMessage& message, const Address& address)
 	{
 		Common::LOG_INFO("Challenge packet received from server");
 
+		//Get server's pending connection
+		PendingConnection* pendingConnection = GetPendingConnectionFromAddress(address);
+		if (pendingConnection == nullptr)
+		{
+			std::stringstream ss;
+			ss << "There is no pending connection corresponding with IP: " << address.GetIP();
+			Common::LOG_ERROR(ss.str());
+			return;
+		}
+
 		uint64_t clientSalt = message.clientSalt;
 		uint64_t serverSalt = message.serverSalt;
-		if (_saltNumber != clientSalt)
+		if (pendingConnection->GetClientSalt() != clientSalt)
 		{
 			Common::LOG_WARNING("The generated salt number does not match the server's challenge client salt number. Aborting operation");
 			return;
 		}
 
-		_dataPrefix = clientSalt ^ serverSalt; //XOR operation to create the data prefix for all packects from now on
+		pendingConnection->SetServerSalt(serverSalt);
 
 		_currentState = ClientState::SendingConnectionChallengeResponse;
 
-		CreateConnectionChallengeResponse();
+		CreateConnectionChallengeResponse(*pendingConnection);
 
 		Common::LOG_INFO("Sending challenge response packet to server...");
 	}
 
-	void Client::ProcessConnectionRequestAccepted(const ConnectionAcceptedMessage& message)
+	void Client::ProcessConnectionRequestAccepted(const ConnectionAcceptedMessage& message, const Address& address)
 	{
-		uint64_t dataPrefix = message.prefix;
-		if (dataPrefix != _dataPrefix)
+		//Get server's pending connection
+		PendingConnection* pendingConnection = GetPendingConnectionFromAddress(address);
+		if (pendingConnection == nullptr)
+		{
+			std::stringstream ss;
+			ss << "There is no pending connection corresponding with IP: " << address.GetIP();
+			Common::LOG_ERROR(ss.str());
+			return;
+		}
+
+		uint64_t pendingConnectionDataPrefix = pendingConnection->GetPrefix();
+		uint64_t remoteDataPrefix = message.prefix;
+		if (remoteDataPrefix != pendingConnectionDataPrefix)
 		{
 			Common::LOG_WARNING("Packet prefix does not match. Skipping packet...");
 			return;
 		}
 
-		DeletePendingConnectionAtIndex(0);
+		AddRemotePeer(address, 0, remoteDataPrefix);
 
-		_remotePeerSlots[0] = true;
-		_remotePeers[0].Connect(_serverAddress.GetInfo(), 0, 5, dataPrefix);
+		DeletePendingConnectionAtIndex(0);
 
 		_clientIndex = message.clientIndexAssigned;
 		_currentState = ClientState::Connected;
@@ -209,19 +247,27 @@ namespace NetLib
 		ExecuteOnLocalConnectionFailed(static_cast<ConnectionFailedReasonType>(message.reason));
 	}
 
-	void Client::ProcessDisconnection(const DisconnectionMessage& message)
+	void Client::ProcessDisconnection(const DisconnectionMessage& message, const Address& address)
 	{
+		RemotePeer* remotePeer = GetRemotePeerFromAddress(address);
+		if (remotePeer == nullptr)
+		{
+			std::stringstream ss;
+			ss << "There is no remote peer corresponding with IP: " << address.GetIP();
+			Common::LOG_ERROR(ss.str());
+			return;
+		}
+
 		uint64_t dataPrefix = message.prefix;
-		if (dataPrefix != _dataPrefix)
+		if (dataPrefix != remotePeer->GetDataPrefix())
 		{
 			Common::LOG_WARNING("Packet prefix does not match. Skipping packet...");
 			return;
 		}
 
-		_currentState = ClientState::Disconnected();
-		Common::LOG_INFO("Disconnection message received from server. Disconnecting...");
+		Stop();
 
-		ExecuteOnPeerDisconnected();
+		Common::LOG_INFO("Disconnection message received from server. Disconnecting...");
 	}
 
 	void Client::ProcessTimeResponse(const TimeResponseMessage& message)
@@ -285,7 +331,7 @@ namespace NetLib
 		Common::LOG_INFO(ss.str());
 	}
 
-	void Client::CreateConnectionRequestMessage()
+	void Client::CreateConnectionRequestMessage(PendingConnection& pendingConnection)
 	{
 		//Get a connection request message
 		MessageFactory& messageFactory = MessageFactory::GetInstance();
@@ -300,27 +346,15 @@ namespace NetLib
 		std::unique_ptr<ConnectionRequestMessage> connectionRequestMessage(static_cast<ConnectionRequestMessage*>(message.release()));
 
 		//Set connection request fields
-		connectionRequestMessage->clientSalt = _saltNumber;
+		connectionRequestMessage->clientSalt = pendingConnection.GetClientSalt();
 
 		//Store message in server's pending connection in order to send it
-		const unsigned int serverPendingConnectionIndex = 0;
-		PendingConnection* pendingConnection = GetPendingConnectionFromIndex(serverPendingConnectionIndex);
-		if (pendingConnection == nullptr)
-		{
-			messageFactory.ReleaseMessage(std::move(connectionRequestMessage));
-
-			std::stringstream ss;
-			ss << "Can't create new Connection Request Message because the PendingConnection at index " << serverPendingConnectionIndex << " is null";
-			Common::LOG_ERROR(ss.str());
-			return;
-		}
-
-		pendingConnection->AddMessage(std::move(connectionRequestMessage));
+		pendingConnection.AddMessage(std::move(connectionRequestMessage));
 
 		Common::LOG_INFO("Connection request created.");
 	}
 
-	void Client::CreateConnectionChallengeResponse()
+	void Client::CreateConnectionChallengeResponse(PendingConnection& pendingConnection)
 	{
 		//Get a connection challenge message
 		MessageFactory& messageFactory = MessageFactory::GetInstance();
@@ -334,25 +368,13 @@ namespace NetLib
 		std::unique_ptr<ConnectionChallengeResponseMessage> connectionChallengeResponseMessage(static_cast<ConnectionChallengeResponseMessage*>(message.release()));
 		
 		//Set connection challenge fields
-		connectionChallengeResponseMessage->prefix = _dataPrefix;
+		connectionChallengeResponseMessage->prefix = pendingConnection.GetPrefix();
 
 		//Store message in server's pending connection in order to send it
-		const unsigned int serverPendingConnectionIndex = 0;
-		PendingConnection* pendingConnection = GetPendingConnectionFromIndex(serverPendingConnectionIndex);
-		if (pendingConnection == nullptr)
-		{
-			messageFactory.ReleaseMessage(std::move(connectionChallengeResponseMessage));
-
-			std::stringstream ss;
-			ss << "Can't create new Connection Request Message because the PendingConnection at index " << serverPendingConnectionIndex << " is null";
-			Common::LOG_ERROR(ss.str());
-			return;
-		}
-
-		pendingConnection->AddMessage(std::move(connectionChallengeResponseMessage));
+		pendingConnection.AddMessage(std::move(connectionChallengeResponseMessage));
 	}
 
-	void Client::CreateTimeRequestMessage()
+	void Client::CreateTimeRequestMessage(RemotePeer& remotePeer)
 	{
 		Common::LOG_INFO("TIME REQUEST CREATED");
 		MessageFactory& messageFactory = MessageFactory::GetInstance();
@@ -364,10 +386,10 @@ namespace NetLib
 		TimeClock& timeClock = TimeClock::GetInstance();
 		timeRequestMessage->remoteTime = timeClock.GetLocalTimeMilliseconds();
 
-		_remotePeers[0].AddMessage(std::move(timeRequestMessage));
+		remotePeer.AddMessage(std::move(timeRequestMessage));
 	}
 
-	void Client::CreateInGameMessage()
+	void Client::CreateInGameMessage(RemotePeer& remotePeer)
 	{
 		MessageFactory& messageFactory = MessageFactory::GetInstance();
 		std::unique_ptr<Message> message = messageFactory.LendMessage(MessageType::InGame);
@@ -381,23 +403,41 @@ namespace NetLib
 		inGameMessage->SetOrdered(true);
 		inGameMessage->data = inGameMessageID;
 		inGameMessageID++;
-		_remotePeers[0].AddMessage(std::move(inGameMessage));
+		remotePeer.AddMessage(std::move(inGameMessage));
 	}
 
 	void Client::UpdateTimeRequestsElapsedTime(float elapsedTime)
 	{
 		if (_numberOfInitialTimeRequestBurstLeft > 0)
 		{
+			RemotePeer* remotePeer = GetRemotePeerFromAddress(_serverAddress);
+			if (remotePeer == nullptr)
+			{
+				std::stringstream ss;
+				ss << "There is no Remote peer corresponding to IP: " << _serverAddress.GetIP();
+				Common::LOG_ERROR(ss.str());
+				return;
+			}
+
 			--_numberOfInitialTimeRequestBurstLeft;
-			CreateTimeRequestMessage();
+			CreateTimeRequestMessage(*remotePeer);
 			return;
 		}
 
 		_timeSinceLastTimeRequest += elapsedTime;
 		if (_timeSinceLastTimeRequest >= TIME_REQUESTS_FREQUENCY_SECONDS)
 		{
+			RemotePeer* remotePeer = GetRemotePeerFromAddress(_serverAddress);
+			if (remotePeer == nullptr)
+			{
+				std::stringstream ss;
+				ss << "There is no Remote peer corresponding to IP: " << _serverAddress.GetIP();
+				Common::LOG_ERROR(ss.str());
+				return;
+			}
+
 			_timeSinceLastTimeRequest = 0;
-			CreateTimeRequestMessage();
+			CreateTimeRequestMessage(*remotePeer);
 		}
 	}
 }

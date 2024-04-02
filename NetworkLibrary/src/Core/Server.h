@@ -48,7 +48,6 @@ namespace NetLib
 		/// -1 = Unable to connect, the server has reached its maximum connections.
 		/// </returns>
 		int IsClientAbleToConnect(const Address& address) const;
-		void AddNewRemotePeer(int remotePeerSlotIndex, const Address& address, uint64_t dataPrefix);
 
 		void CreateConnectionChallengeMessage(const Address& address, PendingConnection& pendingConnection);
 		void CreateConnectionApprovedMessage(RemotePeer& remotePeer);

@@ -91,7 +91,7 @@ namespace NetLib
 	void Server::ProcessConnectionRequest(const ConnectionRequestMessage& message, const Address& address)
 	{
 		std::stringstream ss;
-		ss << "Processing connection request from [IP: " << address.GetIP() << ", Port: " << address.GetPort() << "]";
+		ss << "Processing connection request from [IP: " << address.GetIP() << ", Port: " << address.GetPort() << "] with salt number " << message.clientSalt;
 		Common::LOG_INFO(ss.str());
 
 		int isAbleToConnectResult = IsClientAbleToConnect(address);
@@ -270,14 +270,15 @@ namespace NetLib
 			else
 			{
 				//Create remote client
-				int availableClientSlot = FindFreeRemotePeerSlot();
-				AddNewRemotePeer(availableClientSlot, address, dataPrefix);
+				AddRemotePeer(address, _nextAssignedRemotePeerID, dataPrefix);
+				++_nextAssignedRemotePeerID;
 
 				//Delete pending connection since we have accepted
 				DeletePendingConnectionAtIndex(pendingConnectionIndex);
 
 				//Send connection approved packet
-				CreateConnectionApprovedMessage(_remotePeers[availableClientSlot]);
+				RemotePeer* remotePeer = GetRemotePeerFromAddress(address);
+				CreateConnectionApprovedMessage(*remotePeer);
 				Common::LOG_INFO("Connection approved");
 			}
 		}
@@ -336,13 +337,6 @@ namespace NetLib
 		return 0;
 	}
 
-	void Server::AddNewRemotePeer(int remotePeerSlotIndex, const Address& address, uint64_t dataPrefix)
-	{
-		_remotePeerSlots[remotePeerSlotIndex] = true;
-		_remotePeers[remotePeerSlotIndex].Connect(address.GetInfo(), _nextAssignedRemotePeerID, REMOTE_CLIENT_INACTIVITY_TIME, dataPrefix);
-		++_nextAssignedRemotePeerID;
-	}
-
 	void Server::CreateConnectionApprovedMessage(RemotePeer& remotePeer)
 	{
 		MessageFactory& messageFactory = MessageFactory::GetInstance();
@@ -373,7 +367,6 @@ namespace NetLib
 	{
 		//TODO: Send disconnect packet to all the connected clients
 
-		ExecuteOnPeerDisconnected();
 		return true;
 	}
 }

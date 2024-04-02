@@ -10,7 +10,6 @@
 
 namespace NetLib
 {
-
 	class Message;
 	class ConnectionChallengeMessage;
 	class ConnectionAcceptedMessage;
@@ -56,18 +55,18 @@ namespace NetLib
 		bool StopConcrete() override;
 
 	private:
-		void GenerateClientSaltNumber();
-		void ProcessConnectionChallenge(const ConnectionChallengeMessage& message);
-		void ProcessConnectionRequestAccepted(const ConnectionAcceptedMessage& message);
+		uint64_t GenerateClientSaltNumber();
+		void ProcessConnectionChallenge(const ConnectionChallengeMessage& message, const Address& address);
+		void ProcessConnectionRequestAccepted(const ConnectionAcceptedMessage& message, const Address& address);
 		void ProcessConnectionRequestDenied(const ConnectionDeniedMessage& message);
-		void ProcessDisconnection(const DisconnectionMessage& message);
+		void ProcessDisconnection(const DisconnectionMessage& message, const Address& address);
 		void ProcessTimeResponse(const TimeResponseMessage& message);
 		void ProcessInGameResponse(const InGameResponseMessage& message);
 
-		void CreateConnectionRequestMessage();
-		void CreateConnectionChallengeResponse();
-		void CreateTimeRequestMessage();
-		void CreateInGameMessage();
+		void CreateConnectionRequestMessage(PendingConnection& pendingConnection);
+		void CreateConnectionChallengeResponse(PendingConnection& pendingConnection);
+		void CreateTimeRequestMessage(RemotePeer& remotePeer);
+		void CreateInGameMessage(RemotePeer& remotePeer);
 
 		void UpdateTimeRequestsElapsedTime(float elapsedTime);
 
@@ -75,8 +74,6 @@ namespace NetLib
 		ClientState _currentState = ClientState::Disconnected;
 		const float _serverMaxInactivityTimeout;
 		float _serverInactivityTimeLeft;
-		uint64_t _saltNumber;
-		uint64_t _dataPrefix;
 		unsigned int _clientIndex;
 
 		unsigned int inGameMessageID; //Only for RUDP testing purposes. Delete later!

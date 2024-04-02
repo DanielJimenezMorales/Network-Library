@@ -33,7 +33,7 @@ namespace NetLib
 		void AddSentMessage(std::unique_ptr<Message> message);
 		void FreeSentMessages();
 
-		uint64_t GetPrefix() const { return _clientSalt ^ _serverSalt; }
+		uint64_t GetPrefix() const { return _clientSalt ^ _serverSalt; } //XOR operation to create the data prefix for all packects from now on
 		uint64_t GetClientSalt() const { return _clientSalt; }
 		uint64_t GetServerSalt() const { return _serverSalt; }
 		const Address& GetAddress() const { return _address; }

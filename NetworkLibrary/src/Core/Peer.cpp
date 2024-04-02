@@ -36,7 +36,6 @@ namespace NetLib
 
 		TickPendingConnections(elapsedTime);
 		TickRemotePeers(elapsedTime);
-		HandlerRemotePeersInactivity();
 		TickConcrete(elapsedTime);
 
 		SendData();
@@ -47,10 +46,8 @@ namespace NetLib
 
 	bool Peer::Stop()
 	{
-		StopConcrete();
-		_socket.Close();
-
-		MessageFactory::DeleteInstance();
+		StopInternal(ConnectionFailedReasonType::CFR_PEER_SHUT_DOWN);
+		ExecuteOnPeerDisconnected();
 
 		return true;
 	}
@@ -108,7 +105,7 @@ namespace NetLib
 		_socket.SendTo(_sendBuffer, packet.Size(), address);
 	}
 
-	bool Peer::AddRemoteClient(const Address& addressInfo, uint16_t id, uint64_t dataPrefix)
+	bool Peer::AddRemotePeer(const Address& addressInfo, uint16_t id, uint64_t dataPrefix)
 	{
 		int slotIndex = FindFreeRemotePeerSlot();
 		if (slotIndex == -1)
@@ -222,6 +219,46 @@ namespace NetLib
 		return true;
 	}
 
+	void Peer::RemoveAllRemotePeers(ConnectionFailedReasonType reason)
+	{
+		for (unsigned int i = 0; i < _maxConnections; ++i)
+		{
+			if (_remotePeerSlots[i])
+			{
+				RemoveRemotePeer(i, reason);
+			}
+		}
+	}
+
+	void Peer::RemoveRemotePeer(unsigned int index, ConnectionFailedReasonType reason)
+	{
+		if (_remotePeerSlots[index])
+		{
+			_remotePeerSlots[index] = false;
+
+			CreateDisconnectionPacket(_remotePeers[index], reason);
+			_remotePeers[index].Disconnect();
+		}
+	}
+
+	void Peer::CreateDisconnectionPacket(const RemotePeer& remotePeer, ConnectionFailedReasonType reason)
+	{
+		NetworkPacket packet;
+		packet.SetHeaderChannelType(TransmissionChannelType::UnreliableUnordered);
+
+		MessageFactory& messageFactory = MessageFactory::GetInstance();
+		std::unique_ptr<Message> message = messageFactory.LendMessage(MessageType::Disconnection);
+
+		std::unique_ptr<DisconnectionMessage> disconenctionMessage(static_cast<DisconnectionMessage*>(message.release()));
+		disconenctionMessage->SetOrdered(false);
+		disconenctionMessage->SetReliability(false);
+		disconenctionMessage->prefix = remotePeer.GetDataPrefix();
+		disconenctionMessage->reason = reason;
+
+		packet.AddMessage(std::move(disconenctionMessage));
+		SendPacketToAddress(packet, remotePeer.GetAddress());
+	}
+
 	int Peer::AddPendingConnection(const Address& addr, float timeoutSeconds)
 	{
 		int index = -1;
@@ -275,6 +312,11 @@ namespace NetLib
 	void Peer::UnsubscribeToOnPeerDisconnected(unsigned int id)
 	{
 		_onPeerDisconnected.DeleteSubscriber(id);
+	}
+
+	void Peer::UnsubscribeToOnPendingConnectionTimedOut(unsigned int id)
+	{
+		_onPendingConnectionTimedOut.DeleteSubscriber(id);
 	}
 
 	void Peer::ProcessReceivedData()
@@ -373,15 +415,34 @@ namespace NetLib
 	void Peer::TickPendingConnections(float elapsedTime)
 	{
 		unsigned int numberOfPendingConnections = _pendingConnections.size();
+
+		std::vector<unsigned int> inactivePendingConnectionIndexes;
+		inactivePendingConnectionIndexes.reserve(numberOfPendingConnections);
+
+		//Update pending connections
 		for (unsigned int i = 0; i < numberOfPendingConnections; ++i)
 		{
 			if (_pendingConnectionSlots[i])
 			{
 				_pendingConnections[i].Tick(elapsedTime);
+				if (_pendingConnections[i].IsInactive())
+				{
+					inactivePendingConnectionIndexes.push_back(i);
+				}
 			}
 		}
 
-		//TODO Delete inactive pending connections
+		//Delete pending connections that have timed out (That means they are inactive!)
+		int inactiveIndex = -1;
+		Address inactiveAddress = Address::GetInvalid();
+		for (size_t i = 0; i < inactivePendingConnectionIndexes.size(); ++i)
+		{
+			inactiveIndex = inactivePendingConnectionIndexes[i];
+			inactiveAddress = _pendingConnections[inactiveIndex].GetAddress();
+			DeletePendingConnectionAtIndex(inactiveIndex);
+
+			ExecuteOnPendingConnectionTimedOut(inactiveAddress);
+		}
 	}
 
 	void Peer::TickRemotePeers(float elapsedTime)
@@ -391,16 +452,8 @@ namespace NetLib
 			if (_remotePeerSlots[i])
 			{
 				_remotePeers[i].Tick(elapsedTime);
-			}
-		}
-	}
 
-	void Peer::HandlerRemotePeersInactivity()
-	{
-		for (unsigned int i = 0; i < _maxConnections; ++i)
-		{
-			if (_remotePeerSlots[i])
-			{
+				//Start the disconnection process for those ones who are inactive
 				if (_remotePeers[i].IsInactive())
 				{
 					StartDisconnectingRemotePeer(i);
@@ -598,6 +651,34 @@ namespace NetLib
 			{
 				_remotePeerSlots[remoteClientSlot] = false;
 				_remotePeers[remoteClientSlot].Disconnect();
+			}
+		}
+	}
+
+	void Peer::ExecuteOnPendingConnectionTimedOut(const Address& address)
+	{
+		_onPendingConnectionTimedOut.Execute(address);
+	}
+
+	void Peer::StopInternal(ConnectionFailedReasonType reason)
+	{
+		StopConcrete();
+
+		ResetPendingConnections();
+		RemoveAllRemotePeers(reason);
+
+		_socket.Close();
+
+		MessageFactory::DeleteInstance();
+	}
+
+	void Peer::ResetPendingConnections()
+	{
+		for (unsigned int i = 0; i < _pendingConnections.size(); ++i)
+		{
+			if (_pendingConnectionSlots[i])
+			{
+				DeletePendingConnectionAtIndex(i);
 			}
 		}
 	}
