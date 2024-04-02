@@ -76,6 +76,11 @@ namespace NetLib
 			ProcessTimeRequest(timeRequestMessage, address);
 			break;
 		}
+		case MessageType::Disconnection:
+		{
+			const DisconnectionMessage& disconnectionMessage = static_cast<const DisconnectionMessage&>(message);
+			ProcessDisconnection(disconnectionMessage, address);
+		}
 		case MessageType::InGame:
 		{
 			const InGameMessage& inGameMessage = static_cast<const InGameMessage&>(message);
@@ -94,7 +99,7 @@ namespace NetLib
 		ss << "Processing connection request from [IP: " << address.GetIP() << ", Port: " << address.GetPort() << "] with salt number " << message.clientSalt;
 		Common::LOG_INFO(ss.str());
 
-		int isAbleToConnectResult = IsClientAbleToConnect(address);
+		int isAbleToConnectResult = IsRemotePeerAbleToConnect(address);
 
 		if (isAbleToConnectResult == 0)//If there is green light keep with the connection pipeline.
 		{
@@ -244,7 +249,7 @@ namespace NetLib
 
 		uint64_t dataPrefix = message.prefix;
 
-		int isAbleToConnectResult = IsClientAbleToConnect(address);
+		int isAbleToConnectResult = IsRemotePeerAbleToConnect(address);
 
 		if (isAbleToConnectResult == 0)//If there is green light keep with the connection pipeline.
 		{
@@ -274,7 +279,7 @@ namespace NetLib
 				++_nextAssignedRemotePeerID;
 
 				//Delete pending connection since we have accepted
-				DeletePendingConnectionAtIndex(pendingConnectionIndex);
+				RemovePendingConnectionAtIndex(pendingConnectionIndex);
 
 				//Send connection approved packet
 				RemotePeer* remotePeer = GetRemotePeerFromAddress(address);
@@ -321,7 +326,32 @@ namespace NetLib
 		CreateInGameResponseMessage(*remotePeer, message.data);
 	}
 
-	int Server::IsClientAbleToConnect(const Address& address) const
+	void Server::ProcessDisconnection(const DisconnectionMessage& message, const Address& address)
+	{
+		RemotePeer* remotePeer = GetRemotePeerFromAddress(address);
+		if (remotePeer == nullptr)
+		{
+			std::stringstream ss;
+			ss << "There is no remote peer corresponding with IP: " << address.GetIP();
+			Common::LOG_ERROR(ss.str());
+			return;
+		}
+
+		uint64_t dataPrefix = message.prefix;
+		if (dataPrefix != remotePeer->GetDataPrefix())
+		{
+			Common::LOG_WARNING("Packet prefix does not match. Skipping message...");
+			return;
+		}
+
+		std::stringstream ss;
+		ss << "Disconnection message received from remote peer with reason code equal to " << (int)message.reason << ". Disconnecting remove peer...";
+		Common::LOG_INFO(ss.str());
+
+		StartDisconnectingRemotePeer(GetRemotePeerIndex(*remotePeer));
+	}
+
+	int Server::IsRemotePeerAbleToConnect(const Address& address) const
 	{
 		if (IsRemotePeerAlreadyConnected(address))
 		{
@@ -365,8 +395,6 @@ namespace NetLib
 
 	bool Server::StopConcrete()
 	{
-		//TODO: Send disconnect packet to all the connected clients
-
 		return true;
 	}
 }

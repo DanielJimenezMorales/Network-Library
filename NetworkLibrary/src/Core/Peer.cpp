@@ -37,10 +37,10 @@ namespace NetLib
 		TickPendingConnections(elapsedTime);
 		TickRemotePeers(elapsedTime);
 		TickConcrete(elapsedTime);
+		FinishRemotePeersDisconnection();
 
 		SendData();
 
-		FinishRemotePeersDisconnection();
 		return true;
 	}
 
@@ -50,6 +50,11 @@ namespace NetLib
 		ExecuteOnPeerDisconnected();
 
 		return true;
+	}
+
+	void Peer::UnsubscribeToOnRemotePeerDisconnect(unsigned int id)
+	{
+		_onRemotePeerDisconnect.DeleteSubscriber(id);
 	}
 
 	Peer::~Peer()
@@ -151,6 +156,24 @@ namespace NetLib
 		return result;
 	}
 
+	int Peer::GetRemotePeerIndex(const RemotePeer& remotePeer) const
+	{
+		int index = -1;
+		for (unsigned int i = 0; i < _maxConnections; ++i)
+		{
+			if (_remotePeerSlots[i])
+			{
+				if (_remotePeers[i].IsAddressEqual(remotePeer.GetAddress()))
+				{
+					index = i;
+					break;
+				}
+			}
+		}
+
+		return index;
+	}
+
 	bool Peer::IsRemotePeerAlreadyConnected(const Address& address) const
 	{
 		bool found = false;
@@ -194,18 +217,15 @@ namespace NetLib
 		return result;
 	}
 
-	void Peer::RemovePendingConnection(const Address& address)
+	bool Peer::RemovePendingConnection(const Address& address)
 	{
 		int index = GetPendingConnectionIndexFromAddress(address);
 		if (index != -1)
 		{
-			_pendingConnections.erase(_pendingConnections.begin() + index);
+			return RemovePendingConnectionAtIndex(index);
 		}
-	}
 
-	bool Peer::IsPendingConnectionAlreadyAdded(const Address& address) const
-	{
-		return GetPendingConnectionIndexFromAddress(address) != -1;
+		return false;
 	}
 
 	bool Peer::BindSocket(const Address& address) const
@@ -238,6 +258,8 @@ namespace NetLib
 
 			CreateDisconnectionPacket(_remotePeers[index], reason);
 			_remotePeers[index].Disconnect();
+
+			ExecuteOnRemotePeerDisconnect();
 		}
 	}
 
@@ -276,7 +298,7 @@ namespace NetLib
 		return index;
 	}
 
-	bool Peer::DeletePendingConnectionAtIndex(unsigned int index)
+	bool Peer::RemovePendingConnectionAtIndex(unsigned int index)
 	{
 		if (_pendingConnectionSlots[index])
 		{
@@ -405,6 +427,7 @@ namespace NetLib
 			while (remotePeer.ArePendingReadyToProcessMessages())
 			{
 				const Message* message = remotePeer.GetPendingReadyToProcessMessage();
+
 				ProcessMessage(*message, remotePeer.GetAddress());
 			}
 
@@ -439,7 +462,7 @@ namespace NetLib
 		{
 			inactiveIndex = inactivePendingConnectionIndexes[i];
 			inactiveAddress = _pendingConnections[inactiveIndex].GetAddress();
-			DeletePendingConnectionAtIndex(inactiveIndex);
+			RemovePendingConnectionAtIndex(inactiveIndex);
 
 			ExecuteOnPendingConnectionTimedOut(inactiveAddress);
 		}
@@ -635,8 +658,11 @@ namespace NetLib
 
 	void Peer::StartDisconnectingRemotePeer(unsigned int index)
 	{
-		DisconnectRemotePeerConcrete(_remotePeers[index]);
-		_remotePeerSlotIDsToDisconnect.push(index);
+		if (_remotePeerSlots[index])
+		{
+			Common::LOG_INFO("EMPIEZO A DESCONECTARR");
+			_remotePeerSlotIDsToDisconnect.push(index);
+		}
 	}
 
 	void Peer::FinishRemotePeersDisconnection()
@@ -649,8 +675,7 @@ namespace NetLib
 
 			if (_remotePeerSlots[remoteClientSlot])
 			{
-				_remotePeerSlots[remoteClientSlot] = false;
-				_remotePeers[remoteClientSlot].Disconnect();
+				RemoveRemotePeer(remoteClientSlot, ConnectionFailedReasonType::CFR_UNKNOWN);
 			}
 		}
 	}
@@ -658,6 +683,11 @@ namespace NetLib
 	void Peer::ExecuteOnPendingConnectionTimedOut(const Address& address)
 	{
 		_onPendingConnectionTimedOut.Execute(address);
+	}
+
+	void Peer::ExecuteOnRemotePeerDisconnect()
+	{
+		_onRemotePeerDisconnect.Execute();
 	}
 
 	void Peer::StopInternal(ConnectionFailedReasonType reason)
@@ -678,7 +708,7 @@ namespace NetLib
 		{
 			if (_pendingConnectionSlots[i])
 			{
-				DeletePendingConnectionAtIndex(i);
+				RemovePendingConnectionAtIndex(i);
 			}
 		}
 	}

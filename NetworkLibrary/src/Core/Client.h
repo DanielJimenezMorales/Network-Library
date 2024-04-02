@@ -70,10 +70,10 @@ namespace NetLib
 
 		void UpdateTimeRequestsElapsedTime(float elapsedTime);
 
+		void OnServerDisconnect();
+
 		Address _serverAddress;
 		ClientState _currentState = ClientState::Disconnected;
-		const float _serverMaxInactivityTimeout;
-		float _serverInactivityTimeLeft;
 		unsigned int _clientIndex;
 
 		unsigned int inGameMessageID; //Only for RUDP testing purposes. Delete later!

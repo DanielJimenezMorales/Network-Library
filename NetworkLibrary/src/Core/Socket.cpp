@@ -155,6 +155,8 @@ namespace NetLib
 		ZeroMemory(&incomingAddress, incomingAddressSize);
 
 		int bytesIn = recvfrom(_listenSocket, (char*)incomingDataBuffer, incomingDataBufferSize, 0, (sockaddr*)&incomingAddress, &incomingAddressSize);
+		*remoteAddress = Address(incomingAddress);
+
 		if (bytesIn == SOCKET_ERROR)
 		{
 			int error = GetLastError();
@@ -182,7 +184,6 @@ namespace NetLib
 			}
 		}
 
-		*remoteAddress = Address(incomingAddress);
 		numberOfBytesRead = bytesIn;
 
 		return SocketResult::SUCCESS;

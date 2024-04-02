@@ -36,6 +36,8 @@ namespace NetLib
 
 		unsigned int GetRTTMilliseconds() const override;
 
+		void Reset() override;
+
 		~UnreliableOrderedTransmissionChannel();
 
 	protected:

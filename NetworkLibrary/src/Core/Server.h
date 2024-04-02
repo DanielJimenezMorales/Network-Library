@@ -12,6 +12,7 @@ namespace NetLib
 	class ConnectionChallengeResponseMessage;
 	class TimeRequestMessage;
 	class InGameMessage;
+	class DisconnectionMessage;
 
 	class Server : public Peer
 	{
@@ -37,6 +38,7 @@ namespace NetLib
 		void ProcessConnectionChallengeResponse(const ConnectionChallengeResponseMessage& message, const Address& address);
 		void ProcessTimeRequest(const TimeRequestMessage& message, const Address& address);
 		void ProcessInGame(const InGameMessage& message, const Address& address);
+		void ProcessDisconnection(const DisconnectionMessage& message, const Address& address);
 
 		/// <summary>
 		/// This method checks if a new client is able to connect to server
@@ -47,7 +49,7 @@ namespace NetLib
 		/// 1 = Is already connected.
 		/// -1 = Unable to connect, the server has reached its maximum connections.
 		/// </returns>
-		int IsClientAbleToConnect(const Address& address) const;
+		int IsRemotePeerAbleToConnect(const Address& address) const;
 
 		void CreateConnectionChallengeMessage(const Address& address, PendingConnection& pendingConnection);
 		void CreateConnectionApprovedMessage(RemotePeer& remotePeer);

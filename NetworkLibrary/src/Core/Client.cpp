@@ -13,8 +13,6 @@
 namespace NetLib
 {
 	Client::Client(float serverMaxInactivityTimeout) : Peer(PeerType::ClientMode, 1, 1024, 1024),
-		_serverMaxInactivityTimeout(serverMaxInactivityTimeout),
-		_serverInactivityTimeLeft(serverMaxInactivityTimeout),
 		_serverAddress("127.0.0.1", 54000),
 		inGameMessageID(0),
 		_timeSinceLastTimeRequest(0.0f),
@@ -51,11 +49,12 @@ namespace NetLib
 		BindSocket(address);
 
 		_currentState = ClientState::SendingConnectionRequest;
-		_serverInactivityTimeLeft = _serverMaxInactivityTimeout;
 
 		uint64_t clientSalt = GenerateClientSaltNumber();
 		int index = AddPendingConnection(_serverAddress, 1.f);
 		GetPendingConnectionFromIndex(index)->SetClientSalt(clientSalt);
+
+		SubscribeToOnRemotePeerDisconnect(std::bind(&NetLib::Client::OnServerDisconnect, this));
 
 		Common::LOG_INFO("Client started succesfully!");
 
@@ -139,18 +138,6 @@ namespace NetLib
 			CreateConnectionRequestMessage(*pendingConnection);
 		}
 
-		if (_currentState != ClientState::Disconnected)
-		{
-			_serverInactivityTimeLeft -= elapsedTime;
-
-			if (_serverInactivityTimeLeft <= 0.f)
-			{
-				Common::LOG_INFO("Server inactivity timeout reached. Disconnecting client...");
-				_serverInactivityTimeLeft = 0.f;
-				_currentState = ClientState::Disconnected;
-			}
-		}
-
 		if (_currentState == ClientState::Connected)
 		{
 			UpdateTimeRequestsElapsedTime(elapsedTime);
@@ -230,7 +217,7 @@ namespace NetLib
 
 		AddRemotePeer(address, 0, remoteDataPrefix);
 
-		DeletePendingConnectionAtIndex(0);
+		RemovePendingConnectionAtIndex(0);
 
 		_clientIndex = message.clientIndexAssigned;
 		_currentState = ClientState::Connected;
@@ -261,13 +248,16 @@ namespace NetLib
 		uint64_t dataPrefix = message.prefix;
 		if (dataPrefix != remotePeer->GetDataPrefix())
 		{
-			Common::LOG_WARNING("Packet prefix does not match. Skipping packet...");
+			Common::LOG_WARNING("Packet prefix does not match. Skipping message...");
 			return;
 		}
 
-		Stop();
-
-		Common::LOG_INFO("Disconnection message received from server. Disconnecting...");
+		std::stringstream ss;
+		ss << "Disconnection message received from server with reason code equal to " << (int)message.reason << ". Disconnecting...";
+		Common::LOG_INFO(ss.str());
+		
+		int index = GetRemotePeerIndex(*remotePeer);
+		StartDisconnectingRemotePeer(index);
 	}
 
 	void Client::ProcessTimeResponse(const TimeResponseMessage& message)
@@ -439,5 +429,11 @@ namespace NetLib
 			_timeSinceLastTimeRequest = 0;
 			CreateTimeRequestMessage(*remotePeer);
 		}
+	}
+
+	void Client::OnServerDisconnect()
+	{
+		Common::LOG_INFO("ON SERVER DISCONNECT");
+		Stop();
 	}
 }

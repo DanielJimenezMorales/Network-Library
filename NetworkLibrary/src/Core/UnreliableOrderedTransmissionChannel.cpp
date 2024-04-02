@@ -2,6 +2,7 @@
 
 #include "UnreliableOrderedTransmissionChannel.h"
 #include "MessageFactory.h"
+#include "Logger.h"
 
 namespace NetLib
 {
@@ -133,6 +134,12 @@ namespace NetLib
 	unsigned int UnreliableOrderedTransmissionChannel::GetRTTMilliseconds() const
 	{
 		return 0;
+	}
+
+	void UnreliableOrderedTransmissionChannel::Reset()
+	{
+		TransmissionChannel::Reset();
+		_lastMessageSequenceNumberReceived = 0;
 	}
 
 	UnreliableOrderedTransmissionChannel::~UnreliableOrderedTransmissionChannel()
