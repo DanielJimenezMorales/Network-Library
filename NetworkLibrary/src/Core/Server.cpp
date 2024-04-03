@@ -348,7 +348,7 @@ namespace NetLib
 		ss << "Disconnection message received from remote peer with reason code equal to " << (int)message.reason << ". Disconnecting remove peer...";
 		Common::LOG_INFO(ss.str());
 
-		StartDisconnectingRemotePeer(GetRemotePeerIndex(*remotePeer));
+		StartDisconnectingRemotePeer(GetRemotePeerIndex(*remotePeer), false, ConnectionFailedReasonType::CFR_UNKNOWN);
 	}
 
 	int Server::IsRemotePeerAbleToConnect(const Address& address) const

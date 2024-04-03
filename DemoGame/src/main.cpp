@@ -30,7 +30,7 @@ public:
     void Subscribe(NetLib::Peer& peer)
     {
         auto callback = std::bind(&DelegateSubscriber::OnPeerConnectedConsequences, this);
-        peer.SubscribeToOnPeerConnected(callback);
+        peer.SubscribeToOnLocalPeerConnect(callback);
     }
 };
 
@@ -85,7 +85,7 @@ int main()
             accumulator -= FIXED_FRAME_TARGET_DURATION;
         }
 
-        if (clientOrServer == 1 && timeClock.GetLocalTimeSeconds() > 30.0f)
+        if (clientOrServer == 0 && timeClock.GetLocalTimeSeconds() > 10.0f)
         {
             peer->Stop();
             isRunning = false;

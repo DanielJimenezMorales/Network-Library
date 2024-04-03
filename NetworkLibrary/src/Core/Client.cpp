@@ -142,7 +142,7 @@ namespace NetLib
 		{
 			UpdateTimeRequestsElapsedTime(elapsedTime);
 
-			RemotePeer* remotePeer = GetRemotePeerFromAddress(_serverAddress);
+			/*RemotePeer* remotePeer = GetRemotePeerFromAddress(_serverAddress);
 			if (remotePeer == nullptr)
 			{
 				std::stringstream ss;
@@ -150,7 +150,7 @@ namespace NetLib
 				Common::LOG_ERROR(ss.str());
 				return;
 			}
-			CreateInGameMessage(*remotePeer);
+			CreateInGameMessage(*remotePeer);*/
 		}
 	}
 
@@ -257,7 +257,7 @@ namespace NetLib
 		Common::LOG_INFO(ss.str());
 		
 		int index = GetRemotePeerIndex(*remotePeer);
-		StartDisconnectingRemotePeer(index);
+		StartDisconnectingRemotePeer(index, false, ConnectionFailedReasonType::CFR_UNKNOWN);
 	}
 
 	void Client::ProcessTimeResponse(const TimeResponseMessage& message)

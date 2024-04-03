@@ -57,6 +57,11 @@ namespace NetLib
 		_onRemotePeerDisconnect.DeleteSubscriber(id);
 	}
 
+	void Peer::UnsubscribeToOnRemotePeerConnect(unsigned int id)
+	{
+		_onRemotePeerConnect.DeleteSubscriber(id);
+	}
+
 	Peer::~Peer()
 	{
 		_remotePeerSlots.clear();
@@ -73,8 +78,8 @@ namespace NetLib
 		_maxConnections(maxConnections),
 		_receiveBufferSize(receiveBufferSize),
 		_sendBufferSize(sendBufferSize),
-		_onPeerConnected(),
-		_onPeerDisconnected()
+		_onLocalPeerConnect(),
+		_onLocalPeerDisconnect()
 	{
 		_receiveBuffer = new uint8_t[_receiveBufferSize];
 		_sendBuffer = new uint8_t[_sendBufferSize];
@@ -119,7 +124,9 @@ namespace NetLib
 		}
 
 		_remotePeerSlots[slotIndex] = true;
-		_remotePeers[slotIndex].Connect(addressInfo.GetInfo(), id, REMOTE_CLIENT_INACTIVITY_TIME, dataPrefix);
+		_remotePeers[slotIndex].Connect(addressInfo.GetInfo(), id, REMOTE_PEER_INACTIVITY_TIME, dataPrefix);
+
+		ExecuteOnRemotePeerConnect();
 		return true;
 	}
 
@@ -239,24 +246,27 @@ namespace NetLib
 		return true;
 	}
 
-	void Peer::RemoveAllRemotePeers(ConnectionFailedReasonType reason)
+	void Peer::RemoveAllRemotePeers(bool shouldNotify, ConnectionFailedReasonType reason)
 	{
 		for (unsigned int i = 0; i < _maxConnections; ++i)
 		{
 			if (_remotePeerSlots[i])
 			{
-				RemoveRemotePeer(i, reason);
+				RemoveRemotePeer(i, shouldNotify, reason);
 			}
 		}
 	}
 
-	void Peer::RemoveRemotePeer(unsigned int index, ConnectionFailedReasonType reason)
+	void Peer::RemoveRemotePeer(unsigned int index, bool shouldNotify, ConnectionFailedReasonType reason)
 	{
 		if (_remotePeerSlots[index])
 		{
-			_remotePeerSlots[index] = false;
+			if (shouldNotify)
+			{
+				CreateDisconnectionPacket(_remotePeers[index], reason);
+			}
 
-			CreateDisconnectionPacket(_remotePeers[index], reason);
+			_remotePeerSlots[index] = false;
 			_remotePeers[index].Disconnect();
 
 			ExecuteOnRemotePeerDisconnect();
@@ -313,12 +323,12 @@ namespace NetLib
 
 	void Peer::ExecuteOnPeerConnected()
 	{
-		_onPeerConnected.Execute();
+		_onLocalPeerConnect.Execute();
 	}
 
 	void Peer::ExecuteOnPeerDisconnected()
 	{
-		_onPeerDisconnected.Execute();
+		_onLocalPeerDisconnect.Execute();
 	}
 
 	void Peer::ExecuteOnLocalConnectionFailed(ConnectionFailedReasonType reason)
@@ -328,12 +338,12 @@ namespace NetLib
 
 	void Peer::UnsubscribeToOnPeerConnected(unsigned int id)
 	{
-		_onPeerConnected.DeleteSubscriber(id);
+		_onLocalPeerConnect.DeleteSubscriber(id);
 	}
 
 	void Peer::UnsubscribeToOnPeerDisconnected(unsigned int id)
 	{
-		_onPeerDisconnected.DeleteSubscriber(id);
+		_onLocalPeerDisconnect.DeleteSubscriber(id);
 	}
 
 	void Peer::UnsubscribeToOnPendingConnectionTimedOut(unsigned int id)
@@ -368,7 +378,7 @@ namespace NetLib
 				int remotePeerIndex = GetRemotePeerIndexFromAddress(remoteAddress);
 				if (remotePeerIndex != -1)
 				{
-					StartDisconnectingRemotePeer(remotePeerIndex);
+					StartDisconnectingRemotePeer(remotePeerIndex, false, ConnectionFailedReasonType::CFR_UNKNOWN);
 				}
 			}
 		} while (arePendingDatagramsToRead);
@@ -479,7 +489,7 @@ namespace NetLib
 				//Start the disconnection process for those ones who are inactive
 				if (_remotePeers[i].IsInactive())
 				{
-					StartDisconnectingRemotePeer(i);
+					StartDisconnectingRemotePeer(i, true, ConnectionFailedReasonType::CFR_TIMEOUT);
 				}
 			}
 		}
@@ -656,26 +666,32 @@ namespace NetLib
 		_socket.SendTo(buffer.GetData(), buffer.GetSize(), address);
 	}
 
-	void Peer::StartDisconnectingRemotePeer(unsigned int index)
+	void Peer::StartDisconnectingRemotePeer(unsigned int index, bool shouldNotify, ConnectionFailedReasonType reason)
 	{
 		if (_remotePeerSlots[index])
 		{
 			Common::LOG_INFO("EMPIEZO A DESCONECTARR");
-			_remotePeerSlotIDsToDisconnect.push(index);
+
+			RemotePeerDisconnectionData disconnectionData;
+			disconnectionData.index = index;
+			disconnectionData.shouldNotify = shouldNotify;
+			disconnectionData.reason = reason;
+
+			_remotePeerDisconnections.push(disconnectionData);
 		}
 	}
 
 	void Peer::FinishRemotePeersDisconnection()
 	{
-		unsigned int remoteClientSlot;
-		while (!_remotePeerSlotIDsToDisconnect.empty())
+		RemotePeerDisconnectionData remoteClientSlot;
+		while (!_remotePeerDisconnections.empty())
 		{
-			remoteClientSlot = _remotePeerSlotIDsToDisconnect.front();
-			_remotePeerSlotIDsToDisconnect.pop();
+			remoteClientSlot = _remotePeerDisconnections.front();
+			_remotePeerDisconnections.pop();
 
-			if (_remotePeerSlots[remoteClientSlot])
+			if (_remotePeerSlots[remoteClientSlot.index])
 			{
-				RemoveRemotePeer(remoteClientSlot, ConnectionFailedReasonType::CFR_UNKNOWN);
+				RemoveRemotePeer(remoteClientSlot.index, remoteClientSlot.shouldNotify, remoteClientSlot.reason);
 			}
 		}
 	}
@@ -690,12 +706,17 @@ namespace NetLib
 		_onRemotePeerDisconnect.Execute();
 	}
 
+	void Peer::ExecuteOnRemotePeerConnect()
+	{
+		_onRemotePeerConnect.Execute();
+	}
+
 	void Peer::StopInternal(ConnectionFailedReasonType reason)
 	{
 		StopConcrete();
 
 		ResetPendingConnections();
-		RemoveAllRemotePeers(reason);
+		RemoveAllRemotePeers(true, reason);
 
 		_socket.Close();
 
