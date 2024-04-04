@@ -246,26 +246,38 @@ namespace NetLib
 		return true;
 	}
 
-	void Peer::RemoveAllRemotePeers(bool shouldNotify, ConnectionFailedReasonType reason)
+	void Peer::DisconnectAllRemotePeers(bool shouldNotify, ConnectionFailedReasonType reason)
+	{
+		if (shouldNotify)
+		{
+			for (unsigned int i = 0; i < _maxConnections; ++i)
+			{
+				if (_remotePeerSlots[i])
+				{
+					const RemotePeer& remotePeer = _remotePeers[i];
+					CreateDisconnectionPacket(remotePeer, reason);
+				}
+			}
+		}
+
+		RemoveAllRemotePeers();
+	}
+
+	void Peer::RemoveAllRemotePeers()
 	{
 		for (unsigned int i = 0; i < _maxConnections; ++i)
 		{
 			if (_remotePeerSlots[i])
 			{
-				RemoveRemotePeer(i, shouldNotify, reason);
+				RemoveRemotePeer(i);
 			}
 		}
 	}
 
-	void Peer::RemoveRemotePeer(unsigned int index, bool shouldNotify, ConnectionFailedReasonType reason)
+	void Peer::RemoveRemotePeer(unsigned int index)
 	{
 		if (_remotePeerSlots[index])
 		{
-			if (shouldNotify)
-			{
-				CreateDisconnectionPacket(_remotePeers[index], reason);
-			}
-
 			_remotePeerSlots[index] = false;
 			_remotePeers[index].Disconnect();
 
@@ -672,6 +684,8 @@ namespace NetLib
 		if (_remotePeerSlots[index])
 		{
 			Common::LOG_INFO("EMPIEZO A DESCONECTARR");
+			const RemotePeer& remotePeer = _remotePeers[index];
+			CreateDisconnectionPacket(remotePeer, reason);
 
 			RemotePeerDisconnectionData disconnectionData;
 			disconnectionData.index = index;
@@ -692,7 +706,7 @@ namespace NetLib
 
 			if (_remotePeerSlots[remoteClientSlot.index])
 			{
-				RemoveRemotePeer(remoteClientSlot.index, remoteClientSlot.shouldNotify, remoteClientSlot.reason);
+				RemoveRemotePeer(remoteClientSlot.index);
 			}
 		}
 	}
@@ -717,7 +731,7 @@ namespace NetLib
 		StopConcrete();
 
 		ResetPendingConnections();
-		RemoveAllRemotePeers(true, reason);
+		DisconnectAllRemotePeers(true, reason);
 
 		_socket.Close();
 

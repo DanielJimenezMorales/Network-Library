@@ -85,11 +85,11 @@ int main()
             accumulator -= FIXED_FRAME_TARGET_DURATION;
         }
 
-        /*if (clientOrServer == 0 && timeClock.GetLocalTimeSeconds() > 10.0f)
+        if (clientOrServer == 0 && timeClock.GetLocalTimeSeconds() > 10.0f)
         {
             peer->Stop();
             isRunning = false;
-        }*/
+        }
     }
     //GAMELOOP END
 
