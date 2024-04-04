@@ -51,7 +51,6 @@ namespace NetLib
 		bool StartConcrete() override;
 		void ProcessMessage(const Message& message, const Address& address) override;
 		void TickConcrete(float elapsedTime) override;
-		void DisconnectRemotePeerConcrete(RemotePeer& remotePeer) override;
 		bool StopConcrete() override;
 
 	private:

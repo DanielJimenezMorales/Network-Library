@@ -49,7 +49,7 @@ namespace NetLib
 		_remotePeerSlots[slotIndex] = true;
 		_remotePeers[slotIndex].Connect(addressInfo.GetInfo(), id, REMOTE_PEER_INACTIVITY_TIME, dataPrefix);
 
-		auto it = _validRemotePeers.insert(_remotePeers[slotIndex]);
+		auto it = _validRemotePeers.insert(&(_remotePeers[slotIndex]));
 		assert(it.second); //If the element was already there it means that we are trying to add it again. ERROR!!
 		return true;
 	}
@@ -89,9 +89,9 @@ namespace NetLib
 		return result;
 	}
 
-	int RemotePeersHandler::GetRemotePeerIndexFromAddress(const Address& address) const
+	RemotePeer* RemotePeersHandler::GetRemotePeerFromId(unsigned int id)
 	{
-		int index = -1;
+		RemotePeer* result = nullptr;
 		for (unsigned int i = 0; i < _maxConnections; ++i)
 		{
 			if (!_remotePeerSlots[i])
@@ -99,32 +99,14 @@ namespace NetLib
 				continue;
 			}
 
-			if (_remotePeers[i].GetAddress() == address)
+			if (_remotePeers[i].GetClientIndex() == id)
 			{
-				index = i;
+				result = &_remotePeers[i];
 				break;
 			}
 		}
 
-		return index;
-	}
-
-	int RemotePeersHandler::GetRemotePeerIndex(const RemotePeer& remotePeer) const
-	{
-		int index = -1;
-		for (unsigned int i = 0; i < _maxConnections; ++i)
-		{
-			if (_remotePeerSlots[i])
-			{
-				if (_remotePeers[i].IsAddressEqual(remotePeer.GetAddress()))
-				{
-					index = i;
-					break;
-				}
-			}
-		}
-
-		return index;
+		return result;
 	}
 
 	bool RemotePeersHandler::IsRemotePeerAlreadyConnected(const Address& address) const
@@ -147,28 +129,73 @@ namespace NetLib
 		return found;
 	}
 
+	bool RemotePeersHandler::DoesRemotePeerIdExist(unsigned int id) const
+	{
+		bool result = false;
+
+		if (GetIndexFromId(id) != -1)
+		{
+			result = true;
+		}
+
+		return result;
+	}
+
+	std::unordered_set<RemotePeer*>::iterator RemotePeersHandler::GetValidRemotePeersIterator()
+	{
+		return _validRemotePeers.begin();
+	}
+
+	std::unordered_set<RemotePeer*>::iterator RemotePeersHandler::GetValidRemotePeersPastTheEndIterator()
+	{
+		return _validRemotePeers.end();
+	}
+
 	void RemotePeersHandler::RemoveAllRemotePeers()
 	{
 		for (unsigned int i = 0; i < _maxConnections; ++i)
 		{
 			if (_remotePeerSlots[i])
 			{
-				RemoveRemotePeer(i);
+				RemoveRemotePeer(_remotePeers[i].GetClientIndex());
 			}
 		}
 	}
 
-	void RemotePeersHandler::RemoveRemotePeer(unsigned int remotePeerIndex)
+	bool RemotePeersHandler::RemoveRemotePeer(unsigned int remotePeerId)
 	{
-		if (_remotePeerSlots[remotePeerIndex])
+		int index = GetIndexFromId(remotePeerId);
+		if (index != -1)
 		{
-			_remotePeerSlots[remotePeerIndex] = false;
-			_remotePeers[remotePeerIndex].Disconnect();
+			_remotePeerSlots[index] = false;
+			_remotePeers[index].Disconnect();
 
-			auto it = _validRemotePeers.find(_remotePeers[remotePeerIndex]);
+			auto it = _validRemotePeers.find(&(_remotePeers[index]));
 			assert(it != _validRemotePeers.end()); //If it does not exist in the valid peers and we are trying to delete it, that is an ERROR!!
 			_validRemotePeers.erase(it);
+
+			return true;
 		}
+
+		return false;
+	}
+
+	int RemotePeersHandler::GetIndexFromId(unsigned int id) const
+	{
+		int index = -1;
+		for (unsigned int i = 0; i < _maxConnections; ++i)
+		{
+			if (_remotePeerSlots[i])
+			{
+				if (_remotePeers[i].GetClientIndex() == id)
+				{
+					index = i;
+					break;
+				}
+			}
+		}
+
+		return index;
 	}
 
 	RemotePeersHandler::~RemotePeersHandler()

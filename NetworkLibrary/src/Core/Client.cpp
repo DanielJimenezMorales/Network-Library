@@ -142,7 +142,7 @@ namespace NetLib
 		{
 			UpdateTimeRequestsElapsedTime(elapsedTime);
 
-			/*RemotePeer* remotePeer = GetRemotePeerFromAddress(_serverAddress);
+			RemotePeer* remotePeer = _remotePeersHandler.GetRemotePeerFromAddress(_serverAddress);
 			if (remotePeer == nullptr)
 			{
 				std::stringstream ss;
@@ -150,12 +150,8 @@ namespace NetLib
 				Common::LOG_ERROR(ss.str());
 				return;
 			}
-			CreateInGameMessage(*remotePeer);*/
+			CreateInGameMessage(*remotePeer);
 		}
-	}
-
-	void Client::DisconnectRemotePeerConcrete(RemotePeer& remotePeer)
-	{
 	}
 
 	bool Client::StopConcrete()
@@ -235,7 +231,7 @@ namespace NetLib
 
 	void Client::ProcessDisconnection(const DisconnectionMessage& message, const Address& address)
 	{
-		RemotePeer* remotePeer = GetRemotePeerFromAddress(address);
+		RemotePeer* remotePeer = _remotePeersHandler.GetRemotePeerFromAddress(address);
 		if (remotePeer == nullptr)
 		{
 			std::stringstream ss;
@@ -255,8 +251,7 @@ namespace NetLib
 		ss << "Disconnection message received from server with reason code equal to " << (int)message.reason << ". Disconnecting...";
 		Common::LOG_INFO(ss.str());
 		
-		int index = GetRemotePeerIndex(*remotePeer);
-		StartDisconnectingRemotePeer(index, false, ConnectionFailedReasonType::CFR_UNKNOWN);
+		StartDisconnectingRemotePeer(remotePeer->GetClientIndex(), false, ConnectionFailedReasonType::CFR_UNKNOWN);
 	}
 
 	void Client::ProcessTimeResponse(const TimeResponseMessage& message)
@@ -399,7 +394,7 @@ namespace NetLib
 	{
 		if (_numberOfInitialTimeRequestBurstLeft > 0)
 		{
-			RemotePeer* remotePeer = GetRemotePeerFromAddress(_serverAddress);
+			RemotePeer* remotePeer = _remotePeersHandler.GetRemotePeerFromAddress(_serverAddress);
 			if (remotePeer == nullptr)
 			{
 				std::stringstream ss;
@@ -416,7 +411,7 @@ namespace NetLib
 		_timeSinceLastTimeRequest += elapsedTime;
 		if (_timeSinceLastTimeRequest >= TIME_REQUESTS_FREQUENCY_SECONDS)
 		{
-			RemotePeer* remotePeer = GetRemotePeerFromAddress(_serverAddress);
+			RemotePeer* remotePeer = _remotePeersHandler.GetRemotePeerFromAddress(_serverAddress);
 			if (remotePeer == nullptr)
 			{
 				std::stringstream ss;

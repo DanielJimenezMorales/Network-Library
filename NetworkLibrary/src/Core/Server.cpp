@@ -134,7 +134,7 @@ namespace NetLib
 		else if (isAbleToConnectResult == 1)//If the client is already connected just send a connection approved message
 		{
 			//int connectedClientIndex = FindExistingClientIndex(address);
-			RemotePeer* remotePeer = GetRemotePeerFromAddress(address);
+			RemotePeer* remotePeer = _remotePeersHandler.GetRemotePeerFromAddress(address);
 			CreateConnectionApprovedMessage(*remotePeer);
 			Common::LOG_INFO("The client is already connected, sending connection approved...");
 		}
@@ -282,7 +282,7 @@ namespace NetLib
 				RemovePendingConnectionAtIndex(pendingConnectionIndex);
 
 				//Send connection approved packet
-				RemotePeer* remotePeer = GetRemotePeerFromAddress(address);
+				RemotePeer* remotePeer = _remotePeersHandler.GetRemotePeerFromAddress(address);
 				CreateConnectionApprovedMessage(*remotePeer);
 				Common::LOG_INFO("Connection approved");
 			}
@@ -290,7 +290,7 @@ namespace NetLib
 		else if (isAbleToConnectResult == 1)//If the client is already connected just send a connection approved message
 		{
 			//Find remote client
-			RemotePeer* remotePeer = GetRemotePeerFromAddress(address);
+			RemotePeer* remotePeer = _remotePeersHandler.GetRemotePeerFromAddress(address);
 
 			//Check if data prefix match
 			if (remotePeer->GetDataPrefix() != dataPrefix)
@@ -310,7 +310,7 @@ namespace NetLib
 	void Server::ProcessTimeRequest(const TimeRequestMessage& message, const Address& address)
 	{
 		Common::LOG_INFO("PROCESSING TIME REQUEST");
-		RemotePeer* remotePeer = GetRemotePeerFromAddress(address);
+		RemotePeer* remotePeer = _remotePeersHandler.GetRemotePeerFromAddress(address);
 		CreateTimeResponseMessage(*remotePeer, message);
 	}
 
@@ -320,7 +320,7 @@ namespace NetLib
 		ss << "InGame ID: " << message.data;
 		Common::LOG_INFO(ss.str());
 
-		RemotePeer* remotePeer = GetRemotePeerFromAddress(address);
+		RemotePeer* remotePeer = _remotePeersHandler.GetRemotePeerFromAddress(address);
 		assert(remotePeer != nullptr);
 
 		CreateInGameResponseMessage(*remotePeer, message.data);
@@ -328,7 +328,7 @@ namespace NetLib
 
 	void Server::ProcessDisconnection(const DisconnectionMessage& message, const Address& address)
 	{
-		RemotePeer* remotePeer = GetRemotePeerFromAddress(address);
+		RemotePeer* remotePeer = _remotePeersHandler.GetRemotePeerFromAddress(address);
 		if (remotePeer == nullptr)
 		{
 			std::stringstream ss;
@@ -348,17 +348,17 @@ namespace NetLib
 		ss << "Disconnection message received from remote peer with reason code equal to " << (int)message.reason << ". Disconnecting remove peer...";
 		Common::LOG_INFO(ss.str());
 
-		StartDisconnectingRemotePeer(GetRemotePeerIndex(*remotePeer), false, ConnectionFailedReasonType::CFR_UNKNOWN);
+		StartDisconnectingRemotePeer(remotePeer->GetClientIndex(), false, ConnectionFailedReasonType::CFR_UNKNOWN);
 	}
 
 	int Server::IsRemotePeerAbleToConnect(const Address& address) const
 	{
-		if (IsRemotePeerAlreadyConnected(address))
+		if (_remotePeersHandler.IsRemotePeerAlreadyConnected(address))
 		{
 			return 1;
 		}
 
-		int availableClientSlot = FindFreeRemotePeerSlot();
+		int availableClientSlot = _remotePeersHandler.FindFreeRemotePeerSlot();
 		if (availableClientSlot == -1)
 		{
 			return -1;
@@ -386,11 +386,6 @@ namespace NetLib
 	void Server::SendPacketToRemotePeer(const RemotePeer& remotePeer, const NetworkPacket& packet) const
 	{
 		SendPacketToAddress(packet, remotePeer.GetAddress());
-	}
-
-	void Server::DisconnectRemotePeerConcrete(RemotePeer& remotePeer)
-	{
-		CreateDisconnectionMessage(remotePeer);
 	}
 
 	bool Server::StopConcrete()

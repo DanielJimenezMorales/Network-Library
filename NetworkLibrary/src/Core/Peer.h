@@ -48,13 +48,10 @@ namespace NetLib
 		unsigned int SubscribeToOnRemotePeerConnect(Functor&& functor);
 		void UnsubscribeToOnRemotePeerConnect(unsigned int id);
 
-		//TODO This is temporary here due to RemotePeersHandler needs it. But it should be done in another way!
-		void CreateDisconnectionPacket(const RemotePeer& remotePeer, ConnectionFailedReasonType reason);
-
 		virtual ~Peer();
 
 	protected:
-		Peer(PeerType type, int maxConnections, unsigned int receiveBufferSize, unsigned int sendBufferSize);
+		Peer(PeerType type, unsigned int maxConnections, unsigned int receiveBufferSize, unsigned int sendBufferSize);
 		Peer(const Peer&) = delete;
 
 		Peer& operator=(const Peer&) = delete;
@@ -62,7 +59,6 @@ namespace NetLib
 		virtual bool StartConcrete() = 0;
 		virtual void ProcessMessage(const Message& message, const Address& address) = 0;
 		virtual void TickConcrete(float elapsedTime) = 0;
-		virtual void DisconnectRemotePeerConcrete(RemotePeer& remotePeer) = 0;
 		virtual bool StopConcrete() = 0;
 
 		//Pending connection related
@@ -74,10 +70,6 @@ namespace NetLib
 
 		void SendPacketToAddress(const NetworkPacket& packet, const Address& address) const;
 		bool AddRemotePeer(const Address& addressInfo, uint16_t id, uint64_t dataPrefix);
-		int FindFreeRemotePeerSlot() const;
-		RemotePeer* GetRemotePeerFromAddress(const Address& address);
-		int GetRemotePeerIndex(const RemotePeer& remotePeer) const;
-		bool IsRemotePeerAlreadyConnected(const Address& address) const;
 		bool BindSocket(const Address& address) const;
 
 		void StartDisconnectingRemotePeer(unsigned int index, bool shouldNotify, ConnectionFailedReasonType reason);
@@ -96,6 +88,8 @@ namespace NetLib
 		std::vector<bool> _pendingConnectionSlots;
 		std::vector<PendingConnection> _pendingConnections;
 
+		RemotePeersHandler _remotePeersHandler;
+
 	private:
 		void ProcessReceivedData();
 		void ProcessDatagram(Buffer& buffer, const Address& address);
@@ -107,10 +101,11 @@ namespace NetLib
 
 		//Remote peer related
 		void TickRemotePeers(float elapsedTime);
-		int GetRemotePeerIndexFromAddress(const Address& address) const;
 		void DisconnectAllRemotePeers(bool shouldNotify, ConnectionFailedReasonType reason);
-		void RemoveAllRemotePeers();
-		void RemoveRemotePeer(unsigned int remotePeerIndex);
+		void DisconnectRemotePeer(const RemotePeer& remotePeer, bool shouldNotify, ConnectionFailedReasonType reason);
+		void RemoveRemotePeer(unsigned int remotePeerId);
+
+		void CreateDisconnectionPacket(const RemotePeer& remotePeer, ConnectionFailedReasonType reason);
 
 		void SendData();
 		/// <summary>
@@ -145,11 +140,7 @@ namespace NetLib
 		unsigned int _sendBufferSize;
 		uint8_t* _sendBuffer;
 
-		const int _maxConnections;
-		std::vector<bool> _remotePeerSlots;
-		std::vector<RemotePeer> _remotePeers;
 		std::queue<RemotePeerDisconnectionData> _remotePeerDisconnections;
-		//RemotePeersHandler _remotePeersHandler;
 
 		Common::Delegate<> _onLocalPeerConnect;
 		Common::Delegate<> _onLocalPeerDisconnect;

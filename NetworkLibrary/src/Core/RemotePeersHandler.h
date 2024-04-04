@@ -40,19 +40,24 @@ namespace NetLib
 		bool AddRemotePeer(const Address& addressInfo, uint16_t id, uint64_t dataPrefix);
 		int FindFreeRemotePeerSlot() const;
 		RemotePeer* GetRemotePeerFromAddress(const Address& address);
-		int GetRemotePeerIndexFromAddress(const Address& address) const;
-		int GetRemotePeerIndex(const RemotePeer& remotePeer) const;
+		RemotePeer* GetRemotePeerFromId(unsigned int id);
 		bool IsRemotePeerAlreadyConnected(const Address& address) const;
+		bool DoesRemotePeerIdExist(unsigned int id) const;
+
+		std::unordered_set<RemotePeer*>::iterator GetValidRemotePeersIterator();
+		std::unordered_set<RemotePeer*>::iterator GetValidRemotePeersPastTheEndIterator();
 
 		void RemoveAllRemotePeers();
-		void RemoveRemotePeer(unsigned int remotePeerIndex);
+		bool RemoveRemotePeer(unsigned int remotePeerId);
 
 		~RemotePeersHandler();
 
 	private:
+		int GetIndexFromId(unsigned int id) const;
+
 		const int _maxConnections;
 		std::vector<bool> _remotePeerSlots;
 		std::vector<RemotePeer> _remotePeers;
-		std::unordered_set<RemotePeer&> _validRemotePeers;
+		std::unordered_set<RemotePeer*> _validRemotePeers;
 	};
 }
