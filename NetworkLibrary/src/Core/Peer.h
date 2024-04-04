@@ -43,6 +43,9 @@ namespace NetLib
 	//be disconnected with ConnectionFailedReasonType::CFR_TIMEOUT reason
 	const float REMOTE_PEER_INACTIVITY_TIME = 5.0f;
 
+	//TODO Process pending connections as remote peers in order to be able to track inactivity
+	//TODO Also check for pending connections on CONNRESET socket error when calling to receive from in order to remove pending connections too
+	//Finish implementing OnConnection Failed on client when the connection has timed out
 	class Peer
 	{
 	public:
@@ -97,6 +100,8 @@ namespace NetLib
 
 		void StartDisconnectingRemotePeer(unsigned int index, bool shouldNotify, ConnectionFailedReasonType reason);
 
+		void StopInternal(ConnectionFailedReasonType reason);
+
 		//Delegates related
 		template<typename Functor>
 		unsigned int SubscribeToOnPendingConnectionTimedOut(Functor&& functor);
@@ -145,7 +150,6 @@ namespace NetLib
 
 		void FinishRemotePeersDisconnection();
 
-		void StopInternal(ConnectionFailedReasonType reason);
 		void ResetPendingConnections();
 
 		//Delegates related

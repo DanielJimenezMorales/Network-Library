@@ -70,6 +70,8 @@ namespace NetLib
 
 		void UpdateTimeRequestsElapsedTime(float elapsedTime);
 
+		void OnConnectionFailed(ConnectionFailedReasonType reason);
+		void OnServerPendingConnectionFailed();
 		void OnServerDisconnect();
 
 		Address _serverAddress;

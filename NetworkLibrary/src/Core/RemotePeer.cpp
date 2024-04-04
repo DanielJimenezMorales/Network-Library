@@ -132,7 +132,6 @@ namespace NetLib
 		if (transmissionChannel != nullptr)
 		{
 			transmissionChannel->AddMessageToSend(std::move(message));
-			_inactivityTimeLeft = _maxInactivityTime;
 			return true;
 		}
 		else
@@ -278,6 +277,7 @@ namespace NetLib
 		if (transmissionChannel != nullptr)
 		{
 			transmissionChannel->AddReceivedMessage(std::move(message));
+			_inactivityTimeLeft = _maxInactivityTime;
 			return true;
 		}
 		else

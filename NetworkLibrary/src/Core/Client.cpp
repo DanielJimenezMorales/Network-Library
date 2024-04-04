@@ -160,7 +160,7 @@ namespace NetLib
 
 	bool Client::StopConcrete()
 	{
-		_currentState = ClientState::Disconnected();
+		_currentState = ClientState::Disconnected;
 		return true;
 	}
 
@@ -228,10 +228,9 @@ namespace NetLib
 
 	void Client::ProcessConnectionRequestDenied(const ConnectionDeniedMessage& message)
 	{
-		_currentState = ClientState::Disconnected;
 		Common::LOG_INFO("Connection denied");
-
-		ExecuteOnLocalConnectionFailed(static_cast<ConnectionFailedReasonType>(message.reason));
+		ConnectionFailedReasonType reason = static_cast<ConnectionFailedReasonType>(message.reason);
+		OnConnectionFailed(reason);
 	}
 
 	void Client::ProcessDisconnection(const DisconnectionMessage& message, const Address& address)
@@ -429,6 +428,17 @@ namespace NetLib
 			_timeSinceLastTimeRequest = 0;
 			CreateTimeRequestMessage(*remotePeer);
 		}
+	}
+
+	void Client::OnConnectionFailed(ConnectionFailedReasonType reason)
+	{
+		StopInternal(reason);
+		ExecuteOnLocalConnectionFailed(reason);
+	}
+
+	void Client::OnServerPendingConnectionFailed()
+	{
+		OnConnectionFailed(ConnectionFailedReasonType::CFR_CONNECTION_TIMEOUT);
 	}
 
 	void Client::OnServerDisconnect()

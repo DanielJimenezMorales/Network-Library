@@ -315,6 +315,7 @@ namespace NetLib
 			_pendingConnectionSlots[index] = false;
 			_pendingConnections[index].Reset();
 
+			Common::LOG_INFO("REMOVING PENDING CONNECTION");
 			return true;
 		}
 
