@@ -1,6 +1,7 @@
 #pragma once
 #include <vector>
 #include <queue>
+#include <unordered_set>
 #include <cstdint>
 
 #include "RemotePeer.h"
@@ -52,5 +53,6 @@ namespace NetLib
 		const int _maxConnections;
 		std::vector<bool> _remotePeerSlots;
 		std::vector<RemotePeer> _remotePeers;
+		std::unordered_set<RemotePeer&> _validRemotePeers;
 	};
 }

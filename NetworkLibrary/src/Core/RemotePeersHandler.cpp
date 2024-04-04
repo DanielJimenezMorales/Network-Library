@@ -1,3 +1,5 @@
+#include <cassert>
+
 #include "RemotePeersHandler.h"
 #include "Address.h"
 #include "Logger.h"
@@ -9,6 +11,7 @@ namespace NetLib
 	{
 		_remotePeerSlots.reserve(_maxConnections);
 		_remotePeers.reserve(_maxConnections);
+		_validRemotePeers.reserve(_maxConnections);
 
 		for (unsigned int i = 0; i < _maxConnections; ++i)
 		{
@@ -45,6 +48,9 @@ namespace NetLib
 
 		_remotePeerSlots[slotIndex] = true;
 		_remotePeers[slotIndex].Connect(addressInfo.GetInfo(), id, REMOTE_PEER_INACTIVITY_TIME, dataPrefix);
+
+		auto it = _validRemotePeers.insert(_remotePeers[slotIndex]);
+		assert(it.second); //If the element was already there it means that we are trying to add it again. ERROR!!
 		return true;
 	}
 
@@ -158,6 +164,10 @@ namespace NetLib
 		{
 			_remotePeerSlots[remotePeerIndex] = false;
 			_remotePeers[remotePeerIndex].Disconnect();
+
+			auto it = _validRemotePeers.find(_remotePeers[remotePeerIndex]);
+			assert(it != _validRemotePeers.end()); //If it does not exist in the valid peers and we are trying to delete it, that is an ERROR!!
+			_validRemotePeers.erase(it);
 		}
 	}
 
