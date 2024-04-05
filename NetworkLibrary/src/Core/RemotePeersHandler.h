@@ -29,7 +29,7 @@ namespace NetLib
 
 		void TickRemotePeers(float elapsedTime);
 
-		bool AddRemotePeer(const Address& addressInfo, uint16_t id, uint64_t dataPrefix);
+		bool AddRemotePeer(const Address& addressInfo, uint16_t id, uint64_t clientSalt, uint64_t serverSalt);
 		int FindFreeRemotePeerSlot() const;
 		RemotePeer* GetRemotePeerFromAddress(const Address& address);
 		RemotePeer* GetRemotePeerFromId(unsigned int id);

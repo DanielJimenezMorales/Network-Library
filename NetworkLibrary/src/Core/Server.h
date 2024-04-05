@@ -26,7 +26,8 @@ namespace NetLib
 
 	protected:
 		bool StartConcrete() override;
-		void ProcessMessage(const Message& message, const Address& address) override;
+		void ProcessMessageFromPeer(const Message& message, RemotePeer& remotePeer) override;
+		void ProcessMessageFromUnknownPeer(const Message& message, const Address& address) override;
 		void TickConcrete(float elapsedTime) override;
 		bool StopConcrete() override;
 
@@ -34,10 +35,10 @@ namespace NetLib
 		uint64_t GenerateServerSalt() const;
 
 		void ProcessConnectionRequest(const ConnectionRequestMessage& message, const Address& address);
-		void ProcessConnectionChallengeResponse(const ConnectionChallengeResponseMessage& message, const Address& address);
-		void ProcessTimeRequest(const TimeRequestMessage& message, const Address& address);
-		void ProcessInGame(const InGameMessage& message, const Address& address);
-		void ProcessDisconnection(const DisconnectionMessage& message, const Address& address);
+		void ProcessConnectionChallengeResponse(const ConnectionChallengeResponseMessage& message, RemotePeer& remotePeer);
+		void ProcessTimeRequest(const TimeRequestMessage& message, RemotePeer& remotePeer);
+		void ProcessInGame(const InGameMessage& message, RemotePeer& remotePeer);
+		void ProcessDisconnection(const DisconnectionMessage& message, RemotePeer& remotePeer);
 
 		/// <summary>
 		/// This method checks if a new client is able to connect to server
@@ -50,7 +51,7 @@ namespace NetLib
 		/// </returns>
 		//int IsRemotePeerAbleToConnect(const Address& address) const;
 
-		void CreateConnectionChallengeMessage(const Address& address, PendingConnection& pendingConnection);
+		void CreateConnectionChallengeMessage(RemotePeer& remotePeer);
 		void CreateConnectionApprovedMessage(RemotePeer& remotePeer);
 		void CreateDisconnectionMessage(RemotePeer& remotePeer);
 		void CreateTimeResponseMessage(RemotePeer& remotePeer, const TimeRequestMessage& timeRequest);

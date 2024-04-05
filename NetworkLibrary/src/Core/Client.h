@@ -20,10 +20,10 @@ namespace NetLib
 
 	enum ClientState
 	{
-		Disconnected = 0,
-		Connected = 1,
-		SendingConnectionRequest = 2,
-		SendingConnectionChallengeResponse = 3,
+		CS_Disconnected = 0,
+		CS_Connected = 1,
+		CS_SendingConnectionRequest = 2,
+		CS_SendingConnectionChallengeResponse = 3,
 	};
 
 	//TIME SYNC CONSTANTS
@@ -49,21 +49,22 @@ namespace NetLib
 
 	protected:
 		bool StartConcrete() override;
-		void ProcessMessage(const Message& message, const Address& address) override;
+		void ProcessMessageFromPeer(const Message& message, RemotePeer& remotePeer) override;
+		void ProcessMessageFromUnknownPeer(const Message& message, const Address& address) override;
 		void TickConcrete(float elapsedTime) override;
 		bool StopConcrete() override;
 
 	private:
 		uint64_t GenerateClientSaltNumber();
-		void ProcessConnectionChallenge(const ConnectionChallengeMessage& message, const Address& address);
-		void ProcessConnectionRequestAccepted(const ConnectionAcceptedMessage& message, const Address& address);
+		void ProcessConnectionChallenge(const ConnectionChallengeMessage& message, RemotePeer& remotePeer);
+		void ProcessConnectionRequestAccepted(const ConnectionAcceptedMessage& message, RemotePeer& remotePeer);
 		void ProcessConnectionRequestDenied(const ConnectionDeniedMessage& message);
-		void ProcessDisconnection(const DisconnectionMessage& message, const Address& address);
+		void ProcessDisconnection(const DisconnectionMessage& message, RemotePeer& remotePeer);
 		void ProcessTimeResponse(const TimeResponseMessage& message);
 		void ProcessInGameResponse(const InGameResponseMessage& message);
 
-		void CreateConnectionRequestMessage(PendingConnection& pendingConnection);
-		void CreateConnectionChallengeResponse(PendingConnection& pendingConnection);
+		void CreateConnectionRequestMessage(RemotePeer& remotePeer);
+		void CreateConnectionChallengeResponse(RemotePeer& remotePeer);
 		void CreateTimeRequestMessage(RemotePeer& remotePeer);
 		void CreateInGameMessage(RemotePeer& remotePeer);
 
@@ -74,7 +75,7 @@ namespace NetLib
 		void OnServerDisconnect();
 
 		Address _serverAddress;
-		ClientState _currentState = ClientState::Disconnected;
+		ClientState _currentState;
 		unsigned int _clientIndex;
 
 		unsigned int inGameMessageID; //Only for RUDP testing purposes. Delete later!

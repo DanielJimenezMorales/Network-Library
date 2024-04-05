@@ -35,7 +35,6 @@ namespace NetLib
 	{
 		ProcessReceivedData();
 
-		TickPendingConnections(elapsedTime);
 		TickRemotePeers(elapsedTime);
 		TickConcrete(elapsedTime);
 		FinishRemotePeersDisconnection();
@@ -81,16 +80,6 @@ namespace NetLib
 	{
 		_receiveBuffer = new uint8_t[_receiveBufferSize];
 		_sendBuffer = new uint8_t[_sendBufferSize];
-
-		const unsigned int maxPendingConnections = maxConnections * 2;
-		_pendingConnectionSlots.reserve(maxPendingConnections);
-		_pendingConnections.reserve(maxPendingConnections); //There could be more pending connections than clients
-
-		for (size_t i = 0; i < maxPendingConnections; ++i)
-		{
-			_pendingConnectionSlots.push_back(false);
-			_pendingConnections.emplace_back();
-		}
 	}
 
 	void Peer::SendPacketToAddress(const NetworkPacket& packet, const Address& address) const
@@ -101,9 +90,9 @@ namespace NetLib
 		_socket.SendTo(_sendBuffer, packet.Size(), address);
 	}
 
-	bool Peer::AddRemotePeer(const Address& addressInfo, uint16_t id, uint64_t dataPrefix)
+	bool Peer::AddRemotePeer(const Address& addressInfo, uint16_t id, uint64_t clientSalt, uint64_t serverSalt)
 	{
-		bool addedSuccesfully = _remotePeersHandler.AddRemotePeer(addressInfo, id, dataPrefix);
+		bool addedSuccesfully = _remotePeersHandler.AddRemotePeer(addressInfo, id, clientSalt, serverSalt);
 
 		if (addedSuccesfully)
 		{
@@ -111,40 +100,6 @@ namespace NetLib
 		}
 
 		return addedSuccesfully;
-	}
-
-	PendingConnection* Peer::GetPendingConnectionFromAddress(const Address& address)
-	{
-		PendingConnection* result = nullptr;
-		int id = GetPendingConnectionIndexFromAddress(address);
-		if (id != -1)
-		{
-			result = &_pendingConnections[id];
-		}
-
-		return result;
-	}
-
-	PendingConnection* Peer::GetPendingConnectionFromIndex(unsigned int id)
-	{
-		PendingConnection* result = nullptr;
-		if (_pendingConnectionSlots[id])
-		{
-			result = &_pendingConnections[id];
-		}
-
-		return result;
-	}
-
-	bool Peer::RemovePendingConnection(const Address& address)
-	{
-		int id = GetPendingConnectionIndexFromAddress(address);
-		if (id != -1)
-		{
-			return RemovePendingConnectionAtIndex(id);
-		}
-
-		return false;
 	}
 
 	bool Peer::BindSocket(const Address& address) const
@@ -206,37 +161,6 @@ namespace NetLib
 
 		packet.AddMessage(std::move(disconenctionMessage));
 		SendPacketToAddress(packet, remotePeer.GetAddress());
-	}
-
-	int Peer::AddPendingConnection(const Address& addr, float timeoutSeconds)
-	{
-		int id = -1;
-		for (unsigned int i = 0; i < _pendingConnections.size(); ++i)
-		{
-			if (!_pendingConnectionSlots[i])
-			{
-				_pendingConnectionSlots[i] = true;
-				_pendingConnections[i].Initialize(addr, timeoutSeconds);
-				id = i;
-				break;
-			}
-		}
-
-		return id;
-	}
-
-	bool Peer::RemovePendingConnectionAtIndex(unsigned int id)
-	{
-		if (_pendingConnectionSlots[id])
-		{
-			_pendingConnectionSlots[id] = false;
-			_pendingConnections[id].Reset();
-
-			Common::LOG_INFO("REMOVING PENDING CONNECTION");
-			return true;
-		}
-
-		return false;
 	}
 
 	void Peer::ExecuteOnPeerConnected()
@@ -333,8 +257,7 @@ namespace NetLib
 			}
 			else
 			{
-				ProcessMessage(*message, address);
-
+				ProcessMessageFromUnknownPeer(*message, address);
 				messageFactory.ReleaseMessage(std::move(message));
 			}
 		}
@@ -353,44 +276,10 @@ namespace NetLib
 			while (remotePeer.ArePendingReadyToProcessMessages())
 			{
 				const Message* message = remotePeer.GetPendingReadyToProcessMessage();
-
-				ProcessMessage(*message, remotePeer.GetAddress());
+				ProcessMessageFromPeer(*message, remotePeer);
 			}
 
 			remotePeer.FreeProcessedMessages();
-		}
-	}
-
-	void Peer::TickPendingConnections(float elapsedTime)
-	{
-		unsigned int numberOfPendingConnections = _pendingConnections.size();
-
-		std::vector<unsigned int> inactivePendingConnectionIndexes;
-		inactivePendingConnectionIndexes.reserve(numberOfPendingConnections);
-
-		//Update pending connections
-		for (unsigned int i = 0; i < numberOfPendingConnections; ++i)
-		{
-			if (_pendingConnectionSlots[i])
-			{
-				_pendingConnections[i].Tick(elapsedTime);
-				if (_pendingConnections[i].IsInactive())
-				{
-					inactivePendingConnectionIndexes.push_back(i);
-				}
-			}
-		}
-
-		//Delete pending connections that have timed out (That means they are inactive!)
-		int inactiveIndex = -1;
-		Address inactiveAddress = Address::GetInvalid();
-		for (size_t i = 0; i < inactivePendingConnectionIndexes.size(); ++i)
-		{
-			inactiveIndex = inactivePendingConnectionIndexes[i];
-			inactiveAddress = _pendingConnections[inactiveIndex].GetAddress();
-			RemovePendingConnectionAtIndex(inactiveIndex);
-
-			ExecuteOnPendingConnectionTimedOut(inactiveAddress);
 		}
 	}
 
@@ -412,68 +301,9 @@ namespace NetLib
 		}
 	}
 
-	int Peer::GetPendingConnectionIndexFromAddress(const Address& address) const
-	{
-		int id = -1;
-		for (unsigned int i = 0; i < _pendingConnections.size(); ++i)
-		{
-			if (_pendingConnectionSlots[i])
-			{
-				if (_pendingConnections[i].GetAddress() == address)
-				{
-					id = i;
-					break;
-				}
-			}
-		}
-
-		return id;
-	}
-
 	void Peer::SendData()
 	{
-		SendDataToPendingConnections();
 		SendDataToRemotePeers();
-	}
-
-	void Peer::SendDataToPendingConnections()
-	{
-		for (unsigned int i = 0; i < _pendingConnections.size(); ++i)
-		{
-			if (_pendingConnectionSlots[i])
-			{
-				SendDataToPendingConnection(_pendingConnections[i]);
-			}
-		}
-	}
-
-	void Peer::SendDataToPendingConnection(PendingConnection& pendingConnection)
-	{
-		if (!pendingConnection.ArePendingMessages())
-		{
-			return;
-		}
-
-		//Create and populate packet
-		NetworkPacket packet = NetworkPacket();
-		do
-		{
-			std::unique_ptr<Message> message = pendingConnection.GetAMessage();
-			packet.AddMessage(std::move(message));
-		} while (pendingConnection.ArePendingMessages());
-
-		//Send packet
-		SendPacketToAddress(packet, pendingConnection.GetAddress());
-
-		//Send messages ownership back to pending connection
-		while (packet.GetNumberOfMessages() > 0)
-		{
-			std::unique_ptr<Message> message = packet.GetMessages();
-			pendingConnection.AddSentMessage(std::move(message));
-		}
-
-		//Release sent messages
-		pendingConnection.FreeSentMessages();
 	}
 
 	void Peer::SendDataToRemotePeers()
@@ -634,22 +464,10 @@ namespace NetLib
 	{
 		StopConcrete();
 
-		ResetPendingConnections();
 		DisconnectAllRemotePeers(true, reason);
 
 		_socket.Close();
 
 		MessageFactory::DeleteInstance();
-	}
-
-	void Peer::ResetPendingConnections()
-	{
-		for (unsigned int i = 0; i < _pendingConnections.size(); ++i)
-		{
-			if (_pendingConnectionSlots[i])
-			{
-				RemovePendingConnectionAtIndex(i);
-			}
-		}
 	}
 }

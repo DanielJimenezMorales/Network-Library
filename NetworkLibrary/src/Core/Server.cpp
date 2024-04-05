@@ -6,7 +6,6 @@
 #include "Logger.h"
 #include "NetworkPacket.h"
 #include "Message.h"
-#include "PendingConnection.h"
 #include "MessageFactory.h"
 #include "TimeClock.h"
 
@@ -49,7 +48,7 @@ namespace NetLib
 		return serverSalt;
 	}
 
-	void Server::ProcessMessage(const Message& message, const Address& address)
+	void Server::ProcessMessageFromPeer(const Message& message, RemotePeer& remotePeer)
 	{
 		MessageType messageType = message.GetHeader().type;
 		std::stringstream ss;
@@ -60,36 +59,48 @@ namespace NetLib
 		{
 		case MessageType::ConnectionRequest:
 		{
-			const ConnectionRequestMessage& connectionRequestMessage = static_cast<const ConnectionRequestMessage&>(message);
-			ProcessConnectionRequest(connectionRequestMessage, address);
+			Common::LOG_WARNING("Connection request messages should be processed inside ProcessMessageFromUnknownPeer method");
 			break;
 		}
 		case MessageType::ConnectionChallengeResponse:
 		{
 			const ConnectionChallengeResponseMessage& connectionChallengeResponseMessage = static_cast<const ConnectionChallengeResponseMessage&>(message);
-			ProcessConnectionChallengeResponse(connectionChallengeResponseMessage, address);
+			ProcessConnectionChallengeResponse(connectionChallengeResponseMessage, remotePeer);
 			break;
 		}
 		case MessageType::TimeRequest:
 		{
 			const TimeRequestMessage& timeRequestMessage = static_cast<const TimeRequestMessage&>(message);
-			ProcessTimeRequest(timeRequestMessage, address);
+			ProcessTimeRequest(timeRequestMessage, remotePeer);
 			break;
 		}
 		case MessageType::Disconnection:
 		{
 			const DisconnectionMessage& disconnectionMessage = static_cast<const DisconnectionMessage&>(message);
-			ProcessDisconnection(disconnectionMessage, address);
+			ProcessDisconnection(disconnectionMessage, remotePeer);
 		}
 		case MessageType::InGame:
 		{
 			const InGameMessage& inGameMessage = static_cast<const InGameMessage&>(message);
-			ProcessInGame(inGameMessage, address);
+			ProcessInGame(inGameMessage, remotePeer);
 			break;
 		}
 		default:
 			Common::LOG_WARNING("Invalid Message type, ignoring it...");
 			break;
+		}
+	}
+
+	void Server::ProcessMessageFromUnknownPeer(const Message& message, const Address& address)
+	{
+		if (message.GetHeader().type == MessageType::ConnectionRequest)
+		{
+			const ConnectionRequestMessage& connectionRequestMessage = static_cast<const ConnectionRequestMessage&>(message);
+			ProcessConnectionRequest(connectionRequestMessage, address);
+		}
+		else
+		{
+			Common::LOG_WARNING("Server only process Connection request messages from unknown peers. Any other type of message will be discarded.");
 		}
 	}
 
@@ -104,39 +115,28 @@ namespace NetLib
 		if (isAbleToConnectResult == RemotePeersHandlerResult::RPH_SUCCESS)//If there is green light keep with the connection pipeline.
 		{
 			uint64_t clientSalt = message.clientSalt;
-			PendingConnection* pendingConnection = nullptr;
-			for (unsigned int i = 0; i < _pendingConnections.size(); ++i)
-			{
-				if (_pendingConnectionSlots[i])
-				{
-					if (_pendingConnections[i].IsAddressEqual(address) && _pendingConnections[i].GetClientSalt() == clientSalt)
-					{
-						pendingConnection = GetPendingConnectionFromIndex(i);
-						break;
-					}
-				}
-			}
+			uint64_t serverSalt = GenerateServerSalt();
+			AddRemotePeer(address, _nextAssignedRemotePeerID, clientSalt, serverSalt);
+			++_nextAssignedRemotePeerID;
 
-			if (pendingConnection == nullptr) //If no pending connection was found create one!
-			{
-				int pendingConnectionIndex = AddPendingConnection(address, 1.f);
-				pendingConnection = GetPendingConnectionFromIndex(pendingConnectionIndex);
-				pendingConnection->SetClientSalt(clientSalt);
-				pendingConnection->SetServerSalt(GenerateServerSalt());
-
-				std::stringstream ss;
-				ss << "Creating a pending connection entry. Client salt: " << clientSalt << " Server salt: " << pendingConnection->GetServerSalt();
-				Common::LOG_INFO(ss.str());
-			}
-
-			CreateConnectionChallengeMessage(address, *pendingConnection);
+			RemotePeer* remotePeer = _remotePeersHandler.GetRemotePeerFromAddress(address);
+			CreateConnectionChallengeMessage(*remotePeer);
 		}
 		else if (isAbleToConnectResult == RemotePeersHandlerResult::RPH_ALREADYEXIST)//If the client is already connected just send a connection approved message
 		{
-			//int connectedClientIndex = FindExistingClientIndex(address);
 			RemotePeer* remotePeer = _remotePeersHandler.GetRemotePeerFromAddress(address);
-			CreateConnectionApprovedMessage(*remotePeer);
-			Common::LOG_INFO("The client is already connected, sending connection approved...");
+
+			RemotePeerState remotePeerState = remotePeer->GeturrentState();
+			if (remotePeerState == RemotePeerState::Connected)
+			{
+				CreateConnectionApprovedMessage(*remotePeer);
+				Common::LOG_INFO("The client is already connected, sending connection approved...");
+			}
+			else if (remotePeerState == RemotePeerState::Connecting)
+			{
+				CreateConnectionChallengeMessage(*remotePeer);
+				Common::LOG_INFO("The client is already trying to connect, sending connection challenge...");
+			}
 		}
 		else if (isAbleToConnectResult == RemotePeersHandlerResult::RPH_FULL)//If all the client slots are full deny the connection
 		{
@@ -201,7 +201,7 @@ namespace NetLib
 		Common::LOG_INFO("In game response message created.");
 	}
 
-	void Server::CreateConnectionChallengeMessage(const Address& address, PendingConnection& pendingConnection)
+	void Server::CreateConnectionChallengeMessage(RemotePeer& remotePeer)
 	{
 		MessageFactory& messageFactory = MessageFactory::GetInstance();
 
@@ -213,9 +213,9 @@ namespace NetLib
 		}
 
 		std::unique_ptr<ConnectionChallengeMessage> connectionChallengePacket(static_cast<ConnectionChallengeMessage*>(message.release()));
-		connectionChallengePacket->clientSalt = pendingConnection.GetClientSalt();
-		connectionChallengePacket->serverSalt = pendingConnection.GetServerSalt();
-		pendingConnection.AddMessage(std::move(connectionChallengePacket));
+		connectionChallengePacket->clientSalt = remotePeer.GetClientSalt();
+		connectionChallengePacket->serverSalt = remotePeer.GetServerSalt();
+		remotePeer.AddMessage(std::move(connectionChallengePacket));
 
 		Common::LOG_INFO("Connection challenge message created.");
 	}
@@ -241,104 +241,50 @@ namespace NetLib
 		}
 	}
 
-	void Server::ProcessConnectionChallengeResponse(const ConnectionChallengeResponseMessage& message, const Address& address)
+	void Server::ProcessConnectionChallengeResponse(const ConnectionChallengeResponseMessage& message, RemotePeer& remotePeer)
 	{
 		std::stringstream ss;
-		ss << "Processing connection challenge response from [IP: " << address.GetIP() << ", Port: " << address.GetPort() << "]";
+		ss << "Processing connection challenge response from [IP: " << remotePeer.GetAddress().GetIP() << ", Port: " << remotePeer.GetAddress().GetPort() << "]";
 		Common::LOG_INFO(ss.str());
 
 		uint64_t dataPrefix = message.prefix;
 
-		RemotePeersHandlerResult isAbleToConnectResult = _remotePeersHandler.IsRemotePeerAbleToConnect(address);
-
-		if (isAbleToConnectResult == RemotePeersHandlerResult::RPH_SUCCESS)//If there is green light keep with the connection pipeline.
+		if (remotePeer.GetDataPrefix() == dataPrefix)
 		{
-			//Search for a pending connection that matches the challenge response
-			int pendingConnectionIndex = -1;
-			for (unsigned int i = 0; i < _pendingConnections.size(); ++i)
-			{
-				if (_pendingConnectionSlots[i])
-				{
-					if (_pendingConnections[i].GetPrefix() == dataPrefix && _pendingConnections[i].IsAddressEqual(address))
-					{
-						pendingConnectionIndex = i;
-						break;
-					}
-				}
-			}
-
-			if (pendingConnectionIndex == -1)
-			{
-				Common::LOG_INFO("Connection denied due to not pending connection found.");
-				SendConnectionDeniedPacket(address, ConnectionFailedReasonType::CFR_UNKNOWN);
-			}
-			else
-			{
-				//Create remote client
-				AddRemotePeer(address, _nextAssignedRemotePeerID, dataPrefix);
-				++_nextAssignedRemotePeerID;
-
-				//Delete pending connection since we have accepted
-				RemovePendingConnectionAtIndex(pendingConnectionIndex);
-
-				//Send connection approved packet
-				RemotePeer* remotePeer = _remotePeersHandler.GetRemotePeerFromAddress(address);
-				CreateConnectionApprovedMessage(*remotePeer);
-				Common::LOG_INFO("Connection approved");
-			}
+			remotePeer.SetConnected();
+			//Send connection approved packet
+			CreateConnectionApprovedMessage(remotePeer);
+			Common::LOG_INFO("Connection approved");
 		}
-		else if (isAbleToConnectResult == RemotePeersHandlerResult::RPH_ALREADYEXIST)//If the client is already connected just send a connection approved message
+		else
 		{
-			//Find remote client
-			RemotePeer* remotePeer = _remotePeersHandler.GetRemotePeerFromAddress(address);
+			Common::LOG_INFO("Connection denied due to not wrong data prefix");
+			SendConnectionDeniedPacket(remotePeer.GetAddress(), ConnectionFailedReasonType::CFR_UNKNOWN);
 
-			//Check if data prefix match
-			if (remotePeer->GetDataPrefix() != dataPrefix)
-			{
-				return;
-			}
-
-			CreateConnectionApprovedMessage(*remotePeer);
-		}
-		else if (isAbleToConnectResult == RemotePeersHandlerResult::RPH_FULL)//If all the client slots are full deny the connection
-		{
-			SendConnectionDeniedPacket(address, ConnectionFailedReasonType::CFR_SERVER_FULL);
+			StartDisconnectingRemotePeer(remotePeer.GetClientIndex(), false, ConnectionFailedReasonType::CFR_UNKNOWN);
 		}
 	}
 
 	//REFACTOR THIS METHOD
-	void Server::ProcessTimeRequest(const TimeRequestMessage& message, const Address& address)
+	void Server::ProcessTimeRequest(const TimeRequestMessage& message, RemotePeer& remotePeer)
 	{
 		Common::LOG_INFO("PROCESSING TIME REQUEST");
-		RemotePeer* remotePeer = _remotePeersHandler.GetRemotePeerFromAddress(address);
-		CreateTimeResponseMessage(*remotePeer, message);
+		CreateTimeResponseMessage(remotePeer, message);
 	}
 
-	void Server::ProcessInGame(const InGameMessage& message, const Address& address)
+	void Server::ProcessInGame(const InGameMessage& message, RemotePeer& remotePeer)
 	{
 		std::stringstream ss;
 		ss << "InGame ID: " << message.data;
 		Common::LOG_INFO(ss.str());
 
-		RemotePeer* remotePeer = _remotePeersHandler.GetRemotePeerFromAddress(address);
-		assert(remotePeer != nullptr);
-
-		CreateInGameResponseMessage(*remotePeer, message.data);
+		CreateInGameResponseMessage(remotePeer, message.data);
 	}
 
-	void Server::ProcessDisconnection(const DisconnectionMessage& message, const Address& address)
+	void Server::ProcessDisconnection(const DisconnectionMessage& message, RemotePeer& remotePeer)
 	{
-		RemotePeer* remotePeer = _remotePeersHandler.GetRemotePeerFromAddress(address);
-		if (remotePeer == nullptr)
-		{
-			std::stringstream ss;
-			ss << "There is no remote peer corresponding with IP: " << address.GetIP();
-			Common::LOG_ERROR(ss.str());
-			return;
-		}
-
 		uint64_t dataPrefix = message.prefix;
-		if (dataPrefix != remotePeer->GetDataPrefix())
+		if (dataPrefix != remotePeer.GetDataPrefix())
 		{
 			Common::LOG_WARNING("Packet prefix does not match. Skipping message...");
 			return;
@@ -348,7 +294,7 @@ namespace NetLib
 		ss << "Disconnection message received from remote peer with reason code equal to " << (int)message.reason << ". Disconnecting remove peer...";
 		Common::LOG_INFO(ss.str());
 
-		StartDisconnectingRemotePeer(remotePeer->GetClientIndex(), false, ConnectionFailedReasonType::CFR_UNKNOWN);
+		StartDisconnectingRemotePeer(remotePeer.GetClientIndex(), false, ConnectionFailedReasonType::CFR_UNKNOWN);
 	}
 
 	void Server::CreateConnectionApprovedMessage(RemotePeer& remotePeer)

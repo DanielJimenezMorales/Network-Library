@@ -56,20 +56,23 @@ namespace NetLib
 
 	RemotePeer::RemotePeer() :
 		_address(Address::GetInvalid()),
-		_dataPrefix(0),
+		_clientSalt(0),
+		_serverSalt(0),
 		_maxInactivityTime(0),
 		_inactivityTimeLeft(0),
-		_nextPacketSequenceNumber(0)
+		_nextPacketSequenceNumber(0),
+		_currentState(RemotePeerState::Disconnected)
 	{
 		InitTransmissionChannels();
 	}
 
-	RemotePeer::RemotePeer(const sockaddr_in& addressInfo, uint16_t id, float maxInactivityTime, uint64_t dataPrefix) :
+	RemotePeer::RemotePeer(const sockaddr_in& addressInfo, uint16_t id, float maxInactivityTime, uint64_t clientSalt, uint64_t serverSalt) :
 		_address(Address::GetInvalid()),
-		_nextPacketSequenceNumber(0)
+		_nextPacketSequenceNumber(0),
+		_currentState(RemotePeerState::Disconnected)
 	{
 		InitTransmissionChannels();
-		Connect(addressInfo, id, maxInactivityTime, dataPrefix);
+		Connect(addressInfo, id, maxInactivityTime, clientSalt, serverSalt);
 	}
 
 	RemotePeer::~RemotePeer()
@@ -99,13 +102,15 @@ namespace NetLib
 		return lastMessageSequenceNumberAcked;
 	}
 
-	void RemotePeer::Connect(const sockaddr_in& addressInfo, uint16_t id, float maxInactivityTime, uint64_t dataPrefix)
+	void RemotePeer::Connect(const sockaddr_in& addressInfo, uint16_t id, float maxInactivityTime, uint64_t clientSalt, uint64_t serverSalt)
 	{
 		_address = Address(addressInfo);
 		_id = id;
 		_maxInactivityTime = maxInactivityTime;
 		_inactivityTimeLeft = _maxInactivityTime;
-		_dataPrefix = dataPrefix;
+		_clientSalt = clientSalt;
+		_serverSalt = serverSalt;
+		_currentState = RemotePeerState::Connecting;
 	}
 
 	void RemotePeer::Tick(float elapsedTime)
@@ -371,5 +376,7 @@ namespace NetLib
 
 		//Reset address
 		_address = Address::GetInvalid();
+
+		_currentState = RemotePeerState::Disconnected;
 	}
 }

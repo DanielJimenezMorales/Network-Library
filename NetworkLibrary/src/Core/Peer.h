@@ -4,7 +4,6 @@
 #include <list>
 
 #include "Address.h"
-#include "PendingConnection.h"
 #include "Socket.h"
 #include "Buffer.h"
 #include "TransmissionChannel.h"
@@ -73,19 +72,13 @@ namespace NetLib
 		Peer& operator=(const Peer&) = delete;
 
 		virtual bool StartConcrete() = 0;
-		virtual void ProcessMessage(const Message& message, const Address& address) = 0;
+		virtual void ProcessMessageFromPeer(const Message& message, RemotePeer& remotePeer) = 0;
+		virtual void ProcessMessageFromUnknownPeer(const Message& message, const Address& address) = 0;
 		virtual void TickConcrete(float elapsedTime) = 0;
 		virtual bool StopConcrete() = 0;
 
-		//Pending connection related
-		int AddPendingConnection(const Address& addr, float timeoutSeconds);
-		bool RemovePendingConnectionAtIndex(unsigned int id);
-		bool RemovePendingConnection(const Address& address);
-		PendingConnection* GetPendingConnectionFromAddress(const Address& address);
-		PendingConnection* GetPendingConnectionFromIndex(unsigned int id);
-
 		void SendPacketToAddress(const NetworkPacket& packet, const Address& address) const;
-		bool AddRemotePeer(const Address& addressInfo, uint16_t id, uint64_t dataPrefix);
+		bool AddRemotePeer(const Address& addressInfo, uint16_t id, uint64_t clientSalt, uint64_t serverSalt);
 		bool BindSocket(const Address& address) const;
 
 		void StartDisconnectingRemotePeer(unsigned int id, bool shouldNotify, ConnectionFailedReasonType reason);
@@ -101,19 +94,12 @@ namespace NetLib
 		void ExecuteOnPeerDisconnected();
 		void ExecuteOnLocalConnectionFailed(ConnectionFailedReasonType reason);
 
-		std::vector<bool> _pendingConnectionSlots;
-		std::vector<PendingConnection> _pendingConnections;
-
 		RemotePeersHandler _remotePeersHandler;
 
 	private:
 		void ProcessReceivedData();
 		void ProcessDatagram(Buffer& buffer, const Address& address);
 		void ProcessNewRemotePeerMessages();
-
-		//Pending connection related
-		void TickPendingConnections(float elapsedTime);
-		int GetPendingConnectionIndexFromAddress(const Address& address) const;
 
 		//Remote peer related
 		void TickRemotePeers(float elapsedTime);
@@ -123,11 +109,6 @@ namespace NetLib
 		void CreateDisconnectionPacket(const RemotePeer& remotePeer, ConnectionFailedReasonType reason);
 
 		void SendData();
-		/// <summary>
-		/// Sends pending data to all the active pending connections
-		/// </summary>
-		void SendDataToPendingConnections();
-		void SendDataToPendingConnection(PendingConnection& pendingConnection);
 		/// <summary>
 		/// Sends pending data to all the connected remote peers
 		/// </summary>
@@ -139,8 +120,6 @@ namespace NetLib
 
 		bool DoesRemotePeerIdExistInPendingDisconnections(unsigned int id) const;
 		void FinishRemotePeersDisconnection();
-
-		void ResetPendingConnections();
 
 		//Delegates related
 		void ExecuteOnPendingConnectionTimedOut(const Address& address);

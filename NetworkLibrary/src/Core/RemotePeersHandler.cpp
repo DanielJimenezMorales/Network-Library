@@ -37,7 +37,7 @@ namespace NetLib
 		}
 	}
 
-	bool RemotePeersHandler::AddRemotePeer(const Address& addressInfo, uint16_t id, uint64_t dataPrefix)
+	bool RemotePeersHandler::AddRemotePeer(const Address& addressInfo, uint16_t id, uint64_t clientSalt, uint64_t serverSalt)
 	{
 		//TODO Check for every single possible error scenario. Is already connected? Is it maxConnections full? etc. Return error code
 		int slotIndex = FindFreeRemotePeerSlot();
@@ -47,7 +47,7 @@ namespace NetLib
 		}
 
 		_remotePeerSlots[slotIndex] = true;
-		_remotePeers[slotIndex].Connect(addressInfo.GetInfo(), id, REMOTE_PEER_INACTIVITY_TIME, dataPrefix);
+		_remotePeers[slotIndex].Connect(addressInfo.GetInfo(), id, REMOTE_PEER_INACTIVITY_TIME, clientSalt, serverSalt);
 
 		auto it = _validRemotePeers.insert(&(_remotePeers[slotIndex]));
 		assert(it.second); //If the element was already there it means that we are trying to add it again. ERROR!!
