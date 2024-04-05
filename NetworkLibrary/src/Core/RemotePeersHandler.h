@@ -10,20 +10,12 @@ namespace NetLib
 {
 	class Address;
 
-	enum ConnectionFailedReasonType : uint8_t
+	enum RemotePeersHandlerResult : uint8_t
 	{
-		CFR_UNKNOWN = 0,			//Unexpect
-		CFR_TIMEOUT = 1,			//The peer is inactive
-		CFR_SERVER_FULL = 2,		//The server can't handle more connections, it has reached its maximum
-		CFR_PEER_SHUT_DOWN = 3,		//The peer has shut down its Network system
-		CFR_CONNECTION_TIMEOUT = 4	//The in process connection has taken too long
-	};
-
-	struct RemotePeerDisconnectionData
-	{
-		unsigned int index;
-		bool shouldNotify;
-		ConnectionFailedReasonType reason;
+		RPH_ERROR = 0,
+		RPH_SUCCESS = 1,
+		RPH_FULL = 2,
+		RPH_ALREADYEXIST = 3
 	};
 
 	//If the local peer does not receive any message from a remote peer during REMOTE_PEER_INACTIVITY_TIME seconds it will be considered inactive and it will
@@ -43,6 +35,7 @@ namespace NetLib
 		RemotePeer* GetRemotePeerFromId(unsigned int id);
 		bool IsRemotePeerAlreadyConnected(const Address& address) const;
 		bool DoesRemotePeerIdExist(unsigned int id) const;
+		RemotePeersHandlerResult IsRemotePeerAbleToConnect(const Address& address) const;
 
 		std::unordered_set<RemotePeer*>::iterator GetValidRemotePeersIterator();
 		std::unordered_set<RemotePeer*>::iterator GetValidRemotePeersPastTheEndIterator();
