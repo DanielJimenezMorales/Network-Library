@@ -96,14 +96,14 @@ namespace NetLib
 		void AddUnackedReliableMessage(std::unique_ptr<Message> message);
 
 		void AckReliableMessage(uint16_t messageSequenceNumber);
-		bool DoesUnorderedMessagesContainsSequence(uint16_t sequence, unsigned int& index) const;
+		bool DoesUnorderedMessagesContainsSequence(uint16_t sequence, unsigned int& id) const;
 		bool AddOrderedMessage(std::unique_ptr<Message> message);
 		bool TryRemoveUnackedReliableMessageFromSequence(uint16_t sequence);
 		int GetPendingUnackedReliableMessageIndexFromSequence(uint16_t sequence) const;
-		std::unique_ptr<Message> DeleteUnackedReliableMessageAtIndex(unsigned int index);
+		std::unique_ptr<Message> DeleteUnackedReliableMessageAtIndex(unsigned int id);
 
 		const ReliableMessageEntry& GetReliableMessageEntry(uint16_t sequenceNumber) const;
-		unsigned int GetRollingBufferIndex(uint16_t index) const { return index % _reliableMessageEntriesBufferSize; };
+		unsigned int GetRollingBufferIndex(uint16_t id) const { return id % _reliableMessageEntriesBufferSize; };
 
 		void AddMessageRTTValueToProcess(uint16_t messageRTT);
 		void UpdateRTT();

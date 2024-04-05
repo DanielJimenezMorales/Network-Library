@@ -54,6 +54,21 @@ namespace NetLib
 		return true;
 	}
 
+	RemotePeersHandlerResult RemotePeersHandler::IsRemotePeerAbleToConnect(const Address& address) const
+	{
+		if (IsRemotePeerAlreadyConnected(address))
+		{
+			return RemotePeersHandlerResult::RPH_ALREADYEXIST;
+		}
+
+		if (FindFreeRemotePeerSlot() == -1)
+		{
+			return RemotePeersHandlerResult::RPH_FULL;
+		}
+
+		return RemotePeersHandlerResult::RPH_SUCCESS;
+	}
+
 	int RemotePeersHandler::FindFreeRemotePeerSlot() const
 	{
 		int freeIndex = -1;
@@ -164,13 +179,13 @@ namespace NetLib
 
 	bool RemotePeersHandler::RemoveRemotePeer(unsigned int remotePeerId)
 	{
-		int index = GetIndexFromId(remotePeerId);
-		if (index != -1)
+		int id = GetIndexFromId(remotePeerId);
+		if (id != -1)
 		{
-			_remotePeerSlots[index] = false;
-			_remotePeers[index].Disconnect();
+			_remotePeerSlots[id] = false;
+			_remotePeers[id].Disconnect();
 
-			auto it = _validRemotePeers.find(&(_remotePeers[index]));
+			auto it = _validRemotePeers.find(&(_remotePeers[id]));
 			assert(it != _validRemotePeers.end()); //If it does not exist in the valid peers and we are trying to delete it, that is an ERROR!!
 			_validRemotePeers.erase(it);
 

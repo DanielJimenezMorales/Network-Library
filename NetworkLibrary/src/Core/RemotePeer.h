@@ -29,6 +29,7 @@ namespace NetLib
 		void InitTransmissionChannels();
 		TransmissionChannel* GetTransmissionChannelFromType(TransmissionChannelType channelType);
 		const TransmissionChannel* GetTransmissionChannelFromType(TransmissionChannelType channelType) const;
+		TransmissionChannelType GetTransmissionChannelTypeFromHeader(const MessageHeader& messageHeader) const;
 
 	public:
 		RemotePeer();
@@ -59,7 +60,6 @@ namespace NetLib
 		bool IsAddressEqual(const Address& other) const { return other == _address; }
 		bool IsInactive() const { return _inactivityTimeLeft == 0.f; }
 		bool AddMessage(std::unique_ptr<Message> message);
-		TransmissionChannelType GetTransmissionChannelTypeFromHeader(const MessageHeader& messageHeader) const;
 		bool ArePendingMessages(TransmissionChannelType channelType) const;
 		std::unique_ptr<Message> GetPendingMessage(TransmissionChannelType channelType);
 		unsigned int GetSizeOfNextUnsentMessage(TransmissionChannelType channelType) const;

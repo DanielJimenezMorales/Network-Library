@@ -1,5 +1,6 @@
 #include <sstream>
 #include <memory>
+#include <cassert>
 
 #include "Peer.h"
 #include "NetworkPacket.h"
@@ -13,7 +14,7 @@ namespace NetLib
 {
 	bool Peer::Start()
 	{
-		if (_socket.Start() != SocketResult::SUCCESS)
+		if (_socket.Start() != SocketResult::SOKT_SUCCESS)
 		{
 			Common::LOG_ERROR("Error while starting peer, aborting operation...");
 			return false;
@@ -115,21 +116,21 @@ namespace NetLib
 	PendingConnection* Peer::GetPendingConnectionFromAddress(const Address& address)
 	{
 		PendingConnection* result = nullptr;
-		int index = GetPendingConnectionIndexFromAddress(address);
-		if (index != -1)
+		int id = GetPendingConnectionIndexFromAddress(address);
+		if (id != -1)
 		{
-			result = &_pendingConnections[index];
+			result = &_pendingConnections[id];
 		}
 
 		return result;
 	}
 
-	PendingConnection* Peer::GetPendingConnectionFromIndex(unsigned int index)
+	PendingConnection* Peer::GetPendingConnectionFromIndex(unsigned int id)
 	{
 		PendingConnection* result = nullptr;
-		if (_pendingConnectionSlots[index])
+		if (_pendingConnectionSlots[id])
 		{
-			result = &_pendingConnections[index];
+			result = &_pendingConnections[id];
 		}
 
 		return result;
@@ -137,10 +138,10 @@ namespace NetLib
 
 	bool Peer::RemovePendingConnection(const Address& address)
 	{
-		int index = GetPendingConnectionIndexFromAddress(address);
-		if (index != -1)
+		int id = GetPendingConnectionIndexFromAddress(address);
+		if (id != -1)
 		{
-			return RemovePendingConnectionAtIndex(index);
+			return RemovePendingConnectionAtIndex(id);
 		}
 
 		return false;
@@ -149,7 +150,7 @@ namespace NetLib
 	bool Peer::BindSocket(const Address& address) const
 	{
 		SocketResult result = _socket.Bind(address);
-		if (result != SocketResult::SUCCESS)
+		if (result != SocketResult::SOKT_SUCCESS)
 		{
 			return false;
 		}
@@ -181,15 +182,9 @@ namespace NetLib
 			CreateDisconnectionPacket(remotePeer, reason);
 		}
 
-		if (_remotePeersHandler.RemoveRemotePeer(remotePeer.GetClientIndex()))
-		{
-			ExecuteOnRemotePeerDisconnect();
-		}
-	}
-
-	void Peer::RemoveRemotePeer(unsigned int id)
-	{
-		if (_remotePeersHandler.RemoveRemotePeer(id))
+		bool removedSuccesfully = _remotePeersHandler.RemoveRemotePeer(remotePeer.GetClientIndex());
+		assert(removedSuccesfully);
+		if (removedSuccesfully)
 		{
 			ExecuteOnRemotePeerDisconnect();
 		}
@@ -215,27 +210,27 @@ namespace NetLib
 
 	int Peer::AddPendingConnection(const Address& addr, float timeoutSeconds)
 	{
-		int index = -1;
+		int id = -1;
 		for (unsigned int i = 0; i < _pendingConnections.size(); ++i)
 		{
 			if (!_pendingConnectionSlots[i])
 			{
 				_pendingConnectionSlots[i] = true;
 				_pendingConnections[i].Initialize(addr, timeoutSeconds);
-				index = i;
+				id = i;
 				break;
 			}
 		}
 
-		return index;
+		return id;
 	}
 
-	bool Peer::RemovePendingConnectionAtIndex(unsigned int index)
+	bool Peer::RemovePendingConnectionAtIndex(unsigned int id)
 	{
-		if (_pendingConnectionSlots[index])
+		if (_pendingConnectionSlots[id])
 		{
-			_pendingConnectionSlots[index] = false;
-			_pendingConnections[index].Reset();
+			_pendingConnectionSlots[id] = false;
+			_pendingConnections[id].Reset();
 
 			Common::LOG_INFO("REMOVING PENDING CONNECTION");
 			return true;
@@ -284,24 +279,23 @@ namespace NetLib
 		{
 			SocketResult result = _socket.ReceiveFrom(_receiveBuffer, _receiveBufferSize, &remoteAddress, numberOfBytesRead);
 
-			if (result == SocketResult::SUCCESS)
+			if (result == SocketResult::SOKT_SUCCESS)
 			{
 				//Data read succesfully. Keep going!
 				Buffer buffer = Buffer(_receiveBuffer, numberOfBytesRead);
 				ProcessDatagram(buffer, remoteAddress);
 			}
-			else if (result == SocketResult::ERR || result == SocketResult::WOULDBLOCK)
+			else if (result == SocketResult::SOKT_ERR || result == SocketResult::SOKT_WOULDBLOCK)
 			{
 				//An unexpected error occurred or there is no more data to read atm
 				arePendingDatagramsToRead = false;
 			}
-			else if (result == SocketResult::CONNRESET)
+			else if (result == SocketResult::SOKT_CONNRESET)
 			{
 				//The remote socket got closed unexpectedly
 				RemotePeer* remotePeer = _remotePeersHandler.GetRemotePeerFromAddress(remoteAddress);
 				if (remotePeer != nullptr)
 				{
-					Common::LOG_INFO("H O L A");
 					StartDisconnectingRemotePeer(remotePeer->GetClientIndex(), false, ConnectionFailedReasonType::CFR_UNKNOWN);
 				}
 			}
@@ -420,20 +414,20 @@ namespace NetLib
 
 	int Peer::GetPendingConnectionIndexFromAddress(const Address& address) const
 	{
-		int index = -1;
+		int id = -1;
 		for (unsigned int i = 0; i < _pendingConnections.size(); ++i)
 		{
 			if (_pendingConnectionSlots[i])
 			{
 				if (_pendingConnections[i].GetAddress() == address)
 				{
-					index = i;
+					id = i;
 					break;
 				}
 			}
 		}
 
-		return index;
+		return id;
 	}
 
 	void Peer::SendData()
@@ -573,31 +567,51 @@ namespace NetLib
 
 		if (remotePeer != nullptr)
 		{
-			Common::LOG_INFO("EMPIEZO A DESCONECTARR");
-			//TODO Check if the ID is already added. And instead of calling it disconnectionData.index call it disconnectionData.id
-			RemotePeerDisconnectionData disconnectionData;
-			disconnectionData.index = id;
-			disconnectionData.shouldNotify = shouldNotify;
-			disconnectionData.reason = reason;
+			if (!DoesRemotePeerIdExistInPendingDisconnections(id))
+			{
+				Common::LOG_INFO("EMPIEZO A DESCONECTARR");
+				RemotePeerDisconnectionData disconnectionData;
+				disconnectionData.id = id;
+				disconnectionData.shouldNotify = shouldNotify;
+				disconnectionData.reason = reason;
 
-			_remotePeerDisconnections.push(disconnectionData);
+				_remotePeerPendingDisconnections.push_back(disconnectionData);
+			}
 		}
+	}
+
+	bool Peer::DoesRemotePeerIdExistInPendingDisconnections(unsigned int id) const
+	{
+		bool doesIdAlreadyExist = false;
+		auto cit = _remotePeerPendingDisconnections.cbegin();
+		while (cit != _remotePeerPendingDisconnections.cend())
+		{
+			const RemotePeerDisconnectionData& data = *cit;
+			if (data.id == id)
+			{
+				doesIdAlreadyExist = true;
+				break;
+			}
+
+			++cit;
+		}
+
+		return doesIdAlreadyExist;
 	}
 
 	void Peer::FinishRemotePeersDisconnection()
 	{
-		RemotePeerDisconnectionData disconnectionData;
-		while (!_remotePeerDisconnections.empty())
+		while (!_remotePeerPendingDisconnections.empty())
 		{
-			disconnectionData = _remotePeerDisconnections.front();
-			_remotePeerDisconnections.pop();
+			RemotePeerDisconnectionData& disconnectionData = _remotePeerPendingDisconnections.front();
 
-			Common::LOG_INFO("SDSSSS");
-			RemotePeer* remotePeer = _remotePeersHandler.GetRemotePeerFromId(disconnectionData.index);
+			RemotePeer* remotePeer = _remotePeersHandler.GetRemotePeerFromId(disconnectionData.id);
 			if (remotePeer != nullptr)
 			{
 				DisconnectRemotePeer(*remotePeer, disconnectionData.shouldNotify, disconnectionData.reason);
 			}
+
+			_remotePeerPendingDisconnections.erase(_remotePeerPendingDisconnections.begin());
 		}
 	}
 

@@ -99,9 +99,9 @@ namespace NetLib
 		ss << "Processing connection request from [IP: " << address.GetIP() << ", Port: " << address.GetPort() << "] with salt number " << message.clientSalt;
 		Common::LOG_INFO(ss.str());
 
-		int isAbleToConnectResult = IsRemotePeerAbleToConnect(address);
+		RemotePeersHandlerResult isAbleToConnectResult = _remotePeersHandler.IsRemotePeerAbleToConnect(address);
 
-		if (isAbleToConnectResult == 0)//If there is green light keep with the connection pipeline.
+		if (isAbleToConnectResult == RemotePeersHandlerResult::RPH_SUCCESS)//If there is green light keep with the connection pipeline.
 		{
 			uint64_t clientSalt = message.clientSalt;
 			PendingConnection* pendingConnection = nullptr;
@@ -131,14 +131,14 @@ namespace NetLib
 
 			CreateConnectionChallengeMessage(address, *pendingConnection);
 		}
-		else if (isAbleToConnectResult == 1)//If the client is already connected just send a connection approved message
+		else if (isAbleToConnectResult == RemotePeersHandlerResult::RPH_ALREADYEXIST)//If the client is already connected just send a connection approved message
 		{
 			//int connectedClientIndex = FindExistingClientIndex(address);
 			RemotePeer* remotePeer = _remotePeersHandler.GetRemotePeerFromAddress(address);
 			CreateConnectionApprovedMessage(*remotePeer);
 			Common::LOG_INFO("The client is already connected, sending connection approved...");
 		}
-		else if (isAbleToConnectResult == -1)//If all the client slots are full deny the connection
+		else if (isAbleToConnectResult == RemotePeersHandlerResult::RPH_FULL)//If all the client slots are full deny the connection
 		{
 			SendConnectionDeniedPacket(address, ConnectionFailedReasonType::CFR_SERVER_FULL);
 			Common::LOG_WARNING("All available connection slots are full. Denying incoming connection...");
@@ -249,9 +249,9 @@ namespace NetLib
 
 		uint64_t dataPrefix = message.prefix;
 
-		int isAbleToConnectResult = IsRemotePeerAbleToConnect(address);
+		RemotePeersHandlerResult isAbleToConnectResult = _remotePeersHandler.IsRemotePeerAbleToConnect(address);
 
-		if (isAbleToConnectResult == 0)//If there is green light keep with the connection pipeline.
+		if (isAbleToConnectResult == RemotePeersHandlerResult::RPH_SUCCESS)//If there is green light keep with the connection pipeline.
 		{
 			//Search for a pending connection that matches the challenge response
 			int pendingConnectionIndex = -1;
@@ -287,7 +287,7 @@ namespace NetLib
 				Common::LOG_INFO("Connection approved");
 			}
 		}
-		else if (isAbleToConnectResult == 1)//If the client is already connected just send a connection approved message
+		else if (isAbleToConnectResult == RemotePeersHandlerResult::RPH_ALREADYEXIST)//If the client is already connected just send a connection approved message
 		{
 			//Find remote client
 			RemotePeer* remotePeer = _remotePeersHandler.GetRemotePeerFromAddress(address);
@@ -300,7 +300,7 @@ namespace NetLib
 
 			CreateConnectionApprovedMessage(*remotePeer);
 		}
-		else if (isAbleToConnectResult == -1)//If all the client slots are full deny the connection
+		else if (isAbleToConnectResult == RemotePeersHandlerResult::RPH_FULL)//If all the client slots are full deny the connection
 		{
 			SendConnectionDeniedPacket(address, ConnectionFailedReasonType::CFR_SERVER_FULL);
 		}
@@ -349,22 +349,6 @@ namespace NetLib
 		Common::LOG_INFO(ss.str());
 
 		StartDisconnectingRemotePeer(remotePeer->GetClientIndex(), false, ConnectionFailedReasonType::CFR_UNKNOWN);
-	}
-
-	int Server::IsRemotePeerAbleToConnect(const Address& address) const
-	{
-		if (_remotePeersHandler.IsRemotePeerAlreadyConnected(address))
-		{
-			return 1;
-		}
-
-		int availableClientSlot = _remotePeersHandler.FindFreeRemotePeerSlot();
-		if (availableClientSlot == -1)
-		{
-			return -1;
-		}
-
-		return 0;
 	}
 
 	void Server::CreateConnectionApprovedMessage(RemotePeer& remotePeer)

@@ -48,7 +48,7 @@ namespace NetLib
 		/// 1 = Is already connected.
 		/// -1 = Unable to connect, the server has reached its maximum connections.
 		/// </returns>
-		int IsRemotePeerAbleToConnect(const Address& address) const;
+		//int IsRemotePeerAbleToConnect(const Address& address) const;
 
 		void CreateConnectionChallengeMessage(const Address& address, PendingConnection& pendingConnection);
 		void CreateConnectionApprovedMessage(RemotePeer& remotePeer);

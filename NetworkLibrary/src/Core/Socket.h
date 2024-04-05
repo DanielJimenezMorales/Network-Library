@@ -9,10 +9,10 @@ namespace NetLib
 
 	enum SocketResult : uint8_t
 	{
-		ERR = 0,
-		SUCCESS = 1,
-		WOULDBLOCK = 2,
-		CONNRESET = 3
+		SOKT_ERR = 0,
+		SOKT_SUCCESS = 1,
+		SOKT_WOULDBLOCK = 2,
+		SOKT_CONNRESET = 3
 	};
 
 	class Socket

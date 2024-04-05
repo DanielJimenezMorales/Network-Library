@@ -1,7 +1,7 @@
 #pragma once
 #include <cstdint>
 #include <vector>
-#include <queue>
+#include <list>
 
 #include "Address.h"
 #include "PendingConnection.h"
@@ -16,6 +16,22 @@ namespace NetLib
 	class Message;
 	class NetworkPacket;
 	class RemotePeer;
+
+	enum ConnectionFailedReasonType : uint8_t
+	{
+		CFR_UNKNOWN = 0,			//Unexpect
+		CFR_TIMEOUT = 1,			//The peer is inactive
+		CFR_SERVER_FULL = 2,		//The server can't handle more connections, it has reached its maximum
+		CFR_PEER_SHUT_DOWN = 3,		//The peer has shut down its Network system
+		CFR_CONNECTION_TIMEOUT = 4	//The in process connection has taken too long
+	};
+
+	struct RemotePeerDisconnectionData
+	{
+		unsigned int id;
+		bool shouldNotify;
+		ConnectionFailedReasonType reason;
+	};
 
 	enum PeerType : uint8_t
 	{
@@ -63,16 +79,16 @@ namespace NetLib
 
 		//Pending connection related
 		int AddPendingConnection(const Address& addr, float timeoutSeconds);
-		bool RemovePendingConnectionAtIndex(unsigned int index);
+		bool RemovePendingConnectionAtIndex(unsigned int id);
 		bool RemovePendingConnection(const Address& address);
 		PendingConnection* GetPendingConnectionFromAddress(const Address& address);
-		PendingConnection* GetPendingConnectionFromIndex(unsigned int index);
+		PendingConnection* GetPendingConnectionFromIndex(unsigned int id);
 
 		void SendPacketToAddress(const NetworkPacket& packet, const Address& address) const;
 		bool AddRemotePeer(const Address& addressInfo, uint16_t id, uint64_t dataPrefix);
 		bool BindSocket(const Address& address) const;
 
-		void StartDisconnectingRemotePeer(unsigned int index, bool shouldNotify, ConnectionFailedReasonType reason);
+		void StartDisconnectingRemotePeer(unsigned int id, bool shouldNotify, ConnectionFailedReasonType reason);
 
 		void StopInternal(ConnectionFailedReasonType reason);
 
@@ -103,7 +119,6 @@ namespace NetLib
 		void TickRemotePeers(float elapsedTime);
 		void DisconnectAllRemotePeers(bool shouldNotify, ConnectionFailedReasonType reason);
 		void DisconnectRemotePeer(const RemotePeer& remotePeer, bool shouldNotify, ConnectionFailedReasonType reason);
-		void RemoveRemotePeer(unsigned int remotePeerId);
 
 		void CreateDisconnectionPacket(const RemotePeer& remotePeer, ConnectionFailedReasonType reason);
 
@@ -122,6 +137,7 @@ namespace NetLib
 
 		void SendDataToAddress(const Buffer& buffer, const Address& address) const;
 
+		bool DoesRemotePeerIdExistInPendingDisconnections(unsigned int id) const;
 		void FinishRemotePeersDisconnection();
 
 		void ResetPendingConnections();
@@ -140,7 +156,7 @@ namespace NetLib
 		unsigned int _sendBufferSize;
 		uint8_t* _sendBuffer;
 
-		std::queue<RemotePeerDisconnectionData> _remotePeerDisconnections;
+		std::list<RemotePeerDisconnectionData> _remotePeerPendingDisconnections;
 
 		Common::Delegate<> _onLocalPeerConnect;
 		Common::Delegate<> _onLocalPeerDisconnect;
