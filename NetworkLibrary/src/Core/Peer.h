@@ -39,9 +39,8 @@ namespace NetLib
 		ServerMode = 2
 	};
 
-	//TODO Process pending connections as remote peers in order to be able to track inactivity
-	//TODO Also check for pending connections on CONNRESET socket error when calling to receive from in order to remove pending connections too
-	//Finish implementing OnConnection Failed on client when the connection has timed out
+	//TODO Evaluate what to do with OnPendingConnectionTimeOut delegate
+	//TODO Set ordered and reliable flags in all the connection messages such as challenge response, connection approved...
 	class Peer
 	{
 	public:
