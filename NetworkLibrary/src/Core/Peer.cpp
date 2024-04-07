@@ -26,8 +26,7 @@ namespace NetLib
 			return false;
 		}
 
-		MessageFactory::CreateInstance(3);
-
+		Common::LOG_INFO("Peer started succesfully");
 		return true;
 	}
 
@@ -468,6 +467,6 @@ namespace NetLib
 
 		_socket.Close();
 
-		MessageFactory::DeleteInstance();
+		Common::LOG_INFO("Peer stopped succesfully");
 	}
 }

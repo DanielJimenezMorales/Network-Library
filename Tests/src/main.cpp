@@ -4,11 +4,11 @@
 #include <iostream>
 #include <chrono>
 #include <sstream>
+#include <cassert>
 
 #include "Server.h"
 #include "Client.h"
 #include "Logger.h"
-#include "TimeClock.h"
 #include "Initializer.h"
 
 #define DEFAULT_IP "127.0.0.1"
@@ -19,31 +19,84 @@ const unsigned int FIXED_FRAMES_PER_SECOND = 50;
 const float FIXED_FRAME_TARGET_DURATION = 1.0f / FIXED_FRAMES_PER_SECOND;
 bool isRunning = true;
 
-//TODO Add a maximum size to each packet and add as many messages as possible until reaching the max size
-class DelegateSubscriber
+void LogTestName(const std::string& name)
 {
-public:
-    void OnPeerConnectedConsequences()
+    std::stringstream ss;
+    ss << "\n**********************************************\n" << name << "\n" << "**********************************************";
+    Common::LOG_INFO(ss.str());
+}
+
+void LogTestResult(bool correct)
+{
+    std::string text;
+    if (correct)
     {
-        Common::LOG_INFO("ON PEER SUCCESFULLY CONNECTED!");
+        text = "CORRECT";
+    }
+    else
+    {
+        text = "ERROR";
     }
 
-    void Subscribe(NetLib::Peer& peer)
+    std::stringstream ss;
+    ss << "\n**********************************************\n" << text << "\n" << "**********************************************";
+    Common::LOG_INFO(ss.str());
+}
+
+void SetUp()
+{
+    NetLib::Initializer::Initialize();
+}
+
+void TearDown()
+{
+    NetLib::Initializer::Finalize();
+}
+
+bool TestServerOnLocalPeerConnectDelegate()
+{
+    LogTestName("TestServerOnLocalPeerConnectDelegate");
+
+    //Set up
+    SetUp();
+
+    //Arrange
+    const float clientServerInactivityTimeout = 5;
+    const unsigned int serverMaxConnections = 1;
+
+    NetLib::Peer* serverPeer = new NetLib::Server(serverMaxConnections);
+
+    bool isOnLocalPeerConnectDelegateCalled = false;
+    auto callback = [&isOnLocalPeerConnectDelegateCalled]()
     {
-        auto callback = std::bind(&DelegateSubscriber::OnPeerConnectedConsequences, this);
-        peer.SubscribeToOnLocalPeerConnect(callback);
-    }
-};
+        isOnLocalPeerConnectDelegateCalled = true;
+    };
+    
+    //Act
+    serverPeer->SubscribeToOnLocalPeerConnect(callback);
+    serverPeer->Start();
+    serverPeer->Stop();
+
+    //Assert
+    assert(isOnLocalPeerConnectDelegateCalled);
+
+    //Tear down
+    TearDown();
+
+    return true;
+}
 
 //#pragma comment(lib, "Ws2_32.lib") //Added to Properties/Linker/Input/Additional Dependencies
 int main()
 {
+    LogTestResult(TestServerOnLocalPeerConnectDelegate());
+    return 0;
     std::cout << "Select:\nServer: 0\nClient: 1\n";
 
     int clientOrServer;
     std::cin >> clientOrServer;
 
-    NetLib::Initializer::Initialize();
+    NetLib::TimeClock::CreateInstance();
 
     NetLib::Peer* peer = nullptr;
 
@@ -54,12 +107,6 @@ int main()
     else if (clientOrServer == 1)
     {
         peer = new NetLib::Client(5);
-    }
-
-    if (peer != nullptr)
-    {
-        DelegateSubscriber subscriber;
-        subscriber.Subscribe(*peer);
     }
 
     bool result = peer->Start();
@@ -103,7 +150,7 @@ int main()
     delete peer;
     peer = nullptr;
 
-    NetLib::Initializer::Finalize();
+    NetLib::TimeClock::DeleteInstance();
 
     return EXIT_SUCCESS;
 }
