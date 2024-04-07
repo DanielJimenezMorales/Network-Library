@@ -59,7 +59,8 @@ namespace NetLib
 		{
 		case MessageType::ConnectionRequest:
 		{
-			Common::LOG_WARNING("Connection request messages should be processed inside ProcessMessageFromUnknownPeer method");
+			const ConnectionRequestMessage& connectionRequestMessage = static_cast<const ConnectionRequestMessage&>(message);
+			ProcessConnectionRequest(connectionRequestMessage, remotePeer.GetAddress());
 			break;
 		}
 		case MessageType::ConnectionChallengeResponse:

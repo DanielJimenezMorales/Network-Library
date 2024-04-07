@@ -41,6 +41,7 @@ namespace NetLib
 
 	//TODO Evaluate what to do with OnPendingConnectionTimeOut delegate
 	//TODO Set ordered and reliable flags in all the connection messages such as challenge response, connection approved...
+	//TODO Execute OnRemotePeerConnect when it really connects and not when it is added to the RemotePeersHandler with Connecting state
 	class Peer
 	{
 	public:

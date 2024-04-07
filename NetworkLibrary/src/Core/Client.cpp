@@ -51,7 +51,7 @@ namespace NetLib
 		_currentState = ClientState::CS_SendingConnectionRequest;
 
 		uint64_t clientSalt = GenerateClientSaltNumber();
-		_remotePeersHandler.AddRemotePeer(_serverAddress, 0, clientSalt, 0);
+		AddRemotePeer(_serverAddress, 0, clientSalt, 0);
 
 		SubscribeToOnRemotePeerDisconnect(std::bind(&NetLib::Client::OnServerDisconnect, this));
 
