@@ -186,6 +186,10 @@ namespace NetLib
 
 		numberOfBytesRead = bytesIn;
 
+		std::stringstream ss;
+		ss << "Socket info. Data received from " << remoteAddress->GetIP() << ":" << remoteAddress->GetPort();
+		Common::LOG_INFO(ss.str());
+
 		return SocketResult::SOKT_SUCCESS;
 	}
 
@@ -213,6 +217,10 @@ namespace NetLib
 			Common::LOG_ERROR(ss.str());
 			return SocketResult::SOKT_ERR;
 		}
+
+		std::stringstream ss;
+		ss << "Socket info. Data sent to " << remoteAddress.GetIP() << ":" << remoteAddress.GetPort();
+		Common::LOG_INFO(ss.str());
 
 		return SocketResult::SOKT_SUCCESS;
 	}

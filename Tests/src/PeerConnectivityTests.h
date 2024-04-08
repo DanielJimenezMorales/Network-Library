@@ -1,5 +1,7 @@
 #pragma once
 #include <cassert>
+#include <chrono>
+#include <thread>
 
 #include "Server.h"
 #include "Client.h"
@@ -29,12 +31,26 @@ namespace Tests
 	public:
         bool static ExecuteAll()
         {
+            std::chrono::seconds duration(1);
+
             LogTestUtils::LogTestResult(Test_ServerOnLocalPeerConnectDelegate_CheckItIsCalledOnlyOnce());
+            std::this_thread::sleep_for(duration);
+
             LogTestUtils::LogTestResult(Test_ClientOnLocalPeerConnectDelegate_CheckItIsCalledOnlyOnce());
+            std::this_thread::sleep_for(duration);
+
             LogTestUtils::LogTestResult(Test_ServerOnLocalPeerDisconnectDelegate_CheckItIsCalledOnlyOnce());
+            std::this_thread::sleep_for(duration);
+
             LogTestUtils::LogTestResult(Test_ClientOnLocalPeerDisconnectDelegate_CheckItIsCalledOnlyOnce());
+            std::this_thread::sleep_for(duration);
+
             LogTestUtils::LogTestResult(Test_ServerOnRemotePeerConnectDelegate_CheckItIsCalledOnlyOnce());
+            std::this_thread::sleep_for(duration);
+
             LogTestUtils::LogTestResult(Test_ClientOnRemotePeerConnectDelegate_CheckItIsCalledOnlyOnce());
+            std::this_thread::sleep_for(duration);
+
             LogTestUtils::LogTestResult(Test_ClientOnRemotePeerDisconnectDelegate_CheckItIsCalledOnlyOnceWhenServerStops());
             return true;
         }
