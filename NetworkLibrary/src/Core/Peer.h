@@ -39,15 +39,22 @@ namespace NetLib
 		ServerMode = 2
 	};
 
-	//TODO Evaluate what to do with OnPendingConnectionTimeOut delegate
+	enum PeerConnectionState : uint8_t
+	{
+		PCS_Disconnected = 0,
+		PCS_Connecting = 1,
+		PCS_Connected = 2
+	};
+
 	//TODO Set ordered and reliable flags in all the connection messages such as challenge response, connection approved...
-	//TODO Execute OnRemotePeerConnect when it really connects and not when it is added to the RemotePeersHandler with Connecting state
 	class Peer
 	{
 	public:
 		bool Start();
 		bool Tick(float elapsedTime);
 		bool Stop();
+
+		PeerConnectionState GetConnectionState() { return _connectionState; }
 
 		//Delegates related
 		template<typename Functor>
@@ -79,20 +86,17 @@ namespace NetLib
 
 		void SendPacketToAddress(const NetworkPacket& packet, const Address& address) const;
 		bool AddRemotePeer(const Address& addressInfo, uint16_t id, uint64_t clientSalt, uint64_t serverSalt);
+		void ConnectRemotePeer(RemotePeer& remotePeer);
 		bool BindSocket(const Address& address) const;
 
 		void StartDisconnectingRemotePeer(unsigned int id, bool shouldNotify, ConnectionFailedReasonType reason);
 
-		void StopInternal(ConnectionFailedReasonType reason);
+		void RequestStop(bool shouldNotifyRemotePeers, ConnectionFailedReasonType reason);
 
 		//Delegates related
-		template<typename Functor>
-		unsigned int SubscribeToOnPendingConnectionTimedOut(Functor&& functor);
-		void UnsubscribeToOnPendingConnectionTimedOut(unsigned int id);
-
-		void ExecuteOnPeerConnected();
-		void ExecuteOnPeerDisconnected();
-		void ExecuteOnLocalConnectionFailed(ConnectionFailedReasonType reason);
+		void ExecuteOnLocalPeerConnect();
+		void ExecuteOnLocalPeerDisconnect(ConnectionFailedReasonType reason);
+		void ExecuteOnLocalPeerConnectionFailed(ConnectionFailedReasonType reason);
 
 		RemotePeersHandler _remotePeersHandler;
 
@@ -100,6 +104,8 @@ namespace NetLib
 		void ProcessReceivedData();
 		void ProcessDatagram(Buffer& buffer, const Address& address);
 		void ProcessNewRemotePeerMessages();
+
+		void SetConnectionState(PeerConnectionState state);
 
 		//Remote peer related
 		void TickRemotePeers(float elapsedTime);
@@ -121,12 +127,15 @@ namespace NetLib
 		bool DoesRemotePeerIdExistInPendingDisconnections(unsigned int id) const;
 		void FinishRemotePeersDisconnection();
 
+		void StopInternal();
+		void ExecuteStopCallback(PeerConnectionState connectionStateAtStopTime);
+
 		//Delegates related
-		void ExecuteOnPendingConnectionTimedOut(const Address& address);
-		void ExecuteOnRemotePeerDisconnect();
 		void ExecuteOnRemotePeerConnect();
+		void ExecuteOnRemotePeerDisconnect();
 
 		PeerType _type;
+		PeerConnectionState _connectionState;
 		Address _address;
 		Socket _socket;
 
@@ -135,13 +144,17 @@ namespace NetLib
 		unsigned int _sendBufferSize;
 		uint8_t* _sendBuffer;
 
+		//Stop request
+		bool _isStopRequested;
+		bool _stopRequestShouldNotifyRemotePeers;
+		ConnectionFailedReasonType _stopRequestReason;
+
 		std::list<RemotePeerDisconnectionData> _remotePeerPendingDisconnections;
 
 		Common::Delegate<> _onLocalPeerConnect;
-		Common::Delegate<> _onLocalPeerDisconnect;
+		Common::Delegate<ConnectionFailedReasonType> _onLocalPeerDisconnect;
 		//This should only be called in client-side since the server is not connecting to anything.
-		Common::Delegate<ConnectionFailedReasonType> _onLocalConnectionFailed;
-		Common::Delegate<const Address&> _onPendingConnectionTimedOut;
+		Common::Delegate<ConnectionFailedReasonType> _onLocalPeerConnectionFailed;
 		Common::Delegate<> _onRemotePeerConnect;
 		Common::Delegate<> _onRemotePeerDisconnect;
 	};
@@ -157,12 +170,6 @@ namespace NetLib
 	inline unsigned int Peer::SubscribeToOnLocalPeerDisconnect(Functor&& functor)
 	{
 		return _onLocalPeerDisconnect.AddSubscriber(std::forward<Functor>(functor));
-	}
-
-	template<typename Functor>
-	inline unsigned int Peer::SubscribeToOnPendingConnectionTimedOut(Functor&& functor)
-	{
-		return _onPendingConnectionTimedOut.AddSubscriber(std::forward<Functor>(functor));
 	}
 
 	template<typename Functor>

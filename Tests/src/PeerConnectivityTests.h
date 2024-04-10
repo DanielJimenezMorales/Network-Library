@@ -9,7 +9,6 @@
 #include "Initializer.h"
 #include "LogTestUtils.h"
 
-//TODO There is a bug when connecting with high jitter, packet loss... It looks like the server gets full of connections for some reason and the connection is denied. Ans then it crash.
 namespace Tests
 {
     const unsigned int FIXED_FRAMES_PER_SECOND = 50;
@@ -31,27 +30,38 @@ namespace Tests
 	public:
         bool static ExecuteAll()
         {
-            std::chrono::seconds duration(1);
+            //Set a small break between different tests in order to avoid receiving messages from the last test
+            std::chrono::milliseconds duration(500);
 
+            //Test local peer connection
             LogTestUtils::LogTestResult(Test_ServerOnLocalPeerConnectDelegate_CheckItIsCalledOnlyOnce());
             std::this_thread::sleep_for(duration);
 
             LogTestUtils::LogTestResult(Test_ClientOnLocalPeerConnectDelegate_CheckItIsCalledOnlyOnce());
             std::this_thread::sleep_for(duration);
 
+            //Test local peer disconnection
             LogTestUtils::LogTestResult(Test_ServerOnLocalPeerDisconnectDelegate_CheckItIsCalledOnlyOnce());
             std::this_thread::sleep_for(duration);
 
             LogTestUtils::LogTestResult(Test_ClientOnLocalPeerDisconnectDelegate_CheckItIsCalledOnlyOnce());
             std::this_thread::sleep_for(duration);
 
+            LogTestUtils::LogTestResult(Test_ClientOnLocalPeerDisconnectDelegate_CheckItIsCalledOnlyOnceWhenServerStops());
+            std::this_thread::sleep_for(duration);
+
+            //TODO Create one test testing ConnectionFailed callback due to server is full
+
+            //Test remote peer connection
             LogTestUtils::LogTestResult(Test_ServerOnRemotePeerConnectDelegate_CheckItIsCalledOnlyOnce());
             std::this_thread::sleep_for(duration);
 
             LogTestUtils::LogTestResult(Test_ClientOnRemotePeerConnectDelegate_CheckItIsCalledOnlyOnce());
             std::this_thread::sleep_for(duration);
 
+            //Test remote peer disconnection
             LogTestUtils::LogTestResult(Test_ClientOnRemotePeerDisconnectDelegate_CheckItIsCalledOnlyOnceWhenServerStops());
+
             return true;
         }
 
@@ -78,6 +88,7 @@ namespace Tests
             //Act
             subscriberId = serverPeer->SubscribeToOnLocalPeerConnect(callback);
             serverPeer->Start();
+            auto connectionStateAfterStart = serverPeer->GetConnectionState();
             serverPeer->Stop();
             serverPeer->UnsubscribeToOnPeerConnected(subscriberId);
 
@@ -86,6 +97,7 @@ namespace Tests
 
             //Assert
             assert(numberOfTimesCalled == 1);
+            assert(connectionStateAfterStart == NetLib::PeerConnectionState::PCS_Connected);
 
             //Tear down
             TearDown();
@@ -110,11 +122,13 @@ namespace Tests
 
             int numberOfTimesCalled = 0;
             bool isRunning = true;
+            NetLib::PeerConnectionState clientPeerConnectionStateAfterOnConnect = NetLib::PeerConnectionState::PCS_Disconnected;
 
-            auto callback = [&isRunning, &numberOfTimesCalled]()
+            auto callback = [&isRunning, &numberOfTimesCalled, &clientPeerConnectionStateAfterOnConnect, &clientPeer]()
             {
                 isRunning = false;
                 ++numberOfTimesCalled;
+                clientPeerConnectionStateAfterOnConnect = clientPeer->GetConnectionState();
             };
 
             NetLib::TimeClock& timeClock = NetLib::TimeClock::GetInstance();
@@ -127,6 +141,7 @@ namespace Tests
             subscriberId = clientPeer->SubscribeToOnLocalPeerConnect(callback);
             serverPeer->Start();
             clientPeer->Start();
+            auto clientPeerConnectionStateAfterStart = clientPeer->GetConnectionState();
 
             while (isRunning)
             {
@@ -159,6 +174,8 @@ namespace Tests
 
             //Assert
             assert(numberOfTimesCalled == 1);
+            assert(clientPeerConnectionStateAfterStart == NetLib::PeerConnectionState::PCS_Connecting);
+            assert(clientPeerConnectionStateAfterOnConnect == NetLib::PeerConnectionState::PCS_Connected);
 
             //Tear down
             TearDown();
@@ -177,11 +194,15 @@ namespace Tests
             const unsigned int serverMaxConnections = 1;
 
             NetLib::Peer* serverPeer = new NetLib::Server(serverMaxConnections);
+            NetLib::PeerConnectionState serverConnectionStateAfterStop = NetLib::PeerConnectionState::PCS_Connected;
+            NetLib::ConnectionFailedReasonType disconnectionReason = NetLib::ConnectionFailedReasonType::CFR_UNKNOWN;
 
             int numberOfTimesCalled = 0;
-            auto callback = [&numberOfTimesCalled]()
+            auto callback = [&numberOfTimesCalled, &serverConnectionStateAfterStop, &serverPeer, &disconnectionReason](NetLib::ConnectionFailedReasonType reason)
             {
                 ++numberOfTimesCalled;
+                serverConnectionStateAfterStop = serverPeer->GetConnectionState();
+                disconnectionReason = reason;
             };
 
             unsigned int subscriberId = 0;
@@ -197,6 +218,8 @@ namespace Tests
 
             //Assert
             assert(numberOfTimesCalled == 1);
+            assert(serverConnectionStateAfterStop == NetLib::PeerConnectionState::PCS_Disconnected);
+            assert(disconnectionReason == NetLib::ConnectionFailedReasonType::CFR_PEER_SHUT_DOWN);
 
             //Tear down
             TearDown();
@@ -221,11 +244,15 @@ namespace Tests
 
             int numberOfTimesCalled = 0;
             bool isRunning = true;
+            NetLib::PeerConnectionState clientConnectionStateAfterStop = NetLib::PeerConnectionState::PCS_Connected;
+            NetLib::ConnectionFailedReasonType disconnectionReason = NetLib::ConnectionFailedReasonType::CFR_UNKNOWN;
 
-            auto callback = [&isRunning, &numberOfTimesCalled]()
+            auto callback = [&isRunning, &numberOfTimesCalled, &clientConnectionStateAfterStop, &clientPeer, &disconnectionReason](NetLib::ConnectionFailedReasonType reason)
             {
                 isRunning = false;
                 ++numberOfTimesCalled;
+                clientConnectionStateAfterStop = clientPeer->GetConnectionState();
+                disconnectionReason = reason;
             };
 
             NetLib::TimeClock& timeClock = NetLib::TimeClock::GetInstance();
@@ -237,7 +264,7 @@ namespace Tests
             unsigned int subscriberId = 0;
 
             //Act
-            subscriberId = clientPeer->SubscribeToOnLocalPeerConnect(callback);
+            subscriberId = clientPeer->SubscribeToOnLocalPeerDisconnect(callback);
             serverPeer->Start();
             clientPeer->Start();
 
@@ -269,7 +296,7 @@ namespace Tests
 
             serverPeer->Stop();
 
-            clientPeer->UnsubscribeToOnPeerConnected(subscriberId);
+            clientPeer->UnsubscribeToOnPeerDisconnected(subscriberId);
 
             delete serverPeer;
             serverPeer = nullptr;
@@ -278,6 +305,95 @@ namespace Tests
 
             //Assert
             assert(numberOfTimesCalled == 1);
+            assert(clientConnectionStateAfterStop == NetLib::PeerConnectionState::PCS_Disconnected);
+            assert(disconnectionReason == NetLib::ConnectionFailedReasonType::CFR_PEER_SHUT_DOWN);
+
+            //Tear down
+            TearDown();
+
+            return true;
+        }
+
+        bool static Test_ClientOnLocalPeerDisconnectDelegate_CheckItIsCalledOnlyOnceWhenServerStops()
+        {
+            LogTestUtils::LogTestName("Test_ClientOnLocalPeerDisconnectDelegate_CheckItIsCalledOnlyOnceWhenServerStops");
+
+            //Set up
+            SetUp();
+
+            //Arrange
+            const float clientServerInactivityTimeout = 5;
+            const unsigned int serverMaxConnections = 1;
+            const float testTimeout = 2;
+
+            NetLib::Peer* serverPeer = new NetLib::Server(serverMaxConnections);
+            NetLib::Peer* clientPeer = new NetLib::Client(clientServerInactivityTimeout);
+
+            int numberOfTimesCalled = 0;
+            bool isRunning = true;
+            NetLib::PeerConnectionState clientConnectionStateAfterStop = NetLib::PeerConnectionState::PCS_Connected;
+            NetLib::ConnectionFailedReasonType disconnectionReason = NetLib::ConnectionFailedReasonType::CFR_UNKNOWN;
+
+            auto callback = [&isRunning, &numberOfTimesCalled, &clientConnectionStateAfterStop, &clientPeer, &disconnectionReason](NetLib::ConnectionFailedReasonType reason)
+            {
+                isRunning = false;
+                ++numberOfTimesCalled;
+                clientConnectionStateAfterStop = clientPeer->GetConnectionState();
+                disconnectionReason = reason;
+            };
+
+            NetLib::TimeClock& timeClock = NetLib::TimeClock::GetInstance();
+            double accumulator = 0.0;
+            float testTimeLeft = testTimeout;
+            float disconnectServerTimeout = 1.f;
+            bool isAlreadyDisconnected = false;
+
+            unsigned int subscriberId = 0;
+
+            //Act
+            subscriberId = clientPeer->SubscribeToOnLocalPeerDisconnect(callback);
+            serverPeer->Start();
+            clientPeer->Start();
+
+            while (isRunning)
+            {
+                timeClock.UpdateLocalTime();
+                accumulator += timeClock.GetElapsedTimeSeconds();
+
+                while (accumulator >= FIXED_FRAME_TARGET_DURATION)
+                {
+                    serverPeer->Tick(FIXED_FRAME_TARGET_DURATION);
+                    clientPeer->Tick(FIXED_FRAME_TARGET_DURATION);
+
+                    accumulator -= FIXED_FRAME_TARGET_DURATION;
+                    disconnectServerTimeout -= FIXED_FRAME_TARGET_DURATION;
+                    if (disconnectServerTimeout <= 0.f && !isAlreadyDisconnected)
+                    {
+                        serverPeer->Stop();
+                        isAlreadyDisconnected = true;
+                    }
+
+                    testTimeLeft -= FIXED_FRAME_TARGET_DURATION;
+                    if (testTimeLeft <= 0.f)
+                    {
+                        isRunning = false;
+                    }
+                }
+            }
+
+            //No need to call to clientPeer->Stop() since when it detects the server disconnects, the client also disconnects before executing callback
+
+            clientPeer->UnsubscribeToOnPeerDisconnected(subscriberId);
+
+            delete serverPeer;
+            serverPeer = nullptr;
+            delete clientPeer;
+            clientPeer = nullptr;
+
+            //Assert
+            assert(numberOfTimesCalled == 1);
+            assert(clientConnectionStateAfterStop == NetLib::PeerConnectionState::PCS_Disconnected);
+            assert(disconnectionReason == NetLib::ConnectionFailedReasonType::CFR_PEER_SHUT_DOWN);
 
             //Tear down
             TearDown();
@@ -456,7 +572,7 @@ namespace Tests
             NetLib::TimeClock& timeClock = NetLib::TimeClock::GetInstance();
             double accumulator = 0.0;
             float testTimeLeft = testTimeout;
-            float disconnectServerTimeout = 0.6f;
+            float disconnectServerTimeout = 0.3f;
             bool isServerDisconnected = false;
 
             unsigned int subscriberId = 0;
@@ -492,7 +608,7 @@ namespace Tests
                 }
             }
 
-            clientPeer->Stop();
+            //No need to call to clientPeer->Stop() since when it detects the server disconnects, the client also disconnects before executing callback
             clientPeer->UnsubscribeToOnRemotePeerDisconnect(subscriberId);
 
             delete serverPeer;

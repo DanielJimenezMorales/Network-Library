@@ -14,15 +14,25 @@ namespace NetLib
 {
 	bool Peer::Start()
 	{
+		if (_connectionState != PeerConnectionState::PCS_Disconnected)
+		{
+			Common::LOG_WARNING("You are trying to call Peer::Start on a Peer that has already started");
+			return true;
+		}
+
+		SetConnectionState(PeerConnectionState::PCS_Connecting);
+
 		if (_socket.Start() != SocketResult::SOKT_SUCCESS)
 		{
 			Common::LOG_ERROR("Error while starting peer, aborting operation...");
+			SetConnectionState(PeerConnectionState::PCS_Disconnected);
 			return false;
 		}
 
 		if (!StartConcrete())
 		{
 			Common::LOG_ERROR("Error while starting peer, aborting operation...");
+			SetConnectionState(PeerConnectionState::PCS_Disconnected);
 			return false;
 		}
 
@@ -32,6 +42,12 @@ namespace NetLib
 
 	bool Peer::Tick(float elapsedTime)
 	{
+		if (_connectionState == PeerConnectionState::PCS_Disconnected)
+		{
+			Common::LOG_WARNING("You are trying to call Peer::Tick on a Peer that is disconnected");
+			return false;
+		}
+
 		ProcessReceivedData();
 
 		TickRemotePeers(elapsedTime);
@@ -40,13 +56,18 @@ namespace NetLib
 
 		SendData();
 
+		if (_isStopRequested)
+		{
+			StopInternal();
+		}
+
 		return true;
 	}
 
 	bool Peer::Stop()
 	{
-		StopInternal(ConnectionFailedReasonType::CFR_PEER_SHUT_DOWN);
-		ExecuteOnPeerDisconnected();
+		RequestStop(true, ConnectionFailedReasonType::CFR_PEER_SHUT_DOWN);
+		StopInternal();
 
 		return true;
 	}
@@ -69,13 +90,17 @@ namespace NetLib
 
 	Peer::Peer(PeerType type, unsigned int maxConnections, unsigned int receiveBufferSize, unsigned int sendBufferSize) :
 		_type(type),
+		_connectionState(PeerConnectionState::PCS_Disconnected),
 		_socket(),
 		_address(Address::GetInvalid()),
 		_receiveBufferSize(receiveBufferSize),
 		_sendBufferSize(sendBufferSize),
 		_remotePeersHandler(maxConnections),
 		_onLocalPeerConnect(),
-		_onLocalPeerDisconnect()
+		_onLocalPeerDisconnect(),
+		_isStopRequested(false),
+		_stopRequestShouldNotifyRemotePeers(false),
+		_stopRequestReason(ConnectionFailedReasonType::CFR_UNKNOWN)
 	{
 		_receiveBuffer = new uint8_t[_receiveBufferSize];
 		_sendBuffer = new uint8_t[_sendBufferSize];
@@ -93,12 +118,13 @@ namespace NetLib
 	{
 		bool addedSuccesfully = _remotePeersHandler.AddRemotePeer(addressInfo, id, clientSalt, serverSalt);
 
-		if (addedSuccesfully)
-		{
-			ExecuteOnRemotePeerConnect();
-		}
-
 		return addedSuccesfully;
+	}
+
+	void Peer::ConnectRemotePeer(RemotePeer& remotePeer)
+	{
+		remotePeer.SetConnected();
+		ExecuteOnRemotePeerConnect();
 	}
 
 	bool Peer::BindSocket(const Address& address) const
@@ -138,10 +164,7 @@ namespace NetLib
 
 		bool removedSuccesfully = _remotePeersHandler.RemoveRemotePeer(remotePeer.GetClientIndex());
 		assert(removedSuccesfully);
-		if (removedSuccesfully)
-		{
-			ExecuteOnRemotePeerDisconnect();
-		}
+		ExecuteOnRemotePeerDisconnect();
 	}
 
 	void Peer::CreateDisconnectionPacket(const RemotePeer& remotePeer, ConnectionFailedReasonType reason)
@@ -162,19 +185,20 @@ namespace NetLib
 		SendPacketToAddress(packet, remotePeer.GetAddress());
 	}
 
-	void Peer::ExecuteOnPeerConnected()
+	void Peer::ExecuteOnLocalPeerConnect()
 	{
+		SetConnectionState(PeerConnectionState::PCS_Connected);
 		_onLocalPeerConnect.Execute();
 	}
 
-	void Peer::ExecuteOnPeerDisconnected()
+	void Peer::ExecuteOnLocalPeerDisconnect(ConnectionFailedReasonType reason)
 	{
-		_onLocalPeerDisconnect.Execute();
+		_onLocalPeerDisconnect.Execute(reason);
 	}
 
-	void Peer::ExecuteOnLocalConnectionFailed(ConnectionFailedReasonType reason)
+	void Peer::ExecuteOnLocalPeerConnectionFailed(ConnectionFailedReasonType reason)
 	{
-		_onLocalConnectionFailed.Execute(reason);
+		_onLocalPeerConnectionFailed.Execute(reason);
 	}
 
 	void Peer::UnsubscribeToOnPeerConnected(unsigned int id)
@@ -185,11 +209,6 @@ namespace NetLib
 	void Peer::UnsubscribeToOnPeerDisconnected(unsigned int id)
 	{
 		_onLocalPeerDisconnect.DeleteSubscriber(id);
-	}
-
-	void Peer::UnsubscribeToOnPendingConnectionTimedOut(unsigned int id)
-	{
-		_onPendingConnectionTimedOut.DeleteSubscriber(id);
 	}
 
 	void Peer::ProcessReceivedData()
@@ -444,9 +463,16 @@ namespace NetLib
 		}
 	}
 
-	void Peer::ExecuteOnPendingConnectionTimedOut(const Address& address)
+	void Peer::RequestStop(bool shouldNotifyRemotePeers, ConnectionFailedReasonType reason)
 	{
-		_onPendingConnectionTimedOut.Execute(address);
+		_isStopRequested = true;
+		_stopRequestShouldNotifyRemotePeers = shouldNotifyRemotePeers;
+		_stopRequestReason = reason;
+	}
+
+	void Peer::SetConnectionState(PeerConnectionState state)
+	{
+		_connectionState = state;
 	}
 
 	void Peer::ExecuteOnRemotePeerDisconnect()
@@ -459,14 +485,40 @@ namespace NetLib
 		_onRemotePeerConnect.Execute();
 	}
 
-	void Peer::StopInternal(ConnectionFailedReasonType reason)
+	void Peer::StopInternal()
 	{
+		if (_connectionState == PeerConnectionState::PCS_Disconnected)
+		{
+			Common::LOG_WARNING("You are trying to call Peer::Stop on a Peer that is disconnected");
+			return;
+		}
+
 		StopConcrete();
-
-		DisconnectAllRemotePeers(true, reason);
-
+		DisconnectAllRemotePeers(_stopRequestShouldNotifyRemotePeers, _stopRequestReason);
 		_socket.Close();
 
+		_isStopRequested = false;
+
+		PeerConnectionState previousConnectionState = _connectionState;
+		SetConnectionState(PeerConnectionState::PCS_Disconnected);
 		Common::LOG_INFO("Peer stopped succesfully");
+
+		ExecuteStopCallback(previousConnectionState);
+	}
+
+	void Peer::ExecuteStopCallback(PeerConnectionState connectionStateAtStopTime)
+	{
+		if (connectionStateAtStopTime == PeerConnectionState::PCS_Connected)
+		{
+			ExecuteOnLocalPeerDisconnect(_stopRequestReason);
+		}
+		else if (connectionStateAtStopTime == PeerConnectionState::PCS_Connecting)
+		{
+			ExecuteOnLocalPeerConnectionFailed(_stopRequestReason);
+		}
+		else
+		{
+			Common::LOG_ERROR("Error! This peer was neither in the Connecting nor Connected states at the time of stop. No stop-like callback will be executed.");
+		}
 	}
 }

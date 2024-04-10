@@ -32,7 +32,7 @@ namespace NetLib
 		BindSocket(address);
 		Common::LOG_INFO("Server started succesfully!");
 
-		ExecuteOnPeerConnected();
+		ExecuteOnLocalPeerConnect();
 		return true;
 	}
 
@@ -252,7 +252,8 @@ namespace NetLib
 
 		if (remotePeer.GetDataPrefix() == dataPrefix)
 		{
-			remotePeer.SetConnected();
+			ConnectRemotePeer(remotePeer);
+
 			//Send connection approved packet
 			CreateConnectionApprovedMessage(remotePeer);
 			Common::LOG_INFO("Connection approved");

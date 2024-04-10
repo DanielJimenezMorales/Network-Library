@@ -194,20 +194,21 @@ namespace NetLib
 			return;
 		}
 
-		remotePeer.SetConnected();
+		ConnectRemotePeer(remotePeer);
 
 		_clientIndex = message.clientIndexAssigned;
 		_currentState = ClientState::CS_Connected;
 
 		Common::LOG_INFO("Connection accepted!");
-		ExecuteOnPeerConnected();
+		ExecuteOnLocalPeerConnect();
 	}
 
 	void Client::ProcessConnectionRequestDenied(const ConnectionDeniedMessage& message)
 	{
-		Common::LOG_INFO("Connection denied");
+		Common::LOG_INFO("Processing connection denied");
 		ConnectionFailedReasonType reason = static_cast<ConnectionFailedReasonType>(message.reason);
-		OnConnectionFailed(reason);
+
+		RequestStop(false, reason);
 	}
 
 	void Client::ProcessDisconnection(const DisconnectionMessage& message, RemotePeer& remotePeer)
@@ -395,17 +396,6 @@ namespace NetLib
 			_timeSinceLastTimeRequest = 0;
 			CreateTimeRequestMessage(*remotePeer);
 		}
-	}
-
-	void Client::OnConnectionFailed(ConnectionFailedReasonType reason)
-	{
-		StopInternal(reason);
-		ExecuteOnLocalConnectionFailed(reason);
-	}
-
-	void Client::OnServerPendingConnectionFailed()
-	{
-		OnConnectionFailed(ConnectionFailedReasonType::CFR_CONNECTION_TIMEOUT);
 	}
 
 	void Client::OnServerDisconnect()
