@@ -86,19 +86,21 @@ namespace NetLib
 	class ConnectionDeniedMessage : public Message
 	{
 	public:
-		ConnectionDeniedMessage() : Message(MessageType::ConnectionDenied) {}
+		ConnectionDeniedMessage() : Message(MessageType::ConnectionDenied), reason(0) {}
 
 		void Write(Buffer& buffer) const override;
 		void Read(Buffer& buffer) override;
 		uint32_t Size() const override;
 
 		~ConnectionDeniedMessage() override {};
+
+		uint8_t reason;
 	};
 
 	class DisconnectionMessage : public Message
 	{
 	public:
-		DisconnectionMessage() : prefix(0), Message(MessageType::Disconnection) {}
+		DisconnectionMessage() : prefix(0), reason(0), Message(MessageType::Disconnection) {}
 
 		void Write(Buffer& buffer) const override;
 		void Read(Buffer& buffer) override;
@@ -107,6 +109,7 @@ namespace NetLib
 		~DisconnectionMessage() override {};
 
 		uint64_t prefix;
+		uint8_t reason;
 	};
 
 	class TimeRequestMessage : public Message

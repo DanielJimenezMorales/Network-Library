@@ -447,6 +447,8 @@ namespace NetLib
 
 		_unackedReliableMessageTimeouts.clear();
 
+		_unackedMessagesSendTimes.clear();
+
 		it = _orderedMessagesWaitingForPrevious.begin();
 		while (it != _orderedMessagesWaitingForPrevious.end())
 		{
@@ -553,6 +555,12 @@ namespace NetLib
 		_lastMessageSequenceNumberAcked = 0;
 		_nextOrderedMessageSequenceNumber = 1;
 		_areUnsentACKs = false;
+		_rttMilliseconds = 0;
+
+		while (!_messagesRTTToProcess.empty())
+		{
+			_messagesRTTToProcess.pop();
+		}
 
 		for (unsigned int i = 0; i < _reliableMessageEntriesBufferSize; ++i)
 		{

@@ -18,10 +18,10 @@ namespace NetLib
 		if (iResult != 0)
 		{
 			Common::LOG_ERROR("WSAStartup failed: " + iResult);
-			return SocketResult::ERR;
+			return SocketResult::SOKT_ERR;
 		}
 
-		return SocketResult::SUCCESS;
+		return SocketResult::SOKT_SUCCESS;
 	}
 
 	int Socket::GetLastError() const
@@ -38,7 +38,7 @@ namespace NetLib
 	{
 		if (!IsValid())
 		{
-			return SocketResult::ERR;
+			return SocketResult::SOKT_ERR;
 		}
 
 		unsigned long listenSocketBlockingMode = status ? 0 : 1;
@@ -48,10 +48,10 @@ namespace NetLib
 			std::stringstream ss;
 			ss << "Socket error. Error while setting blocking mode, to " << listenSocketBlockingMode << ". error code " << GetLastError();
 			Common::LOG_ERROR(ss.str());
-			return SocketResult::ERR;
+			return SocketResult::SOKT_ERR;
 		}
 
-		return SocketResult::SUCCESS;
+		return SocketResult::SOKT_SUCCESS;
 	}
 
 	SocketResult Socket::Create()
@@ -62,17 +62,17 @@ namespace NetLib
 			std::stringstream ss;
 			ss << "Socket error. Error while creating the socket, error code " << GetLastError();
 			Common::LOG_ERROR(ss.str());
-			return SocketResult::ERR;
+			return SocketResult::SOKT_ERR;
 		}
 
-		return SocketResult::SUCCESS;
+		return SocketResult::SOKT_SUCCESS;
 	}
 
 	SocketResult Socket::Bind(const Address& address) const
 	{
 		if (!IsValid())
 		{
-			return SocketResult::ERR;
+			return SocketResult::SOKT_ERR;
 		}
 
 		if (bind(_listenSocket, (sockaddr*)&address.GetInfo(), sizeof(address.GetInfo())) == SOCKET_ERROR)
@@ -80,17 +80,17 @@ namespace NetLib
 			std::stringstream ss;
 			ss << "Socket error. Error while binding the listen socket, error code " << GetLastError();
 			Common::LOG_ERROR(ss.str());
-			return SocketResult::ERR;
+			return SocketResult::SOKT_ERR;
 		}
 
-		return SocketResult::SUCCESS;
+		return SocketResult::SOKT_SUCCESS;
 	}
 
 	SocketResult Socket::Close()
 	{
 		if (!IsValid())
 		{
-			return SocketResult::ERR;
+			return SocketResult::SOKT_ERR;
 		}
 
 		int iResult = closesocket(_listenSocket);
@@ -99,7 +99,7 @@ namespace NetLib
 			std::stringstream ss;
 			ss << "Socket error. Error while closing the socket, error code " << GetLastError();
 			Common::LOG_ERROR(ss.str());
-			return SocketResult::ERR;
+			return SocketResult::SOKT_ERR;
 		}
 
 		iResult = WSACleanup();
@@ -108,43 +108,46 @@ namespace NetLib
 			std::stringstream ss;
 			ss << "Socket error. Error while closing the sockets library, error code " << GetLastError();
 			Common::LOG_ERROR(ss.str());
-			return SocketResult::ERR;
+			return SocketResult::SOKT_ERR;
 		}
 
-		return SocketResult::SUCCESS;
+		_listenSocket = INVALID_SOCKET;
+
+		Common::LOG_INFO("Socket succesfully closed");
+		return SocketResult::SOKT_SUCCESS;
 	}
 
 	SocketResult Socket::Start()
 	{
-		SocketResult result = SocketResult::SUCCESS;
+		SocketResult result = SocketResult::SOKT_SUCCESS;
 
 		result = InitializeSocketsLibrary();
-		if (result != SocketResult::SUCCESS)
+		if (result != SocketResult::SOKT_SUCCESS)
 		{
 			Common::LOG_ERROR("Error while starting the sockets library, aborting operation...");
 			return result;
 		}
 
 		result = Create();
-		if (result != SocketResult::SUCCESS)
+		if (result != SocketResult::SOKT_SUCCESS)
 		{
 			return result;
 		}
 
 		result = SetBlockingMode(false);
-		if (result != SocketResult::SUCCESS)
+		if (result != SocketResult::SOKT_SUCCESS)
 		{
 			return result;
 		}
 
-		return SocketResult::SUCCESS;
+		return SocketResult::SOKT_SUCCESS;
 	}
 
 	SocketResult Socket::ReceiveFrom(uint8_t* incomingDataBuffer, unsigned int incomingDataBufferSize, Address* remoteAddress, unsigned int& numberOfBytesRead) const
 	{
 		if (incomingDataBuffer == nullptr || !IsValid())
 		{
-			return SocketResult::ERR;
+			return SocketResult::SOKT_ERR;
 		}
 
 		sockaddr_in incomingAddress;
@@ -152,6 +155,8 @@ namespace NetLib
 		ZeroMemory(&incomingAddress, incomingAddressSize);
 
 		int bytesIn = recvfrom(_listenSocket, (char*)incomingDataBuffer, incomingDataBufferSize, 0, (sockaddr*)&incomingAddress, &incomingAddressSize);
+		*remoteAddress = Address(incomingAddress);
+
 		if (bytesIn == SOCKET_ERROR)
 		{
 			int error = GetLastError();
@@ -159,37 +164,40 @@ namespace NetLib
 			if (error == WSAEMSGSIZE)
 			{
 				Common::LOG_ERROR("Socket error. The message received does not fit inside the buffer.");
-				return SocketResult::ERR;
+				return SocketResult::SOKT_ERR;
 			}
 			else if (error == WSAEWOULDBLOCK)
 			{
-				return SocketResult::WOULDBLOCK;
+				return SocketResult::SOKT_WOULDBLOCK;
 			}
 			else if (error == WSAECONNRESET)
 			{
 				Common::LOG_WARNING("Socket warning. The remote socket has been closed unexpectly.");
-				return SocketResult::CONNRESET;
+				return SocketResult::SOKT_CONNRESET;
 			}
 			else
 			{
 				std::stringstream ss;
 				ss << "Socket error. Error while receiving a message, error code: " << error;
 				Common::LOG_ERROR(ss.str());
-				return SocketResult::ERR;
+				return SocketResult::SOKT_ERR;
 			}
 		}
 
-		*remoteAddress = Address(incomingAddress);
 		numberOfBytesRead = bytesIn;
 
-		return SocketResult::SUCCESS;
+		std::stringstream ss;
+		ss << "Socket info. Data received from " << remoteAddress->GetIP() << ":" << remoteAddress->GetPort();
+		Common::LOG_INFO(ss.str());
+
+		return SocketResult::SOKT_SUCCESS;
 	}
 
 	SocketResult Socket::SendTo(const uint8_t* dataBuffer, unsigned int dataBufferSize, const Address& remoteAddress) const
 	{
 		if (dataBuffer == nullptr || !IsValid())
 		{
-			return SocketResult::ERR;
+			return SocketResult::SOKT_ERR;
 		}
 
 		if (dataBufferSize > _defaultMTUSize)
@@ -207,10 +215,14 @@ namespace NetLib
 			std::stringstream ss;
 			ss << "Socket error. Error while sending data, error code " << GetLastError();
 			Common::LOG_ERROR(ss.str());
-			return SocketResult::ERR;
+			return SocketResult::SOKT_ERR;
 		}
 
-		return SocketResult::SUCCESS;
+		std::stringstream ss;
+		ss << "Socket info. Data sent to " << remoteAddress.GetIP() << ":" << remoteAddress.GetPort();
+		Common::LOG_INFO(ss.str());
+
+		return SocketResult::SOKT_SUCCESS;
 	}
 
 	Socket::~Socket()

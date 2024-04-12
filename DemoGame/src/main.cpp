@@ -9,6 +9,7 @@
 #include "Client.h"
 #include "Logger.h"
 #include "TimeClock.h"
+#include "Initializer.h"
 
 #define DEFAULT_IP "127.0.0.1"
 #define DEFAULT_PORT "27015"
@@ -30,7 +31,7 @@ public:
     void Subscribe(NetLib::Peer& peer)
     {
         auto callback = std::bind(&DelegateSubscriber::OnPeerConnectedConsequences, this);
-        peer.SubscribeToOnPeerConnected(callback);
+        peer.SubscribeToOnLocalPeerConnect(callback);
     }
 };
 
@@ -42,7 +43,7 @@ int main()
     int clientOrServer;
     std::cin >> clientOrServer;
 
-    NetLib::TimeClock::CreateInstance();
+    NetLib::Initializer::Initialize();
 
     NetLib::Peer* peer = nullptr;
 
@@ -84,6 +85,12 @@ int main()
 
             accumulator -= FIXED_FRAME_TARGET_DURATION;
         }
+
+        if (clientOrServer == 1 && timeClock.GetLocalTimeSeconds() > 5.0f)
+        {
+            peer->Stop();
+            isRunning = false;
+        }
     }
     //GAMELOOP END
 
@@ -96,7 +103,7 @@ int main()
     delete peer;
     peer = nullptr;
 
-    NetLib::TimeClock::DeleteInstance();
+    NetLib::Initializer::Finalize();
 
     return EXIT_SUCCESS;
 }

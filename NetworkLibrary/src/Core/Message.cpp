@@ -86,23 +86,26 @@ namespace NetLib
 	void ConnectionDeniedMessage::Write(Buffer& buffer) const
 	{
 		_header.Write(buffer);
+		buffer.WriteByte(reason);
 	}
 
 	void ConnectionDeniedMessage::Read(Buffer& buffer)
 	{
 		_header.type = MessageType::ConnectionDenied;
 		_header.ReadWithoutHeader(buffer);
+		reason = buffer.ReadByte();
 	}
 
 	uint32_t ConnectionDeniedMessage::Size() const
 	{
-		return MessageHeader::Size();
+		return MessageHeader::Size() + sizeof(uint8_t);
 	}
 
 	void DisconnectionMessage::Write(Buffer& buffer) const
 	{
 		_header.Write(buffer);
 		buffer.WriteLong(prefix);
+		buffer.WriteByte(reason);
 	}
 
 	void DisconnectionMessage::Read(Buffer& buffer)
@@ -111,11 +114,12 @@ namespace NetLib
 		_header.ReadWithoutHeader(buffer);
 
 		prefix = buffer.ReadLong();
+		reason = buffer.ReadByte();
 	}
 
 	uint32_t DisconnectionMessage::Size() const
 	{
-		return MessageHeader::Size() + sizeof(uint64_t);
+		return MessageHeader::Size() + sizeof(uint64_t) + sizeof(uint8_t);
 	}
 
 	void TimeRequestMessage::Write(Buffer& buffer) const
