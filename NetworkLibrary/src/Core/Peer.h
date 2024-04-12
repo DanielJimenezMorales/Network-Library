@@ -96,7 +96,6 @@ namespace NetLib
 		//Delegates related
 		void ExecuteOnLocalPeerConnect();
 		void ExecuteOnLocalPeerDisconnect(ConnectionFailedReasonType reason);
-		void ExecuteOnLocalPeerConnectionFailed(ConnectionFailedReasonType reason);
 
 		RemotePeersHandler _remotePeersHandler;
 
@@ -128,7 +127,6 @@ namespace NetLib
 		void FinishRemotePeersDisconnection();
 
 		void StopInternal();
-		void ExecuteStopCallback(PeerConnectionState connectionStateAtStopTime);
 
 		//Delegates related
 		void ExecuteOnRemotePeerConnect();
@@ -153,8 +151,6 @@ namespace NetLib
 
 		Common::Delegate<> _onLocalPeerConnect;
 		Common::Delegate<ConnectionFailedReasonType> _onLocalPeerDisconnect;
-		//This should only be called in client-side since the server is not connecting to anything.
-		Common::Delegate<ConnectionFailedReasonType> _onLocalPeerConnectionFailed;
 		Common::Delegate<> _onRemotePeerConnect;
 		Common::Delegate<> _onRemotePeerDisconnect;
 	};

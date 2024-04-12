@@ -196,11 +196,6 @@ namespace NetLib
 		_onLocalPeerDisconnect.Execute(reason);
 	}
 
-	void Peer::ExecuteOnLocalPeerConnectionFailed(ConnectionFailedReasonType reason)
-	{
-		_onLocalPeerConnectionFailed.Execute(reason);
-	}
-
 	void Peer::UnsubscribeToOnPeerConnected(unsigned int id)
 	{
 		_onLocalPeerConnect.DeleteSubscriber(id);
@@ -503,22 +498,6 @@ namespace NetLib
 		SetConnectionState(PeerConnectionState::PCS_Disconnected);
 		Common::LOG_INFO("Peer stopped succesfully");
 
-		ExecuteStopCallback(previousConnectionState);
-	}
-
-	void Peer::ExecuteStopCallback(PeerConnectionState connectionStateAtStopTime)
-	{
-		if (connectionStateAtStopTime == PeerConnectionState::PCS_Connected)
-		{
-			ExecuteOnLocalPeerDisconnect(_stopRequestReason);
-		}
-		else if (connectionStateAtStopTime == PeerConnectionState::PCS_Connecting)
-		{
-			ExecuteOnLocalPeerConnectionFailed(_stopRequestReason);
-		}
-		else
-		{
-			Common::LOG_ERROR("Error! This peer was neither in the Connecting nor Connected states at the time of stop. No stop-like callback will be executed.");
-		}
+		ExecuteOnLocalPeerDisconnect(_stopRequestReason);
 	}
 }

@@ -50,7 +50,8 @@ namespace Tests
             LogTestUtils::LogTestResult(Test_ClientOnLocalPeerDisconnectDelegate_CheckItIsCalledOnlyOnceWhenServerStops());
             std::this_thread::sleep_for(duration);
 
-            //TODO Create one test testing ConnectionFailed callback due to server is full
+            LogTestUtils::LogTestResult(Test_ClientOnLocalPeerDisconnectDelegate_CheckItIsCalledOnlyOnceWhenServerDenyConnectionDueToItIsFull());
+            std::this_thread::sleep_for(duration);
 
             //Test remote peer connection
             LogTestUtils::LogTestResult(Test_ServerOnRemotePeerConnectDelegate_CheckItIsCalledOnlyOnce());
@@ -401,6 +402,116 @@ namespace Tests
             return true;
         }
 
+        bool static Test_ClientOnLocalPeerDisconnectDelegate_CheckItIsCalledOnlyOnceWhenServerDenyConnectionDueToItIsFull()
+        {
+            LogTestUtils::LogTestName("Test_ClientOnLocalPeerDisconnectDelegate_CheckItIsCalledOnlyOnceWhenServerDenyConnectionDueToItIsFull");
+
+            //Set up
+            SetUp();
+
+            //Arrange
+            const float clientServerInactivityTimeout = 5;
+            const unsigned int serverMaxConnections = 1;
+            const float testTimeout = 2;
+
+            NetLib::Peer* serverPeer = new NetLib::Server(serverMaxConnections);
+            NetLib::Peer* clientPeer1 = new NetLib::Client(clientServerInactivityTimeout);
+            NetLib::Peer* clientPeer2 = new NetLib::Client(clientServerInactivityTimeout);
+
+            bool isClient1Connected = false;
+            bool isClient2Initialized = false;
+
+            int numberOfTimesCalled = 0;
+            bool isRunning = true;
+            NetLib::PeerConnectionState client2ConnectionStateAfterStop = NetLib::PeerConnectionState::PCS_Connected;
+            NetLib::ConnectionFailedReasonType disconnectionReason = NetLib::ConnectionFailedReasonType::CFR_UNKNOWN;
+
+            auto callback = [&isRunning, &numberOfTimesCalled, &client2ConnectionStateAfterStop, &clientPeer2, &disconnectionReason](NetLib::ConnectionFailedReasonType reason)
+            {
+                isRunning = false;
+                ++numberOfTimesCalled;
+                client2ConnectionStateAfterStop = clientPeer2->GetConnectionState();
+                disconnectionReason = reason;
+            };
+
+            auto callbackClient1Connected = [&isClient1Connected]()
+            {
+                isClient1Connected = true;
+            };
+
+            NetLib::TimeClock& timeClock = NetLib::TimeClock::GetInstance();
+            double accumulator = 0.0;
+            float testTimeLeft = testTimeout;
+            float disconnectServerTimeout = 1.f;
+            bool isAlreadyDisconnected = false;
+
+            unsigned int subscriberId = 0;
+            unsigned int client1ConnectedSubscriberId = 0;
+
+            //Act
+            subscriberId = clientPeer2->SubscribeToOnLocalPeerDisconnect(callback);
+            client1ConnectedSubscriberId = clientPeer1->SubscribeToOnLocalPeerConnect(callbackClient1Connected);
+            serverPeer->Start();
+            clientPeer1->Start();
+
+            while (isRunning)
+            {
+                timeClock.UpdateLocalTime();
+                accumulator += timeClock.GetElapsedTimeSeconds();
+
+                while (accumulator >= FIXED_FRAME_TARGET_DURATION)
+                {
+                    if (isClient1Connected && !isClient2Initialized)
+                    {
+                        clientPeer2->Start();
+                        isClient2Initialized = true;
+                    }
+
+                    serverPeer->Tick(FIXED_FRAME_TARGET_DURATION);
+                    clientPeer1->Tick(FIXED_FRAME_TARGET_DURATION);
+
+                    if (isClient2Initialized)
+                    {
+                        clientPeer2->Tick(FIXED_FRAME_TARGET_DURATION);
+                    }
+
+                    accumulator -= FIXED_FRAME_TARGET_DURATION;
+                    disconnectServerTimeout -= FIXED_FRAME_TARGET_DURATION;
+
+                    testTimeLeft -= FIXED_FRAME_TARGET_DURATION;
+                    if (testTimeLeft <= 0.f)
+                    {
+                        isRunning = false;
+                    }
+                }
+            }
+
+
+            serverPeer->Stop();
+            clientPeer1->Stop();
+            clientPeer1->UnsubscribeToOnPeerConnected(client1ConnectedSubscriberId);
+
+            //No need to call to clientPeer2->Stop() since when it detects the connection denied, the client automatically stops before executing callback
+            clientPeer2->UnsubscribeToOnPeerDisconnected(subscriberId);
+
+            delete serverPeer;
+            serverPeer = nullptr;
+            delete clientPeer1;
+            clientPeer1 = nullptr;
+            delete clientPeer2;
+            clientPeer2 = nullptr;
+
+            //Assert
+            assert(numberOfTimesCalled == 1);
+            assert(client2ConnectionStateAfterStop == NetLib::PeerConnectionState::PCS_Disconnected);
+            assert(disconnectionReason == NetLib::ConnectionFailedReasonType::CFR_SERVER_FULL);
+
+            //Tear down
+            TearDown();
+
+            return true;
+        }
+
         bool static Test_ServerOnRemotePeerConnectDelegate_CheckItIsCalledOnlyOnce()
         {
             LogTestUtils::LogTestName("Test_ServerOnRemotePeerConnectDelegate_CheckItIsCalledOnlyOnce");
@@ -465,6 +576,9 @@ namespace Tests
             clientPeer = nullptr;
 
             //Assert
+            std::stringstream ss;
+            ss << numberOfTimesCalled;
+            Common::LOG_INFO(ss.str());
             assert(numberOfTimesCalled == 1);
 
             //Tear down
