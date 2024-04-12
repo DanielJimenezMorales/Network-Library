@@ -187,6 +187,12 @@ namespace NetLib
 
 	void Client::ProcessConnectionRequestAccepted(const ConnectionAcceptedMessage& message, RemotePeer& remotePeer)
 	{
+		if (remotePeer.GeturrentState() == RemotePeerState::Connected)
+		{
+			Common::LOG_INFO("The server's remote peer is already connected. Ignoring message");
+			return;
+		}
+
 		uint64_t remoteDataPrefix = message.prefix;
 		if (remoteDataPrefix != remotePeer.GetDataPrefix())
 		{

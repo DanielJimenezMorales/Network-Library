@@ -168,4 +168,22 @@ namespace NetLib
 
 		uint64_t data;
 	};
+
+	class ReplicationMessage : public Message
+	{
+	public:
+		ReplicationMessage() : replicationAction(0), networkEntityId(0), replicatedClassId(0), dataSize(0), data(nullptr), Message(MessageType::Replication) {}
+
+		void Write(Buffer& buffer) const override;
+		void Read(Buffer& buffer) override;
+		uint32_t Size() const override; //TODO Make this also dynamic based on replication action. Now it is set to its worst case
+
+		~ReplicationMessage() override;
+
+		uint8_t replicationAction;
+		uint32_t networkEntityId;
+		uint32_t replicatedClassId; //TODO If replication action is destroy, we don't care about this one
+		uint16_t dataSize; //TODO If replication action is destroy, we don't care about this one
+		uint8_t* data; //TODO Free this memory when calling MessageFactory::Release in order to avoid memory leaks
+	};
 }

@@ -199,4 +199,51 @@ namespace NetLib
 	{
 		return MessageHeader::Size() + sizeof(uint64_t);
 	}
+
+	void ReplicationMessage::Write(Buffer& buffer) const
+	{
+		_header.Write(buffer);
+		buffer.WriteByte(replicationAction);
+		buffer.WriteInteger(networkEntityId);
+		buffer.WriteInteger(replicatedClassId);
+		buffer.WriteShort(dataSize);
+		for (size_t i = 0; i < dataSize; ++i)
+		{
+			buffer.WriteByte(data[i]);
+		}
+	}
+
+	void ReplicationMessage::Read(Buffer& buffer)
+	{
+		_header.type = MessageType::Replication;
+		_header.ReadWithoutHeader(buffer);
+
+		replicationAction = buffer.ReadByte();
+		networkEntityId = buffer.ReadInteger();
+		replicatedClassId = buffer.ReadInteger();
+		dataSize = buffer.ReadShort();
+		if (dataSize > 0)
+		{
+			data = new uint8_t[dataSize];
+		}
+
+		for (size_t i = 0; i < dataSize; ++i)
+		{
+			data[i] = buffer.ReadByte();
+		}
+	}
+
+	uint32_t ReplicationMessage::Size() const
+	{
+		return MessageHeader::Size() + sizeof(uint8_t) + (2 * sizeof(uint32_t)) + sizeof(uint16_t) + (dataSize * sizeof(uint8_t));
+	}
+
+	ReplicationMessage::~ReplicationMessage()
+	{
+		if (data != nullptr)
+		{
+			delete[] data;
+			data = nullptr;
+		}
+	}
 }

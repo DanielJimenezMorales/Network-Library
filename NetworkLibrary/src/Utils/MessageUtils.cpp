@@ -46,6 +46,9 @@ namespace NetLib
 		case MessageType::InGameResponse:
 			message = messageFactory.LendMessage(MessageType::InGameResponse);
 			break;
+		case MessageType::Replication:
+			message = messageFactory.LendMessage(MessageType::Replication);
+			break;
 		default:
 			std::stringstream ss;
 			ss << "Can't read message of type MessageType = " << (int)type << ", ignoring it...";

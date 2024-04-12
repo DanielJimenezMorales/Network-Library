@@ -248,6 +248,13 @@ namespace NetLib
 		ss << "Processing connection challenge response from [IP: " << remotePeer.GetAddress().GetIP() << ", Port: " << remotePeer.GetAddress().GetPort() << "]";
 		Common::LOG_INFO(ss.str());
 
+		if (remotePeer.GeturrentState() == RemotePeerState::Connected)
+		{
+			Common::LOG_INFO("The remote peer is already connected. Sending connection approved...");
+			CreateConnectionApprovedMessage(remotePeer);
+			return;
+		}
+
 		uint64_t dataPrefix = message.prefix;
 
 		if (remotePeer.GetDataPrefix() == dataPrefix)
