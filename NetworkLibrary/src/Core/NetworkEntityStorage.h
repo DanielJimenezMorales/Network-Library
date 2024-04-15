@@ -13,7 +13,8 @@ namespace NetLib
 	public:
 		NetworkEntityStorage() : _nextNetworkEntityId(1) {};
 
-		void AddNetworkEntity(INetworkEntity& networkEntity);
+		INetworkEntity* GetNetworkEntityFromId(uint32_t entityId);
+		void AddNetworkEntity(INetworkEntity& networkEntity, bool setId = true);
 		bool RemoveNetworkEntity(INetworkEntity& networkEntity);
 		std::unordered_map<uint32_t, INetworkEntity*>::const_iterator GetNetworkEntities() const;
 		std::unordered_map<uint32_t, INetworkEntity*>::const_iterator GetPastToEndNetworkEntities() const;

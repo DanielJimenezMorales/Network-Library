@@ -5,7 +5,6 @@
 
 #include "Server.h"
 #include "Client.h"
-#include "Logger.h"
 #include "Initializer.h"
 #include "LogTestUtils.h"
 
@@ -576,9 +575,6 @@ namespace Tests
             clientPeer = nullptr;
 
             //Assert
-            std::stringstream ss;
-            ss << numberOfTimesCalled;
-            Common::LOG_INFO(ss.str());
             assert(numberOfTimesCalled == 1);
 
             //Tear down

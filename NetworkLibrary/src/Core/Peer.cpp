@@ -72,6 +72,11 @@ namespace NetLib
 		return true;
 	}
 
+	bool Peer::RegisterNetworkEntityFactory(NetworkEntityFactory* entityFactory, uint32_t entityType)
+	{
+		return _replicationManager.RegisterNetworkEntityFactory(entityFactory, entityType);
+	}
+
 	void Peer::UnsubscribeToOnRemotePeerDisconnect(unsigned int id)
 	{
 		_onRemotePeerDisconnect.DeleteSubscriber(id);

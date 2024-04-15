@@ -18,6 +18,11 @@ namespace NetLib
 
 	}
 
+	INetworkEntity* Server::CreateNetworkEntity(uint32_t entityType)
+	{
+		return _replicationManager.CreateNetworkEntity(entityType);
+	}
+
 	Server::~Server()
 	{
 	}
@@ -38,6 +43,7 @@ namespace NetLib
 
 	void Server::TickConcrete(float elapsedTime)
 	{
+		TickReplication();
 	}
 
 	uint64_t Server::GenerateServerSalt() const
@@ -325,6 +331,37 @@ namespace NetLib
 	void Server::SendPacketToRemotePeer(const RemotePeer& remotePeer, const NetworkPacket& packet) const
 	{
 		SendPacketToAddress(packet, remotePeer.GetAddress());
+	}
+
+	void Server::TickReplication()
+	{
+		_replicationManager.Server_ReplicateWorldState();
+
+		MessageFactory& messageFactory = MessageFactory::GetInstance();
+
+		while (_replicationManager.ArePendingReplicationMessages())
+		{
+			const ReplicationMessage* pendingReplicationMessage = _replicationManager.GetPendingReplicationMessage();
+
+			auto validRemotePeersIt = _remotePeersHandler.GetValidRemotePeersIterator();
+			auto pastTheEndIt = _remotePeersHandler.GetValidRemotePeersPastTheEndIterator();
+
+			for (; validRemotePeersIt != pastTheEndIt; ++validRemotePeersIt)
+			{
+				std::unique_ptr<Message> message = messageFactory.LendMessage(MessageType::Replication);
+				std::unique_ptr<ReplicationMessage> replicationMessage(static_cast<ReplicationMessage*>(message.release()));
+
+				replicationMessage->SetOrdered(pendingReplicationMessage->GetHeader().isOrdered);
+				replicationMessage->SetReliability(pendingReplicationMessage->GetHeader().isReliable);
+				replicationMessage->replicationAction = pendingReplicationMessage->replicationAction;
+				replicationMessage->networkEntityId = pendingReplicationMessage->networkEntityId;
+				replicationMessage->replicatedClassId = pendingReplicationMessage->replicatedClassId;
+
+				(*validRemotePeersIt)->AddMessage(std::move(replicationMessage));
+			}
+		}
+
+		_replicationManager.ClearSentReplicationMessages();
 	}
 
 	bool Server::StopConcrete()

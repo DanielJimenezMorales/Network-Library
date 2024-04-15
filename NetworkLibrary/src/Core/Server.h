@@ -13,6 +13,7 @@ namespace NetLib
 	class TimeRequestMessage;
 	class InGameMessage;
 	class DisconnectionMessage;
+	class INetworkEntity;
 
 	class Server : public Peer
 	{
@@ -21,6 +22,8 @@ namespace NetLib
 		Server(const Server&) = delete;
 
 		Server& operator=(const Server&) = delete;
+
+		INetworkEntity* CreateNetworkEntity(uint32_t entityType);
 
 		~Server() override;
 
@@ -58,6 +61,8 @@ namespace NetLib
 		void CreateInGameResponseMessage(RemotePeer& remotePeer, uint64_t data);
 		void SendConnectionDeniedPacket(const Address& address, ConnectionFailedReasonType reason) const;
 		void SendPacketToRemotePeer(const RemotePeer& remotePeer, const NetworkPacket& packet) const;
+
+		void TickReplication();
 
 		unsigned int _nextAssignedRemotePeerID = 1;
 	};

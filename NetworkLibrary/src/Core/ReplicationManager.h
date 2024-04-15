@@ -4,8 +4,8 @@
 #include <queue>
 #include <memory>
 
-#include "NetworkEntityFactory.h"
 #include "NetworkEntityStorage.h"
+#include "ReplicationObjectRegistry.h"
 #include "Message.h"
 
 namespace NetLib
@@ -17,27 +17,34 @@ namespace NetLib
 		RAT_DESTROY = 2
 	};
 
-	//SERVER ONLY
 	class ReplicationManager
 	{
 	public:
-		bool RegisterNetworkEntityFactory(NetworkEntityFactory& entityFactory, uint32_t entityType);
-		void CreateNetworkEntity(uint32_t entityType);
+		bool RegisterNetworkEntityFactory(NetworkEntityFactory* entityFactory, uint32_t entityType);
+		INetworkEntity* CreateNetworkEntity(uint32_t entityType);
 		void RemoveNetworkEntity(uint32_t entityId);
 
-		void Tick();
+		void Server_ReplicateWorldState();
+		void Client_ProcessReceivedReplicationMessage(const ReplicationMessage& replicationMessage);
+
+		bool ArePendingReplicationMessages() const;
+		const ReplicationMessage* GetPendingReplicationMessage();
+
+		void ClearSentReplicationMessages();
 
 	private:
 		void CreateCreateReplicationMessage(uint32_t entityType, uint32_t networkEntityId);
-		void CreateDestroyReplicationMessage(uint32_t entityType, uint32_t networkEntityId);
-		NetworkEntityFactory* GetNetworkEntityFactory(uint32_t entityType);
-		bool IsEntityFactoryRegistered(uint32_t entityType) const;
+		std::unique_ptr<ReplicationMessage> CreateUpdateReplicationMessage(uint32_t entityType, uint32_t networkEntityId);
+		void CreateDestroyReplicationMessage(uint32_t networkEntityId);
 
-		std::unordered_map<uint32_t, NetworkEntityFactory*> _entityFactories;
+		void ProcessReceivedCreateReplicationMessage(const ReplicationMessage& replicationMessage);
+		void ProcessReceivedUpdateReplicationMessage(const ReplicationMessage& replicationMessage);
+		void ProcessReceivedDestroyReplicationMessage(const ReplicationMessage& replicationMessage);
+
 		NetworkEntityStorage _networkEntitiesStorage;
+		ReplicationObjectRegistry _networkObjectsRegistry;
 
-		std::queue<std::unique_ptr<Message>> _pendingCreateReplicationActionMessages;
-		std::queue<std::unique_ptr<Message>> _pendingUpdateReplicationActionMessages;
-		std::queue<std::unique_ptr<Message>> _pendingDestroyReplicationActionMessages;
+		std::queue<std::unique_ptr<ReplicationMessage>> _pendingReplicationActionMessages;
+		std::queue<std::unique_ptr<ReplicationMessage>> _sentReplicationMessages;
 	};
 }
