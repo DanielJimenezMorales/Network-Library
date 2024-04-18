@@ -24,6 +24,7 @@ namespace NetLib
 		Server& operator=(const Server&) = delete;
 
 		INetworkEntity* CreateNetworkEntity(uint32_t entityType);
+		void DestroyNetworkEntity(uint32_t entityId);
 
 		~Server() override;
 

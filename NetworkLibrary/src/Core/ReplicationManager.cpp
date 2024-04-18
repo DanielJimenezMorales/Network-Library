@@ -151,7 +151,7 @@ namespace NetLib
 		networkEntityToRemove->NetworkEntityDestroy();
 
 		//Destroy object through its custom factory
-		_networkObjectsRegistry.DestroyObjectOfType(*networkEntityToRemove);
+		_networkObjectsRegistry.DestroyObjectOfType(networkEntityToRemove);
 
 		CreateDestroyReplicationMessage(entityId);
 	}

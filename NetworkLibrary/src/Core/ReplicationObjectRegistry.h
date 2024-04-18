@@ -13,7 +13,7 @@ namespace NetLib
 		bool RegisterNetworkEntityFactory(NetworkEntityFactory* entityFactory, uint32_t entityType);
 
 		INetworkEntity* CreateObjectOfType(uint32_t entityType);
-		void DestroyObjectOfType(INetworkEntity& networkEntityToDestroy);
+		void DestroyObjectOfType(INetworkEntity* networkEntityToDestroy);
 
 	private:
 		NetworkEntityFactory* GetNetworkEntityFactory(uint32_t entityType);

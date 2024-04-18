@@ -20,7 +20,28 @@ namespace NetLib
 
 	INetworkEntity* Server::CreateNetworkEntity(uint32_t entityType)
 	{
+		if (GetConnectionState() != PeerConnectionState::PCS_Connected)
+		{
+			std::stringstream ss;
+			ss << "Can't create Network entity of type " << static_cast<int>(entityType) << " because the server is not connected.";
+			Common::LOG_WARNING(ss.str());
+			return nullptr;
+		}
+
 		return _replicationManager.CreateNetworkEntity(entityType);
+	}
+
+	void Server::DestroyNetworkEntity(uint32_t entityId)
+	{
+		if (GetConnectionState() != PeerConnectionState::PCS_Connected)
+		{
+			std::stringstream ss;
+			ss << "Can't destroy Network entity with ID: " << static_cast<int>(entityId) << " because the server is not connected.";
+			Common::LOG_WARNING(ss.str());
+			return;
+		}
+
+		_replicationManager.RemoveNetworkEntity(entityId);
 	}
 
 	Server::~Server()

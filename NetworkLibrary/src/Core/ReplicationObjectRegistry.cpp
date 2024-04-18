@@ -46,9 +46,9 @@ namespace NetLib
 		return &networkEntity;
 	}
 
-	void ReplicationObjectRegistry::DestroyObjectOfType(INetworkEntity& networkEntityToDestroy)
+	void ReplicationObjectRegistry::DestroyObjectOfType(INetworkEntity* networkEntityToDestroy)
 	{
-		NetworkEntityFactory* networkEntityFactory = GetNetworkEntityFactory(networkEntityToDestroy.GetEntityType());
+		NetworkEntityFactory* networkEntityFactory = GetNetworkEntityFactory(networkEntityToDestroy->GetEntityType());
 		assert(networkEntityFactory != nullptr);
 		networkEntityFactory->Destroy(networkEntityToDestroy);
 	}
