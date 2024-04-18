@@ -1,10 +1,11 @@
 #include <sstream>
+#include <SDL_image.h>
 
 #include "Game.h"
 #include "Logger.h"
-#include "TimeClock.h"
 #include "Server.h"
 #include "Client.h"
+#include "Initializer.h"
 
 bool Game::Init()
 {
@@ -12,7 +13,7 @@ bool Game::Init()
 
     int clientOrServer;
     std::cin >> clientOrServer;
-    NetLib::TimeClock::CreateInstance();
+    NetLib::Initializer::Initialize();
 
     if (clientOrServer == 0)
     {
@@ -49,6 +50,31 @@ bool Game::Init()
     SDL_SetRenderDrawColor(_renderer, 255, 0, 0, 255);
     _isRunning = true;
 
+    SDL_Surface* imageSurface = IMG_Load("sprites/PlayerSprites/playerHead.png");
+    if (imageSurface == nullptr)
+    {
+        Common::LOG_INFO("HH");
+    }
+
+    imageTexture = SDL_CreateTextureFromSurface(_renderer, imageSurface);
+    SDL_FreeSurface(imageSurface);
+
+    result = SDL_QueryTexture(imageTexture, NULL, NULL, &sourceTextureRect.w, &sourceTextureRect.h);
+    if (result == 0)
+    {
+        Common::LOG_INFO("COOL");
+    }
+
+    sourceTextureRect.x = 0;
+    sourceTextureRect.y = 0;
+    /*destTextureRect.x = 256 - (sourceTextureRect.w / 2);
+    destTextureRect.y = 256 - (sourceTextureRect.h / 2);
+    destTextureRect.w = sourceTextureRect.w;
+    destTextureRect.h = sourceTextureRect.h;*/
+
+    entt::entity playerEntity = _activeScene._registry.create();
+    _activeScene._registry.emplace<SpriteRendererComponent>(playerEntity, sourceTextureRect, imageTexture);
+    _activeScene._registry.emplace<TransformComponent>(playerEntity, 256, 256);
     return true;
 }
 
@@ -66,6 +92,7 @@ void Game::GameLoop()
 
         while (accumulator >= FIXED_FRAME_TARGET_DURATION)
         {
+            _activeScene.Update(FIXED_FRAME_TARGET_DURATION);
             _peer->Tick(FIXED_FRAME_TARGET_DURATION);
 
             accumulator -= FIXED_FRAME_TARGET_DURATION;
@@ -96,6 +123,8 @@ void Game::Render()
     SDL_RenderClear(_renderer);
 
     //render things...
+    //int result = SDL_RenderCopy(_renderer, imageTexture, &sourceTextureRect, &destTextureRect);
+    _activeScene.Render(_renderer);
 
     SDL_RenderPresent(_renderer);
 }
@@ -110,7 +139,7 @@ bool Game::Release()
     delete _peer;
     _peer = nullptr;
 
-    NetLib::TimeClock::DeleteInstance();
+    NetLib::Initializer::Finalize();
 
     SDL_DestroyRenderer(_renderer);
     SDL_DestroyWindow(_window);
@@ -120,7 +149,7 @@ bool Game::Release()
 
 int Game::InitSDL()
 {
-    return SDL_Init(SDL_INIT_VIDEO);
+    return SDL_Init(SDL_INIT_EVERYTHING);
 }
 
 int Game::CreateWindowAndRenderer()

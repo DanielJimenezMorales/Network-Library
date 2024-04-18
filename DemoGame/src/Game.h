@@ -1,6 +1,7 @@
 #include <SDL.h>
 
 #include "Peer.h"
+#include "Scene.h"
 
 const unsigned int FIXED_FRAMES_PER_SECOND = 50;
 const float FIXED_FRAME_TARGET_DURATION = 1.0f / FIXED_FRAMES_PER_SECOND;
@@ -24,5 +25,11 @@ private:
 	SDL_Renderer* _renderer;
 	bool _isRunning;
 
+	//Temp
+	SDL_Texture* imageTexture;
+	SDL_Rect sourceTextureRect;
+	SDL_Rect destTextureRect;
+
 	NetLib::Peer* _peer;
+	Scene _activeScene;
 };

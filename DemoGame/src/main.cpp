@@ -7,12 +7,8 @@
 #include <sstream>
 #include <SDL.h>
 
-#include "Server.h"
-#include "Client.h"
 #include "Logger.h"
-#include "TimeClock.h"
 #include "Game.h"
-#include "Initializer.h"
 
 #define DEFAULT_IP "127.0.0.1"
 #define DEFAULT_PORT "27015"
@@ -29,8 +25,6 @@ int main()
 
     game.GameLoop();
     game.Release();
-
-    NetLib::Initializer::Finalize();
 
     return EXIT_SUCCESS;
 }

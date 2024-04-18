@@ -1,5 +1,7 @@
 workspace "NetworkLibrary"
 	architecture "x64"
+	-- Entt requires C++ to be version 17
+	cppdialect "C++17"
 
 	configurations
 	{
@@ -99,7 +101,7 @@ project "DemoGame"
 	files
 	{
 		"%{prj.name}/src/**.h",
-		"%{prj.name}/src/**.cpp"
+		"%{prj.name}/src/**.cpp",
 	}
 
 	includedirs
@@ -112,7 +114,8 @@ project "DemoGame"
 		"vendor/sdl2/SDL2-2.30.1/include/",
 		"vendor/sdl2/SDL2_image-2.8.2/include/",
 		"vendor/sdl2/SDL2_mixer-2.8.0/include/",
-		"vendor/sdl2/SDL2_ttf-2.22.0/include/"
+		"vendor/sdl2/SDL2_ttf-2.22.0/include/",
+		"vendor/entt/include/"
 	}
 
 	dependson
