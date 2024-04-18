@@ -107,7 +107,12 @@ project "DemoGame"
 		"Common/src/",
 		"NetworkLibrary/src/Core/",
 		"NetworkLibrary/src/Utils/",
-		"%{prj.name}/src/"
+		"%{prj.name}/src/",
+
+		"vendor/sdl2/SDL2-2.30.1/include/",
+		"vendor/sdl2/SDL2_image-2.8.2/include/",
+		"vendor/sdl2/SDL2_mixer-2.8.0/include/",
+		"vendor/sdl2/SDL2_ttf-2.22.0/include/"
 	}
 
 	dependson
@@ -119,13 +124,24 @@ project "DemoGame"
 	libdirs
 	{
 		"Common/bin",
-		"NetworkLibrary/bin"
+		"NetworkLibrary/bin",
+
+		"vendor/sdl2/SDL2-2.30.1/lib/x64",
+		"vendor/sdl2/SDL2_image-2.8.2/lib/x64",
+		"vendor/sdl2/SDL2_mixer-2.8.0/lib/x64",
+		"vendor/sdl2/SDL2_ttf-2.22.0/lib/x64"
 	}
 
 	links
 	{
 		"Common_%{cfg.buildcfg}",
-		"NetworkLibrary_%{cfg.buildcfg}"
+		"NetworkLibrary_%{cfg.buildcfg}",
+
+		"vendor/sdl2/SDL2-2.30.1/lib/x64/SDL2",
+		"vendor/sdl2/SDL2-2.30.1/lib/x64/SDL2main",
+		"vendor/sdl2/SDL2_image-2.8.2/lib/x64/SDL2_image",
+		"vendor/sdl2/SDL2_mixer-2.8.0/lib/x64/SDL2_mixer",
+		"vendor/sdl2/SDL2_ttf-2.22.0/lib/x64/SDL2_ttf"
 	}
 
 	filter "configurations:Debug"
