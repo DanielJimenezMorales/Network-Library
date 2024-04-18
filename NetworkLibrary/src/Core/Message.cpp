@@ -86,23 +86,26 @@ namespace NetLib
 	void ConnectionDeniedMessage::Write(Buffer& buffer) const
 	{
 		_header.Write(buffer);
+		buffer.WriteByte(reason);
 	}
 
 	void ConnectionDeniedMessage::Read(Buffer& buffer)
 	{
 		_header.type = MessageType::ConnectionDenied;
 		_header.ReadWithoutHeader(buffer);
+		reason = buffer.ReadByte();
 	}
 
 	uint32_t ConnectionDeniedMessage::Size() const
 	{
-		return MessageHeader::Size();
+		return MessageHeader::Size() + sizeof(uint8_t);
 	}
 
 	void DisconnectionMessage::Write(Buffer& buffer) const
 	{
 		_header.Write(buffer);
 		buffer.WriteLong(prefix);
+		buffer.WriteByte(reason);
 	}
 
 	void DisconnectionMessage::Read(Buffer& buffer)
@@ -111,11 +114,12 @@ namespace NetLib
 		_header.ReadWithoutHeader(buffer);
 
 		prefix = buffer.ReadLong();
+		reason = buffer.ReadByte();
 	}
 
 	uint32_t DisconnectionMessage::Size() const
 	{
-		return MessageHeader::Size() + sizeof(uint64_t);
+		return MessageHeader::Size() + sizeof(uint64_t) + sizeof(uint8_t);
 	}
 
 	void TimeRequestMessage::Write(Buffer& buffer) const
@@ -194,5 +198,52 @@ namespace NetLib
 	uint32_t InGameResponseMessage::Size() const
 	{
 		return MessageHeader::Size() + sizeof(uint64_t);
+	}
+
+	void ReplicationMessage::Write(Buffer& buffer) const
+	{
+		_header.Write(buffer);
+		buffer.WriteByte(replicationAction);
+		buffer.WriteInteger(networkEntityId);
+		buffer.WriteInteger(replicatedClassId);
+		buffer.WriteShort(dataSize);
+		for (size_t i = 0; i < dataSize; ++i)
+		{
+			buffer.WriteByte(data[i]);
+		}
+	}
+
+	void ReplicationMessage::Read(Buffer& buffer)
+	{
+		_header.type = MessageType::Replication;
+		_header.ReadWithoutHeader(buffer);
+
+		replicationAction = buffer.ReadByte();
+		networkEntityId = buffer.ReadInteger();
+		replicatedClassId = buffer.ReadInteger();
+		dataSize = buffer.ReadShort();
+		if (dataSize > 0)
+		{
+			data = new uint8_t[dataSize];
+		}
+
+		for (size_t i = 0; i < dataSize; ++i)
+		{
+			data[i] = buffer.ReadByte();
+		}
+	}
+
+	uint32_t ReplicationMessage::Size() const
+	{
+		return MessageHeader::Size() + sizeof(uint8_t) + (2 * sizeof(uint32_t)) + sizeof(uint16_t) + (dataSize * sizeof(uint8_t));
+	}
+
+	ReplicationMessage::~ReplicationMessage()
+	{
+		if (data != nullptr)
+		{
+			delete[] data;
+			data = nullptr;
+		}
 	}
 }

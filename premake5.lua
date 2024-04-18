@@ -153,3 +153,52 @@ project "DemoGame"
 
 	filter "configurations:Release"
 		optimize "On"
+
+project "Tests"
+	kind "ConsoleApp"
+	location "Tests"
+	language "C++"
+	targetdir "%{prj.name}/bin"
+	targetname "%{prj.name}_%{cfg.buildcfg}"
+
+	files
+	{
+		"%{prj.name}/src/**.h",
+		"%{prj.name}/src/**.cpp"
+	}
+
+	includedirs
+	{
+		"Common/src/",
+		"NetworkLibrary/src/Core/",
+		"NetworkLibrary/src/Utils/",
+		"%{prj.name}/src/"
+	}
+
+	dependson
+	{
+		"Common",
+		"NetworkLibrary"
+	}
+
+	libdirs
+	{
+		"Common/bin",
+		"NetworkLibrary/bin"
+	}
+
+	links
+	{
+		"Common_%{cfg.buildcfg}",
+		"NetworkLibrary_%{cfg.buildcfg}"
+	}
+
+	filter "configurations:Debug"
+		defines
+		{
+			"LOG_ENABLED"
+		}
+		symbols "On"
+
+	filter "configurations:Release"
+		optimize "On"

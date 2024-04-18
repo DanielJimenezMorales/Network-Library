@@ -10,7 +10,6 @@
 
 namespace NetLib
 {
-
 	class Message;
 	class ConnectionChallengeMessage;
 	class ConnectionAcceptedMessage;
@@ -18,13 +17,14 @@ namespace NetLib
 	class DisconnectionMessage;
 	class TimeResponseMessage;
 	class InGameResponseMessage;
+	class ReplicationMessage;
 
 	enum ClientState
 	{
-		Disconnected = 0,
-		Connected = 1,
-		SendingConnectionRequest = 2,
-		SendingConnectionChallengeResponse = 3,
+		CS_Disconnected = 0,
+		CS_Connected = 1,
+		CS_SendingConnectionRequest = 2,
+		CS_SendingConnectionChallengeResponse = 3,
 	};
 
 	//TIME SYNC CONSTANTS
@@ -50,33 +50,32 @@ namespace NetLib
 
 	protected:
 		bool StartConcrete() override;
-		void ProcessMessage(const Message& message, const Address& address) override;
+		void ProcessMessageFromPeer(const Message& message, RemotePeer& remotePeer) override;
+		void ProcessMessageFromUnknownPeer(const Message& message, const Address& address) override;
 		void TickConcrete(float elapsedTime) override;
-		void DisconnectRemotePeerConcrete(RemotePeer& remotePeer) override;
 		bool StopConcrete() override;
 
 	private:
-		void GenerateClientSaltNumber();
-		void ProcessConnectionChallenge(const ConnectionChallengeMessage& message);
-		void ProcessConnectionRequestAccepted(const ConnectionAcceptedMessage& message);
+		uint64_t GenerateClientSaltNumber();
+		void ProcessConnectionChallenge(const ConnectionChallengeMessage& message, RemotePeer& remotePeer);
+		void ProcessConnectionRequestAccepted(const ConnectionAcceptedMessage& message, RemotePeer& remotePeer);
 		void ProcessConnectionRequestDenied(const ConnectionDeniedMessage& message);
-		void ProcessDisconnection(const DisconnectionMessage& message);
+		void ProcessDisconnection(const DisconnectionMessage& message, RemotePeer& remotePeer);
 		void ProcessTimeResponse(const TimeResponseMessage& message);
 		void ProcessInGameResponse(const InGameResponseMessage& message);
+		void ProcessReplicationAction(const ReplicationMessage& message);
 
-		void CreateConnectionRequestMessage();
-		void CreateConnectionChallengeResponse();
-		void CreateTimeRequestMessage();
-		void CreateInGameMessage();
+		void CreateConnectionRequestMessage(RemotePeer& remotePeer);
+		void CreateConnectionChallengeResponse(RemotePeer& remotePeer);
+		void CreateTimeRequestMessage(RemotePeer& remotePeer);
+		void CreateInGameMessage(RemotePeer& remotePeer);
 
 		void UpdateTimeRequestsElapsedTime(float elapsedTime);
 
+		void OnServerDisconnect();
+
 		Address _serverAddress;
-		ClientState _currentState = ClientState::Disconnected;
-		const float _serverMaxInactivityTimeout;
-		float _serverInactivityTimeLeft;
-		uint64_t _saltNumber;
-		uint64_t _dataPrefix;
+		ClientState _currentState;
 		unsigned int _clientIndex;
 
 		unsigned int inGameMessageID; //Only for RUDP testing purposes. Delete later!

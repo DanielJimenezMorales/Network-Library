@@ -12,12 +12,11 @@
 #include "Logger.h"
 #include "TimeClock.h"
 #include "Game.h"
+#include "Initializer.h"
 
 #define DEFAULT_IP "127.0.0.1"
 #define DEFAULT_PORT "27015"
 #define DEFAULT_BUFFER_LENGTH 512
-
-//TODO Add a maximum size to each packet and add as many messages as possible until reaching the max size
 
 //#pragma comment(lib, "Ws2_32.lib") //Added to Properties/Linker/Input/Additional Dependencies
 int main()
@@ -30,6 +29,8 @@ int main()
 
     game.GameLoop();
     game.Release();
+
+    NetLib::Initializer::Finalize();
 
     return EXIT_SUCCESS;
 }

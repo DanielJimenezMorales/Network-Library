@@ -12,6 +12,8 @@ namespace NetLib
 	class ConnectionChallengeResponseMessage;
 	class TimeRequestMessage;
 	class InGameMessage;
+	class DisconnectionMessage;
+	class INetworkEntity;
 
 	class Server : public Peer
 	{
@@ -21,22 +23,26 @@ namespace NetLib
 
 		Server& operator=(const Server&) = delete;
 
+		INetworkEntity* CreateNetworkEntity(uint32_t entityType);
+		void DestroyNetworkEntity(uint32_t entityId);
+
 		~Server() override;
 
 	protected:
 		bool StartConcrete() override;
-		void ProcessMessage(const Message& message, const Address& address) override;
+		void ProcessMessageFromPeer(const Message& message, RemotePeer& remotePeer) override;
+		void ProcessMessageFromUnknownPeer(const Message& message, const Address& address) override;
 		void TickConcrete(float elapsedTime) override;
-		void DisconnectRemotePeerConcrete(RemotePeer& remotePeer) override;
 		bool StopConcrete() override;
 
 	private:
 		uint64_t GenerateServerSalt() const;
 
 		void ProcessConnectionRequest(const ConnectionRequestMessage& message, const Address& address);
-		void ProcessConnectionChallengeResponse(const ConnectionChallengeResponseMessage& message, const Address& address);
-		void ProcessTimeRequest(const TimeRequestMessage& message, const Address& address);
-		void ProcessInGame(const InGameMessage& message, const Address& address);
+		void ProcessConnectionChallengeResponse(const ConnectionChallengeResponseMessage& message, RemotePeer& remotePeer);
+		void ProcessTimeRequest(const TimeRequestMessage& message, RemotePeer& remotePeer);
+		void ProcessInGame(const InGameMessage& message, RemotePeer& remotePeer);
+		void ProcessDisconnection(const DisconnectionMessage& message, RemotePeer& remotePeer);
 
 		/// <summary>
 		/// This method checks if a new client is able to connect to server
@@ -47,16 +53,17 @@ namespace NetLib
 		/// 1 = Is already connected.
 		/// -1 = Unable to connect, the server has reached its maximum connections.
 		/// </returns>
-		int IsClientAbleToConnect(const Address& address) const;
-		void AddNewRemotePeer(int remotePeerSlotIndex, const Address& address, uint64_t dataPrefix);
+		//int IsRemotePeerAbleToConnect(const Address& address) const;
 
-		void CreateConnectionChallengeMessage(const Address& address, int pendingConnectionIndex);
+		void CreateConnectionChallengeMessage(RemotePeer& remotePeer);
 		void CreateConnectionApprovedMessage(RemotePeer& remotePeer);
 		void CreateDisconnectionMessage(RemotePeer& remotePeer);
 		void CreateTimeResponseMessage(RemotePeer& remotePeer, const TimeRequestMessage& timeRequest);
 		void CreateInGameResponseMessage(RemotePeer& remotePeer, uint64_t data);
-		void SendConnectionDeniedPacket(const Address& address) const;
+		void SendConnectionDeniedPacket(const Address& address, ConnectionFailedReasonType reason) const;
 		void SendPacketToRemotePeer(const RemotePeer& remotePeer, const NetworkPacket& packet) const;
+
+		void TickReplication();
 
 		unsigned int _nextAssignedRemotePeerID = 1;
 	};

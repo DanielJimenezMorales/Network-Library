@@ -126,6 +126,9 @@ namespace NetLib
 
         _messagePools[MessageType::InGameResponse] = std::queue<std::unique_ptr<Message>>();
         InitializePool(_messagePools[MessageType::InGameResponse], MessageType::InGameResponse);
+
+        _messagePools[MessageType::Replication] = std::queue<std::unique_ptr<Message>>();
+        InitializePool(_messagePools[MessageType::Replication], MessageType::Replication);
     }
 
     void MessageFactory::InitializePool(std::queue<std::unique_ptr<Message>>& pool, MessageType messageType)
@@ -188,6 +191,9 @@ namespace NetLib
             break;
         case MessageType::InGameResponse:
             resultMessage = std::make_unique<InGameResponseMessage>();
+            break;
+        case MessageType::Replication:
+            resultMessage = std::make_unique<ReplicationMessage>();
             break;
         default:
             Common::LOG_ERROR("Can't create a new message. Invalid message type");

@@ -86,19 +86,21 @@ namespace NetLib
 	class ConnectionDeniedMessage : public Message
 	{
 	public:
-		ConnectionDeniedMessage() : Message(MessageType::ConnectionDenied) {}
+		ConnectionDeniedMessage() : Message(MessageType::ConnectionDenied), reason(0) {}
 
 		void Write(Buffer& buffer) const override;
 		void Read(Buffer& buffer) override;
 		uint32_t Size() const override;
 
 		~ConnectionDeniedMessage() override {};
+
+		uint8_t reason;
 	};
 
 	class DisconnectionMessage : public Message
 	{
 	public:
-		DisconnectionMessage() : prefix(0), Message(MessageType::Disconnection) {}
+		DisconnectionMessage() : prefix(0), reason(0), Message(MessageType::Disconnection) {}
 
 		void Write(Buffer& buffer) const override;
 		void Read(Buffer& buffer) override;
@@ -107,6 +109,7 @@ namespace NetLib
 		~DisconnectionMessage() override {};
 
 		uint64_t prefix;
+		uint8_t reason;
 	};
 
 	class TimeRequestMessage : public Message
@@ -164,5 +167,23 @@ namespace NetLib
 		~InGameResponseMessage() override {};
 
 		uint64_t data;
+	};
+
+	class ReplicationMessage : public Message
+	{
+	public:
+		ReplicationMessage() : replicationAction(0), networkEntityId(0), replicatedClassId(0), dataSize(0), data(nullptr), Message(MessageType::Replication) {}
+
+		void Write(Buffer& buffer) const override;
+		void Read(Buffer& buffer) override;
+		uint32_t Size() const override; //TODO Make this also dynamic based on replication action. Now it is set to its worst case
+
+		~ReplicationMessage() override;
+
+		uint8_t replicationAction;
+		uint32_t networkEntityId;
+		uint32_t replicatedClassId; //TODO If replication action is update or destroy, we don't care about this one
+		uint16_t dataSize; //TODO If replication action is destroy, we don't care about this one
+		uint8_t* data; //TODO Free this memory when calling MessageFactory::Release in order to avoid memory leaks
 	};
 }
