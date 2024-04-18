@@ -2,13 +2,31 @@
 
 namespace NetLib
 {
-	void NetworkEntityStorage::AddNetworkEntity(INetworkEntity& networkEntity)
+	INetworkEntity* NetworkEntityStorage::GetNetworkEntityFromId(uint32_t entityId)
 	{
-		uint32_t id = _nextNetworkEntityId;
-		networkEntity.SetEntityId(id);
-		_networkEntities[id] = &networkEntity;
+		INetworkEntity* entity = nullptr;
+		auto it = _networkEntities.find(entityId);
 
-		CalculateNextNetworkEntityId();
+		if (it != _networkEntities.end())
+		{
+			entity = it->second;
+		}
+
+		return entity;
+	}
+
+	void NetworkEntityStorage::AddNetworkEntity(INetworkEntity& networkEntity, bool setId)
+	{
+		uint32_t id = networkEntity.GetEntityId();
+
+		if (setId)
+		{
+			id = _nextNetworkEntityId;
+			networkEntity.SetEntityId(id);
+			CalculateNextNetworkEntityId();
+		}
+
+		_networkEntities[id] = &networkEntity;
 	}
 
 	bool NetworkEntityStorage::RemoveNetworkEntity(INetworkEntity& networkEntity)

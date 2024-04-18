@@ -62,6 +62,15 @@ namespace Common
 			}
 		}
 
+		void DeleteAllSubscribers()
+		{
+			//TODO add mutex here
+			for (size_t i = 0; i < _subscribers.size(); ++i)
+			{
+				_subscribers[i].reset();
+			}
+		}
+
 		void Execute(Parameters... params)
 		{
 			//TODO make this thread-safe. Maybe a temp copy of the subscribers in order to safely loop them?

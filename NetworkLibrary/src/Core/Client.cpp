@@ -115,6 +115,13 @@ namespace NetLib
 				ProcessInGameResponse(inGameResponseMessage);
 			}
 			break;
+		case MessageType::Replication:
+			if (_currentState == ClientState::CS_Connected)
+			{
+				const ReplicationMessage& replicationMessage = static_cast<const ReplicationMessage&>(message);
+				ProcessReplicationAction(replicationMessage);
+			}
+			break;
 		default:
 			Common::LOG_WARNING("Invalid Message type, ignoring it...");
 			break;
@@ -292,6 +299,11 @@ namespace NetLib
 		std::stringstream ss;
 		ss << "In game response ID = " << message.data;
 		Common::LOG_INFO(ss.str());
+	}
+
+	void Client::ProcessReplicationAction(const ReplicationMessage& message)
+	{
+		_replicationManager.Client_ProcessReceivedReplicationMessage(message);
 	}
 
 	void Client::CreateConnectionRequestMessage(RemotePeer& remotePeer)

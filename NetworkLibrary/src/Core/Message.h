@@ -182,7 +182,7 @@ namespace NetLib
 
 		uint8_t replicationAction;
 		uint32_t networkEntityId;
-		uint32_t replicatedClassId; //TODO If replication action is destroy, we don't care about this one
+		uint32_t replicatedClassId; //TODO If replication action is update or destroy, we don't care about this one
 		uint16_t dataSize; //TODO If replication action is destroy, we don't care about this one
 		uint8_t* data; //TODO Free this memory when calling MessageFactory::Release in order to avoid memory leaks
 	};

@@ -9,12 +9,14 @@
 #include "TransmissionChannel.h"
 #include "Delegate.h"
 #include "RemotePeersHandler.h"
+#include "ReplicationManager.h"
 
 namespace NetLib
 {
 	class Message;
 	class NetworkPacket;
 	class RemotePeer;
+	class NetworkEntityFactory;
 
 	enum ConnectionFailedReasonType : uint8_t
 	{
@@ -55,6 +57,7 @@ namespace NetLib
 		bool Stop();
 
 		PeerConnectionState GetConnectionState() { return _connectionState; }
+		bool RegisterNetworkEntityFactory(NetworkEntityFactory* entityFactory, uint32_t entityType);
 
 		//Delegates related
 		template<typename Functor>
@@ -98,6 +101,7 @@ namespace NetLib
 		void ExecuteOnLocalPeerDisconnect(ConnectionFailedReasonType reason);
 
 		RemotePeersHandler _remotePeersHandler;
+		ReplicationManager _replicationManager;
 
 	private:
 		void ProcessReceivedData();

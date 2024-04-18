@@ -7,6 +7,6 @@ namespace NetLib
 	{
 	public:
 		virtual INetworkEntity& Create() = 0;
-		virtual void Destroy(INetworkEntity& networkEntity) = 0;
+		virtual void Destroy(INetworkEntity* networkEntity) = 0;
 	};
 }
