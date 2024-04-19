@@ -6,6 +6,11 @@
 #include "Server.h"
 #include "Client.h"
 #include "Initializer.h"
+#include "GameEntity.h"
+#include "SpriteRendererComponent.h"
+#include "TransformComponent.h"
+#include "ScriptComponent.h"
+#include "PlayerMovement.h"
 
 bool Game::Init()
 {
@@ -56,9 +61,10 @@ bool Game::Init()
         Common::LOG_INFO("HH");
     }
 
-    imageTexture = SDL_CreateTextureFromSurface(_renderer, imageSurface);
+    SDL_Texture* imageTexture = SDL_CreateTextureFromSurface(_renderer, imageSurface);
     SDL_FreeSurface(imageSurface);
 
+    SDL_Rect sourceTextureRect;
     result = SDL_QueryTexture(imageTexture, NULL, NULL, &sourceTextureRect.w, &sourceTextureRect.h);
     if (result == 0)
     {
@@ -67,14 +73,14 @@ bool Game::Init()
 
     sourceTextureRect.x = 0;
     sourceTextureRect.y = 0;
-    /*destTextureRect.x = 256 - (sourceTextureRect.w / 2);
-    destTextureRect.y = 256 - (sourceTextureRect.h / 2);
-    destTextureRect.w = sourceTextureRect.w;
-    destTextureRect.h = sourceTextureRect.h;*/
 
-    entt::entity playerEntity = _activeScene._registry.create();
-    _activeScene._registry.emplace<SpriteRendererComponent>(playerEntity, sourceTextureRect, imageTexture);
-    _activeScene._registry.emplace<TransformComponent>(playerEntity, 256, 256);
+    GameEntity playerEntity = _activeScene.CreateGameEntity();
+    playerEntity.AddComponent<SpriteRendererComponent>(sourceTextureRect, imageTexture);
+    TransformComponent& playerTransform = playerEntity.GetComponent<TransformComponent>();
+    playerTransform.posX = 256;
+    playerTransform.posY = 56;
+
+    playerEntity.AddComponent<ScriptComponent>().Bind<PlayerMovement>();
     return true;
 }
 
@@ -122,8 +128,6 @@ void Game::Render()
 {
     SDL_RenderClear(_renderer);
 
-    //render things...
-    //int result = SDL_RenderCopy(_renderer, imageTexture, &sourceTextureRect, &destTextureRect);
     _activeScene.Render(_renderer);
 
     SDL_RenderPresent(_renderer);
