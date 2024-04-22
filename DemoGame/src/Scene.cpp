@@ -6,8 +6,14 @@
 
 void Scene::Update(float elapsedTime)
 {
-	//Update scripts:
+	//Update scripts
 	_scriptSystem.Update(_registry, this, elapsedTime);
+}
+
+void Scene::Tick(float tickElapsedTime)
+{
+	//Tick scripts
+	_scriptSystem.Tick(_registry, tickElapsedTime);
 }
 
 void Scene::Render(SDL_Renderer* renderer)

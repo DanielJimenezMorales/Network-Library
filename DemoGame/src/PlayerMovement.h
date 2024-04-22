@@ -1,4 +1,6 @@
 #pragma once
+#include <sstream>
+
 #include "ScriptableSystem.h"
 #include "TransformComponent.h"
 #include "Logger.h"
@@ -11,9 +13,12 @@ protected:
 		Common::LOG_INFO("PLAYER MOVEMENT CREATE");
 	}
 
-	void Update(float elapsedTime) override
+	void Tick(float tickElapsedTime) override
 	{
+		std::stringstream ss;
+		ss << tickElapsedTime;
+		Common::LOG_INFO(ss.str());
 		TransformComponent& transform = GetComponent<TransformComponent>();
-		++transform.posX;
+		transform.posX += 50*tickElapsedTime;
 	}
 };

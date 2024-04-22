@@ -20,6 +20,12 @@ void ScriptSystem::Update(entt::registry& registry, Scene* scene, float elapsedT
 
 void ScriptSystem::Tick(entt::registry& registry, float tickElapsedTime) const
 {
+	auto& view = registry.view<ScriptComponent>();
+	for (auto entity : view)
+	{
+		ScriptComponent& script = view.get<ScriptComponent>(entity);
+		script.behaviour->Tick(tickElapsedTime);
+	}
 }
 
 void ScriptSystem::CreateScript(ScriptComponent& script, Scene* scene, entt::entity entity) const

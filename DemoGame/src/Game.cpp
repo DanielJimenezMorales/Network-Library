@@ -11,6 +11,11 @@
 #include "TransformComponent.h"
 #include "ScriptComponent.h"
 #include "PlayerMovement.h"
+#include "KeyboardController.h"
+
+const int JUMP_ACTION = 0;
+const int HORIZONTAL_AXIS_ACTION = 1;
+KeyboardController* keyboard;
 
 bool Game::Init()
 {
@@ -55,6 +60,14 @@ bool Game::Init()
     SDL_SetRenderDrawColor(_renderer, 255, 0, 0, 255);
     _isRunning = true;
 
+    //TEMP
+    keyboard = new KeyboardController();
+    InputButton button(JUMP_ACTION, SDLK_w);
+    keyboard->AddButtonMap(button);
+    InputAxis axis(HORIZONTAL_AXIS_ACTION, SDLK_d, SDLK_a);
+    keyboard->AddAxisMap(axis);
+    _inputHandler.AddController(keyboard);
+
     SDL_Surface* imageSurface = IMG_Load("sprites/PlayerSprites/playerHead.png");
     if (imageSurface == nullptr)
     {
@@ -96,9 +109,11 @@ void Game::GameLoop()
 
         HandleEvents();
 
+        Update(timeClock.GetElapsedTimeSeconds());
+
         while (accumulator >= FIXED_FRAME_TARGET_DURATION)
         {
-            _activeScene.Update(FIXED_FRAME_TARGET_DURATION);
+            _activeScene.Tick(FIXED_FRAME_TARGET_DURATION);
             _peer->Tick(FIXED_FRAME_TARGET_DURATION);
 
             accumulator -= FIXED_FRAME_TARGET_DURATION;
@@ -110,6 +125,8 @@ void Game::GameLoop()
 
 void Game::HandleEvents()
 {
+    _inputHandler.PreHandleEvents();
+
     SDL_Event ev;
     while (SDL_PollEvent(&ev))
     {
@@ -117,11 +134,33 @@ void Game::HandleEvents()
         {
             _isRunning = false;
         }
+        else
+        {
+            _inputHandler.HandleEvent(ev);
+        }
     }
+
+    _inputHandler.PostHandleEvents();
 }
 
-void Game::Update()
+void Game::Update(float elapsedTime)
 {
+    std::stringstream ss;
+    ss << "HORIZONTAL AXIS VALUE: " << keyboard->GetAxis(HORIZONTAL_AXIS_ACTION);
+    Common::LOG_INFO(ss.str());
+    if (keyboard->GetButtonDown(JUMP_ACTION))
+    {
+        Common::LOG_INFO("DOWN");
+    }
+    if (keyboard->GetButtonUp(JUMP_ACTION))
+    {
+        Common::LOG_INFO("UP");
+    }
+    if (keyboard->GetButtonPressed(JUMP_ACTION))
+    {
+        Common::LOG_INFO("BUTTON");
+    }
+    _activeScene.Update(elapsedTime);
 }
 
 void Game::Render()

@@ -15,6 +15,7 @@ public:
 	~Scene() {};
 
 	void Update(float elapsedTime);
+	void Tick(float tickElapsedTime);
 	void Render(SDL_Renderer* renderer);
 
 	GameEntity CreateGameEntity();

@@ -3,6 +3,7 @@
 
 #include "Peer.h"
 #include "Scene.h"
+#include "InputHandler.h"
 
 const unsigned int FIXED_FRAMES_PER_SECOND = 50;
 const float FIXED_FRAME_TARGET_DURATION = 1.0f / FIXED_FRAMES_PER_SECOND;
@@ -21,7 +22,7 @@ private:
 	int CreateWindowAndRenderer();
 
 	void HandleEvents();
-	void Update();
+	void Update(float elapsedTime);
 	void Render();
 
 	SDL_Window* _window;
@@ -30,4 +31,5 @@ private:
 
 	NetLib::Peer* _peer;
 	Scene _activeScene;
+	InputHandler _inputHandler;
 };
