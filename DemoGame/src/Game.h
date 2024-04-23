@@ -23,6 +23,7 @@ private:
 
 	void HandleEvents();
 	void Update(float elapsedTime);
+	void Tick(float tickElapsedTime);
 	void Render();
 
 	SDL_Window* _window;

@@ -12,6 +12,7 @@
 #include "ScriptComponent.h"
 #include "PlayerMovement.h"
 #include "KeyboardController.h"
+#include "InputComponent.h"
 
 const int JUMP_ACTION = 0;
 const int HORIZONTAL_AXIS_ACTION = 1;
@@ -96,9 +97,9 @@ bool Game::Init()
     playerTransform.posX = 256;
     playerTransform.posY = 56;
 
+    InputComponent& inputComponent = playerEntity.AddComponent<InputComponent>(keyboard);
+
     playerEntity.AddComponent<ScriptComponent>().Bind<PlayerMovement>();
-    PlayerMovement* playerMovement = static_cast<PlayerMovement*>(playerEntity.GetComponent<ScriptComponent>().behaviour);
-    playerMovement->SetKeyboard(keyboard);
     return true;
 }
 
@@ -118,9 +119,7 @@ void Game::GameLoop()
 
         while (accumulator >= FIXED_FRAME_TARGET_DURATION)
         {
-            _activeScene.Tick(FIXED_FRAME_TARGET_DURATION);
-            _peer->Tick(FIXED_FRAME_TARGET_DURATION);
-
+            Tick(FIXED_FRAME_TARGET_DURATION);
             accumulator -= FIXED_FRAME_TARGET_DURATION;
         }
 
@@ -151,6 +150,12 @@ void Game::HandleEvents()
 void Game::Update(float elapsedTime)
 {
     _activeScene.Update(elapsedTime);
+}
+
+void Game::Tick(float tickElapsedTime)
+{
+    _activeScene.Tick(tickElapsedTime);
+    _peer->Tick(tickElapsedTime);
 }
 
 void Game::Render()

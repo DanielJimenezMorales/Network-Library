@@ -1,8 +1,10 @@
 #include "PlayerMovement.h"
+#include "InputComponent.h"
 
 void PlayerMovement::Tick(float tickElapsedTime)
 {
-	Vec2f inputs(_keyboard->GetAxis(HORIZONTAL_AXIS), _keyboard->GetAxis(VERTICAL_AXIS));
+	InputComponent& inputComponent = GetComponent<InputComponent>();
+	Vec2f inputs(inputComponent.inputController->GetAxis(HORIZONTAL_AXIS), inputComponent.inputController->GetAxis(VERTICAL_AXIS));
 	inputs.Normalize();
 
 	TransformComponent& transform = GetComponent<TransformComponent>();
