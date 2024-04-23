@@ -3,6 +3,7 @@
 void PlayerMovement::Tick(float tickElapsedTime)
 {
 	Vec2f inputs(_keyboard->GetAxis(HORIZONTAL_AXIS), _keyboard->GetAxis(VERTICAL_AXIS));
+	inputs.Normalize();
 
 	TransformComponent& transform = GetComponent<TransformComponent>();
 

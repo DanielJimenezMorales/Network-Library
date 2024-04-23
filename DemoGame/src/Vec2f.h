@@ -69,6 +69,12 @@ public:
 
 	void Normalize()
 	{
+		//Check for this in order to avoid dividing by 0
+		if (fabs(_x) < _EPSILON && fabs(_y) < _EPSILON)
+		{
+			return;
+		}
+
 		*this /= Magnitude();
 	}
 
