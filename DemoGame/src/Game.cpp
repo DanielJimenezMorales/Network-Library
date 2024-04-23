@@ -15,6 +15,7 @@
 
 const int JUMP_ACTION = 0;
 const int HORIZONTAL_AXIS_ACTION = 1;
+const int VERTICAL_AXIS_ACTION = 2;
 KeyboardController* keyboard;
 
 bool Game::Init()
@@ -62,10 +63,12 @@ bool Game::Init()
 
     //TEMP
     keyboard = new KeyboardController();
-    InputButton button(JUMP_ACTION, SDLK_w);
+    InputButton button(JUMP_ACTION, SDLK_q);
     keyboard->AddButtonMap(button);
     InputAxis axis(HORIZONTAL_AXIS_ACTION, SDLK_d, SDLK_a);
     keyboard->AddAxisMap(axis);
+    InputAxis axis2(VERTICAL_AXIS_ACTION, SDLK_s, SDLK_w);
+    keyboard->AddAxisMap(axis2);
     _inputHandler.AddController(keyboard);
 
     SDL_Surface* imageSurface = IMG_Load("sprites/PlayerSprites/playerHead.png");
@@ -94,6 +97,8 @@ bool Game::Init()
     playerTransform.posY = 56;
 
     playerEntity.AddComponent<ScriptComponent>().Bind<PlayerMovement>();
+    PlayerMovement* playerMovement = static_cast<PlayerMovement*>(playerEntity.GetComponent<ScriptComponent>().behaviour);
+    playerMovement->SetKeyboard(keyboard);
     return true;
 }
 
@@ -145,21 +150,6 @@ void Game::HandleEvents()
 
 void Game::Update(float elapsedTime)
 {
-    std::stringstream ss;
-    ss << "HORIZONTAL AXIS VALUE: " << keyboard->GetAxis(HORIZONTAL_AXIS_ACTION);
-    Common::LOG_INFO(ss.str());
-    if (keyboard->GetButtonDown(JUMP_ACTION))
-    {
-        Common::LOG_INFO("DOWN");
-    }
-    if (keyboard->GetButtonUp(JUMP_ACTION))
-    {
-        Common::LOG_INFO("UP");
-    }
-    if (keyboard->GetButtonPressed(JUMP_ACTION))
-    {
-        Common::LOG_INFO("BUTTON");
-    }
     _activeScene.Update(elapsedTime);
 }
 

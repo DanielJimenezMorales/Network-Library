@@ -7,13 +7,16 @@ public:
 	template <typename T>
 	void Bind()
 	{
-		CreateScript = []() {return static_cast<ScriptableSystem*>(new T()); };
-		DestroyScript = [](ScriptComponent* scriptComponent) {delete scriptComponent->behaviour; scriptComponent->behaviour = nullptr; };
+		behaviour = static_cast<ScriptableSystem*>(new T());
+		isCreated = false;
 	}
 
-	bool IsCreated() const { return behaviour != nullptr; };
+	void Unbind()
+	{
+		delete behaviour;
+		behaviour = nullptr;
+	}
 
-	ScriptableSystem* (*CreateScript)();
-	void (*DestroyScript)(ScriptComponent*);
 	ScriptableSystem* behaviour;
+	bool isCreated;
 };
