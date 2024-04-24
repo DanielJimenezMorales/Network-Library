@@ -6,9 +6,6 @@
 #include "Logger.h"
 #include "Vec2f.h"
 
-const int HORIZONTAL_AXIS = 1;
-const int VERTICAL_AXIS = 2;
-
 class PlayerMovement : public ScriptableSystem
 {
 protected:

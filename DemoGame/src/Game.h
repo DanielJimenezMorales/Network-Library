@@ -1,9 +1,9 @@
 #pragma once
 #include <SDL.h>
 
-#include "Peer.h"
 #include "Scene.h"
 #include "InputHandler.h"
+#include "NetworkSystem.h"
 
 const unsigned int FIXED_FRAMES_PER_SECOND = 50;
 const float FIXED_FRAME_TARGET_DURATION = 1.0f / FIXED_FRAMES_PER_SECOND;
@@ -22,15 +22,17 @@ private:
 	int CreateWindowAndRenderer();
 
 	void HandleEvents();
-	void Update(float elapsedTime);
+	void PreTick();
 	void Tick(float tickElapsedTime);
+	void PosTick();
+	void Update(float elapsedTime);
 	void Render();
 
 	SDL_Window* _window;
 	SDL_Renderer* _renderer;
 	bool _isRunning;
 
-	NetLib::Peer* _peer;
 	Scene _activeScene;
 	InputHandler _inputHandler;
+	NetworkSystem _networkSystem;
 };

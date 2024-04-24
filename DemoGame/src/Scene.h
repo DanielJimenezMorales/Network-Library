@@ -1,6 +1,7 @@
 #pragma once
 
 #include <SDL_image.h>
+#include <cassert>
 
 #include "entt.hpp"
 #include "SpriteRendererSystem.h"

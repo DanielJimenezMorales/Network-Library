@@ -8,4 +8,3 @@ public:
 
 	const IInputController* inputController;
 };
-

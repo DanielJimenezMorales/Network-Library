@@ -24,6 +24,11 @@ void ScriptSystem::Tick(entt::registry& registry, float tickElapsedTime) const
 	for (auto entity : view)
 	{
 		ScriptComponent& script = view.get<ScriptComponent>(entity);
+		if (!script.isCreated)
+		{
+			continue;
+		}
+
 		script.behaviour->Tick(tickElapsedTime);
 	}
 }

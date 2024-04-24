@@ -3,9 +3,7 @@
 
 #include "Game.h"
 #include "Logger.h"
-#include "Server.h"
-#include "Client.h"
-#include "Initializer.h"
+#include "TimeClock.h"
 #include "GameEntity.h"
 #include "SpriteRendererComponent.h"
 #include "TransformComponent.h"
@@ -13,10 +11,8 @@
 #include "PlayerMovement.h"
 #include "KeyboardController.h"
 #include "InputComponent.h"
+#include "InputActionIdsConfiguration.h"
 
-const int JUMP_ACTION = 0;
-const int HORIZONTAL_AXIS_ACTION = 1;
-const int VERTICAL_AXIS_ACTION = 2;
 KeyboardController* keyboard;
 
 bool Game::Init()
@@ -25,20 +21,14 @@ bool Game::Init()
 
     int clientOrServer;
     std::cin >> clientOrServer;
-    NetLib::Initializer::Initialize();
 
     if (clientOrServer == 0)
     {
-        _peer = new NetLib::Server(2);
+        _networkSystem.Initialize(NetLib::PeerType::ServerMode);
     }
     else if (clientOrServer == 1)
     {
-        _peer = new NetLib::Client(5);
-    }
-
-    if (!_peer->Start())
-    {
-        Common::LOG_ERROR("Peer startup failed");
+        _networkSystem.Initialize(NetLib::PeerType::ClientMode);
     }
 
     int result = InitSDL();
@@ -64,11 +54,11 @@ bool Game::Init()
 
     //TEMP
     keyboard = new KeyboardController();
-    InputButton button(JUMP_ACTION, SDLK_q);
+    InputButton button(JUMP_BUTTON, SDLK_q);
     keyboard->AddButtonMap(button);
-    InputAxis axis(HORIZONTAL_AXIS_ACTION, SDLK_d, SDLK_a);
+    InputAxis axis(HORIZONTAL_AXIS, SDLK_d, SDLK_a);
     keyboard->AddAxisMap(axis);
-    InputAxis axis2(VERTICAL_AXIS_ACTION, SDLK_s, SDLK_w);
+    InputAxis axis2(VERTICAL_AXIS, SDLK_s, SDLK_w);
     keyboard->AddAxisMap(axis2);
     _inputHandler.AddController(keyboard);
 
@@ -97,7 +87,7 @@ bool Game::Init()
     playerTransform.posX = 256;
     playerTransform.posY = 56;
 
-    InputComponent& inputComponent = playerEntity.AddComponent<InputComponent>(keyboard);
+    playerEntity.AddComponent<InputComponent>(keyboard);
 
     playerEntity.AddComponent<ScriptComponent>().Bind<PlayerMovement>();
     return true;
@@ -115,13 +105,15 @@ void Game::GameLoop()
 
         HandleEvents();
 
-        Update(timeClock.GetElapsedTimeSeconds());
-
         while (accumulator >= FIXED_FRAME_TARGET_DURATION)
         {
+            PreTick();
             Tick(FIXED_FRAME_TARGET_DURATION);
+            PosTick();
             accumulator -= FIXED_FRAME_TARGET_DURATION;
         }
+        
+        Update(timeClock.GetElapsedTimeSeconds());
 
         Render();
     }
@@ -147,15 +139,26 @@ void Game::HandleEvents()
     _inputHandler.PostHandleEvents();
 }
 
-void Game::Update(float elapsedTime)
+void Game::PreTick()
 {
-    _activeScene.Update(elapsedTime);
+    //Get all network info from Remote peers and process it
+    _networkSystem.PreTick();
 }
 
 void Game::Tick(float tickElapsedTime)
 {
     _activeScene.Tick(tickElapsedTime);
-    _peer->Tick(tickElapsedTime);
+}
+
+void Game::PosTick()
+{
+    //SendData, disconnect, etc
+    _networkSystem.PosTick();
+}
+
+void Game::Update(float elapsedTime)
+{
+    _activeScene.Update(elapsedTime);
 }
 
 void Game::Render()
@@ -169,15 +172,7 @@ void Game::Render()
 
 bool Game::Release()
 {
-    if (!_peer->Stop())
-    {
-        Common::LOG_ERROR("Peer stop failed");
-    }
-
-    delete _peer;
-    _peer = nullptr;
-
-    NetLib::Initializer::Finalize();
+    _networkSystem.Release();
 
     SDL_DestroyRenderer(_renderer);
     SDL_DestroyWindow(_window);
