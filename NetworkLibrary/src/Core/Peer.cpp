@@ -40,6 +40,19 @@ namespace NetLib
 		return true;
 	}
 
+	bool Peer::PreTick()
+	{
+		if (_connectionState == PeerConnectionState::PCS_Disconnected)
+		{
+			Common::LOG_WARNING("You are trying to call Peer::PreTick on a Peer that is disconnected");
+			return false;
+		}
+
+		ProcessReceivedData();
+
+		return true;
+	}
+
 	bool Peer::Tick(float elapsedTime)
 	{
 		if (_connectionState == PeerConnectionState::PCS_Disconnected)
@@ -47,8 +60,6 @@ namespace NetLib
 			Common::LOG_WARNING("You are trying to call Peer::Tick on a Peer that is disconnected");
 			return false;
 		}
-
-		ProcessReceivedData();
 
 		TickRemotePeers(elapsedTime);
 		TickConcrete(elapsedTime);
@@ -72,9 +83,9 @@ namespace NetLib
 		return true;
 	}
 
-	bool Peer::RegisterNetworkEntityFactory(NetworkEntityFactory* entityFactory, uint32_t entityType)
+	void Peer::RegisterNetworkEntityFactory(INetworkEntityFactory* entityFactory)
 	{
-		return _replicationManager.RegisterNetworkEntityFactory(entityFactory, entityType);
+		_replicationManager.RegisterNetworkEntityFactory(entityFactory);
 	}
 
 	void Peer::UnsubscribeToOnRemotePeerDisconnect(unsigned int id)

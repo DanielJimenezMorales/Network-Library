@@ -22,15 +22,6 @@ bool Game::Init()
     int clientOrServer;
     std::cin >> clientOrServer;
 
-    if (clientOrServer == 0)
-    {
-        _networkSystem.Initialize(NetLib::PeerType::ServerMode);
-    }
-    else if (clientOrServer == 1)
-    {
-        _networkSystem.Initialize(NetLib::PeerType::ClientMode);
-    }
-
     int result = InitSDL();
     if (result != 0)
     {
@@ -90,6 +81,16 @@ bool Game::Init()
     playerEntity.AddComponent<InputComponent>(keyboard);
 
     playerEntity.AddComponent<ScriptComponent>().Bind<PlayerMovement>();
+
+
+    if (clientOrServer == 0)
+    {
+        _networkSystem.Initialize(_renderer, &_activeScene, NetLib::PeerType::ServerMode);
+    }
+    else if (clientOrServer == 1)
+    {
+        _networkSystem.Initialize(_renderer, &_activeScene, NetLib::PeerType::ClientMode);
+    }
     return true;
 }
 
@@ -148,12 +149,12 @@ void Game::PreTick()
 void Game::Tick(float tickElapsedTime)
 {
     _activeScene.Tick(tickElapsedTime);
+    _networkSystem.Tick(tickElapsedTime);
 }
 
 void Game::PosTick()
 {
     //SendData, disconnect, etc
-    _networkSystem.PosTick();
 }
 
 void Game::Update(float elapsedTime)

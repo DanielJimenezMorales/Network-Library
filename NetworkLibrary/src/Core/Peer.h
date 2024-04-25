@@ -53,11 +53,12 @@ namespace NetLib
 	{
 	public:
 		bool Start();
+		bool PreTick();
 		bool Tick(float elapsedTime);
 		bool Stop();
 
 		PeerConnectionState GetConnectionState() { return _connectionState; }
-		bool RegisterNetworkEntityFactory(NetworkEntityFactory* entityFactory, uint32_t entityType);
+		void RegisterNetworkEntityFactory(INetworkEntityFactory* entityFactory);
 
 		//Delegates related
 		template<typename Functor>

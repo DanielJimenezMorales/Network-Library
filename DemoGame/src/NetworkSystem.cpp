@@ -4,7 +4,7 @@
 #include "Server.h"
 #include "Logger.h"
 
-void NetworkSystem::Initialize(NetLib::PeerType type)
+void NetworkSystem::Initialize(SDL_Renderer* renderer, Scene* scene, NetLib::PeerType type)
 {
 	NetLib::Initializer::Initialize();
 
@@ -18,19 +18,29 @@ void NetworkSystem::Initialize(NetLib::PeerType type)
 		break;
 	}
 
+	_networkEntityFactory.SetRenderer(renderer);
+	_networkEntityFactory.SetScene(scene);
+	_networkPeer->RegisterNetworkEntityFactory(&_networkEntityFactory);
+
 	if(!_networkPeer->Start())
 	{
 		Common::LOG_ERROR("Peer startup failed");
 	}
 }
 
-void NetworkSystem::PreTick() const
+void NetworkSystem::PreTick()
 {
-	_networkPeer->Tick(0.02f);
+	_networkPeer->PreTick();
 }
 
-void NetworkSystem::PosTick() const
+void NetworkSystem::Tick(float elapsedTime)
 {
+	_networkPeer->Tick(elapsedTime);
+	if (_currentTick == 150)
+	{
+		static_cast<NetLib::Server*>(_networkPeer)->CreateNetworkEntity(0, 0.f, 0.f);
+	}
+	++_currentTick;
 }
 
 void NetworkSystem::Release()

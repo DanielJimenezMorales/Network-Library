@@ -18,17 +18,17 @@ namespace NetLib
 
 	}
 
-	INetworkEntity* Server::CreateNetworkEntity(uint32_t entityType)
+	uint32_t Server::CreateNetworkEntity(uint32_t entityType, float posX, float posY)
 	{
 		if (GetConnectionState() != PeerConnectionState::PCS_Connected)
 		{
 			std::stringstream ss;
 			ss << "Can't create Network entity of type " << static_cast<int>(entityType) << " because the server is not connected.";
 			Common::LOG_WARNING(ss.str());
-			return nullptr;
+			return 0;
 		}
 
-		return _replicationManager.CreateNetworkEntity(entityType);
+		return _replicationManager.CreateNetworkEntity(entityType, posX, posY);
 	}
 
 	void Server::DestroyNetworkEntity(uint32_t entityId)

@@ -1,5 +1,6 @@
 #include "Buffer.h"
 #include <cassert>
+#include <cmath>
 
 namespace NetLib
 {
@@ -38,6 +39,11 @@ namespace NetLib
 		*((uint8_t*)(_data + _index)) = value;
 
 		++_index;
+	}
+
+	void Buffer::WriteFloat(float value)
+	{
+		WriteInteger(value);
 	}
 
 	uint64_t Buffer::ReadLong()
@@ -82,6 +88,11 @@ namespace NetLib
 		++_index;
 
 		return value;
+	}
+
+	float Buffer::ReadFloat()
+	{
+		return ReadInteger();
 	}
 
 	void Buffer::ResetAccessIndex()

@@ -12,6 +12,8 @@ public:
 	GameEntity(const GameEntity& other) = default;
 	~GameEntity() = default;
 
+	uint32_t GetId() const { return static_cast<uint32_t>(_ecsEntityId); }
+
 	template <typename T, typename... Params>
 	T& AddComponent(Params&&... params);
 

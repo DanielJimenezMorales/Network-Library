@@ -7,7 +7,7 @@
 
 namespace NetLib
 {
-	void ReplicationManager::CreateCreateReplicationMessage(uint32_t entityType, uint32_t networkEntityId)
+	void ReplicationManager::CreateCreateReplicationMessage(uint32_t entityType, uint32_t networkEntityId, const Buffer& dataBuffer)
 	{
 		//Get message from message factory
 		MessageFactory& messageFactory = MessageFactory::GetInstance();
@@ -22,12 +22,14 @@ namespace NetLib
 		replicationMessage->replicationAction = ReplicationActionType::RAT_CREATE;
 		replicationMessage->networkEntityId = networkEntityId;
 		replicationMessage->replicatedClassId = entityType;
+		replicationMessage->data = dataBuffer.GetData();
+		replicationMessage->dataSize = dataBuffer.GetSize();
 
 		//Store it into queue before broadcasting it
 		_pendingReplicationActionMessages.push(std::move(replicationMessage));
 	}
 
-	std::unique_ptr<ReplicationMessage> ReplicationManager::CreateUpdateReplicationMessage(uint32_t entityType, uint32_t networkEntityId)
+	std::unique_ptr<ReplicationMessage> ReplicationManager::CreateUpdateReplicationMessage(uint32_t networkEntityId)
 	{
 		//Get message from message factory
 		MessageFactory& messageFactory = MessageFactory::GetInstance();
@@ -41,7 +43,6 @@ namespace NetLib
 		std::unique_ptr<ReplicationMessage> replicationMessage(static_cast<ReplicationMessage*>(message.release()));
 		replicationMessage->replicationAction = ReplicationActionType::RAT_UPDATE;
 		replicationMessage->networkEntityId = networkEntityId;
-		replicationMessage->replicatedClassId = entityType;
 
 		return std::move(replicationMessage);
 	}
@@ -68,7 +69,7 @@ namespace NetLib
 	void ReplicationManager::ProcessReceivedCreateReplicationMessage(const ReplicationMessage& replicationMessage)
 	{
 		uint32_t networkEntityId = replicationMessage.networkEntityId;
-		if (_networkEntitiesStorage.GetNetworkEntityFromId(networkEntityId) != nullptr)
+		if (_networkEntitiesStorage.HasNetworkEntityId(networkEntityId))
 		{
 			std::stringstream ss;
 			ss << "Replication: Trying to create a network entity that is already created. Entity ID: " << static_cast<int>(networkEntityId) << ".Ignoring message...";
@@ -76,21 +77,18 @@ namespace NetLib
 			return;
 		}
 
-		//Create object through its custom factory
-		INetworkEntity* networkEntity = _networkObjectsRegistry.CreateObjectOfType(replicationMessage.replicatedClassId);
-		assert(networkEntity != nullptr);
-
-		//Set Id
-		networkEntity->SetEntityId(networkEntityId);
+		//Create network entity through its custom factory
+		int gameEntity = _networkEntityFactory->CreateNetworkEntityObject(replicationMessage.replicatedClassId, networkEntityId, 0.f, 0.f);
+		assert(gameEntity != -1);
 
 		//Add it to the network entities storage in order to avoid loosing it
-		_networkEntitiesStorage.AddNetworkEntity(*networkEntity, false);
+		_networkEntitiesStorage.AddNetworkEntity(networkEntityId, gameEntity);
 	}
 
 	void ReplicationManager::ProcessReceivedUpdateReplicationMessage(const ReplicationMessage& replicationMessage)
 	{
 		uint32_t networkEntityId = replicationMessage.networkEntityId;
-		if (_networkEntitiesStorage.GetNetworkEntityFromId(networkEntityId) == nullptr)
+		if (!_networkEntitiesStorage.HasNetworkEntityId(networkEntityId))
 		{
 			std::stringstream ss;
 			ss << "Replication: Trying to update a network entity that doesn't exist. Entity ID: " << static_cast<int>(networkEntityId) << ".Creating a new entity...";
@@ -106,54 +104,51 @@ namespace NetLib
 	void ReplicationManager::ProcessReceivedDestroyReplicationMessage(const ReplicationMessage& replicationMessage)
 	{
 		uint32_t networkEntityId = replicationMessage.networkEntityId;
-		if (_networkEntitiesStorage.GetNetworkEntityFromId(networkEntityId) == nullptr)
+		RemoveNetworkEntity(networkEntityId);
+	}
+
+	void ReplicationManager::RegisterNetworkEntityFactory(INetworkEntityFactory* entityFactory)
+	{
+		_networkEntityFactory = entityFactory;
+	}
+
+	uint32_t ReplicationManager::CreateNetworkEntity(uint32_t entityType, float posX, float posY)
+	{
+		//Create object through its custom factory
+		int gameEntityId = _networkEntityFactory->CreateNetworkEntityObject(entityType, _nextNetworkEntityId, posX, posY);
+		assert(gameEntityId != -1);
+
+		//Add it to the network entities storage in order to avoid loosing it
+		_networkEntitiesStorage.AddNetworkEntity(_nextNetworkEntityId, gameEntityId);
+
+		//Prepare a Create replication message for interested clients
+		uint8_t* data = new uint8_t[8];
+		Buffer buffer(data, 8);
+		buffer.WriteFloat(posX);
+		buffer.WriteFloat(posY);
+		CreateCreateReplicationMessage(entityType, _nextNetworkEntityId, buffer);
+		CalculateNextNetworkEntityId();
+
+		return static_cast<uint32_t>(gameEntityId);
+	}
+
+	void ReplicationManager::RemoveNetworkEntity(uint32_t networkEntityId)
+	{
+		//Get game entity Id from network entity Id
+		uint32_t gameEntity;
+		bool foundSuccesfully = _networkEntitiesStorage.TryGetNetworkEntityFromId(networkEntityId, gameEntity);
+		if (!foundSuccesfully)
 		{
 			std::stringstream ss;
-			ss << "Replication: Trying to remove a network entity that doesn't exist. Entity ID: " << static_cast<int>(networkEntityId) << ".Ignoring it...";
+			ss << "Replication: Trying to remove a network entity that doesn't exist. Network entity ID: " << static_cast<int>(networkEntityId) << ".Ignoring it...";
 			Common::LOG_INFO(ss.str());
 			return;
 		}
 
-		RemoveNetworkEntity(networkEntityId);
-	}
-
-	bool ReplicationManager::RegisterNetworkEntityFactory(NetworkEntityFactory* entityFactory, uint32_t entityType)
-	{
-		return _networkObjectsRegistry.RegisterNetworkEntityFactory(entityFactory, entityType);
-	}
-
-	INetworkEntity* ReplicationManager::CreateNetworkEntity(uint32_t entityType)
-	{
-		//Create object through its custom factory
-		INetworkEntity* networkEntity = _networkObjectsRegistry.CreateObjectOfType(entityType);
-		assert(networkEntity != nullptr);
-
-		//Add it to the network entities storage in order to avoid loosing it
-		_networkEntitiesStorage.AddNetworkEntity(*networkEntity);
-
-		networkEntity->NetworkEntityCreate();
-
-		//Prepare a Create replication message for interested clients
-		CreateCreateReplicationMessage(entityType, networkEntity->GetEntityId());
-
-		return networkEntity;
-	}
-
-	void ReplicationManager::RemoveNetworkEntity(uint32_t entityId)
-	{
-		//Get Network Entity from Id
-		INetworkEntity* networkEntityToRemove = _networkEntitiesStorage.GetNetworkEntityFromId(entityId);
-		if (networkEntityToRemove == nullptr)
-		{
-			return;
-		}
-
-		networkEntityToRemove->NetworkEntityDestroy();
-
 		//Destroy object through its custom factory
-		_networkObjectsRegistry.DestroyObjectOfType(networkEntityToRemove);
+		_networkEntityFactory->DestroyNetworkEntityObject(gameEntity);
 
-		CreateDestroyReplicationMessage(entityId);
+		CreateDestroyReplicationMessage(networkEntityId);
 	}
 
 	void ReplicationManager::Server_ReplicateWorldState()
@@ -165,7 +160,7 @@ namespace NetLib
 		while (cit != citPastToEnd)
 		{
 			//TODO check that it has not been created with RAT_CREATE in the current tick
-			std::unique_ptr<ReplicationMessage> message = CreateUpdateReplicationMessage(cit->second->GetEntityType(), cit->second->GetEntityId());
+			std::unique_ptr<ReplicationMessage> message = CreateUpdateReplicationMessage(cit->first);
 			_pendingReplicationActionMessages.push(std::move(message));
 			++cit;
 		}
@@ -221,6 +216,16 @@ namespace NetLib
 			_sentReplicationMessages.pop();
 
 			messageFactory.ReleaseMessage(std::move(sentReplicationMessage));
+		}
+	}
+
+	void ReplicationManager::CalculateNextNetworkEntityId()
+	{
+		++_nextNetworkEntityId;
+
+		if (_nextNetworkEntityId == INVALID_NETWORK_ENTITY_ID)
+		{
+			++_nextNetworkEntityId;
 		}
 	}
 }

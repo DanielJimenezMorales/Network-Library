@@ -207,6 +207,7 @@ namespace NetLib
 		buffer.WriteInteger(networkEntityId);
 		buffer.WriteInteger(replicatedClassId);
 		buffer.WriteShort(dataSize);
+		//TODO Create method called WriteData(data, size) in order to avoid this for loop
 		for (size_t i = 0; i < dataSize; ++i)
 		{
 			buffer.WriteByte(data[i]);
@@ -227,6 +228,7 @@ namespace NetLib
 			data = new uint8_t[dataSize];
 		}
 
+		//TODO Create method called ReadData(uint8_t& data, size) in order to avoid this for loop
 		for (size_t i = 0; i < dataSize; ++i)
 		{
 			data[i] = buffer.ReadByte();

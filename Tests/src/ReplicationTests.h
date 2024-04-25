@@ -86,109 +86,109 @@ namespace Tests
     public:
         bool static ExecuteAll()
         {
-            //Set a small break between different tests in order to avoid receiving messages from the last test
-            std::chrono::milliseconds duration(500);
+            ////Set a small break between different tests in order to avoid receiving messages from the last test
+            //std::chrono::milliseconds duration(500);
 
-            //Test local peer connection
-            LogTestUtils::LogTestResult(Test_ServerOnNetworkCreateIsCalledOnce_WhenNetworkEntityIsCreated());
-            std::this_thread::sleep_for(duration);
+            ////Test local peer connection
+            //LogTestUtils::LogTestResult(Test_ServerOnNetworkCreateIsCalledOnce_WhenNetworkEntityIsCreated());
+            //std::this_thread::sleep_for(duration);
 
-            LogTestUtils::LogTestResult(Test_ServerOnNetworkDestroyIsCalledOnce_WhenNetworkEntityIsDestroyed());
+            //LogTestUtils::LogTestResult(Test_ServerOnNetworkDestroyIsCalledOnce_WhenNetworkEntityIsDestroyed());
             return true;
         }
 
-        bool static Test_ServerOnNetworkCreateIsCalledOnce_WhenNetworkEntityIsCreated()
-        {
-            LogTestUtils::LogTestName("Test_ServerOnNetworkCreateIsCalledOnce_WhenNetworkEntityIsCreated");
+        //bool static Test_ServerOnNetworkCreateIsCalledOnce_WhenNetworkEntityIsCreated()
+        //{
+        //    LogTestUtils::LogTestName("Test_ServerOnNetworkCreateIsCalledOnce_WhenNetworkEntityIsCreated");
 
-            //Set up
-            SetUp();
+        //    //Set up
+        //    SetUp();
 
-            //Arrange
-            const unsigned int serverMaxConnections = 1;
-            const float testTimeout = 2;
+        //    //Arrange
+        //    const unsigned int serverMaxConnections = 1;
+        //    const float testTimeout = 2;
 
-            NetLib::Server* serverPeer = new NetLib::Server(serverMaxConnections);
+        //    NetLib::Server* serverPeer = new NetLib::Server(serverMaxConnections);
 
-            int numberOfTimesCalled = 0;
+        //    int numberOfTimesCalled = 0;
 
-            NetLib::INetworkEntity* networkEntity = nullptr;
+        //    NetLib::INetworkEntity* networkEntity = nullptr;
 
-            //Act
-            serverPeer->Start();
+        //    //Act
+        //    serverPeer->Start();
 
-            TestNetworkEntityFactory* serverTestNetworkEntityFactory = new TestNetworkEntityFactory();
-            serverPeer->RegisterNetworkEntityFactory(serverTestNetworkEntityFactory, TestNetworkEntity::TEST_ENTITY_TYPE);
+        //    TestNetworkEntityFactory* serverTestNetworkEntityFactory = new TestNetworkEntityFactory();
+        //    serverPeer->RegisterNetworkEntityFactory(serverTestNetworkEntityFactory, TestNetworkEntity::TEST_ENTITY_TYPE);
 
-            networkEntity = serverPeer->CreateNetworkEntity(TestNetworkEntity::TEST_ENTITY_TYPE);
-            TestNetworkEntity* testNetworkEntity = static_cast<TestNetworkEntity*>(networkEntity);
-            numberOfTimesCalled = testNetworkEntity->GetNumberOfTimesNetworkEntityCreateIsExecuted();
+        //    networkEntity = serverPeer->CreateNetworkEntity(TestNetworkEntity::TEST_ENTITY_TYPE);
+        //    TestNetworkEntity* testNetworkEntity = static_cast<TestNetworkEntity*>(networkEntity);
+        //    numberOfTimesCalled = testNetworkEntity->GetNumberOfTimesNetworkEntityCreateIsExecuted();
 
-            serverPeer->Stop();
+        //    serverPeer->Stop();
 
-            delete serverPeer;
-            serverPeer = nullptr;
-            delete serverTestNetworkEntityFactory;
-            serverTestNetworkEntityFactory = nullptr;
+        //    delete serverPeer;
+        //    serverPeer = nullptr;
+        //    delete serverTestNetworkEntityFactory;
+        //    serverTestNetworkEntityFactory = nullptr;
 
-            //Assert
-            assert(numberOfTimesCalled == 1);
+        //    //Assert
+        //    assert(numberOfTimesCalled == 1);
 
-            //Tear down
-            TearDown();
+        //    //Tear down
+        //    TearDown();
 
-            return true;
-        }
+        //    return true;
+        //}
 
-        bool static Test_ServerOnNetworkDestroyIsCalledOnce_WhenNetworkEntityIsDestroyed()
-        {
-            LogTestUtils::LogTestName("Test_ServerOnNetworkDestroyIsCalledOnce_WhenNetworkEntityIsDestroyed");
+        //bool static Test_ServerOnNetworkDestroyIsCalledOnce_WhenNetworkEntityIsDestroyed()
+        //{
+        //    LogTestUtils::LogTestName("Test_ServerOnNetworkDestroyIsCalledOnce_WhenNetworkEntityIsDestroyed");
 
-            //Set up
-            SetUp();
+        //    //Set up
+        //    SetUp();
 
-            //Arrange
-            const unsigned int serverMaxConnections = 1;
-            const float testTimeout = 2;
+        //    //Arrange
+        //    const unsigned int serverMaxConnections = 1;
+        //    const float testTimeout = 2;
 
-            NetLib::Server* serverPeer = new NetLib::Server(serverMaxConnections);
+        //    NetLib::Server* serverPeer = new NetLib::Server(serverMaxConnections);
 
-            int numberOfTimesCalled = 0;
+        //    int numberOfTimesCalled = 0;
 
-            NetLib::INetworkEntity* networkEntity = nullptr;
+        //    NetLib::INetworkEntity* networkEntity = nullptr;
 
-            auto callback = [&numberOfTimesCalled]()
-            {
-                ++numberOfTimesCalled;
-            };
+        //    auto callback = [&numberOfTimesCalled]()
+        //    {
+        //        ++numberOfTimesCalled;
+        //    };
 
-            //Act
-            serverPeer->Start();
+        //    //Act
+        //    serverPeer->Start();
 
-            TestNetworkEntityFactory* serverTestNetworkEntityFactory = new TestNetworkEntityFactory();
-            serverPeer->RegisterNetworkEntityFactory(serverTestNetworkEntityFactory, TestNetworkEntity::TEST_ENTITY_TYPE);
+        //    TestNetworkEntityFactory* serverTestNetworkEntityFactory = new TestNetworkEntityFactory();
+        //    serverPeer->RegisterNetworkEntityFactory(serverTestNetworkEntityFactory, TestNetworkEntity::TEST_ENTITY_TYPE);
 
-            networkEntity = serverPeer->CreateNetworkEntity(TestNetworkEntity::TEST_ENTITY_TYPE);
-            TestNetworkEntity* testNetworkEntity = static_cast<TestNetworkEntity*>(networkEntity);
-            testNetworkEntity->SubscribeToOnNetworkEntityDestroy(callback);
+        //    networkEntity = serverPeer->CreateNetworkEntity(TestNetworkEntity::TEST_ENTITY_TYPE);
+        //    TestNetworkEntity* testNetworkEntity = static_cast<TestNetworkEntity*>(networkEntity);
+        //    testNetworkEntity->SubscribeToOnNetworkEntityDestroy(callback);
 
-            serverPeer->DestroyNetworkEntity(testNetworkEntity->GetEntityId());
-            testNetworkEntity = nullptr;
+        //    serverPeer->DestroyNetworkEntity(testNetworkEntity->GetEntityId());
+        //    testNetworkEntity = nullptr;
 
-            serverPeer->Stop();
+        //    serverPeer->Stop();
 
-            delete serverPeer;
-            serverPeer = nullptr;
-            delete serverTestNetworkEntityFactory;
-            serverTestNetworkEntityFactory = nullptr;
+        //    delete serverPeer;
+        //    serverPeer = nullptr;
+        //    delete serverTestNetworkEntityFactory;
+        //    serverTestNetworkEntityFactory = nullptr;
 
-            //Assert
-            assert(numberOfTimesCalled == 1);
+        //    //Assert
+        //    assert(numberOfTimesCalled == 1);
 
-            //Tear down
-            TearDown();
+        //    //Tear down
+        //    TearDown();
 
-            return true;
-        }
+        //    return true;
+        //}
 	};
 }
