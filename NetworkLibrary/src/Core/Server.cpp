@@ -106,6 +106,7 @@ namespace NetLib
 		{
 			const DisconnectionMessage& disconnectionMessage = static_cast<const DisconnectionMessage&>(message);
 			ProcessDisconnection(disconnectionMessage, remotePeer);
+			break;
 		}
 		case MessageType::InGame:
 		{
@@ -301,7 +302,7 @@ namespace NetLib
 		}
 	}
 
-	//REFACTOR THIS METHOD
+	//TODO REFACTOR THIS METHOD
 	void Server::ProcessTimeRequest(const TimeRequestMessage& message, RemotePeer& remotePeer)
 	{
 		Common::LOG_INFO("PROCESSING TIME REQUEST");
@@ -377,6 +378,14 @@ namespace NetLib
 				replicationMessage->replicationAction = pendingReplicationMessage->replicationAction;
 				replicationMessage->networkEntityId = pendingReplicationMessage->networkEntityId;
 				replicationMessage->replicatedClassId = pendingReplicationMessage->replicatedClassId;
+				replicationMessage->dataSize = pendingReplicationMessage->dataSize;
+				if (replicationMessage->dataSize > 0)
+				{
+					//TODO Figure out if I can improve this. So far, for large snapshot updates data this can become heavy and slow. Can I avoid the copy somehow?
+					uint8_t* data = new uint8_t[replicationMessage->dataSize];
+					std::memcpy(data, pendingReplicationMessage->data, replicationMessage->dataSize);
+					replicationMessage->data = data;
+				}
 
 				(*validRemotePeersIt)->AddMessage(std::move(replicationMessage));
 			}

@@ -2,6 +2,7 @@
 #include "GameEntity.h"
 #include "SDL.h"
 #include "SpriteRendererComponent.h"
+#include "TransformComponent.h"
 
 void NetworkEntityFactory::SetRenderer(SDL_Renderer* renderer)
 {
@@ -27,6 +28,10 @@ int NetworkEntityFactory::CreateNetworkEntityObject(uint32_t networkEntityType, 
     sourceTextureRect.y = 0;
 
 	GameEntity entity = _scene->CreateGameEntity();
+    TransformComponent& transform = entity.GetComponent<TransformComponent>();
+    transform.posX = posX;
+    transform.posY = posY;
+
     entity.AddComponent<SpriteRendererComponent>(sourceTextureRect, imageTexture);
 	return entity.GetId();
 }

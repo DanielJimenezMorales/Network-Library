@@ -57,7 +57,8 @@ namespace NetLib
 		bool Tick(float elapsedTime);
 		bool Stop();
 
-		PeerConnectionState GetConnectionState() { return _connectionState; }
+		PeerConnectionState GetConnectionState() const { return _connectionState; }
+		PeerType GetPeerType() const { return _type; }
 		void RegisterNetworkEntityFactory(INetworkEntityFactory* entityFactory);
 
 		//Delegates related

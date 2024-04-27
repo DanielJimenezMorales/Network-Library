@@ -17,6 +17,9 @@ namespace NetLib
 		virtual void Read(Buffer& buffer) = 0;
 		virtual uint32_t Size() const = 0;
 
+		//TODO Temp, until I find a better way to clean Replication's data field
+		virtual void Reset() {};
+
 		virtual ~Message() {};
 
 	protected:
@@ -177,6 +180,8 @@ namespace NetLib
 		void Write(Buffer& buffer) const override;
 		void Read(Buffer& buffer) override;
 		uint32_t Size() const override; //TODO Make this also dynamic based on replication action. Now it is set to its worst case
+
+		void Reset() override;
 
 		~ReplicationMessage() override;
 

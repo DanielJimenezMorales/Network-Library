@@ -1,5 +1,6 @@
 #include "Message.h"
 #include "Buffer.h"
+#include "Logger.h"
 
 namespace NetLib
 {
@@ -238,6 +239,15 @@ namespace NetLib
 	uint32_t ReplicationMessage::Size() const
 	{
 		return MessageHeader::Size() + sizeof(uint8_t) + (2 * sizeof(uint32_t)) + sizeof(uint16_t) + (dataSize * sizeof(uint8_t));
+	}
+
+	void ReplicationMessage::Reset()
+	{
+		if (data != nullptr)
+		{
+			delete[] data;
+			data = nullptr;
+		}
 	}
 
 	ReplicationMessage::~ReplicationMessage()

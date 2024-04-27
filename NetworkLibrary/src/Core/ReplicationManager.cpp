@@ -24,7 +24,7 @@ namespace NetLib
 		replicationMessage->replicatedClassId = entityType;
 		replicationMessage->data = dataBuffer.GetData();
 		replicationMessage->dataSize = dataBuffer.GetSize();
-
+		
 		//Store it into queue before broadcasting it
 		_pendingReplicationActionMessages.push(std::move(replicationMessage));
 	}
@@ -43,6 +43,7 @@ namespace NetLib
 		std::unique_ptr<ReplicationMessage> replicationMessage(static_cast<ReplicationMessage*>(message.release()));
 		replicationMessage->replicationAction = ReplicationActionType::RAT_UPDATE;
 		replicationMessage->networkEntityId = networkEntityId;
+		replicationMessage->dataSize = 0;
 
 		return std::move(replicationMessage);
 	}
@@ -78,7 +79,13 @@ namespace NetLib
 		}
 
 		//Create network entity through its custom factory
-		int gameEntity = _networkEntityFactory->CreateNetworkEntityObject(replicationMessage.replicatedClassId, networkEntityId, 0.f, 0.f);
+		Buffer buffer(replicationMessage.data, replicationMessage.dataSize);
+		std::stringstream ss;
+		ss << "DATA SIZE: " << (int)replicationMessage.dataSize;
+		Common::LOG_INFO(ss.str());
+		float posX = buffer.ReadFloat();
+		float posY = buffer.ReadFloat();
+		int gameEntity = _networkEntityFactory->CreateNetworkEntityObject(replicationMessage.replicatedClassId, networkEntityId, posX, posY);
 		assert(gameEntity != -1);
 
 		//Add it to the network entities storage in order to avoid loosing it
@@ -94,7 +101,12 @@ namespace NetLib
 			ss << "Replication: Trying to update a network entity that doesn't exist. Entity ID: " << static_cast<int>(networkEntityId) << ".Creating a new entity...";
 			Common::LOG_INFO(ss.str());
 
-			ProcessReceivedCreateReplicationMessage(replicationMessage);
+			//If not found create a new one and update it
+			int gameEntity = _networkEntityFactory->CreateNetworkEntityObject(replicationMessage.replicatedClassId, networkEntityId, 0.f, 0.f);
+			assert(gameEntity != -1);
+
+			//Add it to the network entities storage in order to avoid loosing it
+			_networkEntitiesStorage.AddNetworkEntity(networkEntityId, gameEntity);
 			return;
 		}
 

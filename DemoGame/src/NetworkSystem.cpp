@@ -36,9 +36,13 @@ void NetworkSystem::PreTick()
 void NetworkSystem::Tick(float elapsedTime)
 {
 	_networkPeer->Tick(elapsedTime);
-	if (_currentTick == 150)
+	if (_networkPeer->GetPeerType() == NetLib::PeerType::ClientMode)
 	{
-		static_cast<NetLib::Server*>(_networkPeer)->CreateNetworkEntity(0, 0.f, 0.f);
+		return;
+	}
+	if (_currentTick == 500)
+	{
+		static_cast<NetLib::Server*>(_networkPeer)->CreateNetworkEntity(0, 256.f, 256.f);
 	}
 	++_currentTick;
 }
