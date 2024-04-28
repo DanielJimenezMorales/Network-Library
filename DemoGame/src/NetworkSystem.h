@@ -3,6 +3,7 @@
 #include "NetworkEntityFactory.h"
 #include "Scene.h"
 #include "SDL.h"
+#include "NetworkVariable.h"
 
 class NetworkSystem
 {
