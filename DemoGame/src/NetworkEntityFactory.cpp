@@ -14,7 +14,7 @@ void NetworkEntityFactory::SetScene(Scene* scene)
     _scene = scene;
 }
 
-int NetworkEntityFactory::CreateNetworkEntityObject(uint32_t networkEntityType, uint32_t networkEntityId, float posX, float posY)
+int NetworkEntityFactory::CreateNetworkEntityObject(uint32_t networkEntityType, uint32_t networkEntityId, float posX, float posY, NetLib::NetworkVariableChangesHandler* networkVariableChangeHandler)
 {
     SDL_Surface* imageSurface = IMG_Load("sprites/PlayerSprites/playerHead.png");
 

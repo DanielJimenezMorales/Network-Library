@@ -10,6 +10,6 @@ public:
 		networkEntityId(networkEntityId), posX(networkVariableChangesHandler, networkEntityId, 1), posY(networkVariableChangesHandler, networkEntityId, 2) {};
 
 	uint32_t networkEntityId;
-	NetworkVariable<float> posX;
-	NetworkVariable<float> posY;
+	NetLib::NetworkVariable<float> posX;
+	NetLib::NetworkVariable<float> posY;
 };

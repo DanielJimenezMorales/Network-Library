@@ -9,7 +9,7 @@ public:
 	NetworkEntityFactory() {}
 	void SetRenderer(SDL_Renderer* renderer);
 	void SetScene(Scene* scene);
-	int CreateNetworkEntityObject(uint32_t networkEntityType, uint32_t networkEntityId, float posX, float posY) override;
+	int CreateNetworkEntityObject(uint32_t networkEntityType, uint32_t networkEntityId, float posX, float posY, NetLib::NetworkVariableChangesHandler* networkVariableChangeHandler) override;
 	void DestroyNetworkEntityObject(uint32_t gameEntity) override;
 
 private:

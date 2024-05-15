@@ -24,12 +24,12 @@ namespace NetLib
 		replicationMessage->replicatedClassId = entityType;
 		replicationMessage->data = dataBuffer.GetData();
 		replicationMessage->dataSize = dataBuffer.GetSize();
-		
+
 		//Store it into queue before broadcasting it
 		_pendingReplicationActionMessages.push(std::move(replicationMessage));
 	}
 
-	std::unique_ptr<ReplicationMessage> ReplicationManager::CreateUpdateReplicationMessage(uint32_t networkEntityId)
+	std::unique_ptr<ReplicationMessage> ReplicationManager::CreateUpdateReplicationMessage(uint32_t networkEntityId, const Buffer& buffer)
 	{
 		//Get message from message factory
 		MessageFactory& messageFactory = MessageFactory::GetInstance();
@@ -43,7 +43,8 @@ namespace NetLib
 		std::unique_ptr<ReplicationMessage> replicationMessage(static_cast<ReplicationMessage*>(message.release()));
 		replicationMessage->replicationAction = ReplicationActionType::RAT_UPDATE;
 		replicationMessage->networkEntityId = networkEntityId;
-		replicationMessage->dataSize = 0;
+		replicationMessage->dataSize = buffer.GetSize();
+		replicationMessage->data = buffer.GetData();
 
 		return std::move(replicationMessage);
 	}
@@ -85,7 +86,7 @@ namespace NetLib
 		Common::LOG_INFO(ss.str());
 		float posX = buffer.ReadFloat();
 		float posY = buffer.ReadFloat();
-		int gameEntity = _networkEntityFactory->CreateNetworkEntityObject(replicationMessage.replicatedClassId, networkEntityId, posX, posY);
+		int gameEntity = _networkEntityFactory->CreateNetworkEntityObject(replicationMessage.replicatedClassId, networkEntityId, posX, posY, &_networkVariableChangesHandler);
 		assert(gameEntity != -1);
 
 		//Add it to the network entities storage in order to avoid loosing it
@@ -102,7 +103,7 @@ namespace NetLib
 			Common::LOG_INFO(ss.str());
 
 			//If not found create a new one and update it
-			int gameEntity = _networkEntityFactory->CreateNetworkEntityObject(replicationMessage.replicatedClassId, networkEntityId, 0.f, 0.f);
+			int gameEntity = _networkEntityFactory->CreateNetworkEntityObject(replicationMessage.replicatedClassId, networkEntityId, 0.f, 0.f, &_networkVariableChangesHandler);
 			assert(gameEntity != -1);
 
 			//Add it to the network entities storage in order to avoid loosing it
@@ -127,7 +128,7 @@ namespace NetLib
 	uint32_t ReplicationManager::CreateNetworkEntity(uint32_t entityType, float posX, float posY)
 	{
 		//Create object through its custom factory
-		int gameEntityId = _networkEntityFactory->CreateNetworkEntityObject(entityType, _nextNetworkEntityId, posX, posY);
+		int gameEntityId = _networkEntityFactory->CreateNetworkEntityObject(entityType, _nextNetworkEntityId, posX, posY, &_networkVariableChangesHandler);
 		assert(gameEntityId != -1);
 
 		//Add it to the network entities storage in order to avoid loosing it
@@ -165,6 +166,8 @@ namespace NetLib
 
 	void ReplicationManager::Server_ReplicateWorldState()
 	{
+		_networkVariableChangesHandler.CollectAllChanges();
+
 		auto cit = _networkEntitiesStorage.GetNetworkEntities();
 		auto citPastToEnd = _networkEntitiesStorage.GetPastToEndNetworkEntities();
 
@@ -172,8 +175,25 @@ namespace NetLib
 		while (cit != citPastToEnd)
 		{
 			//TODO check that it has not been created with RAT_CREATE in the current tick
-			std::unique_ptr<ReplicationMessage> message = CreateUpdateReplicationMessage(cit->first);
-			_pendingReplicationActionMessages.push(std::move(message));
+			//Get network variable changes data
+			const EntityNetworkVariableChanges* entityNetworkVariableChanges = _networkVariableChangesHandler.GetChangesFromEntity(cit->first);
+			if (entityNetworkVariableChanges != nullptr)
+			{
+				size_t dataSize = entityNetworkVariableChanges->Size();
+				uint8_t* data = new uint8_t[dataSize];
+				Buffer buffer(data, dataSize);
+
+				auto changesIt = entityNetworkVariableChanges->floatChanges.cbegin();
+
+				for (; changesIt != entityNetworkVariableChanges->floatChanges.cend(); ++changesIt)
+				{
+					buffer.WriteInteger(changesIt->networkVariableId);
+					buffer.WriteFloat(changesIt->value);
+				}
+
+				std::unique_ptr<ReplicationMessage> message = CreateUpdateReplicationMessage(cit->first, buffer);
+				_pendingReplicationActionMessages.push(std::move(message));
+			}
 			++cit;
 		}
 	}

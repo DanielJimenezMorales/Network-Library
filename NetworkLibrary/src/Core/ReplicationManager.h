@@ -10,6 +10,7 @@
 #include "Message.h"
 #include "INetworkEntityFactory.h"
 #include "Buffer.h"
+#include "NetworkVariableChangesHandler.h"
 
 namespace NetLib
 {
@@ -41,7 +42,7 @@ namespace NetLib
 
 	private:
 		void CreateCreateReplicationMessage(uint32_t entityType, uint32_t networkEntityId, const Buffer& dataBuffer);
-		std::unique_ptr<ReplicationMessage> CreateUpdateReplicationMessage(uint32_t networkEntityId);
+		std::unique_ptr<ReplicationMessage> CreateUpdateReplicationMessage(uint32_t networkEntityId, const Buffer& buffer);
 		void CreateDestroyReplicationMessage(uint32_t networkEntityId);
 
 		void ProcessReceivedCreateReplicationMessage(const ReplicationMessage& replicationMessage);
@@ -58,5 +59,6 @@ namespace NetLib
 		uint32_t _nextNetworkEntityId;
 
 		INetworkEntityFactory* _networkEntityFactory;
+		NetworkVariableChangesHandler _networkVariableChangesHandler;
 	};
 }
