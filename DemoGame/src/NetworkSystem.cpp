@@ -36,6 +36,8 @@ void NetworkSystem::PreTick()
 void NetworkSystem::Tick(float elapsedTime)
 {
 	_networkPeer->Tick(elapsedTime);
+
+	//TEMP
 	if (_networkPeer->GetPeerType() == NetLib::PeerType::ClientMode)
 	{
 		return;
