@@ -30,7 +30,7 @@ namespace NetLib
 		uint32_t _networkVariableId;
 		uint32_t _networkEntityId;
 
-		NetworkVariablePairId() : _networkVariableId(0), _networkEntityId(0) {}
+		NetworkVariablePairId() = default;
 		NetworkVariablePairId(uint32_t networkVariableId, uint32_t networkEntityId) : _networkVariableId(networkVariableId), _networkEntityId(networkEntityId) {}
 
 		bool operator==(const NetworkVariablePairId& other) const
@@ -63,6 +63,7 @@ namespace NetLib
 		void AddChange(NetworkVariableChangeData<float> variableChange);
 
 		void CollectAllChanges();
+		void ProcessVariableChanges(Buffer& buffer);
 
 		const EntityNetworkVariableChanges* GetChangesFromEntity(uint32_t networkEntityId);
 		void Clear();
@@ -70,6 +71,8 @@ namespace NetLib
 	private:
 		std::unordered_map<uint32_t, NetworkVariableType> _variableIdToTypeMap;
 		std::unordered_map<NetworkVariablePairId, NetworkVariable<float>*, CustomNetworkVariablePairIdHash> _floatVariableIdToTypeMap;
+
+		//Only for collecting local changes
 		std::unordered_map<uint32_t, EntityNetworkVariableChanges> _networkEntityIdToChangesMap;
 	};
 }

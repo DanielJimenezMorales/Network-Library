@@ -61,6 +61,40 @@ namespace NetLib
 		}
 	}
 
+	void NetworkVariableChangesHandler::ProcessVariableChanges(Buffer& buffer)
+	{
+		uint16_t numberOfChanges = buffer.ReadShort();
+
+		for (uint16_t i = 0; i < numberOfChanges; ++i)
+		{
+			uint32_t networkVariableId = buffer.ReadInteger();
+			uint32_t networkEntityId = buffer.ReadInteger();
+
+			NetworkVariableType type;
+			auto networkVariableTypeIt = _variableIdToTypeMap.find(networkVariableId);
+			if (networkVariableTypeIt != _variableIdToTypeMap.cend())
+			{
+				type = networkVariableTypeIt->second;
+
+				NetworkVariablePairId pairId(networkVariableId, networkEntityId);
+				auto networkVariableIt = _floatVariableIdToTypeMap.find(pairId);
+				if (networkVariableIt != _floatVariableIdToTypeMap.cend())
+				{
+					networkVariableIt->second->SetChange(buffer.ReadFloat());
+				}
+				else
+				{
+					Common::LOG_ERROR("Network variable not found when trying to assign new value from server");
+				}
+			}
+			else
+			{
+				Common::LOG_ERROR("We have received a NetworkVariable that is not registered. Aborting current's tick variable processing...");
+				return;
+			}
+		}
+	}
+
 	const EntityNetworkVariableChanges* NetworkVariableChangesHandler::GetChangesFromEntity(uint32_t networkEntityId)
 	{
 		EntityNetworkVariableChanges* result = nullptr;

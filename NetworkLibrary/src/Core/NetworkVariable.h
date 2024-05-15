@@ -77,6 +77,11 @@ namespace NetLib
 			return NetworkVariableChangeData<T>(_value, _id, _networkEntityId);
 		}
 
+		void SetChange(const T& newValue)
+		{
+			SetValue(newValue);
+		}
+
 	private:
 		T _value;
 		uint32_t _id;

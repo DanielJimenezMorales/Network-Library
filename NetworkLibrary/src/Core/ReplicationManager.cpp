@@ -112,6 +112,8 @@ namespace NetLib
 		}
 
 		//TODO Pass entity state to target entity
+		Buffer buffer(replicationMessage.data, replicationMessage.dataSize);
+		_networkVariableChangesHandler.ProcessVariableChanges(buffer);
 	}
 
 	void ReplicationManager::ProcessReceivedDestroyReplicationMessage(const ReplicationMessage& replicationMessage)
@@ -179,15 +181,19 @@ namespace NetLib
 			const EntityNetworkVariableChanges* entityNetworkVariableChanges = _networkVariableChangesHandler.GetChangesFromEntity(cit->first);
 			if (entityNetworkVariableChanges != nullptr)
 			{
-				size_t dataSize = entityNetworkVariableChanges->Size();
+				size_t dataSize = entityNetworkVariableChanges->Size() + sizeof(uint16_t);
 				uint8_t* data = new uint8_t[dataSize];
 				Buffer buffer(data, dataSize);
 
-				auto changesIt = entityNetworkVariableChanges->floatChanges.cbegin();
+				//Write the number of network variables within this message
+				uint16_t numberOfChanges = entityNetworkVariableChanges->floatChanges.size();
+				buffer.WriteShort(numberOfChanges);
 
+				auto changesIt = entityNetworkVariableChanges->floatChanges.cbegin();
 				for (; changesIt != entityNetworkVariableChanges->floatChanges.cend(); ++changesIt)
 				{
 					buffer.WriteInteger(changesIt->networkVariableId);
+					buffer.WriteInteger(changesIt->networkEntityId);
 					buffer.WriteFloat(changesIt->value);
 				}
 
