@@ -47,9 +47,6 @@ namespace NetLib
 		}
 		else
 		{
-			std::stringstream ss;
-			ss << "ADD NEW ENTITY CHANGE " << (int)networkEntityId;
-			Common::LOG_INFO(ss.str());
 			_networkEntityIdToChangesMap[networkEntityId] = EntityNetworkVariableChanges();
 			_networkEntityIdToChangesMap[networkEntityId].AddChange(variableChange);
 		}

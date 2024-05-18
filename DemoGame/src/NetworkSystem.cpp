@@ -44,7 +44,7 @@ void NetworkSystem::Tick(float elapsedTime)
 	{
 		return;
 	}
-	if (_currentTick == 300)
+	if (_currentTick == 10)
 	{
 		static_cast<NetLib::Server*>(_networkPeer)->CreateNetworkEntity(10, 256.f, 256.f);
 	}

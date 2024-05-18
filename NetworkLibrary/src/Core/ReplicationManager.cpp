@@ -37,7 +37,7 @@ namespace NetLib
 
 		//Set reliability and order
 		message->SetOrdered(true);
-		message->SetReliability(true);
+		message->SetReliability(false);
 
 		//Set specific replication message data
 		std::unique_ptr<ReplicationMessage> replicationMessage(static_cast<ReplicationMessage*>(message.release()));
@@ -95,9 +95,6 @@ namespace NetLib
 
 	void ReplicationManager::ProcessReceivedUpdateReplicationMessage(const ReplicationMessage& replicationMessage)
 	{
-		std::stringstream ss;
-		ss << "PROCESS ENTITY CHANGEss " << (int)replicationMessage.networkEntityId;
-		Common::LOG_INFO(ss.str());
 		uint32_t networkEntityId = replicationMessage.networkEntityId;
 		if (!_networkEntitiesStorage.HasNetworkEntityId(networkEntityId))
 		{
