@@ -21,7 +21,7 @@ namespace NetLib
 
 		size_t Size() const
 		{
-			return sizeof(uint32_t) + (sizeof(float) + sizeof(uint32_t)) * floatChanges.size();
+			return (sizeof(uint32_t) + sizeof(float) + sizeof(uint32_t)) * floatChanges.size();
 		}
 	};
 

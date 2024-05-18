@@ -95,6 +95,9 @@ namespace NetLib
 
 	void ReplicationManager::ProcessReceivedUpdateReplicationMessage(const ReplicationMessage& replicationMessage)
 	{
+		std::stringstream ss;
+		ss << "PROCESS ENTITY CHANGEss " << (int)replicationMessage.networkEntityId;
+		Common::LOG_INFO(ss.str());
 		uint32_t networkEntityId = replicationMessage.networkEntityId;
 		if (!_networkEntitiesStorage.HasNetworkEntityId(networkEntityId))
 		{
@@ -192,6 +195,8 @@ namespace NetLib
 				auto changesIt = entityNetworkVariableChanges->floatChanges.cbegin();
 				for (; changesIt != entityNetworkVariableChanges->floatChanges.cend(); ++changesIt)
 				{
+					//TODO If we store multiple networkvariables of the same entity, we dont need to include each time the entityId. Create a number of variable changes
+					//in order to only include entityId once
 					buffer.WriteInteger(changesIt->networkVariableId);
 					buffer.WriteInteger(changesIt->networkEntityId);
 					buffer.WriteFloat(changesIt->value);
@@ -202,6 +207,8 @@ namespace NetLib
 			}
 			++cit;
 		}
+
+		_networkVariableChangesHandler.Clear();
 	}
 
 	void ReplicationManager::Client_ProcessReceivedReplicationMessage(const ReplicationMessage& replicationMessage)

@@ -22,7 +22,7 @@ namespace NetLib
 		return true;
 	}
 
-	void NetworkEntityStorage::AddNetworkEntity(uint32_t gameEntityId, uint32_t networkEntityId)
+	void NetworkEntityStorage::AddNetworkEntity(uint32_t networkEntityId, uint32_t gameEntityId)
 	{
 		assert(_networkEntityIdToGameEntityIdMap.find(networkEntityId) == _networkEntityIdToGameEntityIdMap.cend());
 

@@ -72,7 +72,7 @@ bool Game::Init()
     sourceTextureRect.x = 0;
     sourceTextureRect.y = 0;
 
-    GameEntity playerEntity = _activeScene.CreateGameEntity();
+    /*GameEntity playerEntity = _activeScene.CreateGameEntity();
     playerEntity.AddComponent<SpriteRendererComponent>(sourceTextureRect, imageTexture);
     TransformComponent& playerTransform = playerEntity.GetComponent<TransformComponent>();
     playerTransform.posX = 256;
@@ -80,16 +80,16 @@ bool Game::Init()
 
     playerEntity.AddComponent<InputComponent>(keyboard);
 
-    playerEntity.AddComponent<ScriptComponent>().Bind<PlayerMovement>();
+    playerEntity.AddComponent<ScriptComponent>().Bind<PlayerMovement>();*/
 
 
     if (clientOrServer == 0)
     {
-        _networkSystem.Initialize(_renderer, &_activeScene, NetLib::PeerType::ServerMode);
+        _networkSystem.Initialize(_renderer, &_activeScene, NetLib::PeerType::ServerMode, keyboard);
     }
     else if (clientOrServer == 1)
     {
-        _networkSystem.Initialize(_renderer, &_activeScene, NetLib::PeerType::ClientMode);
+        _networkSystem.Initialize(_renderer, &_activeScene, NetLib::PeerType::ClientMode, keyboard);
     }
     return true;
 }

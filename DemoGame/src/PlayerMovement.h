@@ -8,6 +8,8 @@
 
 class PlayerMovement : public ScriptableSystem
 {
+public:
+
 protected:
 	void Create() override
 	{
@@ -21,4 +23,17 @@ private:
 	void ApplyPosition(const Vec2f& position, TransformComponent& transform);
 
 	int _speed = 250;
+};
+
+class PlayerDummyMovement : public ScriptableSystem
+{
+public:
+
+protected:
+	void Create() override
+	{
+		Common::LOG_INFO("PLAYER DUMMY MOVEMENT CREATE");
+	}
+
+	void Tick(float tickElapsedTime) override;
 };

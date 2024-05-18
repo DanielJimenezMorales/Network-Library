@@ -56,18 +56,22 @@ namespace NetLib
 		T& operator=(const T& other)
 		{
 			SetValue(other);
+			return _value;
 		};
 
 		T& operator-=(const T& other)
 		{
 			SetValue(_value - other);
+			return _value;
 		};
 
 		T& operator+=(const T& other)
 		{
 			SetValue(_value + other);
+			return _value;
 		};
 
+		T Get() const { return _value; };
 		NetworkVariableType GetType() const { return _type; };
 		uint32_t GetId() const { return _id; };
 		uint32_t GetEntityId() const { return _networkEntityId; };
@@ -90,7 +94,7 @@ namespace NetLib
 
 		NetworkVariableChangesHandler* _networkVariableChangesHandler;
 
-		void RegisterVariable() const;
+		void RegisterVariable();
 		void UnregisterVariable() const;
 
 		void SetValue(const T& newValue)
@@ -98,4 +102,16 @@ namespace NetLib
 			_value = newValue;
 		};
 	};
+
+	template<typename T>
+	inline void NetworkVariable<T>::RegisterVariable()
+	{
+		_networkVariableChangesHandler->RegisterNetworkVariable(this);
+	}
+
+	template<typename T>
+	inline void NetworkVariable<T>::UnregisterVariable() const
+	{
+		_networkVariableChangesHandler->UnregisterNetworkVariable(*this);
+	}
 }

@@ -4,7 +4,7 @@
 #include "Server.h"
 #include "Logger.h"
 
-void NetworkSystem::Initialize(SDL_Renderer* renderer, Scene* scene, NetLib::PeerType type)
+void NetworkSystem::Initialize(SDL_Renderer* renderer, Scene* scene, NetLib::PeerType type, IInputController* inputController)
 {
 	NetLib::Initializer::Initialize();
 
@@ -20,6 +20,8 @@ void NetworkSystem::Initialize(SDL_Renderer* renderer, Scene* scene, NetLib::Pee
 
 	_networkEntityFactory.SetRenderer(renderer);
 	_networkEntityFactory.SetScene(scene);
+	_networkEntityFactory.SetPeerType(type);
+	_networkEntityFactory.SetKeyboard(inputController);
 	_networkPeer->RegisterNetworkEntityFactory(&_networkEntityFactory);
 
 	if(!_networkPeer->Start())
@@ -42,9 +44,9 @@ void NetworkSystem::Tick(float elapsedTime)
 	{
 		return;
 	}
-	if (_currentTick == 500)
+	if (_currentTick == 300)
 	{
-		static_cast<NetLib::Server*>(_networkPeer)->CreateNetworkEntity(0, 256.f, 256.f);
+		static_cast<NetLib::Server*>(_networkPeer)->CreateNetworkEntity(10, 256.f, 256.f);
 	}
 	++_currentTick;
 }
