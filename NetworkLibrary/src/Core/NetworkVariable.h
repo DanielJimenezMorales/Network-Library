@@ -4,6 +4,9 @@
 
 namespace NetLib
 {
+	typedef uint32_t NetworkVariableId;
+	static constexpr NetworkVariableId INVALID_NETWORK_VARIABLE_ID = 0;
+
 	class NetworkVariableChangesHandler;
 
 	enum NetworkVariableType : uint8_t
@@ -37,8 +40,8 @@ namespace NetLib
 			, "Type not supported for Network variable");
 
 	public:
-		NetworkVariable(NetworkVariableChangesHandler* networkVariableChangesHandler, uint32_t networkEntityId, uint32_t id) :
-			_networkVariableChangesHandler(networkVariableChangesHandler), _networkEntityId(networkEntityId), _id(id)
+		NetworkVariable(NetworkVariableChangesHandler* networkVariableChangesHandler, uint32_t networkEntityId) :
+			_networkVariableChangesHandler(networkVariableChangesHandler), _networkEntityId(networkEntityId), _id(INVALID_NETWORK_VARIABLE_ID)
 		{
 			if (std::is_same<T, float>())
 			{
@@ -76,16 +79,6 @@ namespace NetLib
 		uint32_t GetId() const { return _id; };
 		uint32_t GetEntityId() const { return _networkEntityId; };
 
-		NetworkVariableChangeData<T> GetChange() const
-		{
-			return NetworkVariableChangeData<T>(_value, _id, _networkEntityId);
-		}
-
-		void SetChange(const T& newValue)
-		{
-			SetValue(newValue);
-		}
-
 	private:
 		T _value;
 		uint32_t _id;
@@ -101,6 +94,18 @@ namespace NetLib
 		{
 			_value = newValue;
 		};
+
+		void SetId(NetworkVariableId id)
+		{
+			_id = id;
+		}
+
+		NetworkVariableChangeData<T> GetChange() const
+		{
+			return NetworkVariableChangeData<T>(_value, _id, _networkEntityId);
+		}
+
+		friend class NetworkVariableChangesHandler;
 	};
 
 	template<typename T>

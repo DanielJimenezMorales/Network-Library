@@ -7,7 +7,7 @@
 
 namespace NetLib
 {
-	void ReplicationManager::CreateCreateReplicationMessage(uint32_t entityType, uint32_t networkEntityId, const Buffer& dataBuffer)
+	std::unique_ptr<ReplicationMessage> ReplicationManager::CreateCreateReplicationMessage(uint32_t entityType, uint32_t networkEntityId, const Buffer& dataBuffer)
 	{
 		//Get message from message factory
 		MessageFactory& messageFactory = MessageFactory::GetInstance();
@@ -25,8 +25,7 @@ namespace NetLib
 		replicationMessage->data = dataBuffer.GetData();
 		replicationMessage->dataSize = dataBuffer.GetSize();
 
-		//Store it into queue before broadcasting it
-		_pendingReplicationActionMessages.push(std::move(replicationMessage));
+		return std::move(replicationMessage);
 	}
 
 	std::unique_ptr<ReplicationMessage> ReplicationManager::CreateUpdateReplicationMessage(uint32_t networkEntityId, const Buffer& buffer)
@@ -49,7 +48,7 @@ namespace NetLib
 		return std::move(replicationMessage);
 	}
 
-	void ReplicationManager::CreateDestroyReplicationMessage(uint32_t networkEntityId)
+	std::unique_ptr<ReplicationMessage> ReplicationManager::CreateDestroyReplicationMessage(uint32_t networkEntityId)
 	{
 		//Get message from message factory
 		MessageFactory& messageFactory = MessageFactory::GetInstance();
@@ -64,8 +63,7 @@ namespace NetLib
 		replicationMessage->replicationAction = ReplicationActionType::RAT_DESTROY;
 		replicationMessage->networkEntityId = networkEntityId;
 
-		//Store it into queue before broadcasting it
-		_pendingReplicationActionMessages.push(std::move(replicationMessage));
+		return std::move(replicationMessage);
 	}
 
 	void ReplicationManager::ProcessReceivedCreateReplicationMessage(const ReplicationMessage& replicationMessage)
@@ -141,7 +139,11 @@ namespace NetLib
 		Buffer buffer(data, 8);
 		buffer.WriteFloat(posX);
 		buffer.WriteFloat(posY);
-		CreateCreateReplicationMessage(entityType, _nextNetworkEntityId, buffer);
+		std::unique_ptr<ReplicationMessage> createMessage = CreateCreateReplicationMessage(entityType, _nextNetworkEntityId, buffer);
+
+		//Store it into queue before broadcasting it
+		_pendingReplicationActionMessages.push(std::move(createMessage));
+
 		CalculateNextNetworkEntityId();
 
 		return static_cast<uint32_t>(gameEntityId);
@@ -163,7 +165,10 @@ namespace NetLib
 		//Destroy object through its custom factory
 		_networkEntityFactory->DestroyNetworkEntityObject(gameEntity);
 
-		CreateDestroyReplicationMessage(networkEntityId);
+		std::unique_ptr<ReplicationMessage> destroyMessage = CreateDestroyReplicationMessage(networkEntityId);
+
+		//Store it into queue before broadcasting it
+		_pendingReplicationActionMessages.push(std::move(destroyMessage));
 	}
 
 	void ReplicationManager::Server_ReplicateWorldState()

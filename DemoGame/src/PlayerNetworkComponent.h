@@ -7,7 +7,7 @@ struct PlayerNetworkComponent
 {
 public:
 	PlayerNetworkComponent(NetLib::NetworkVariableChangesHandler* networkVariableChangesHandler, uint32_t networkEntityId) :
-		networkEntityId(networkEntityId), posX(networkVariableChangesHandler, networkEntityId, 1), posY(networkVariableChangesHandler, networkEntityId, 2) {};
+		networkEntityId(networkEntityId), posX(networkVariableChangesHandler, networkEntityId), posY(networkVariableChangesHandler, networkEntityId) {};
 
 	uint32_t networkEntityId;
 	NetLib::NetworkVariable<float> posX;

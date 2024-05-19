@@ -27,11 +27,11 @@ namespace NetLib
 
 	struct NetworkVariablePairId
 	{
-		uint32_t _networkVariableId;
+		NetworkVariableId _networkVariableId;
 		uint32_t _networkEntityId;
 
 		NetworkVariablePairId() = default;
-		NetworkVariablePairId(uint32_t networkVariableId, uint32_t networkEntityId) : _networkVariableId(networkVariableId), _networkEntityId(networkEntityId) {}
+		NetworkVariablePairId(NetworkVariableId networkVariableId, uint32_t networkEntityId) : _networkVariableId(networkVariableId), _networkEntityId(networkEntityId) {}
 
 		bool operator==(const NetworkVariablePairId& other) const
 		{
@@ -58,6 +58,7 @@ namespace NetLib
 	class NetworkVariableChangesHandler
 	{
 	public:
+		NetworkVariableChangesHandler() : _nextNetworkVariableId(INVALID_NETWORK_VARIABLE_ID + 1) {};
 		void RegisterNetworkVariable(NetworkVariable<float>* networkVariable);
 		void UnregisterNetworkVariable(const NetworkVariable<float>& networkVariable);
 		void AddChange(NetworkVariableChangeData<float> variableChange);
@@ -69,10 +70,14 @@ namespace NetLib
 		void Clear();
 
 	private:
-		std::unordered_map<uint32_t, NetworkVariableType> _variableIdToTypeMap;
+		NetworkVariableId _nextNetworkVariableId;
+
+		std::unordered_map<NetworkVariableId, NetworkVariableType> _variableIdToTypeMap;
 		std::unordered_map<NetworkVariablePairId, NetworkVariable<float>*, CustomNetworkVariablePairIdHash> _floatVariableIdToTypeMap;
 
 		//Only for collecting local changes
 		std::unordered_map<uint32_t, EntityNetworkVariableChanges> _networkEntityIdToChangesMap;
+
+		void IncrementNextNetworkVariableId();
 	};
 }

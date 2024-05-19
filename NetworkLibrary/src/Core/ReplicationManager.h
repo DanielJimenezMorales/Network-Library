@@ -41,9 +41,9 @@ namespace NetLib
 		void ClearSentReplicationMessages();
 
 	private:
-		void CreateCreateReplicationMessage(uint32_t entityType, uint32_t networkEntityId, const Buffer& dataBuffer);
+		std::unique_ptr<ReplicationMessage> CreateCreateReplicationMessage(uint32_t entityType, uint32_t networkEntityId, const Buffer& dataBuffer);
 		std::unique_ptr<ReplicationMessage> CreateUpdateReplicationMessage(uint32_t networkEntityId, const Buffer& buffer);
-		void CreateDestroyReplicationMessage(uint32_t networkEntityId);
+		std::unique_ptr<ReplicationMessage> CreateDestroyReplicationMessage(uint32_t networkEntityId);
 
 		void ProcessReceivedCreateReplicationMessage(const ReplicationMessage& replicationMessage);
 		void ProcessReceivedUpdateReplicationMessage(const ReplicationMessage& replicationMessage);

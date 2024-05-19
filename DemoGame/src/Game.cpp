@@ -178,6 +178,7 @@ bool Game::Release()
     SDL_DestroyRenderer(_renderer);
     SDL_DestroyWindow(_window);
     SDL_Quit();
+
     return true;
 }
 

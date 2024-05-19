@@ -8,7 +8,7 @@
 class NetworkEntityFactory : public NetLib::INetworkEntityFactory
 {
 public:
-	NetworkEntityFactory() {}
+	NetworkEntityFactory() : NetLib::INetworkEntityFactory(), _scene(nullptr), _renderer(nullptr), _inputController(nullptr), _peerType(NetLib::PeerType::None) {};
 	void SetRenderer(SDL_Renderer* renderer);
 	void SetScene(Scene* scene);
 	void SetKeyboard(IInputController* inputController);

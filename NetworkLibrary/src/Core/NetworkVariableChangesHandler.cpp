@@ -1,11 +1,16 @@
 #include "NetworkVariableChangesHandler.h"
 #include "Logger.h"
-#include <sstream>
+#include <cassert>
 
 namespace NetLib
 {
 	void NetworkVariableChangesHandler::RegisterNetworkVariable(NetworkVariable<float>* networkVariable)
 	{
+		assert(networkVariable->GetId() == INVALID_NETWORK_VARIABLE_ID);
+
+		networkVariable->SetId(_nextNetworkVariableId);
+		IncrementNextNetworkVariableId();
+
 		_variableIdToTypeMap[networkVariable->GetId()] = networkVariable->GetType();
 		NetworkVariablePairId pairId(networkVariable->GetId(), networkVariable->GetEntityId());
 
@@ -17,7 +22,7 @@ namespace NetLib
 		}
 		else
 		{
-			Common::LOG_ERROR("You are trying to registen a network variable that is already registered.");
+			Common::LOG_ERROR("You are trying to register a network variable that is already registered.");
 		}
 	}
 
@@ -81,7 +86,7 @@ namespace NetLib
 				auto networkVariableIt = _floatVariableIdToTypeMap.find(pairId);
 				if (networkVariableIt != _floatVariableIdToTypeMap.cend())
 				{
-					networkVariableIt->second->SetChange(buffer.ReadFloat());
+					networkVariableIt->second->SetValue(buffer.ReadFloat());
 				}
 				else
 				{
@@ -113,5 +118,15 @@ namespace NetLib
 	void NetworkVariableChangesHandler::Clear()
 	{
 		_networkEntityIdToChangesMap.clear();
+	}
+
+	void NetworkVariableChangesHandler::IncrementNextNetworkVariableId()
+	{
+		++_nextNetworkVariableId;
+
+		if (_nextNetworkVariableId == INVALID_NETWORK_VARIABLE_ID)
+		{
+			++_nextNetworkVariableId;
+		}
 	}
 }
