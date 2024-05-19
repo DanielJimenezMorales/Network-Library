@@ -20,7 +20,11 @@ This repository contains four different projects:
    - Message level ACKs
    - Dynamic retransmission timeout based on connection's RTT
 5. Time sync
-6. World replication (In progress)
+6. World replication
+   - Network variables
+   - Automatic network change tracking
+   - ECS friendly
+
 
 ## Demo game features: (IN PROGRESS)
 
