@@ -3,9 +3,17 @@
 
 #include "Game.h"
 #include "Logger.h"
-#include "Server.h"
-#include "Client.h"
-#include "Initializer.h"
+#include "TimeClock.h"
+#include "GameEntity.h"
+#include "SpriteRendererComponent.h"
+#include "TransformComponent.h"
+#include "ScriptComponent.h"
+#include "PlayerMovement.h"
+#include "KeyboardController.h"
+#include "InputComponent.h"
+#include "InputActionIdsConfiguration.h"
+
+KeyboardController* keyboard;
 
 bool Game::Init()
 {
@@ -13,21 +21,6 @@ bool Game::Init()
 
     int clientOrServer;
     std::cin >> clientOrServer;
-    NetLib::Initializer::Initialize();
-
-    if (clientOrServer == 0)
-    {
-        _peer = new NetLib::Server(2);
-    }
-    else if (clientOrServer == 1)
-    {
-        _peer = new NetLib::Client(5);
-    }
-
-    if (!_peer->Start())
-    {
-        Common::LOG_ERROR("Peer startup failed");
-    }
 
     int result = InitSDL();
     if (result != 0)
@@ -50,15 +43,26 @@ bool Game::Init()
     SDL_SetRenderDrawColor(_renderer, 255, 0, 0, 255);
     _isRunning = true;
 
+    //TEMP
+    keyboard = new KeyboardController();
+    InputButton button(JUMP_BUTTON, SDLK_q);
+    keyboard->AddButtonMap(button);
+    InputAxis axis(HORIZONTAL_AXIS, SDLK_d, SDLK_a);
+    keyboard->AddAxisMap(axis);
+    InputAxis axis2(VERTICAL_AXIS, SDLK_s, SDLK_w);
+    keyboard->AddAxisMap(axis2);
+    _inputHandler.AddController(keyboard);
+
     SDL_Surface* imageSurface = IMG_Load("sprites/PlayerSprites/playerHead.png");
     if (imageSurface == nullptr)
     {
         Common::LOG_INFO("HH");
     }
 
-    imageTexture = SDL_CreateTextureFromSurface(_renderer, imageSurface);
+    SDL_Texture* imageTexture = SDL_CreateTextureFromSurface(_renderer, imageSurface);
     SDL_FreeSurface(imageSurface);
 
+    SDL_Rect sourceTextureRect;
     result = SDL_QueryTexture(imageTexture, NULL, NULL, &sourceTextureRect.w, &sourceTextureRect.h);
     if (result == 0)
     {
@@ -67,14 +71,26 @@ bool Game::Init()
 
     sourceTextureRect.x = 0;
     sourceTextureRect.y = 0;
-    /*destTextureRect.x = 256 - (sourceTextureRect.w / 2);
-    destTextureRect.y = 256 - (sourceTextureRect.h / 2);
-    destTextureRect.w = sourceTextureRect.w;
-    destTextureRect.h = sourceTextureRect.h;*/
 
-    entt::entity playerEntity = _activeScene._registry.create();
-    _activeScene._registry.emplace<SpriteRendererComponent>(playerEntity, sourceTextureRect, imageTexture);
-    _activeScene._registry.emplace<TransformComponent>(playerEntity, 256, 256);
+    /*GameEntity playerEntity = _activeScene.CreateGameEntity();
+    playerEntity.AddComponent<SpriteRendererComponent>(sourceTextureRect, imageTexture);
+    TransformComponent& playerTransform = playerEntity.GetComponent<TransformComponent>();
+    playerTransform.posX = 256;
+    playerTransform.posY = 56;
+
+    playerEntity.AddComponent<InputComponent>(keyboard);
+
+    playerEntity.AddComponent<ScriptComponent>().Bind<PlayerMovement>();*/
+
+
+    if (clientOrServer == 0)
+    {
+        _networkSystem.Initialize(_renderer, &_activeScene, NetLib::PeerType::ServerMode, keyboard);
+    }
+    else if (clientOrServer == 1)
+    {
+        _networkSystem.Initialize(_renderer, &_activeScene, NetLib::PeerType::ClientMode, keyboard);
+    }
     return true;
 }
 
@@ -92,11 +108,13 @@ void Game::GameLoop()
 
         while (accumulator >= FIXED_FRAME_TARGET_DURATION)
         {
-            _activeScene.Update(FIXED_FRAME_TARGET_DURATION);
-            _peer->Tick(FIXED_FRAME_TARGET_DURATION);
-
+            PreTick();
+            Tick(FIXED_FRAME_TARGET_DURATION);
+            PosTick();
             accumulator -= FIXED_FRAME_TARGET_DURATION;
         }
+        
+        Update(timeClock.GetElapsedTimeSeconds());
 
         Render();
     }
@@ -104,6 +122,8 @@ void Game::GameLoop()
 
 void Game::HandleEvents()
 {
+    _inputHandler.PreHandleEvents();
+
     SDL_Event ev;
     while (SDL_PollEvent(&ev))
     {
@@ -111,19 +131,41 @@ void Game::HandleEvents()
         {
             _isRunning = false;
         }
+        else
+        {
+            _inputHandler.HandleEvent(ev);
+        }
     }
+
+    _inputHandler.PostHandleEvents();
 }
 
-void Game::Update()
+void Game::PreTick()
 {
+    //Get all network info from Remote peers and process it
+    _networkSystem.PreTick();
+}
+
+void Game::Tick(float tickElapsedTime)
+{
+    _activeScene.Tick(tickElapsedTime);
+    _networkSystem.Tick(tickElapsedTime);
+}
+
+void Game::PosTick()
+{
+    //SendData, disconnect, etc
+}
+
+void Game::Update(float elapsedTime)
+{
+    _activeScene.Update(elapsedTime);
 }
 
 void Game::Render()
 {
     SDL_RenderClear(_renderer);
 
-    //render things...
-    //int result = SDL_RenderCopy(_renderer, imageTexture, &sourceTextureRect, &destTextureRect);
     _activeScene.Render(_renderer);
 
     SDL_RenderPresent(_renderer);
@@ -131,19 +173,12 @@ void Game::Render()
 
 bool Game::Release()
 {
-    if (!_peer->Stop())
-    {
-        Common::LOG_ERROR("Peer stop failed");
-    }
-
-    delete _peer;
-    _peer = nullptr;
-
-    NetLib::Initializer::Finalize();
+    _networkSystem.Release();
 
     SDL_DestroyRenderer(_renderer);
     SDL_DestroyWindow(_window);
     SDL_Quit();
+
     return true;
 }
 

@@ -26,6 +26,12 @@ namespace Tests
             NetLib::Initializer::Finalize();
         }
 
+        void static TickPeer(NetLib::Peer& peer, float elapsedTime)
+        {
+            peer.PreTick();
+            peer.Tick(elapsedTime);
+        }
+
 	public:
         bool static ExecuteAll()
         {
@@ -150,8 +156,8 @@ namespace Tests
 
                 while (accumulator >= FIXED_FRAME_TARGET_DURATION)
                 {
-                    serverPeer->Tick(FIXED_FRAME_TARGET_DURATION);
-                    clientPeer->Tick(FIXED_FRAME_TARGET_DURATION);
+                    TickPeer(*serverPeer, FIXED_FRAME_TARGET_DURATION);
+                    TickPeer(*clientPeer, FIXED_FRAME_TARGET_DURATION);
 
                     accumulator -= FIXED_FRAME_TARGET_DURATION;
                     testTimeLeft -= FIXED_FRAME_TARGET_DURATION;
@@ -275,8 +281,8 @@ namespace Tests
 
                 while (accumulator >= FIXED_FRAME_TARGET_DURATION)
                 {
-                    serverPeer->Tick(FIXED_FRAME_TARGET_DURATION);
-                    clientPeer->Tick(FIXED_FRAME_TARGET_DURATION);
+                    TickPeer(*serverPeer, FIXED_FRAME_TARGET_DURATION);
+                    TickPeer(*clientPeer, FIXED_FRAME_TARGET_DURATION);
 
                     accumulator -= FIXED_FRAME_TARGET_DURATION;
                     disconnectClientTimeout -= FIXED_FRAME_TARGET_DURATION;
@@ -362,8 +368,8 @@ namespace Tests
 
                 while (accumulator >= FIXED_FRAME_TARGET_DURATION)
                 {
-                    serverPeer->Tick(FIXED_FRAME_TARGET_DURATION);
-                    clientPeer->Tick(FIXED_FRAME_TARGET_DURATION);
+                    TickPeer(*serverPeer, FIXED_FRAME_TARGET_DURATION);
+                    TickPeer(*clientPeer, FIXED_FRAME_TARGET_DURATION);
 
                     accumulator -= FIXED_FRAME_TARGET_DURATION;
                     disconnectServerTimeout -= FIXED_FRAME_TARGET_DURATION;
@@ -466,12 +472,12 @@ namespace Tests
                         isClient2Initialized = true;
                     }
 
-                    serverPeer->Tick(FIXED_FRAME_TARGET_DURATION);
-                    clientPeer1->Tick(FIXED_FRAME_TARGET_DURATION);
+                    TickPeer(*serverPeer, FIXED_FRAME_TARGET_DURATION);
+                    TickPeer(*clientPeer1, FIXED_FRAME_TARGET_DURATION);
 
                     if (isClient2Initialized)
                     {
-                        clientPeer2->Tick(FIXED_FRAME_TARGET_DURATION);
+                        TickPeer(*clientPeer2, FIXED_FRAME_TARGET_DURATION);
                     }
 
                     accumulator -= FIXED_FRAME_TARGET_DURATION;
@@ -553,8 +559,8 @@ namespace Tests
 
                 while (accumulator >= FIXED_FRAME_TARGET_DURATION)
                 {
-                    serverPeer->Tick(FIXED_FRAME_TARGET_DURATION);
-                    clientPeer->Tick(FIXED_FRAME_TARGET_DURATION);
+                    TickPeer(*serverPeer, FIXED_FRAME_TARGET_DURATION);
+                    TickPeer(*clientPeer, FIXED_FRAME_TARGET_DURATION);
 
                     accumulator -= FIXED_FRAME_TARGET_DURATION;
                     testTimeLeft -= FIXED_FRAME_TARGET_DURATION;
@@ -625,8 +631,8 @@ namespace Tests
 
                 while (accumulator >= FIXED_FRAME_TARGET_DURATION)
                 {
-                    serverPeer->Tick(FIXED_FRAME_TARGET_DURATION);
-                    clientPeer->Tick(FIXED_FRAME_TARGET_DURATION);
+                    TickPeer(*serverPeer, FIXED_FRAME_TARGET_DURATION);
+                    TickPeer(*clientPeer, FIXED_FRAME_TARGET_DURATION);
 
                     accumulator -= FIXED_FRAME_TARGET_DURATION;
                     testTimeLeft -= FIXED_FRAME_TARGET_DURATION;
@@ -699,8 +705,8 @@ namespace Tests
 
                 while (accumulator >= FIXED_FRAME_TARGET_DURATION)
                 {
-                    serverPeer->Tick(FIXED_FRAME_TARGET_DURATION);
-                    clientPeer->Tick(FIXED_FRAME_TARGET_DURATION);
+                    TickPeer(*serverPeer, FIXED_FRAME_TARGET_DURATION);
+                    TickPeer(*clientPeer, FIXED_FRAME_TARGET_DURATION);
 
                     accumulator -= FIXED_FRAME_TARGET_DURATION;
                     disconnectServerTimeout -= FIXED_FRAME_TARGET_DURATION;

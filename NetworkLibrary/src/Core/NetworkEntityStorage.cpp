@@ -1,69 +1,54 @@
+#include <cassert>
 #include "NetworkEntityStorage.h"
 
 namespace NetLib
 {
-	INetworkEntity* NetworkEntityStorage::GetNetworkEntityFromId(uint32_t entityId)
+	bool NetworkEntityStorage::HasNetworkEntityId(uint32_t networkEntityId) const
 	{
-		INetworkEntity* entity = nullptr;
-		auto it = _networkEntities.find(entityId);
-
-		if (it != _networkEntities.end())
-		{
-			entity = it->second;
-		}
-
-		return entity;
+		auto it = _networkEntityIdToGameEntityIdMap.find(networkEntityId);
+		return it != _networkEntityIdToGameEntityIdMap.cend();
 	}
 
-	void NetworkEntityStorage::AddNetworkEntity(INetworkEntity& networkEntity, bool setId)
+	bool NetworkEntityStorage::TryGetNetworkEntityFromId(uint32_t entityId, uint32_t& gameEntityId)
 	{
-		uint32_t id = networkEntity.GetEntityId();
+		auto it = _networkEntityIdToGameEntityIdMap.find(entityId);
 
-		if (setId)
-		{
-			id = _nextNetworkEntityId;
-			networkEntity.SetEntityId(id);
-			CalculateNextNetworkEntityId();
-		}
-
-		_networkEntities[id] = &networkEntity;
-	}
-
-	bool NetworkEntityStorage::RemoveNetworkEntity(INetworkEntity& networkEntity)
-	{
-		return RemoveNetworkEntity(networkEntity.GetEntityId());
-	}
-
-	std::unordered_map<uint32_t, INetworkEntity*>::const_iterator NetworkEntityStorage::GetNetworkEntities() const
-	{
-		return _networkEntities.cbegin();
-	}
-
-	std::unordered_map<uint32_t, INetworkEntity*>::const_iterator NetworkEntityStorage::GetPastToEndNetworkEntities() const
-	{
-		return _networkEntities.cend();
-	}
-
-	void NetworkEntityStorage::CalculateNextNetworkEntityId()
-	{
-		++_nextNetworkEntityId;
-
-		if (_nextNetworkEntityId == INVALID_NETWORK_ENTITY_ID)
-		{
-			++_nextNetworkEntityId;
-		}
-	}
-
-	bool NetworkEntityStorage::RemoveNetworkEntity(uint32_t networkEntityId)
-	{
-		auto it = _networkEntities.find(networkEntityId);
-
-		if (it == _networkEntities.end())
+		if (it == _networkEntityIdToGameEntityIdMap.cend())
 		{
 			return false;
 		}
 
-		_networkEntities.erase(it);
+		gameEntityId = it->second;
+		return true;
+	}
+
+	void NetworkEntityStorage::AddNetworkEntity(uint32_t networkEntityId, uint32_t gameEntityId)
+	{
+		assert(_networkEntityIdToGameEntityIdMap.find(networkEntityId) == _networkEntityIdToGameEntityIdMap.cend());
+
+		_networkEntityIdToGameEntityIdMap[networkEntityId] = gameEntityId;
+	}
+
+	std::unordered_map<uint32_t, uint32_t>::const_iterator NetworkEntityStorage::GetNetworkEntities() const
+	{
+		return _networkEntityIdToGameEntityIdMap.cbegin();
+	}
+
+	std::unordered_map<uint32_t, uint32_t>::const_iterator NetworkEntityStorage::GetPastToEndNetworkEntities() const
+	{
+		return _networkEntityIdToGameEntityIdMap.cend();
+	}
+
+	bool NetworkEntityStorage::RemoveNetworkEntity(uint32_t networkEntityId)
+	{
+		auto it = _networkEntityIdToGameEntityIdMap.find(networkEntityId);
+
+		if (it == _networkEntityIdToGameEntityIdMap.end())
+		{
+			return false;
+		}
+
+		_networkEntityIdToGameEntityIdMap.erase(it);
 		return true;
 	}
 }

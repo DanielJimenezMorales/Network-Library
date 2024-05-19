@@ -66,6 +66,8 @@ namespace NetLib
         assert(_isInitialized == true);
         assert(message != nullptr);
 
+        message->Reset();
+
         MessageType messageType = message->GetHeader().type;
         std::queue<std::unique_ptr<Message>>* pool = GetPoolFromType(messageType);
         if (pool != nullptr)
