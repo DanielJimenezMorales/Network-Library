@@ -1,4 +1,3 @@
-#include <sstream>
 #include <memory>
 #include <cassert>
 
@@ -16,7 +15,7 @@ namespace NetLib
 	{
 		if (_connectionState != PeerConnectionState::PCS_Disconnected)
 		{
-			Common::LOG_WARNING("You are trying to call Peer::Start on a Peer that has already started");
+			LOG_WARNING("You are trying to call Peer::Start on a Peer that has already started");
 			return true;
 		}
 
@@ -24,19 +23,19 @@ namespace NetLib
 
 		if (_socket.Start() != SocketResult::SOKT_SUCCESS)
 		{
-			Common::LOG_ERROR("Error while starting peer, aborting operation...");
+			LOG_ERROR("Error while starting peer, aborting operation...");
 			SetConnectionState(PeerConnectionState::PCS_Disconnected);
 			return false;
 		}
 
 		if (!StartConcrete())
 		{
-			Common::LOG_ERROR("Error while starting peer, aborting operation...");
+			LOG_ERROR("Error while starting peer, aborting operation...");
 			SetConnectionState(PeerConnectionState::PCS_Disconnected);
 			return false;
 		}
 
-		Common::LOG_INFO("Peer started succesfully");
+		LOG_INFO("Peer started succesfully");
 		return true;
 	}
 
@@ -44,7 +43,7 @@ namespace NetLib
 	{
 		if (_connectionState == PeerConnectionState::PCS_Disconnected)
 		{
-			Common::LOG_WARNING("You are trying to call Peer::PreTick on a Peer that is disconnected");
+			LOG_WARNING("You are trying to call Peer::PreTick on a Peer that is disconnected");
 			return false;
 		}
 
@@ -57,7 +56,7 @@ namespace NetLib
 	{
 		if (_connectionState == PeerConnectionState::PCS_Disconnected)
 		{
-			Common::LOG_WARNING("You are trying to call Peer::Tick on a Peer that is disconnected");
+			LOG_WARNING("You are trying to call Peer::Tick on a Peer that is disconnected");
 			return false;
 		}
 
@@ -383,9 +382,7 @@ namespace NetLib
 
 			if (message->GetHeader().isReliable)
 			{
-				std::stringstream ss;
-				ss << "Reliable message sequence number: " << message->GetHeader().messageSequenceNumber << " Message type: " << (int)message->GetHeader().type;
-				Common::LOG_INFO(ss.str());
+				LOG_INFO("Reliable message sequence number: %hu, Message type: %hhu", message->GetHeader().messageSequenceNumber, message->GetHeader().type);
 			}
 
 			packet.AddMessage(std::move(message));
@@ -428,7 +425,7 @@ namespace NetLib
 		{
 			if (!DoesRemotePeerIdExistInPendingDisconnections(id))
 			{
-				Common::LOG_INFO("EMPIEZO A DESCONECTARR");
+				LOG_INFO("EMPIEZO A DESCONECTARR");
 				RemotePeerDisconnectionData disconnectionData;
 				disconnectionData.id = id;
 				disconnectionData.shouldNotify = shouldNotify;
@@ -500,7 +497,7 @@ namespace NetLib
 	{
 		if (_connectionState == PeerConnectionState::PCS_Disconnected)
 		{
-			Common::LOG_WARNING("You are trying to call Peer::Stop on a Peer that is disconnected");
+			LOG_WARNING("You are trying to call Peer::Stop on a Peer that is disconnected");
 			return;
 		}
 
@@ -512,7 +509,7 @@ namespace NetLib
 
 		PeerConnectionState previousConnectionState = _connectionState;
 		SetConnectionState(PeerConnectionState::PCS_Disconnected);
-		Common::LOG_INFO("Peer stopped succesfully");
+		LOG_INFO("Peer stopped succesfully");
 
 		ExecuteOnLocalPeerDisconnect(_stopRequestReason);
 	}

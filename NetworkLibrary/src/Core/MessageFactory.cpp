@@ -1,5 +1,4 @@
 #include <cassert>
-#include <sstream>
 #include "MessageFactory.h"
 #include "Logger.h"
 
@@ -48,9 +47,7 @@ namespace NetLib
         }
         else
         {
-            std::stringstream ss;
-            ss << "The message pool of type " << (unsigned int)messageType << " is empty. Creating a new message... Consider increasing pool size. Current init size: " << _initialSize;
-            Common::LOG_WARNING(ss.str());
+            LOG_WARNING("The message pool of type %hhu is empty. Creating a new message... Consider increasing pool size. Current init size: %u", messageType, _initialSize);
 
             message = CreateMessage(messageType);
         }
@@ -198,7 +195,7 @@ namespace NetLib
             resultMessage = std::make_unique<ReplicationMessage>();
             break;
         default:
-            Common::LOG_ERROR("Can't create a new message. Invalid message type");
+            LOG_ERROR("Can't create a new message. Invalid message type");
             break;
         }
 

@@ -1,4 +1,3 @@
-#include <sstream>
 #include <cassert>
 
 #include "ReplicationObjectRegistry.h"
@@ -27,9 +26,7 @@ namespace NetLib
 	{
 		if (IsEntityFactoryRegistered(entityType))
 		{
-			std::stringstream ss;
-			ss << "The Entity Factory of entity type " << static_cast<int>(entityType) << " is already registered. Skipping...";
-			Common::LOG_WARNING(ss.str());
+			LOG_WARNING("The Entity Factory of entity type %u is already registered. Skipping...", entityType);
 			return false;
 		}
 

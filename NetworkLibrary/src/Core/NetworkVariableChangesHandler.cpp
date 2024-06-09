@@ -22,7 +22,7 @@ namespace NetLib
 		}
 		else
 		{
-			Common::LOG_ERROR("You are trying to register a network variable that is already registered.");
+			LOG_ERROR("You are trying to register a network variable that is already registered.");
 		}
 	}
 
@@ -37,7 +37,7 @@ namespace NetLib
 		}
 		else
 		{
-			Common::LOG_WARNING("You are trying to unregister a network variable that doesn't exist");
+			LOG_WARNING("You are trying to unregister a network variable that doesn't exist");
 		}
 	}
 
@@ -90,12 +90,12 @@ namespace NetLib
 				}
 				else
 				{
-					Common::LOG_ERROR("Network variable not found when trying to assign new value from server");
+					LOG_ERROR("Network variable not found when trying to assign new value from server");
 				}
 			}
 			else
 			{
-				Common::LOG_ERROR("We have received a NetworkVariable that is not registered. Aborting current's tick variable processing...");
+				LOG_ERROR("We have received a NetworkVariable that is not registered. Aborting current's tick variable processing...");
 				return;
 			}
 		}

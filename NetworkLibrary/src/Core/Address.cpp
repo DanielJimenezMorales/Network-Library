@@ -1,5 +1,4 @@
 #include "Address.h"
-#include <sstream>
 #include "Logger.h"
 
 namespace NetLib
@@ -14,11 +13,11 @@ namespace NetLib
 		int iResult = inet_pton(AF_INET, ip.c_str(), &_addressInfo.sin_addr);
 		if (iResult == -1)
 		{
-			Common::LOG_ERROR("Error at converting IP string into address. Error code: " + WSAGetLastError());
+			LOG_ERROR("Error at converting IP string into address. Error code: %d", WSAGetLastError());
 		}
 		else if (iResult == 0)
 		{
-			Common::LOG_ERROR("The IP string: " + ip + " is not valid");
+			LOG_ERROR("The IP string: %s is not valid", ip.c_str());
 		}
 	}
 

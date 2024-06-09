@@ -13,7 +13,7 @@ public:
 protected:
 	void Create() override
 	{
-		Common::LOG_INFO("PLAYER MOVEMENT CREATE");
+		LOG_INFO("PLAYER MOVEMENT CREATE");
 	}
 
 	void Tick(float tickElapsedTime) override;
@@ -32,7 +32,7 @@ public:
 protected:
 	void Create() override
 	{
-		Common::LOG_INFO("PLAYER DUMMY MOVEMENT CREATE");
+		LOG_INFO("PLAYER DUMMY MOVEMENT CREATE");
 	}
 
 	void Tick(float tickElapsedTime) override;
