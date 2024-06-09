@@ -1,5 +1,3 @@
-#include <sstream>
-
 #include "TimeClock.h"
 #include "Logger.h"
 
@@ -64,9 +62,7 @@ namespace NetLib
 
 	void TimeClock::SetServerClockTimeDelta(double newValue)
 	{
-		std::stringstream ss;
-		ss << "Adjusting Server's clock time delta. Old value: " << _serverClockTimeDeltaSeconds << "s, New value: " << newValue << "s, Difference: " << _serverClockTimeDeltaSeconds - newValue << "s";
-		Common::LOG_INFO(ss.str());
+		LOG_INFO("Adjusting Server's clock time delta. Old value: %f sec, New value: %f sec, Difference: %f sec", _serverClockTimeDeltaSeconds, newValue, (_serverClockTimeDeltaSeconds - newValue));
 
 		_serverClockTimeDeltaSeconds = newValue;
 	}

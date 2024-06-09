@@ -26,7 +26,7 @@ void NetworkSystem::Initialize(SDL_Renderer* renderer, Scene* scene, NetLib::Pee
 
 	if(!_networkPeer->Start())
 	{
-		Common::LOG_ERROR("Peer startup failed");
+		LOG_ERROR("Peer startup failed");
 	}
 }
 
@@ -55,7 +55,7 @@ void NetworkSystem::Release()
 {
 	if(!_networkPeer->Stop())
 	{
-		Common::LOG_ERROR("Peer stop failed");
+		LOG_ERROR("Peer stop failed");
 	}
 
 	delete _networkPeer;

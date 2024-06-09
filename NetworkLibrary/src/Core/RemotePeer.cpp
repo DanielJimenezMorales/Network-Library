@@ -1,10 +1,8 @@
 #include <cassert>
-#include <sstream>
 #include <memory>
 
 #include "RemotePeer.h"
 #include "Message.h"
-#include "Logger.h"
 #include "UnreliableOrderedTransmissionChannel.h"
 #include "UnreliableUnorderedTransmissionChannel.h"
 #include "ReliableOrderedChannel.h"

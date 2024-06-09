@@ -1,6 +1,4 @@
 #pragma once
-#include <sstream>
-
 #include "Logger.h"
 
 namespace Tests
@@ -10,9 +8,7 @@ namespace Tests
 	public:
         void static LogTestName(const std::string& name)
         {
-            std::stringstream ss;
-            ss << "\n**********************************************\n" << name << "\n" << "**********************************************";
-            Common::LOG_INFO(ss.str());
+            LOG_INFO("\n**********************************************\n%s\n**********************************************", name.c_str());
         }
 
         void static LogTestResult(bool correct)
@@ -27,9 +23,7 @@ namespace Tests
                 text = "ERROR";
             }
 
-            std::stringstream ss;
-            ss << "\n**********************************************\n" << text << "\n" << "**********************************************\n\n";
-            Common::LOG_INFO(ss.str());
+            LOG_INFO("\n**********************************************\n%s\n**********************************************\n\n", text.c_str());
         }
 	};
 }

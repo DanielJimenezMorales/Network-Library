@@ -2,7 +2,6 @@
 
 #include "RemotePeersHandler.h"
 #include "Address.h"
-#include "Logger.h"
 #include "Peer.h"
 
 namespace NetLib

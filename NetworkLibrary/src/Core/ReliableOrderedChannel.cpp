@@ -1,4 +1,3 @@
-#include <sstream>
 #include <memory>
 
 #include "ReliableOrderedChannel.h"
@@ -124,9 +123,7 @@ namespace NetLib
 		uint16_t messageSequenceNumber = message->GetHeader().messageSequenceNumber;
 		if (IsMessageDuplicated(messageSequenceNumber))
 		{
-			std::stringstream ss;
-			ss << "The message with ID = " << messageSequenceNumber << " is duplicated. Ignoring it...";
-			Common::LOG_INFO(ss.str());
+			LOG_INFO("The message with ID = %hu is duplicated. Ignoring it...", messageSequenceNumber);
 
 			MessageFactory& messageFactory = MessageFactory::GetInstance();
 			messageFactory.ReleaseMessage(std::move(message));
@@ -134,7 +131,7 @@ namespace NetLib
 		}
 		else
 		{
-			Common::LOG_INFO("New message received");
+			LOG_INFO("New message received");
 			AckReliableMessage(messageSequenceNumber);
 			if (messageSequenceNumber == _nextOrderedMessageSequenceNumber)
 			{
@@ -257,9 +254,7 @@ namespace NetLib
 		_unackedMessagesSendTimes[message->GetHeader().messageSequenceNumber] = timeClock.GetLocalTimeMilliseconds();
 
 		_unackedReliableMessages.push_back(std::move(message));
-		std::stringstream ss;
-		ss << "Retransmission Timeout: " << GetRetransmissionTimeout();
-		Common::LOG_INFO(ss.str());
+		LOG_INFO("Retransmission Timeout: %f", GetRetransmissionTimeout());
 		_unackedReliableMessageTimeouts.push_back(GetRetransmissionTimeout());
 	}
 
@@ -415,9 +410,7 @@ namespace NetLib
 			}
 		}
 
-		std::stringstream ss;
-		ss << "RTT: " << _rttMilliseconds;
-		Common::LOG_INFO(ss.str());
+		LOG_INFO("RTT: %hu", _rttMilliseconds);
 	}
 
 	float ReliableOrderedChannel::GetRetransmissionTimeout() const
@@ -489,9 +482,7 @@ namespace NetLib
 
 	void ReliableOrderedChannel::ProcessACKs(uint32_t acks, uint16_t lastAckedMessageSequenceNumber)
 	{
-		std::stringstream ss;
-		ss << "Last acked from client = " << lastAckedMessageSequenceNumber;
-		Common::LOG_INFO(ss.str());
+		LOG_INFO("Last acked from client = %hu", lastAckedMessageSequenceNumber);
 
 		//Check if the last acked is in reliable messages lists
 		TryRemoveUnackedReliableMessageFromSequence(lastAckedMessageSequenceNumber);

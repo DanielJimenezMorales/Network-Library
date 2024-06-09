@@ -1,4 +1,3 @@
-#include <sstream>
 #include <SDL_image.h>
 
 #include "Game.h"
@@ -17,7 +16,9 @@ KeyboardController* keyboard;
 
 bool Game::Init()
 {
-    std::cout << "Select:\nServer: 0\nClient: 1\n";
+    LOG_INFO("Select:");
+    LOG_INFO("Server: 0");
+    LOG_INFO("Client: 1");
 
     int clientOrServer;
     std::cin >> clientOrServer;
@@ -25,18 +26,14 @@ bool Game::Init()
     int result = InitSDL();
     if (result != 0)
     {
-        std::stringstream ss;
-        ss << "Error while initializing SDL. Error code: " << SDL_GetError();
-        Common::LOG_ERROR(ss.str());
+        LOG_ERROR("Error while initializing SDL. Error code: %s", SDL_GetError());
         return false;
     }
 
     result = CreateWindowAndRenderer();
     if (result != 0)
     {
-        std::stringstream ss;
-        ss << "Error while initializing SDL window. Error code: " << SDL_GetError();
-        Common::LOG_ERROR(ss.str());
+        LOG_ERROR("Error while initializing SDL window. Error code: %s", SDL_GetError());
         return false;
     }
 
@@ -56,7 +53,7 @@ bool Game::Init()
     SDL_Surface* imageSurface = IMG_Load("sprites/PlayerSprites/playerHead.png");
     if (imageSurface == nullptr)
     {
-        Common::LOG_INFO("HH");
+        LOG_INFO("HH");
     }
 
     SDL_Texture* imageTexture = SDL_CreateTextureFromSurface(_renderer, imageSurface);
@@ -66,7 +63,7 @@ bool Game::Init()
     result = SDL_QueryTexture(imageTexture, NULL, NULL, &sourceTextureRect.w, &sourceTextureRect.h);
     if (result == 0)
     {
-        Common::LOG_INFO("COOL");
+        LOG_INFO("COOL");
     }
 
     sourceTextureRect.x = 0;

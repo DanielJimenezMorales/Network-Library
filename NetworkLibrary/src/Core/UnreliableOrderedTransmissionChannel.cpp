@@ -2,7 +2,6 @@
 
 #include "UnreliableOrderedTransmissionChannel.h"
 #include "MessageFactory.h"
-#include "Logger.h"
 
 namespace NetLib
 {

@@ -1,5 +1,3 @@
-#include <sstream>
-
 #include "MessageUtils.h"
 #include "MessageFactory.h"
 #include "Buffer.h"
@@ -50,9 +48,7 @@ namespace NetLib
 			message = messageFactory.LendMessage(MessageType::Replication);
 			break;
 		default:
-			std::stringstream ss;
-			ss << "Can't read message of type MessageType = " << (int)type << ", ignoring it...";
-			Common::LOG_WARNING(ss.str());
+			LOG_WARNING("Can't read message of type MessageType = %hhu. Ignoring it...", type);
 		}
 
 		if (message != nullptr)

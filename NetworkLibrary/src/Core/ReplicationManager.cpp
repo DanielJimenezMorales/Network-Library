@@ -1,4 +1,3 @@
-#include <sstream>
 #include <cassert>
 
 #include "ReplicationManager.h"
@@ -71,17 +70,13 @@ namespace NetLib
 		uint32_t networkEntityId = replicationMessage.networkEntityId;
 		if (_networkEntitiesStorage.HasNetworkEntityId(networkEntityId))
 		{
-			std::stringstream ss;
-			ss << "Replication: Trying to create a network entity that is already created. Entity ID: " << static_cast<int>(networkEntityId) << ".Ignoring message...";
-			Common::LOG_INFO(ss.str());
+			LOG_INFO("Replication: Trying to create a network entity that is already created. Entity ID: %u. Ignoring message...", networkEntityId);
 			return;
 		}
 
 		//Create network entity through its custom factory
 		Buffer buffer(replicationMessage.data, replicationMessage.dataSize);
-		std::stringstream ss;
-		ss << "DATA SIZE: " << (int)replicationMessage.dataSize;
-		Common::LOG_INFO(ss.str());
+		LOG_INFO("DATA SIZE: %hu", replicationMessage.dataSize);
 		float posX = buffer.ReadFloat();
 		float posY = buffer.ReadFloat();
 		int gameEntity = _networkEntityFactory->CreateNetworkEntityObject(replicationMessage.replicatedClassId, networkEntityId, posX, posY, &_networkVariableChangesHandler);
@@ -96,9 +91,7 @@ namespace NetLib
 		uint32_t networkEntityId = replicationMessage.networkEntityId;
 		if (!_networkEntitiesStorage.HasNetworkEntityId(networkEntityId))
 		{
-			std::stringstream ss;
-			ss << "Replication: Trying to update a network entity that doesn't exist. Entity ID: " << static_cast<int>(networkEntityId) << ".Creating a new entity...";
-			Common::LOG_INFO(ss.str());
+			LOG_INFO("Replication: Trying to update a network entity that doesn't exist. Entity ID: %u. Creating a new entity...", networkEntityId);
 
 			//If not found create a new one and update it
 			int gameEntity = _networkEntityFactory->CreateNetworkEntityObject(replicationMessage.replicatedClassId, networkEntityId, 0.f, 0.f, &_networkVariableChangesHandler);
@@ -156,9 +149,7 @@ namespace NetLib
 		bool foundSuccesfully = _networkEntitiesStorage.TryGetNetworkEntityFromId(networkEntityId, gameEntity);
 		if (!foundSuccesfully)
 		{
-			std::stringstream ss;
-			ss << "Replication: Trying to remove a network entity that doesn't exist. Network entity ID: " << static_cast<int>(networkEntityId) << ".Ignoring it...";
-			Common::LOG_INFO(ss.str());
+			LOG_INFO("Replication: Trying to remove a network entity that doesn't exist. Network entity ID: %u. Ignoring it...", networkEntityId);
 			return;
 		}
 
@@ -228,7 +219,7 @@ namespace NetLib
 			ProcessReceivedDestroyReplicationMessage(replicationMessage);
 			break;
 		default:
-			Common::LOG_WARNING("Invalid replication action. Skipping it...");
+			LOG_WARNING("Invalid replication action. Skipping it...");
 		}
 	}
 

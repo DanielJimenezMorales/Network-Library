@@ -1,4 +1,3 @@
-#include <sstream>
 #include <cassert>
 #include <memory>
 
@@ -22,9 +21,7 @@ namespace NetLib
 	{
 		if (GetConnectionState() != PeerConnectionState::PCS_Connected)
 		{
-			std::stringstream ss;
-			ss << "Can't create Network entity of type " << static_cast<int>(entityType) << " because the server is not connected.";
-			Common::LOG_WARNING(ss.str());
+			LOG_WARNING("Can't create Network entity of type %d because the server is not connected.", static_cast<int>(entityType));
 			return 0;
 		}
 
@@ -35,9 +32,7 @@ namespace NetLib
 	{
 		if (GetConnectionState() != PeerConnectionState::PCS_Connected)
 		{
-			std::stringstream ss;
-			ss << "Can't destroy Network entity with ID: " << static_cast<int>(entityId) << " because the server is not connected.";
-			Common::LOG_WARNING(ss.str());
+			LOG_WARNING("Can't destroy Network entity with ID: %d because the server is not connected.", static_cast<int>(entityId));
 			return;
 		}
 
@@ -56,7 +51,7 @@ namespace NetLib
 		serverHint.sin_port = htons(SERVER_PORT); // Convert from little to big endian
 		Address address = Address(serverHint);
 		BindSocket(address);
-		Common::LOG_INFO("Server started succesfully!");
+		LOG_INFO("Server started succesfully!");
 
 		ExecuteOnLocalPeerConnect();
 		return true;
@@ -78,9 +73,7 @@ namespace NetLib
 	void Server::ProcessMessageFromPeer(const Message& message, RemotePeer& remotePeer)
 	{
 		MessageType messageType = message.GetHeader().type;
-		std::stringstream ss;
-		ss << "Me proceso type " << static_cast<int>(messageType);
-		Common::LOG_INFO(ss.str());
+		LOG_INFO("Me proceso type %d", static_cast<int>(messageType));
 
 		switch (messageType)
 		{
@@ -115,7 +108,7 @@ namespace NetLib
 			break;
 		}
 		default:
-			Common::LOG_WARNING("Invalid Message type, ignoring it...");
+			LOG_WARNING("Invalid Message type, ignoring it...");
 			break;
 		}
 	}
@@ -129,15 +122,13 @@ namespace NetLib
 		}
 		else
 		{
-			Common::LOG_WARNING("Server only process Connection request messages from unknown peers. Any other type of message will be discarded.");
+			LOG_WARNING("Server only process Connection request messages from unknown peers. Any other type of message will be discarded.");
 		}
 	}
 
 	void Server::ProcessConnectionRequest(const ConnectionRequestMessage& message, const Address& address)
 	{
-		std::stringstream ss;
-		ss << "Processing connection request from [IP: " << address.GetIP() << ", Port: " << address.GetPort() << "] with salt number " << message.clientSalt;
-		Common::LOG_INFO(ss.str());
+		LOG_INFO("Processing connection request from [IP: %s, Port: %hu] with salt number %d", address.GetIP().c_str(), (int)address.GetPort(), message.clientSalt);
 
 		RemotePeersHandlerResult isAbleToConnectResult = _remotePeersHandler.IsRemotePeerAbleToConnect(address);
 
@@ -159,18 +150,18 @@ namespace NetLib
 			if (remotePeerState == RemotePeerState::Connected)
 			{
 				CreateConnectionApprovedMessage(*remotePeer);
-				Common::LOG_INFO("The client is already connected, sending connection approved...");
+				LOG_INFO("The client is already connected, sending connection approved...");
 			}
 			else if (remotePeerState == RemotePeerState::Connecting)
 			{
 				CreateConnectionChallengeMessage(*remotePeer);
-				Common::LOG_INFO("The client is already trying to connect, sending connection challenge...");
+				LOG_INFO("The client is already trying to connect, sending connection challenge...");
 			}
 		}
 		else if (isAbleToConnectResult == RemotePeersHandlerResult::RPH_FULL)//If all the client slots are full deny the connection
 		{
 			SendConnectionDeniedPacket(address, ConnectionFailedReasonType::CFR_SERVER_FULL);
-			Common::LOG_WARNING("All available connection slots are full. Denying incoming connection...");
+			LOG_WARNING("All available connection slots are full. Denying incoming connection...");
 		}
 	}
 
@@ -181,7 +172,7 @@ namespace NetLib
 		std::unique_ptr<Message>message = messageFactory.LendMessage(MessageType::Disconnection);
 		if (message == nullptr)
 		{
-			Common::LOG_ERROR("Can't create new Disconnection Message because the MessageFactory has returned a null message");
+			LOG_ERROR("Can't create new Disconnection Message because the MessageFactory has returned a null message");
 			return;
 		}
 
@@ -190,7 +181,7 @@ namespace NetLib
 		disconnectionMessage->prefix = remotePeer.GetDataPrefix();
 		remotePeer.AddMessage(std::move(disconnectionMessage));
 
-		Common::LOG_INFO("Disconnection message created.");
+		LOG_INFO("Disconnection message created.");
 	}
 
 	void Server::CreateTimeResponseMessage(RemotePeer& remotePeer, const TimeRequestMessage& timeRequest)
@@ -215,7 +206,7 @@ namespace NetLib
 		std::unique_ptr<Message>message = messageFactory.LendMessage(MessageType::InGameResponse);
 		if (message == nullptr)
 		{
-			Common::LOG_ERROR("Can't create new in game response Message because the MessageFactory has returned a null message");
+			LOG_ERROR("Can't create new in game response Message because the MessageFactory has returned a null message");
 			return;
 		}
 
@@ -227,7 +218,7 @@ namespace NetLib
 		inGameResponseMessage->data = data;
 		remotePeer.AddMessage(std::move(inGameResponseMessage));
 
-		Common::LOG_INFO("In game response message created.");
+		LOG_INFO("In game response message created.");
 	}
 
 	void Server::CreateConnectionChallengeMessage(RemotePeer& remotePeer)
@@ -237,7 +228,7 @@ namespace NetLib
 		std::unique_ptr<Message> message = messageFactory.LendMessage(MessageType::ConnectionChallenge);
 		if (message == nullptr)
 		{
-			Common::LOG_ERROR("Can't create new Connection Challenge Message because the MessageFactory has returned a null message");
+			LOG_ERROR("Can't create new Connection Challenge Message because the MessageFactory has returned a null message");
 			return;
 		}
 
@@ -246,7 +237,7 @@ namespace NetLib
 		connectionChallengePacket->serverSalt = remotePeer.GetServerSalt();
 		remotePeer.AddMessage(std::move(connectionChallengePacket));
 
-		Common::LOG_INFO("Connection challenge message created.");
+		LOG_INFO("Connection challenge message created.");
 	}
 
 	void Server::SendConnectionDeniedPacket(const Address& address, ConnectionFailedReasonType reason) const
@@ -260,7 +251,7 @@ namespace NetLib
 		NetworkPacket packet = NetworkPacket();
 		packet.AddMessage(std::move(connectionDeniedMessage));
 
-		Common::LOG_INFO("Sending connection denied...");
+		LOG_INFO("Sending connection denied...");
 		SendPacketToAddress(packet, address);
 
 		while (packet.GetNumberOfMessages() > 0)
@@ -272,13 +263,11 @@ namespace NetLib
 
 	void Server::ProcessConnectionChallengeResponse(const ConnectionChallengeResponseMessage& message, RemotePeer& remotePeer)
 	{
-		std::stringstream ss;
-		ss << "Processing connection challenge response from [IP: " << remotePeer.GetAddress().GetIP() << ", Port: " << remotePeer.GetAddress().GetPort() << "]";
-		Common::LOG_INFO(ss.str());
+		LOG_INFO("Processing connection challenge response from [IP: %s , Port: %hu]", remotePeer.GetAddress().GetIP(), remotePeer.GetAddress().GetPort());
 
 		if (remotePeer.GeturrentState() == RemotePeerState::Connected)
 		{
-			Common::LOG_INFO("The remote peer is already connected. Sending connection approved...");
+			LOG_INFO("The remote peer is already connected. Sending connection approved...");
 			CreateConnectionApprovedMessage(remotePeer);
 			return;
 		}
@@ -291,11 +280,11 @@ namespace NetLib
 
 			//Send connection approved packet
 			CreateConnectionApprovedMessage(remotePeer);
-			Common::LOG_INFO("Connection approved");
+			LOG_INFO("Connection approved");
 		}
 		else
 		{
-			Common::LOG_INFO("Connection denied due to not wrong data prefix");
+			LOG_INFO("Connection denied due to not wrong data prefix");
 			SendConnectionDeniedPacket(remotePeer.GetAddress(), ConnectionFailedReasonType::CFR_UNKNOWN);
 
 			StartDisconnectingRemotePeer(remotePeer.GetClientIndex(), false, ConnectionFailedReasonType::CFR_UNKNOWN);
@@ -305,15 +294,13 @@ namespace NetLib
 	//TODO REFACTOR THIS METHOD
 	void Server::ProcessTimeRequest(const TimeRequestMessage& message, RemotePeer& remotePeer)
 	{
-		Common::LOG_INFO("PROCESSING TIME REQUEST");
+		LOG_INFO("PROCESSING TIME REQUEST");
 		CreateTimeResponseMessage(remotePeer, message);
 	}
 
 	void Server::ProcessInGame(const InGameMessage& message, RemotePeer& remotePeer)
 	{
-		std::stringstream ss;
-		ss << "InGame ID: " << message.data;
-		Common::LOG_INFO(ss.str());
+		LOG_INFO("InGame ID: %llu", message.data);
 
 		CreateInGameResponseMessage(remotePeer, message.data);
 	}
@@ -323,13 +310,11 @@ namespace NetLib
 		uint64_t dataPrefix = message.prefix;
 		if (dataPrefix != remotePeer.GetDataPrefix())
 		{
-			Common::LOG_WARNING("Packet prefix does not match. Skipping message...");
+			LOG_WARNING("Packet prefix does not match. Skipping message...");
 			return;
 		}
 
-		std::stringstream ss;
-		ss << "Disconnection message received from remote peer with reason code equal to " << (int)message.reason << ". Disconnecting remove peer...";
-		Common::LOG_INFO(ss.str());
+		LOG_INFO("Disconnection message received from remote peer with reason code equal to %hhu. Disconnecting remove peer...", message.reason);
 
 		StartDisconnectingRemotePeer(remotePeer.GetClientIndex(), false, ConnectionFailedReasonType::CFR_UNKNOWN);
 	}
@@ -340,7 +325,7 @@ namespace NetLib
 		std::unique_ptr<Message> message = messageFactory.LendMessage(MessageType::ConnectionAccepted);
 		if (message == nullptr)
 		{
-			Common::LOG_ERROR("Can't create new Connection Accepted Message because the MessageFactory has returned a null message");
+			LOG_ERROR("Can't create new Connection Accepted Message because the MessageFactory has returned a null message");
 			return;
 		}
 
