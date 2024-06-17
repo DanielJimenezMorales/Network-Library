@@ -3,9 +3,9 @@
 #include <SDL_image.h>
 #include <cassert>
 
-#include "entt.hpp"
 #include "SpriteRendererSystem.h"
 #include "ScriptSystem.h"
+#include "EntityContainer.h"
 
 class GameEntity;
 
@@ -22,7 +22,7 @@ public:
 	GameEntity CreateGameEntity();
 
 private:
-	entt::registry _registry;
+	EntityContainer _entityContainer;
 	SpriteRendererSystem _spriteRendererSystem;
 	ScriptSystem _scriptSystem;
 

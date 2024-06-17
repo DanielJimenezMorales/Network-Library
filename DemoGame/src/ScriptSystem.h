@@ -1,15 +1,15 @@
 #pragma once
-#include "entt.hpp"
 
-class Scene;
+class GameEntity;
+class EntityContainer;
 class ScriptComponent;
 
 class ScriptSystem
 {
 public:
-	void Update(entt::registry& registry, Scene* scene, float elapsedTime) const;
-	void Tick(entt::registry& registry, float tickElapsedTime) const;
+	void Update(EntityContainer& entityContainer, float elapsedTime) const;
+	void Tick(EntityContainer& entityContainer, float tickElapsedTime) const;
 
 private:
-	void CreateScript(ScriptComponent& scriptComponent, Scene* scene, entt::entity) const;
+	void CreateScript(ScriptComponent& scriptComponent, const GameEntity& gameEntity) const;
 };

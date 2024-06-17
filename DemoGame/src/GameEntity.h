@@ -2,17 +2,20 @@
 #include <cassert>
 
 #include "entt.hpp"
-#include "Scene.h"
+#include "EntityContainer.h"
 
+//TODO Make this file .hpp and remove .cpp file
 class GameEntity
 {
 public:
-	GameEntity() = default;
-	GameEntity(entt::entity enttId, Scene* scene) : _ecsEntityId(enttId), _scene(scene) {};
+	GameEntity() : _ecsEntityId(), _entityContainer(nullptr) {};
+	GameEntity(entt::entity enttId, EntityContainer* entityContainer) : _ecsEntityId(enttId), _entityContainer(entityContainer) {};
 	GameEntity(const GameEntity& other) = default;
-	~GameEntity() = default;
+	~GameEntity() {};
 
 	uint32_t GetId() const { return static_cast<uint32_t>(_ecsEntityId); }
+
+	bool IsValid() const { return _entityContainer != nullptr; };
 
 	template <typename T, typename... Params>
 	T& AddComponent(Params&&... params);
@@ -24,36 +27,49 @@ public:
 	T& GetComponent();
 
 	template <typename T>
+	const T& GetComponent() const;
+
+	template <typename T>
 	void RemoveComponent();
 
 private:
 	entt::entity _ecsEntityId;
-	Scene* _scene;
+	EntityContainer* _entityContainer;
+
+	friend class EntityContainer;
 };
 
 template<typename T, typename ...Params>
 inline T& GameEntity::AddComponent(Params && ...params)
 {
-	assert(!HasComponent<T>());
-	return _scene->_registry.emplace<T>(_ecsEntityId, std::forward<Params>(params)...);
+	assert(IsValid());
+	return _entityContainer->AddComponentToEntity<T>(*this, std::forward<Params>(params)...);
 };
 
 template<typename T>
 inline bool GameEntity::HasComponent()
 {
-	return _scene->_registry.all_of<T>(_ecsEntityId);
+	assert(IsValid());
+	return _entityContainer->HasEntityComponent<T>(*this);
 };
 
 template<typename T>
 inline T& GameEntity::GetComponent()
 {
-	assert(HasComponent<T>());
-	return _scene->_registry.get<T>(_ecsEntityId);
-};
+	assert(IsValid());
+	return _entityContainer->GetComponentFromEntity<T>(*this);
+}
+template<typename T>
+inline const T& GameEntity::GetComponent() const
+{
+	assert(IsValid());
+	return _entityContainer->GetComponentFromEntity<T>(*this);
+}
+;
 
 template<typename T>
 inline void GameEntity::RemoveComponent()
 {
-	assert(HasComponent<T>());
-	_scene->_registry.remove<T>(_ecsEntityId);
+	assert(IsValid());
+	_entityContainer->RemoveComponentFromEntity(*this);
 };
