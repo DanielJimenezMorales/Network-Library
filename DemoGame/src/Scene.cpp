@@ -2,7 +2,7 @@
 
 #include "ScriptComponent.h"
 #include "TransformComponent.h"
-#include "GameEntity.h"
+#include "GameEntity.hpp"
 
 void Scene::Update(float elapsedTime)
 {

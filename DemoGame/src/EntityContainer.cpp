@@ -1,5 +1,5 @@
 #include "EntityContainer.h"
-#include "GameEntity.h"
+#include "GameEntity.hpp"
 
 GameEntity EntityContainer::CreateGameEntity()
 {

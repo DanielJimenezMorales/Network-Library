@@ -4,7 +4,6 @@
 #include "entt.hpp"
 #include "EntityContainer.h"
 
-//TODO Make this file .hpp and remove .cpp file
 class GameEntity
 {
 public:
@@ -65,7 +64,6 @@ inline const T& GameEntity::GetComponent() const
 	assert(IsValid());
 	return _entityContainer->GetComponentFromEntity<T>(*this);
 }
-;
 
 template<typename T>
 inline void GameEntity::RemoveComponent()

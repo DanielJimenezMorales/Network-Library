@@ -3,7 +3,7 @@
 #include "Game.h"
 #include "Logger.h"
 #include "TimeClock.h"
-#include "GameEntity.h"
+#include "GameEntity.hpp"
 #include "SpriteRendererComponent.h"
 #include "TransformComponent.h"
 #include "ScriptComponent.h"

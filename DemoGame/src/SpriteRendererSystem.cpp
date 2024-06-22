@@ -2,7 +2,7 @@
 #include "TransformComponent.h"
 #include "SpriteRendererComponent.h"
 #include "EntityContainer.h"
-#include "GameEntity.h"
+#include "GameEntity.hpp"
 #include <vector>
 
 void SpriteRendererSystem::Render(EntityContainer& entityContainer, SDL_Renderer* renderer) const

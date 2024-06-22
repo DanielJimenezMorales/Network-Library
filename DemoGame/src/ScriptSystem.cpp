@@ -1,7 +1,7 @@
 #include "ScriptSystem.h"
 #include "ScriptComponent.h"
 #include "ScriptableSystem.h"
-#include "GameEntity.h"
+#include "GameEntity.hpp"
 #include "EntityContainer.h"
 
 void ScriptSystem::Update(EntityContainer& entityContainer, float elapsedTime) const

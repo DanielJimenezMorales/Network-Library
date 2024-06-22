@@ -1,5 +1,5 @@
 #include "NetworkEntityFactory.h"
-#include "GameEntity.h"
+#include "GameEntity.hpp"
 #include "SDL.h"
 #include "SpriteRendererComponent.h"
 #include "TransformComponent.h"
