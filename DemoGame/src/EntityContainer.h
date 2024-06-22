@@ -36,6 +36,7 @@ public:
 	template <typename T1, typename T2>
 	std::vector<GameEntity> GetEntitiesOfBothTypes();
 
+	//TODO Add GetFirstEntityOfType method
 	//TODO Create a version of GetEntitiesOfType that only returns components instead of GameEntity. Useful if we just simply want to process components and not the whole entity. Maybe call it GetEntityComponentsOfType...
 
 private:

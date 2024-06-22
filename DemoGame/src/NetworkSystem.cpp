@@ -3,6 +3,10 @@
 #include "Client.h"
 #include "Server.h"
 #include "Logger.h"
+#include "CurrentTickComponent.h"
+#include "EntityContainer.h"
+#include "GameEntity.hpp"
+#include <vector>
 
 void NetworkSystem::Initialize(SDL_Renderer* renderer, Scene* scene, NetLib::PeerType type, IInputController* inputController)
 {
@@ -30,25 +34,28 @@ void NetworkSystem::Initialize(SDL_Renderer* renderer, Scene* scene, NetLib::Pee
 	}
 }
 
-void NetworkSystem::PreTick()
+void NetworkSystem::PreTick(EntityContainer& entityContainer, float elapsedTime) const
 {
 	_networkPeer->PreTick();
 }
 
-void NetworkSystem::Tick(float elapsedTime)
+void NetworkSystem::PosTick(EntityContainer& entityContainer, float elapsedTime) const
 {
 	_networkPeer->Tick(elapsedTime);
+
+	std::vector<GameEntity> gameEntity = entityContainer.GetEntitiesOfType<CurrentTickComponent>();
+	CurrentTickComponent& currentTickComponent = gameEntity[0].GetComponent<CurrentTickComponent>();
 
 	//TEMP
 	if (_networkPeer->GetPeerType() == NetLib::PeerType::ClientMode)
 	{
 		return;
 	}
-	if (_currentTick == 10)
+	if (currentTickComponent.currentTick == 10)
 	{
 		static_cast<NetLib::Server*>(_networkPeer)->CreateNetworkEntity(10, 256.f, 256.f);
 	}
-	++_currentTick;
+	++currentTickComponent.currentTick;
 }
 
 void NetworkSystem::Release()

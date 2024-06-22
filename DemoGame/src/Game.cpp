@@ -11,6 +11,9 @@
 #include "KeyboardController.h"
 #include "InputComponent.h"
 #include "InputActionIdsConfiguration.h"
+#include "ScriptSystem.h"
+#include "NetworkSystem.h"
+#include "CurrentTickComponent.h"
 
 KeyboardController* keyboard;
 
@@ -69,25 +72,26 @@ bool Game::Init()
     sourceTextureRect.x = 0;
     sourceTextureRect.y = 0;
 
-    /*GameEntity playerEntity = _activeScene.CreateGameEntity();
-    playerEntity.AddComponent<SpriteRendererComponent>(sourceTextureRect, imageTexture);
-    TransformComponent& playerTransform = playerEntity.GetComponent<TransformComponent>();
-    playerTransform.posX = 256;
-    playerTransform.posY = 56;
+    GameEntity currentTickEntity = _activeScene.CreateGameEntity();
+    currentTickEntity.AddComponent<CurrentTickComponent>();
 
-    playerEntity.AddComponent<InputComponent>(keyboard);
-
-    playerEntity.AddComponent<ScriptComponent>().Bind<PlayerMovement>();*/
-
+    ScriptSystem* scriptSystem = new ScriptSystem();
+    _activeScene.AddUpdateSystem(scriptSystem);
+    _activeScene.AddTickSystem(scriptSystem);
+    NetworkSystem* networkSystem = new NetworkSystem();
 
     if (clientOrServer == 0)
     {
-        _networkSystem.Initialize(_renderer, &_activeScene, NetLib::PeerType::ServerMode, keyboard);
+        networkSystem->Initialize(_renderer, &_activeScene, NetLib::PeerType::ServerMode, keyboard);
     }
     else if (clientOrServer == 1)
     {
-        _networkSystem.Initialize(_renderer, &_activeScene, NetLib::PeerType::ClientMode, keyboard);
+        networkSystem->Initialize(_renderer, &_activeScene, NetLib::PeerType::ClientMode, keyboard);
     }
+
+    _activeScene.AddPreTickSystem(networkSystem);
+    _activeScene.AddPosTickSystem(networkSystem);
+
     return true;
 }
 
@@ -105,9 +109,9 @@ void Game::GameLoop()
 
         while (accumulator >= FIXED_FRAME_TARGET_DURATION)
         {
-            PreTick();
+            PreTick(FIXED_FRAME_TARGET_DURATION);
             Tick(FIXED_FRAME_TARGET_DURATION);
-            PosTick();
+            PosTick(FIXED_FRAME_TARGET_DURATION);
             accumulator -= FIXED_FRAME_TARGET_DURATION;
         }
         
@@ -137,21 +141,19 @@ void Game::HandleEvents()
     _inputHandler.PostHandleEvents();
 }
 
-void Game::PreTick()
+void Game::PreTick(float tickElapsedTime)
 {
-    //Get all network info from Remote peers and process it
-    _networkSystem.PreTick();
+    _activeScene.PreTick(tickElapsedTime);
 }
 
 void Game::Tick(float tickElapsedTime)
 {
     _activeScene.Tick(tickElapsedTime);
-    _networkSystem.Tick(tickElapsedTime);
 }
 
-void Game::PosTick()
+void Game::PosTick(float tickElapsedTime)
 {
-    //SendData, disconnect, etc
+    _activeScene.PosTick(tickElapsedTime);
 }
 
 void Game::Update(float elapsedTime)
@@ -170,7 +172,7 @@ void Game::Render()
 
 bool Game::Release()
 {
-    _networkSystem.Release();
+    //_networkSystem.Release();
 
     SDL_DestroyRenderer(_renderer);
     SDL_DestroyWindow(_window);

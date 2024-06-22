@@ -3,7 +3,6 @@
 
 #include "Scene.h"
 #include "InputHandler.h"
-#include "NetworkSystem.h"
 
 const unsigned int FIXED_FRAMES_PER_SECOND = 50;
 const float FIXED_FRAME_TARGET_DURATION = 1.0f / FIXED_FRAMES_PER_SECOND;
@@ -22,9 +21,9 @@ private:
 	int CreateWindowAndRenderer();
 
 	void HandleEvents();
-	void PreTick();
+	void PreTick(float tickElapsedTime);
 	void Tick(float tickElapsedTime);
-	void PosTick();
+	void PosTick(float tickElapsedTime);
 	void Update(float elapsedTime);
 	void Render();
 
@@ -34,5 +33,4 @@ private:
 
 	Scene _activeScene;
 	InputHandler _inputHandler;
-	NetworkSystem _networkSystem;
 };
