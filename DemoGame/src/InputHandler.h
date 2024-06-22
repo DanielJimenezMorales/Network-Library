@@ -2,10 +2,11 @@
 #include <SDL.h>
 #include <vector>
 
-#include "IInputController.h"
 #include "Logger.h"
 
-typedef enum ButtonState
+class IInputController;
+
+enum class ButtonState
 {
 	None,
 	Pressed,

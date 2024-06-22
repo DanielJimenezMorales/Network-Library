@@ -1,5 +1,5 @@
 #pragma once
-#include "GameEntity.h"
+#include "GameEntity.hpp"
 
 class ScriptableSystem
 {

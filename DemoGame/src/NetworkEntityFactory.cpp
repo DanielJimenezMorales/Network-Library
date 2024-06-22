@@ -1,5 +1,5 @@
 #include "NetworkEntityFactory.h"
-#include "GameEntity.h"
+#include "GameEntity.hpp"
 #include "SDL.h"
 #include "SpriteRendererComponent.h"
 #include "TransformComponent.h"
@@ -7,6 +7,7 @@
 #include "PlayerMovement.h"
 #include "InputComponent.h"
 #include "PlayerNetworkComponent.h"
+#include "Scene.h"
 
 void NetworkEntityFactory::SetRenderer(SDL_Renderer* renderer)
 {

@@ -2,9 +2,10 @@
 #include <sstream>
 
 #include "ScriptableSystem.h"
-#include "TransformComponent.h"
 #include "Logger.h"
 #include "Vec2f.h"
+
+struct TransformComponent;
 
 class PlayerMovement : public ScriptableSystem
 {

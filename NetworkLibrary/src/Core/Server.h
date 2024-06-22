@@ -3,7 +3,6 @@
 #include <vector>
 
 #include "Peer.h"
-#include "RemotePeer.h"
 
 namespace NetLib
 {
@@ -13,7 +12,6 @@ namespace NetLib
 	class TimeRequestMessage;
 	class InGameMessage;
 	class DisconnectionMessage;
-	class INetworkEntity;
 
 	class Server : public Peer
 	{

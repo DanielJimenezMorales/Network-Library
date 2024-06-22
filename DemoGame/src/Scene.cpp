@@ -2,29 +2,28 @@
 
 #include "ScriptComponent.h"
 #include "TransformComponent.h"
-#include "GameEntity.h"
+#include "GameEntity.hpp"
 
 void Scene::Update(float elapsedTime)
 {
 	//Update scripts
-	_scriptSystem.Update(_registry, this, elapsedTime);
+	_scriptSystem.Update(_entityContainer, elapsedTime);
 }
 
 void Scene::Tick(float tickElapsedTime)
 {
 	//Tick scripts
-	_scriptSystem.Tick(_registry, tickElapsedTime);
+	_scriptSystem.Tick(_entityContainer, tickElapsedTime);
 }
 
 void Scene::Render(SDL_Renderer* renderer)
 {
-	_spriteRendererSystem.Render(_registry, renderer);
+	_spriteRendererSystem.Render(_entityContainer, renderer);
 }
 
 GameEntity Scene::CreateGameEntity()
 {
-	entt::entity ecsId = _registry.create();
-	GameEntity newEntity = GameEntity(ecsId, this);
+	GameEntity newEntity = _entityContainer.CreateGameEntity();
 	newEntity.AddComponent<TransformComponent>();
 
 	return newEntity;

@@ -1,9 +1,10 @@
 #pragma once
 #include <SDL_image.h>
-#include "entt.hpp"
+
+class EntityContainer;
 
 class SpriteRendererSystem
 {
 public:
-	void Render(const entt::registry& registry, SDL_Renderer* renderer) const;
+	void Render(EntityContainer& entityContainer, SDL_Renderer* renderer) const;
 };

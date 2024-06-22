@@ -1,29 +1,32 @@
 #include "ScriptSystem.h"
 #include "ScriptComponent.h"
 #include "ScriptableSystem.h"
-#include "GameEntity.h"
+#include "GameEntity.hpp"
+#include "EntityContainer.h"
 
-void ScriptSystem::Update(entt::registry& registry, Scene* scene, float elapsedTime) const
+void ScriptSystem::Update(EntityContainer& entityContainer, float elapsedTime) const
 {
-	auto& view = registry.view<ScriptComponent>();
-	for (auto entity : view)
+	std::vector<GameEntity> entitiesWithScript = entityContainer.GetEntitiesOfType<ScriptComponent>();
+	auto it = entitiesWithScript.begin();
+	for (; it != entitiesWithScript.end(); ++it)
 	{
-		ScriptComponent& script = view.get<ScriptComponent>(entity);
+		ScriptComponent& script = it->GetComponent<ScriptComponent>();
 		if (!script.isCreated)
 		{
-			CreateScript(script, scene, entity);
+			CreateScript(script, *it);
 		}
 
 		script.behaviour->Update(elapsedTime);
 	}
 }
 
-void ScriptSystem::Tick(entt::registry& registry, float tickElapsedTime) const
+void ScriptSystem::Tick(EntityContainer& entityContainer, float tickElapsedTime) const
 {
-	auto& view = registry.view<ScriptComponent>();
-	for (auto entity : view)
+	std::vector<GameEntity> entitiesWithScript = entityContainer.GetEntitiesOfType<ScriptComponent>();
+	auto it = entitiesWithScript.begin();
+	for (; it != entitiesWithScript.end(); ++it)
 	{
-		ScriptComponent& script = view.get<ScriptComponent>(entity);
+		ScriptComponent& script = it->GetComponent<ScriptComponent>();
 		if (!script.isCreated)
 		{
 			continue;
@@ -33,9 +36,9 @@ void ScriptSystem::Tick(entt::registry& registry, float tickElapsedTime) const
 	}
 }
 
-void ScriptSystem::CreateScript(ScriptComponent& script, Scene* scene, entt::entity entity) const
+void ScriptSystem::CreateScript(ScriptComponent& script, const GameEntity& gameEntity) const
 {
-	script.behaviour->entity = GameEntity(entity, scene);
+	script.behaviour->entity = gameEntity;
 	script.behaviour->Create();
 	script.isCreated = true;
 }

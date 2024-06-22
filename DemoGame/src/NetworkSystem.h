@@ -1,10 +1,10 @@
 #pragma once
-#include "Peer.h"
-#include "NetworkEntityFactory.h"
-#include "Scene.h"
 #include "SDL.h"
-#include "NetworkVariable.h"
-#include "IInputController.h"
+#include "NetworkEntityFactory.h"
+
+class Peer;
+class Scene;
+class IInputController;
 
 class NetworkSystem
 {

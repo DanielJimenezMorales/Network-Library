@@ -1,4 +1,5 @@
 #include "InputHandler.h"
+#include "IInputController.h"
 
 void InputHandler::AddController(IInputController* inputController)
 {

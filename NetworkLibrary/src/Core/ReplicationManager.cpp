@@ -3,6 +3,7 @@
 #include "ReplicationManager.h"
 #include "Logger.h"
 #include "MessageFactory.h"
+#include "INetworkEntityFactory.h"
 
 namespace NetLib
 {

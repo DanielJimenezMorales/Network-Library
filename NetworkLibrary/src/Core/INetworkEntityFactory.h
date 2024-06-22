@@ -1,10 +1,10 @@
 #pragma once
 #include <cstdint>
 
-#include "NetworkVariableChangesHandler.h"
-
 namespace NetLib
 {
+	class NetworkVariableChangesHandler;
+
 	class INetworkEntityFactory
 	{
 	public:

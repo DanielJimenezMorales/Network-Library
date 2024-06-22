@@ -10,7 +10,6 @@
 
 namespace NetLib
 {
-	class Message;
 	class ConnectionChallengeMessage;
 	class ConnectionAcceptedMessage;
 	class ConnectionDeniedMessage;

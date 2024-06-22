@@ -1,5 +1,6 @@
 #pragma once
-#include "IInputController.h"
+
+class IInputController;
 
 class InputComponent
 {
