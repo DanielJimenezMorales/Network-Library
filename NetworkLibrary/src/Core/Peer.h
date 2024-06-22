@@ -5,11 +5,12 @@
 
 #include "Address.h"
 #include "Socket.h"
-#include "Buffer.h"
 #include "TransmissionChannel.h"
 #include "Delegate.h"
 #include "RemotePeersHandler.h"
 #include "ReplicationManager.h"
+
+class Buffer;
 
 namespace NetLib
 {

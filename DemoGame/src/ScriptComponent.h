@@ -1,5 +1,6 @@
 #pragma once
-#include "ScriptableSystem.h"
+
+class ScriptableSystem;
 
 struct ScriptComponent
 {

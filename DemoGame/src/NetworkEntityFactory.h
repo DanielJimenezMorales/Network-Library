@@ -1,9 +1,11 @@
 #pragma once
-#include "INetworkEntityFactory.h"
-#include "Scene.h"
 #include "SDL.h"
 #include "Peer.h"
-#include "IInputController.h"
+#include "INetworkEntityFactory.h"
+
+class IInputController;
+class Scene;
+class NetworkVariableChangesHandler;
 
 class NetworkEntityFactory : public NetLib::INetworkEntityFactory
 {

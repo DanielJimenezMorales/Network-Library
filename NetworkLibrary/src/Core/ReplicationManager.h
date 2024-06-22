@@ -6,14 +6,14 @@
 #include <functional>
 
 #include "NetworkEntityStorage.h"
-#include "ReplicationObjectRegistry.h"
 #include "Message.h"
-#include "INetworkEntityFactory.h"
 #include "Buffer.h"
 #include "NetworkVariableChangesHandler.h"
 
 namespace NetLib
 {
+	class INetworkEntityFactory;
+
 	static constexpr uint32_t INVALID_NETWORK_ENTITY_ID = 0;
 
 	enum ReplicationActionType : uint8_t

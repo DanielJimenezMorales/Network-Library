@@ -1,7 +1,9 @@
 #include "PlayerMovement.h"
 #include "InputComponent.h"
+#include "IInputController.h"
 #include "PlayerNetworkComponent.h"
 #include "InputActionIdsConfiguration.h"
+#include "TransformComponent.h"
 
 void PlayerMovement::Tick(float tickElapsedTime)
 {
