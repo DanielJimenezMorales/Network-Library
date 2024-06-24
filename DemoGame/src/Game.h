@@ -32,5 +32,6 @@ private:
 	bool _isRunning;
 
 	Scene _activeScene;
+	//TODO The input handler should also be witin an ECS component
 	InputHandler _inputHandler;
 };

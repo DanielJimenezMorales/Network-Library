@@ -1,21 +1,8 @@
-#include <SDL_image.h>
-
 #include "Game.h"
 #include "Logger.h"
-#include "TimeClock.h"
-#include "GameEntity.hpp"
-#include "SpriteRendererComponent.h"
-#include "TransformComponent.h"
-#include "ScriptComponent.h"
-#include "PlayerMovement.h"
-#include "KeyboardController.h"
-#include "InputComponent.h"
-#include "InputActionIdsConfiguration.h"
-#include "ScriptSystem.h"
-#include "NetworkSystem.h"
-#include "CurrentTickComponent.h"
-
-KeyboardController* keyboard;
+#include "Peer.h"
+#include "Initializer.h"
+#include "SceneInitializer.h"
 
 bool Game::Init()
 {
@@ -43,54 +30,10 @@ bool Game::Init()
     SDL_SetRenderDrawColor(_renderer, 255, 0, 0, 255);
     _isRunning = true;
 
-    //TEMP
-    keyboard = new KeyboardController();
-    InputButton button(JUMP_BUTTON, SDLK_q);
-    keyboard->AddButtonMap(button);
-    InputAxis axis(HORIZONTAL_AXIS, SDLK_d, SDLK_a);
-    keyboard->AddAxisMap(axis);
-    InputAxis axis2(VERTICAL_AXIS, SDLK_s, SDLK_w);
-    keyboard->AddAxisMap(axis2);
-    _inputHandler.AddController(keyboard);
+    SceneInitializer sceneInitializer;
 
-    SDL_Surface* imageSurface = IMG_Load("sprites/PlayerSprites/playerHead.png");
-    if (imageSurface == nullptr)
-    {
-        LOG_INFO("HH");
-    }
-
-    SDL_Texture* imageTexture = SDL_CreateTextureFromSurface(_renderer, imageSurface);
-    SDL_FreeSurface(imageSurface);
-
-    SDL_Rect sourceTextureRect;
-    result = SDL_QueryTexture(imageTexture, NULL, NULL, &sourceTextureRect.w, &sourceTextureRect.h);
-    if (result == 0)
-    {
-        LOG_INFO("COOL");
-    }
-
-    sourceTextureRect.x = 0;
-    sourceTextureRect.y = 0;
-
-    GameEntity currentTickEntity = _activeScene.CreateGameEntity();
-    currentTickEntity.AddComponent<CurrentTickComponent>();
-
-    ScriptSystem* scriptSystem = new ScriptSystem();
-    _activeScene.AddUpdateSystem(scriptSystem);
-    _activeScene.AddTickSystem(scriptSystem);
-    NetworkSystem* networkSystem = new NetworkSystem();
-
-    if (clientOrServer == 0)
-    {
-        networkSystem->Initialize(_renderer, &_activeScene, NetLib::PeerType::ServerMode, keyboard);
-    }
-    else if (clientOrServer == 1)
-    {
-        networkSystem->Initialize(_renderer, &_activeScene, NetLib::PeerType::ClientMode, keyboard);
-    }
-
-    _activeScene.AddPreTickSystem(networkSystem);
-    _activeScene.AddPosTickSystem(networkSystem);
+    NetLib::PeerType peerType = clientOrServer == 0 ? NetLib::PeerType::ServerMode : NetLib::PeerType::ClientMode;
+    sceneInitializer.InitializeScene(_activeScene, peerType, _renderer, _inputHandler);
 
     return true;
 }
@@ -172,7 +115,7 @@ void Game::Render()
 
 bool Game::Release()
 {
-    //_networkSystem.Release();
+    NetLib::Initializer::Finalize();
 
     SDL_DestroyRenderer(_renderer);
     SDL_DestroyWindow(_window);
