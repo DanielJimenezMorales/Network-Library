@@ -12,8 +12,9 @@
 #include "KeyboardController.h"
 #include "InputActionIdsConfiguration.h"
 #include "InputHandler.h"
+#include "TextureLoader.h"
 
-void SceneInitializer::InitializeScene(Scene& scene, NetLib::PeerType networkPeerType, SDL_Renderer* renderer, InputHandler& inputHandler) const
+void SceneInitializer::InitializeScene(Scene& scene, NetLib::PeerType networkPeerType, TextureLoader* textureLoader, InputHandler& inputHandler) const
 {
     //TODO Decouple SDL renderer. I dont want this method a renderer parameter. Create a "Texture loader" or something like that and use it there. This class will only act as a
     // consumer asking for certain textures and or surfaces. Maybe based on an ID
@@ -48,7 +49,7 @@ void SceneInitializer::InitializeScene(Scene& scene, NetLib::PeerType networkPee
     //TODO Make this initializer internal when calling to start
     NetLib::Initializer::Initialize();
     NetworkEntityFactory* networkEntityFactory = new NetworkEntityFactory();
-    networkEntityFactory->SetRenderer(renderer); //TODO this shouldn't need a renderer. Decouple it
+    networkEntityFactory->SetTextureLoader(textureLoader);
     networkEntityFactory->SetScene(&scene);
     networkEntityFactory->SetPeerType(networkPeerType);
     networkEntityFactory->SetKeyboard(keyboard);

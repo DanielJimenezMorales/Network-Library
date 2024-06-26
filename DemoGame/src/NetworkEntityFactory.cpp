@@ -1,6 +1,5 @@
 #include "NetworkEntityFactory.h"
 #include "GameEntity.hpp"
-#include "SDL.h"
 #include "SpriteRendererComponent.h"
 #include "TransformComponent.h"
 #include "ScriptComponent.h"
@@ -8,10 +7,11 @@
 #include "InputComponent.h"
 #include "PlayerNetworkComponent.h"
 #include "Scene.h"
+#include "TextureLoader.h"
 
-void NetworkEntityFactory::SetRenderer(SDL_Renderer* renderer)
+void NetworkEntityFactory::SetTextureLoader(TextureLoader* textureLoader)
 {
-	_renderer = renderer;
+	_textureLoader = textureLoader;
 }
 
 void NetworkEntityFactory::SetScene(Scene* scene)
@@ -31,23 +31,14 @@ void NetworkEntityFactory::SetPeerType(NetLib::PeerType peerType)
 
 int NetworkEntityFactory::CreateNetworkEntityObject(uint32_t networkEntityType, uint32_t networkEntityId, float posX, float posY, NetLib::NetworkVariableChangesHandler* networkVariableChangeHandler)
 {
-	SDL_Surface* imageSurface = IMG_Load("sprites/PlayerSprites/playerHead.png");
-
-	SDL_Texture* imageTexture = SDL_CreateTextureFromSurface(_renderer, imageSurface);
-	SDL_FreeSurface(imageSurface);
-
-	SDL_Rect sourceTextureRect;
-	int result = SDL_QueryTexture(imageTexture, NULL, NULL, &sourceTextureRect.w, &sourceTextureRect.h);
-
-	sourceTextureRect.x = 0;
-	sourceTextureRect.y = 0;
+	Texture* texture = _textureLoader->LoadTexture("sprites/PlayerSprites/playerHead.png");
 
 	GameEntity entity = _scene->CreateGameEntity();
 	TransformComponent& transform = entity.GetComponent<TransformComponent>();
 	transform.posX = posX;
 	transform.posY = posY;
 
-	entity.AddComponent<SpriteRendererComponent>(sourceTextureRect, imageTexture);
+	entity.AddComponent<SpriteRendererComponent>(texture);
 
 	if (_peerType == NetLib::ServerMode)
 	{

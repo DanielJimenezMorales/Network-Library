@@ -3,6 +3,7 @@
 
 #include "Scene.h"
 #include "InputHandler.h"
+#include "TextureLoader.h"
 
 const unsigned int FIXED_FRAMES_PER_SECOND = 50;
 const float FIXED_FRAME_TARGET_DURATION = 1.0f / FIXED_FRAMES_PER_SECOND;
@@ -34,4 +35,5 @@ private:
 	Scene _activeScene;
 	//TODO The input handler should also be witin an ECS component
 	InputHandler _inputHandler;
+	TextureLoader _textureLoader;
 };

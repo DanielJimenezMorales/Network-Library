@@ -30,10 +30,12 @@ bool Game::Init()
     SDL_SetRenderDrawColor(_renderer, 255, 0, 0, 255);
     _isRunning = true;
 
+    _textureLoader.Init(_renderer);
+
     SceneInitializer sceneInitializer;
 
     NetLib::PeerType peerType = clientOrServer == 0 ? NetLib::PeerType::ServerMode : NetLib::PeerType::ClientMode;
-    sceneInitializer.InitializeScene(_activeScene, peerType, _renderer, _inputHandler);
+    sceneInitializer.InitializeScene(_activeScene, peerType, &_textureLoader, _inputHandler);
 
     return true;
 }

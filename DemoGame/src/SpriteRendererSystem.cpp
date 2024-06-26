@@ -4,6 +4,7 @@
 #include "EntityContainer.h"
 #include "GameEntity.hpp"
 #include <vector>
+#include "TextureLoader.h"
 
 void SpriteRendererSystem::Render(EntityContainer& entityContainer, SDL_Renderer* renderer) const
 {
@@ -16,10 +17,11 @@ void SpriteRendererSystem::Render(EntityContainer& entityContainer, SDL_Renderer
 		const SpriteRendererComponent& spriteRenderer = cit->GetComponent<SpriteRendererComponent>();
 		const TransformComponent& transform = cit->GetComponent<TransformComponent>();
 
-		destRect.x = transform.posX - (spriteRenderer.sourceRect.w / 2);
-		destRect.y = transform.posY - (spriteRenderer.sourceRect.h / 2);
-		destRect.w = spriteRenderer.sourceRect.w;
-		destRect.h = spriteRenderer.sourceRect.h;
-		SDL_RenderCopy(renderer, spriteRenderer.texture, &spriteRenderer.sourceRect, &destRect);
+		Texture* texture = spriteRenderer.texture;
+		destRect.x = transform.posX - (texture->GetDimensions().w / 2);
+		destRect.y = transform.posY - (texture->GetDimensions().h / 2);
+		destRect.w = texture->GetDimensions().w;
+		destRect.h = texture->GetDimensions().h;
+		SDL_RenderCopy(renderer, texture->GetRaw(), &texture->GetDimensions(), &destRect);
 	}
 }
