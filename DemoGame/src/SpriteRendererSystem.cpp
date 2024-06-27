@@ -4,7 +4,7 @@
 #include "EntityContainer.h"
 #include "GameEntity.hpp"
 #include <vector>
-#include "TextureLoader.h"
+#include "Texture.h"
 
 void SpriteRendererSystem::Render(EntityContainer& entityContainer, SDL_Renderer* renderer) const
 {

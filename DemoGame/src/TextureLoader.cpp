@@ -1,6 +1,13 @@
 #include "TextureLoader.h"
 #include "Logger.h"
+#include "Texture.h"
+#include <SDL_image.h>
 #include <cassert>
+
+TextureLoader::~TextureLoader()
+{
+	ClearCache();
+}
 
 void TextureLoader::Init(SDL_Renderer* renderer)
 {
@@ -9,15 +16,36 @@ void TextureLoader::Init(SDL_Renderer* renderer)
 
 Texture* TextureLoader::LoadTexture(const char* stringFilePath)
 {
-	Texture* texture = nullptr;
 	if (IsTextureCached(stringFilePath))
 	{
-		texture = GetCachedTexture(stringFilePath);
+		Texture* texture = GetCachedTexture(stringFilePath);
 		assert(texture != nullptr);
 
 		return texture;
 	}
 
+	return CreateTexture(stringFilePath);
+}
+
+bool TextureLoader::IsTextureCached(const char* stringFilePath) const
+{
+	return GetCachedTexture(stringFilePath) != nullptr;
+}
+
+Texture* TextureLoader::GetCachedTexture(const char* stringFilePath) const
+{
+	Texture* texture = nullptr;
+	auto textureFound = _stringFilePathToCachedTextureMap.find(stringFilePath);
+	if (textureFound != _stringFilePathToCachedTextureMap.end())
+	{
+		texture = textureFound->second;
+	}
+
+	return texture;
+}
+
+Texture* TextureLoader::CreateTexture(const char* stringFilePath)
+{
 	SDL_Surface* imageSurface = IMG_Load(stringFilePath);
 	if (imageSurface == nullptr)
 	{
@@ -47,25 +75,34 @@ Texture* TextureLoader::LoadTexture(const char* stringFilePath)
 	sourceTextureRect.x = 0;
 	sourceTextureRect.y = 0;
 
-	texture = new Texture(imageTexture, sourceTextureRect);
+	Texture* texture = new Texture(imageTexture, sourceTextureRect);
 	assert(texture != nullptr);
 
+	CacheTexture(stringFilePath, texture);
 	return texture;
-}
-
-bool TextureLoader::IsTextureCached(const char* stringFilePath) const
-{
-	return false;
-}
-
-Texture* TextureLoader::GetCachedTexture(const char* stringFilePath) const
-{
-	return nullptr;
 }
 
 void TextureLoader::CacheTexture(const char* stringFilePath, Texture* texture)
 {
-	assert(!IsTextureCached(stringFilePath));
+	assert(texture != nullptr);
 
+	if (IsTextureCached(stringFilePath))
+	{
+		LOG_WARNING("Texture already cached. Texture path: %s", stringFilePath);
+		return;
+	}
 
+	_stringFilePathToCachedTextureMap.emplace(stringFilePath, texture);
+}
+
+void TextureLoader::ClearCache()
+{
+	auto it = _stringFilePathToCachedTextureMap.begin();
+	for (; it != _stringFilePathToCachedTextureMap.end(); ++it)
+	{
+		delete it->second;
+		it->second = nullptr;
+	}
+
+	_stringFilePathToCachedTextureMap.clear();
 }

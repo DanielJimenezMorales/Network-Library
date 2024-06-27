@@ -1,27 +1,18 @@
 #pragma once
-#include <SDL_image.h>
+#include <unordered_map>
+#include <string>
 
-class Texture
-{
-public:
-	Texture(SDL_Texture* texture, const SDL_Rect& dimensions) : _texture(texture), _texturePixelDimensions(dimensions)
-	{
-	}
-
-	const SDL_Rect& GetDimensions() const { return _texturePixelDimensions; }
-	SDL_Texture* GetRaw() const { return _texture; }
-
-private:
-	SDL_Texture* _texture;
-	SDL_Rect _texturePixelDimensions;
-};
+class Texture;
+struct SDL_Renderer;
 
 class TextureLoader
 {
 public:
-	TextureLoader() : _renderer(nullptr)
+	TextureLoader() : _renderer(nullptr), _stringFilePathToCachedTextureMap()
 	{
 	}
+
+	~TextureLoader();
 
 	void Init(SDL_Renderer* renderer);
 	Texture* LoadTexture(const char* stringFilePath);
@@ -29,7 +20,11 @@ public:
 private:
 	bool IsTextureCached(const char* stringFilePath) const;
 	Texture* GetCachedTexture(const char* stringFilePath) const;
+	Texture* CreateTexture(const char* stringFilePath);
 	void CacheTexture(const char* stringFilePath, Texture* texture);
 
+	void ClearCache();
+
 	SDL_Renderer* _renderer;
+	std::unordered_map<std::string, Texture*> _stringFilePathToCachedTextureMap;
 };
