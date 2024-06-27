@@ -3,7 +3,7 @@
 
 #include "Scene.h"
 #include "InputHandler.h"
-#include "NetworkSystem.h"
+#include "TextureLoader.h"
 
 const unsigned int FIXED_FRAMES_PER_SECOND = 50;
 const float FIXED_FRAME_TARGET_DURATION = 1.0f / FIXED_FRAMES_PER_SECOND;
@@ -22,9 +22,9 @@ private:
 	int CreateWindowAndRenderer();
 
 	void HandleEvents();
-	void PreTick();
+	void PreTick(float tickElapsedTime);
 	void Tick(float tickElapsedTime);
-	void PosTick();
+	void PosTick(float tickElapsedTime);
 	void Update(float elapsedTime);
 	void Render();
 
@@ -33,6 +33,7 @@ private:
 	bool _isRunning;
 
 	Scene _activeScene;
+	//TODO The input handler should also be witin an ECS component
 	InputHandler _inputHandler;
-	NetworkSystem _networkSystem;
+	TextureLoader _textureLoader;
 };

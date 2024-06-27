@@ -1,18 +1,8 @@
-#include <SDL_image.h>
-
 #include "Game.h"
 #include "Logger.h"
-#include "TimeClock.h"
-#include "GameEntity.hpp"
-#include "SpriteRendererComponent.h"
-#include "TransformComponent.h"
-#include "ScriptComponent.h"
-#include "PlayerMovement.h"
-#include "KeyboardController.h"
-#include "InputComponent.h"
-#include "InputActionIdsConfiguration.h"
-
-KeyboardController* keyboard;
+#include "Peer.h"
+#include "Initializer.h"
+#include "SceneInitializer.h"
 
 bool Game::Init()
 {
@@ -40,54 +30,13 @@ bool Game::Init()
     SDL_SetRenderDrawColor(_renderer, 255, 0, 0, 255);
     _isRunning = true;
 
-    //TEMP
-    keyboard = new KeyboardController();
-    InputButton button(JUMP_BUTTON, SDLK_q);
-    keyboard->AddButtonMap(button);
-    InputAxis axis(HORIZONTAL_AXIS, SDLK_d, SDLK_a);
-    keyboard->AddAxisMap(axis);
-    InputAxis axis2(VERTICAL_AXIS, SDLK_s, SDLK_w);
-    keyboard->AddAxisMap(axis2);
-    _inputHandler.AddController(keyboard);
+    _textureLoader.Init(_renderer);
 
-    SDL_Surface* imageSurface = IMG_Load("sprites/PlayerSprites/playerHead.png");
-    if (imageSurface == nullptr)
-    {
-        LOG_INFO("HH");
-    }
+    SceneInitializer sceneInitializer;
 
-    SDL_Texture* imageTexture = SDL_CreateTextureFromSurface(_renderer, imageSurface);
-    SDL_FreeSurface(imageSurface);
+    NetLib::PeerType peerType = clientOrServer == 0 ? NetLib::PeerType::ServerMode : NetLib::PeerType::ClientMode;
+    sceneInitializer.InitializeScene(_activeScene, peerType, &_textureLoader, _inputHandler);
 
-    SDL_Rect sourceTextureRect;
-    result = SDL_QueryTexture(imageTexture, NULL, NULL, &sourceTextureRect.w, &sourceTextureRect.h);
-    if (result == 0)
-    {
-        LOG_INFO("COOL");
-    }
-
-    sourceTextureRect.x = 0;
-    sourceTextureRect.y = 0;
-
-    /*GameEntity playerEntity = _activeScene.CreateGameEntity();
-    playerEntity.AddComponent<SpriteRendererComponent>(sourceTextureRect, imageTexture);
-    TransformComponent& playerTransform = playerEntity.GetComponent<TransformComponent>();
-    playerTransform.posX = 256;
-    playerTransform.posY = 56;
-
-    playerEntity.AddComponent<InputComponent>(keyboard);
-
-    playerEntity.AddComponent<ScriptComponent>().Bind<PlayerMovement>();*/
-
-
-    if (clientOrServer == 0)
-    {
-        _networkSystem.Initialize(_renderer, &_activeScene, NetLib::PeerType::ServerMode, keyboard);
-    }
-    else if (clientOrServer == 1)
-    {
-        _networkSystem.Initialize(_renderer, &_activeScene, NetLib::PeerType::ClientMode, keyboard);
-    }
     return true;
 }
 
@@ -105,9 +54,9 @@ void Game::GameLoop()
 
         while (accumulator >= FIXED_FRAME_TARGET_DURATION)
         {
-            PreTick();
+            PreTick(FIXED_FRAME_TARGET_DURATION);
             Tick(FIXED_FRAME_TARGET_DURATION);
-            PosTick();
+            PosTick(FIXED_FRAME_TARGET_DURATION);
             accumulator -= FIXED_FRAME_TARGET_DURATION;
         }
         
@@ -137,21 +86,19 @@ void Game::HandleEvents()
     _inputHandler.PostHandleEvents();
 }
 
-void Game::PreTick()
+void Game::PreTick(float tickElapsedTime)
 {
-    //Get all network info from Remote peers and process it
-    _networkSystem.PreTick();
+    _activeScene.PreTick(tickElapsedTime);
 }
 
 void Game::Tick(float tickElapsedTime)
 {
     _activeScene.Tick(tickElapsedTime);
-    _networkSystem.Tick(tickElapsedTime);
 }
 
-void Game::PosTick()
+void Game::PosTick(float tickElapsedTime)
 {
-    //SendData, disconnect, etc
+    _activeScene.PosTick(tickElapsedTime);
 }
 
 void Game::Update(float elapsedTime)
@@ -170,7 +117,7 @@ void Game::Render()
 
 bool Game::Release()
 {
-    _networkSystem.Release();
+    NetLib::Initializer::Finalize();
 
     SDL_DestroyRenderer(_renderer);
     SDL_DestroyWindow(_window);

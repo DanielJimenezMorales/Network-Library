@@ -1,65 +1,46 @@
 #include "NetworkSystem.h"
-#include "Initializer.h"
 #include "Client.h"
 #include "Server.h"
 #include "Logger.h"
+#include "CurrentTickComponent.h"
+#include "EntityContainer.h"
+#include "GameEntity.hpp"
+#include "NetworkPeerComponent.h"
+#include <vector>
 
-void NetworkSystem::Initialize(SDL_Renderer* renderer, Scene* scene, NetLib::PeerType type, IInputController* inputController)
+void NetworkSystem::PreTick(EntityContainer& entityContainer, float elapsedTime) const
 {
-	NetLib::Initializer::Initialize();
+	GameEntity networkPeerEntity = entityContainer.GetFirstEntityOfType<NetworkPeerComponent>();
+	NetworkPeerComponent& networkPeerComponent = networkPeerEntity.GetComponent<NetworkPeerComponent>();
 
-	switch (type)
+	if (networkPeerComponent.peer->GetConnectionState() == NetLib::PCS_Disconnected)
 	{
-	case NetLib::PeerType::ClientMode:
-		_networkPeer = new NetLib::Client(5);
-		break;
-	case NetLib::PeerType::ServerMode:
-		_networkPeer = new NetLib::Server(2);
-		break;
+		networkPeerComponent.peer->Start();
 	}
-
-	_networkEntityFactory.SetRenderer(renderer);
-	_networkEntityFactory.SetScene(scene);
-	_networkEntityFactory.SetPeerType(type);
-	_networkEntityFactory.SetKeyboard(inputController);
-	_networkPeer->RegisterNetworkEntityFactory(&_networkEntityFactory);
-
-	if(!_networkPeer->Start())
+	else
 	{
-		LOG_ERROR("Peer startup failed");
+		networkPeerComponent.peer->PreTick();
 	}
 }
 
-void NetworkSystem::PreTick()
+void NetworkSystem::PosTick(EntityContainer& entityContainer, float elapsedTime) const
 {
-	_networkPeer->PreTick();
-}
 
-void NetworkSystem::Tick(float elapsedTime)
-{
-	_networkPeer->Tick(elapsedTime);
+	GameEntity networkPeerEntity = entityContainer.GetFirstEntityOfType<NetworkPeerComponent>();
+	NetworkPeerComponent& networkPeerComponent = networkPeerEntity.GetComponent<NetworkPeerComponent>();
+	networkPeerComponent.peer->Tick(elapsedTime);
+
+	GameEntity gameEntity = entityContainer.GetFirstEntityOfType<CurrentTickComponent>();
+	CurrentTickComponent& currentTickComponent = gameEntity.GetComponent<CurrentTickComponent>();
 
 	//TEMP
-	if (_networkPeer->GetPeerType() == NetLib::PeerType::ClientMode)
+	if (networkPeerComponent.peer->GetPeerType() == NetLib::PeerType::ClientMode)
 	{
 		return;
 	}
-	if (_currentTick == 10)
+	if (currentTickComponent.currentTick == 10)
 	{
-		static_cast<NetLib::Server*>(_networkPeer)->CreateNetworkEntity(10, 256.f, 256.f);
+		static_cast<NetLib::Server*>(networkPeerComponent.peer)->CreateNetworkEntity(10, 256.f, 256.f);
 	}
-	++_currentTick;
-}
-
-void NetworkSystem::Release()
-{
-	if(!_networkPeer->Stop())
-	{
-		LOG_ERROR("Peer stop failed");
-	}
-
-	delete _networkPeer;
-	_networkPeer = nullptr;
-
-	NetLib::Initializer::Finalize();
+	++currentTickComponent.currentTick;
 }
