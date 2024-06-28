@@ -14,6 +14,9 @@ public:
 	void X(float newX) { _x = newX; }
 	void Y(float newY) { _y = newY; }
 
+	void AddToX(float newX) { _x += newX; }
+	void AddToY(float newY) { _y += newY; }
+
 	// +
 	Vec2f operator+(const Vec2f& rhs) const { return Vec2f(_x + rhs._x, _y + rhs._y); }
 	Vec2f operator+(float rhs) const { return Vec2f(_x + rhs, _y + rhs); }

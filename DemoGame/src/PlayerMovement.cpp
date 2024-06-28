@@ -23,19 +23,17 @@ void PlayerMovement::Tick(float tickElapsedTime)
 
 Vec2f PlayerMovement::UpdatePosition(const Vec2f& inputs, const TransformComponent& transform, float elapsedTime) const
 {
-	float currentXPosition = transform.posX;
-	float currentYPosition = transform.posY;
+	Vec2f currentPosition = transform.position;
 
-	currentXPosition += inputs.X() * _speed * elapsedTime;
-	currentYPosition += inputs.Y() * _speed * elapsedTime;
+	currentPosition.AddToX(inputs.X() * _speed * elapsedTime);
+	currentPosition.AddToY(inputs.Y() * _speed * elapsedTime);
 
-	return Vec2f(currentXPosition, currentYPosition);
+	return currentPosition;
 }
 
 void PlayerMovement::ApplyPosition(const Vec2f& position, TransformComponent& transform)
 {
-	transform.posX = position.X();
-	transform.posY = position.Y();
+	transform.position = position;
 }
 
 void PlayerDummyMovement::Tick(float tickElapsedTime)
@@ -43,6 +41,5 @@ void PlayerDummyMovement::Tick(float tickElapsedTime)
 	TransformComponent& transform = GetComponent<TransformComponent>();
 	PlayerNetworkComponent& networkComponent = GetComponent<PlayerNetworkComponent>();
 
-	transform.posX = networkComponent.posX.Get();
-	transform.posY = networkComponent.posY.Get();
+	transform.position = Vec2f(networkComponent.posX.Get(), networkComponent.posY.Get());
 }

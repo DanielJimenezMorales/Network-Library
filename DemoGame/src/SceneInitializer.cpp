@@ -16,10 +16,6 @@
 
 void SceneInitializer::InitializeScene(Scene& scene, NetLib::PeerType networkPeerType, TextureLoader* textureLoader, InputHandler& inputHandler) const
 {
-    //TODO Decouple SDL renderer. I dont want this method a renderer parameter. Create a "Texture loader" or something like that and use it there. This class will only act as a
-    // consumer asking for certain textures and or surfaces. Maybe based on an ID
-
-    //TODO 
     //Inputs
     KeyboardController* keyboard = new KeyboardController();
     InputButton button(JUMP_BUTTON, SDLK_q);

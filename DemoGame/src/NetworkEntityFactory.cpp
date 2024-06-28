@@ -35,8 +35,7 @@ int NetworkEntityFactory::CreateNetworkEntityObject(uint32_t networkEntityType, 
 
 	GameEntity entity = _scene->CreateGameEntity();
 	TransformComponent& transform = entity.GetComponent<TransformComponent>();
-	transform.posX = posX;
-	transform.posY = posY;
+	transform.position = Vec2f(posX, posY);
 
 	entity.AddComponent<SpriteRendererComponent>(texture);
 
