@@ -13,6 +13,8 @@
 #include "InputActionIdsConfiguration.h"
 #include "InputHandler.h"
 #include "TextureLoader.h"
+#include "PlayerControllerSystem.h"
+#include "RemotePlayerControllerSystem.h"
 
 void SceneInitializer::InitializeScene(Scene& scene, NetLib::PeerType networkPeerType, TextureLoader* textureLoader, InputHandler& inputHandler) const
 {
@@ -54,6 +56,12 @@ void SceneInitializer::InitializeScene(Scene& scene, NetLib::PeerType networkPee
 
 	//Populate systems
     //TODO Create a system storage in order to be able to free them at the end
+    PlayerControllerSystem* playerControllerSystem = new PlayerControllerSystem();
+    scene.AddTickSystem(playerControllerSystem);
+
+    RemotePlayerControllerSystem* remotePlayerControllerSystem = new RemotePlayerControllerSystem();
+    scene.AddTickSystem(remotePlayerControllerSystem);
+
     ScriptSystem* scriptSystem = new ScriptSystem();
     scene.AddUpdateSystem(scriptSystem);
     scene.AddTickSystem(scriptSystem);

@@ -8,6 +8,8 @@
 #include "PlayerNetworkComponent.h"
 #include "Scene.h"
 #include "TextureLoader.h"
+#include "PlayerControllerComponent.h"
+#include "RemotePlayerControllerComponent.h"
 
 void NetworkEntityFactory::SetTextureLoader(TextureLoader* textureLoader)
 {
@@ -41,12 +43,15 @@ int NetworkEntityFactory::CreateNetworkEntityObject(uint32_t networkEntityType, 
 
 	if (_peerType == NetLib::ServerMode)
 	{
+		//TODO Make the input component within a dedicated input entity and not specific from one entity. Also, deactivate it on server. Client should send inputs.
 		entity.AddComponent<InputComponent>(_inputController);
-		entity.AddComponent<ScriptComponent>().Bind<PlayerMovement>();
+		entity.AddComponent<PlayerControllerComponent>(networkVariableChangeHandler, networkEntityId);
+		//entity.AddComponent<ScriptComponent>().Bind<PlayerMovement>();
 	}
 	else
 	{
-		entity.AddComponent<ScriptComponent>().Bind<PlayerDummyMovement>();
+		entity.AddComponent<RemotePlayerControllerComponent>(networkVariableChangeHandler, networkEntityId);
+		//entity.AddComponent<ScriptComponent>().Bind<PlayerDummyMovement>();
 	}
 
 	entity.AddComponent<PlayerNetworkComponent>(networkVariableChangeHandler, networkEntityId);
