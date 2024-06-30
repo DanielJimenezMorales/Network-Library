@@ -27,23 +27,20 @@ void PlayerControllerSystem::TickPlayerController(GameEntity& playerEntity, floa
 
 	TransformComponent& transform = playerEntity.GetComponent<TransformComponent>();
 
-	Vec2f updatedPosition = UpdatePosition(inputs, transform, elapsedTime);
+	PlayerControllerComponent& networkComponent = playerEntity.GetComponent<PlayerControllerComponent>();
+	Vec2f updatedPosition = UpdatePosition(inputs, transform, networkComponent.configuration, elapsedTime);
 	ApplyPosition(updatedPosition, transform);
 
-	PlayerControllerComponent& networkComponent = playerEntity.GetComponent<PlayerControllerComponent>();
 	networkComponent.posX = updatedPosition.X();
 	networkComponent.posY = updatedPosition.Y();
 }
 
-Vec2f PlayerControllerSystem::UpdatePosition(const Vec2f& inputs, const TransformComponent& transform, float elapsedTime) const
+Vec2f PlayerControllerSystem::UpdatePosition(const Vec2f& inputs, const TransformComponent& transform, const PlayerControllerConfiguration& configuration, float elapsedTime) const
 {
-	//temp
-	const PlayerControllerConfiguration config;
-
 	Vec2f currentPosition = transform.position;
 
-	currentPosition.AddToX(inputs.X() * config.movementSpeed * elapsedTime);
-	currentPosition.AddToY(inputs.Y() * config.movementSpeed * elapsedTime);
+	currentPosition.AddToX(inputs.X() * configuration.movementSpeed * elapsedTime);
+	currentPosition.AddToY(inputs.Y() * configuration.movementSpeed * elapsedTime);
 
 	return currentPosition;
 }

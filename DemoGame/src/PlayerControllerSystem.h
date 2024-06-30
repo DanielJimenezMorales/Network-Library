@@ -5,12 +5,7 @@
 class GameEntity;
 struct Vec2f;
 struct TransformComponent;
-
-//TODO Add this within PlayerControllerComponent
-struct PlayerControllerConfiguration
-{
-	uint32_t movementSpeed = 250;
-};
+struct PlayerControllerConfiguration;
 
 class PlayerControllerSystem : public ITickSystem
 {
@@ -23,6 +18,6 @@ public:
 
 private:
 	void TickPlayerController(GameEntity& playerEntity, float elapsedTime) const;
-	Vec2f UpdatePosition(const Vec2f& inputs, const TransformComponent& transform, float elapsedTime) const;
+	Vec2f UpdatePosition(const Vec2f& inputs, const TransformComponent& transform, const PlayerControllerConfiguration& configuration, float elapsedTime) const;
 	void ApplyPosition(const Vec2f& position, TransformComponent& transform) const;
 };

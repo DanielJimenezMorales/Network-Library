@@ -45,7 +45,9 @@ int NetworkEntityFactory::CreateNetworkEntityObject(uint32_t networkEntityType, 
 	{
 		//TODO Make the input component within a dedicated input entity and not specific from one entity. Also, deactivate it on server. Client should send inputs.
 		entity.AddComponent<InputComponent>(_inputController);
-		entity.AddComponent<PlayerControllerComponent>(networkVariableChangeHandler, networkEntityId);
+		PlayerControllerConfiguration playerConfiguration;
+		playerConfiguration.movementSpeed = 250;
+		entity.AddComponent<PlayerControllerComponent>(networkVariableChangeHandler, networkEntityId, playerConfiguration);
 		//entity.AddComponent<ScriptComponent>().Bind<PlayerMovement>();
 	}
 	else

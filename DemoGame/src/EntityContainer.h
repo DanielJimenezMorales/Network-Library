@@ -97,7 +97,8 @@ inline std::vector<GameEntity> EntityContainer::GetEntitiesOfType()
 {
 	std::vector<GameEntity> entitiesFound;
 	auto& view = _entities.view<T>();
-	entitiesFound.reserve(view.size());
+	//TODO See why this size_hint is not working
+	//entitiesFound.reserve(view.size_hint());
 
 	for (auto& entity : view)
 	{
@@ -112,7 +113,9 @@ inline const std::vector<GameEntity> EntityContainer::GetEntitiesOfType() const
 {
 	std::vector<GameEntity> entitiesFound;
 	auto& view = _entities.view<T>();
-	entitiesFound.reserve(view.size());
+
+	//TODO See why this size_hint is not working
+	//entitiesFound.reserve(view.size_hint());
 
 	for (auto& entity : view)
 	{
