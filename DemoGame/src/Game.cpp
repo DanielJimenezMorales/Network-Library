@@ -3,6 +3,8 @@
 #include "Peer.h"
 #include "Initializer.h"
 #include "SceneInitializer.h"
+#include "ServiceLocator.h"
+#include "TextureLoader.h"
 
 bool Game::Init()
 {
@@ -30,12 +32,16 @@ bool Game::Init()
     SDL_SetRenderDrawColor(_renderer, 255, 0, 0, 255);
     _isRunning = true;
 
-    _textureLoader.Init(_renderer);
+
+    ServiceLocator& serviceLocator = ServiceLocator::CreateInstance();
+    TextureLoader* textureLoader = new TextureLoader();
+    textureLoader->Init(_renderer);
+    serviceLocator.RegisterTextureLoader(textureLoader);
 
     SceneInitializer sceneInitializer;
 
     NetLib::PeerType peerType = clientOrServer == 0 ? NetLib::PeerType::ServerMode : NetLib::PeerType::ClientMode;
-    sceneInitializer.InitializeScene(_activeScene, peerType, &_textureLoader, _inputHandler);
+    sceneInitializer.InitializeScene(_activeScene, peerType, _inputHandler);
 
     return true;
 }
@@ -118,6 +124,10 @@ void Game::Render()
 bool Game::Release()
 {
     NetLib::Initializer::Finalize();
+
+    ServiceLocator& serviceLocator = ServiceLocator::GetInstance();
+    serviceLocator.UnregisterAll();
+    ServiceLocator::DestroyInstance();
 
     SDL_DestroyRenderer(_renderer);
     SDL_DestroyWindow(_window);

@@ -25,7 +25,6 @@ void NetworkSystem::PreTick(EntityContainer& entityContainer, float elapsedTime)
 
 void NetworkSystem::PosTick(EntityContainer& entityContainer, float elapsedTime) const
 {
-
 	GameEntity networkPeerEntity = entityContainer.GetFirstEntityOfType<NetworkPeerComponent>();
 	NetworkPeerComponent& networkPeerComponent = networkPeerEntity.GetComponent<NetworkPeerComponent>();
 	networkPeerComponent.peer->Tick(elapsedTime);

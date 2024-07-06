@@ -3,25 +3,16 @@
 #include "SpriteRendererComponent.h"
 #include "TransformComponent.h"
 #include "ScriptComponent.h"
-#include "PlayerMovement.h"
-#include "InputComponent.h"
 #include "PlayerNetworkComponent.h"
 #include "Scene.h"
-#include "TextureLoader.h"
-
-void NetworkEntityFactory::SetTextureLoader(TextureLoader* textureLoader)
-{
-	_textureLoader = textureLoader;
-}
+#include "ServiceLocator.h"
+#include "ITextureLoader.h"
+#include "PlayerControllerComponent.h"
+#include "RemotePlayerControllerComponent.h"
 
 void NetworkEntityFactory::SetScene(Scene* scene)
 {
 	_scene = scene;
-}
-
-void NetworkEntityFactory::SetKeyboard(IInputController* inputController)
-{
-	_inputController = inputController;
 }
 
 void NetworkEntityFactory::SetPeerType(NetLib::PeerType peerType)
@@ -31,23 +22,25 @@ void NetworkEntityFactory::SetPeerType(NetLib::PeerType peerType)
 
 int NetworkEntityFactory::CreateNetworkEntityObject(uint32_t networkEntityType, uint32_t networkEntityId, float posX, float posY, NetLib::NetworkVariableChangesHandler* networkVariableChangeHandler)
 {
-	Texture* texture = _textureLoader->LoadTexture("sprites/PlayerSprites/playerHead.png");
+	ServiceLocator& serviceLocator = ServiceLocator::GetInstance();
+	ITextureLoader& textureLoader = serviceLocator.GetTextureLoader();
+	Texture* texture = textureLoader.LoadTexture("sprites/PlayerSprites/playerHead.png");
 
 	GameEntity entity = _scene->CreateGameEntity();
 	TransformComponent& transform = entity.GetComponent<TransformComponent>();
-	transform.posX = posX;
-	transform.posY = posY;
+	transform.position = Vec2f(posX, posY);
 
 	entity.AddComponent<SpriteRendererComponent>(texture);
 
 	if (_peerType == NetLib::ServerMode)
 	{
-		entity.AddComponent<InputComponent>(_inputController);
-		entity.AddComponent<ScriptComponent>().Bind<PlayerMovement>();
+		PlayerControllerConfiguration playerConfiguration;
+		playerConfiguration.movementSpeed = 250;
+		entity.AddComponent<PlayerControllerComponent>(networkVariableChangeHandler, networkEntityId, playerConfiguration);
 	}
 	else
 	{
-		entity.AddComponent<ScriptComponent>().Bind<PlayerDummyMovement>();
+		entity.AddComponent<RemotePlayerControllerComponent>(networkVariableChangeHandler, networkEntityId);
 	}
 
 	entity.AddComponent<PlayerNetworkComponent>(networkVariableChangeHandler, networkEntityId);

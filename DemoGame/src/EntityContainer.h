@@ -1,5 +1,6 @@
 #pragma once
 #include "entt.hpp"
+#include "ComponentView.hpp"
 #include <vector>
 #include <cassert>
 
@@ -45,7 +46,13 @@ public:
 	template <typename T1, typename T2>
 	const std::vector<GameEntity> GetEntitiesOfBothTypes() const;
 
-	//TODO Create a version of GetEntitiesOfType that only returns components instead of GameEntity. Useful if we just simply want to process components and not the whole entity. Maybe call it GetEntityComponentsOfType...
+	template <typename T>
+	ComponentView<T> GetComponentsOfType();
+
+	template <typename T>
+	const ComponentView<T> GetComponentsOfType() const;
+
+	//TODO Create a version of GetEntityOfType that only returns components instead of GameEntity. Useful if we just simply want to process components and not the whole entity. Maybe call it GetEntityComponentsOfType...
 
 private:
 	entt::registry _entities;
@@ -90,7 +97,8 @@ inline std::vector<GameEntity> EntityContainer::GetEntitiesOfType()
 {
 	std::vector<GameEntity> entitiesFound;
 	auto& view = _entities.view<T>();
-	entitiesFound.reserve(view.size());
+	//TODO See why this size_hint is not working
+	//entitiesFound.reserve(view.size_hint());
 
 	for (auto& entity : view)
 	{
@@ -105,7 +113,9 @@ inline const std::vector<GameEntity> EntityContainer::GetEntitiesOfType() const
 {
 	std::vector<GameEntity> entitiesFound;
 	auto& view = _entities.view<T>();
-	entitiesFound.reserve(view.size());
+
+	//TODO See why this size_hint is not working
+	//entitiesFound.reserve(view.size_hint());
 
 	for (auto& entity : view)
 	{
@@ -159,4 +169,16 @@ inline const std::vector<GameEntity> EntityContainer::GetEntitiesOfBothTypes() c
 	}
 
 	return entitiesFound;
+}
+
+template<typename T>
+inline ComponentView<T> EntityContainer::GetComponentsOfType()
+{
+	return ComponentView<T>(&_entities);
+}
+
+template<typename T>
+inline const ComponentView<T> EntityContainer::GetComponentsOfType() const
+{
+	return ComponentView<T>(&_entities);
 }

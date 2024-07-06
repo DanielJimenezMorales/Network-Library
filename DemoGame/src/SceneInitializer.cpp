@@ -12,14 +12,13 @@
 #include "KeyboardController.h"
 #include "InputActionIdsConfiguration.h"
 #include "InputHandler.h"
-#include "TextureLoader.h"
+#include "ITextureLoader.h"
+#include "PlayerControllerSystem.h"
+#include "RemotePlayerControllerSystem.h"
+#include "InputComponent.h"
 
-void SceneInitializer::InitializeScene(Scene& scene, NetLib::PeerType networkPeerType, TextureLoader* textureLoader, InputHandler& inputHandler) const
+void SceneInitializer::InitializeScene(Scene& scene, NetLib::PeerType networkPeerType, InputHandler& inputHandler) const
 {
-    //TODO Decouple SDL renderer. I dont want this method a renderer parameter. Create a "Texture loader" or something like that and use it there. This class will only act as a
-    // consumer asking for certain textures and or surfaces. Maybe based on an ID
-
-    //TODO 
     //Inputs
     KeyboardController* keyboard = new KeyboardController();
     InputButton button(JUMP_BUTTON, SDLK_q);
@@ -31,6 +30,9 @@ void SceneInitializer::InitializeScene(Scene& scene, NetLib::PeerType networkPee
     inputHandler.AddController(keyboard);
 
 	//Populate entities
+    GameEntity inputsEntity = scene.CreateGameEntity();
+    inputsEntity.AddComponent<InputComponent>(keyboard);
+
     GameEntity currentTickEntity = scene.CreateGameEntity();
     currentTickEntity.AddComponent<CurrentTickComponent>();
 
@@ -49,15 +51,19 @@ void SceneInitializer::InitializeScene(Scene& scene, NetLib::PeerType networkPee
     //TODO Make this initializer internal when calling to start
     NetLib::Initializer::Initialize();
     NetworkEntityFactory* networkEntityFactory = new NetworkEntityFactory();
-    networkEntityFactory->SetTextureLoader(textureLoader);
     networkEntityFactory->SetScene(&scene);
     networkEntityFactory->SetPeerType(networkPeerType);
-    networkEntityFactory->SetKeyboard(keyboard);
     networkPeer->RegisterNetworkEntityFactory(networkEntityFactory);
     networkPeerComponent.peer = networkPeer;
 
 	//Populate systems
     //TODO Create a system storage in order to be able to free them at the end
+    PlayerControllerSystem* playerControllerSystem = new PlayerControllerSystem();
+    scene.AddTickSystem(playerControllerSystem);
+
+    RemotePlayerControllerSystem* remotePlayerControllerSystem = new RemotePlayerControllerSystem();
+    scene.AddTickSystem(remotePlayerControllerSystem);
+
     ScriptSystem* scriptSystem = new ScriptSystem();
     scene.AddUpdateSystem(scriptSystem);
     scene.AddTickSystem(scriptSystem);

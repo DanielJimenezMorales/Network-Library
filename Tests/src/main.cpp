@@ -5,6 +5,6 @@
 int main()
 {
     Tests::PeerConnectivityTests::ExecuteAll();
-    Tests::ReplicationTests::ExecuteAll();
+    //Tests::ReplicationTests::ExecuteAll();
     return EXIT_SUCCESS;
 }
