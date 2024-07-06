@@ -191,4 +191,20 @@ namespace NetLib
 		uint16_t dataSize; //TODO If replication action is destroy, we don't care about this one
 		uint8_t* data; //TODO Free this memory when calling MessageFactory::Release in order to avoid memory leaks
 	};
+
+	class InputStateMessage : public Message
+	{
+	public:
+		InputStateMessage() : dataSize(0), data(nullptr), Message(MessageType::Inputs) {}
+
+		void Write(Buffer& buffer) const override;
+		void Read(Buffer& buffer) override;
+		uint32_t Size() const override;
+
+		void Reset() override;
+
+	private:
+		uint16_t dataSize;
+		uint8_t* data;
+	};
 }
