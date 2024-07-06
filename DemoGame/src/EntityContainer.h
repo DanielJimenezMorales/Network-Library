@@ -52,7 +52,7 @@ public:
 	template <typename T>
 	const ComponentView<T> GetComponentsOfType() const;
 
-	//TODO Create a version of GetEntitiesOfType that only returns components instead of GameEntity. Useful if we just simply want to process components and not the whole entity. Maybe call it GetEntityComponentsOfType...
+	//TODO Create a version of GetEntityOfType that only returns components instead of GameEntity. Useful if we just simply want to process components and not the whole entity. Maybe call it GetEntityComponentsOfType...
 
 private:
 	entt::registry _entities;

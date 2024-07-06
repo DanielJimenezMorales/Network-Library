@@ -15,6 +15,7 @@
 #include "TextureLoader.h"
 #include "PlayerControllerSystem.h"
 #include "RemotePlayerControllerSystem.h"
+#include "InputComponent.h"
 
 void SceneInitializer::InitializeScene(Scene& scene, NetLib::PeerType networkPeerType, TextureLoader* textureLoader, InputHandler& inputHandler) const
 {
@@ -29,6 +30,9 @@ void SceneInitializer::InitializeScene(Scene& scene, NetLib::PeerType networkPee
     inputHandler.AddController(keyboard);
 
 	//Populate entities
+    GameEntity inputsEntity = scene.CreateGameEntity();
+    inputsEntity.AddComponent<InputComponent>(keyboard);
+
     GameEntity currentTickEntity = scene.CreateGameEntity();
     currentTickEntity.AddComponent<CurrentTickComponent>();
 
@@ -50,7 +54,6 @@ void SceneInitializer::InitializeScene(Scene& scene, NetLib::PeerType networkPee
     networkEntityFactory->SetTextureLoader(textureLoader);
     networkEntityFactory->SetScene(&scene);
     networkEntityFactory->SetPeerType(networkPeerType);
-    networkEntityFactory->SetKeyboard(keyboard);
     networkPeer->RegisterNetworkEntityFactory(networkEntityFactory);
     networkPeerComponent.peer = networkPeer;
 

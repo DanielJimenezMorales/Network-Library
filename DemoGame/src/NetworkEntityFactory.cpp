@@ -3,8 +3,6 @@
 #include "SpriteRendererComponent.h"
 #include "TransformComponent.h"
 #include "ScriptComponent.h"
-#include "PlayerMovement.h"
-#include "InputComponent.h"
 #include "PlayerNetworkComponent.h"
 #include "Scene.h"
 #include "TextureLoader.h"
@@ -19,11 +17,6 @@ void NetworkEntityFactory::SetTextureLoader(TextureLoader* textureLoader)
 void NetworkEntityFactory::SetScene(Scene* scene)
 {
 	_scene = scene;
-}
-
-void NetworkEntityFactory::SetKeyboard(IInputController* inputController)
-{
-	_inputController = inputController;
 }
 
 void NetworkEntityFactory::SetPeerType(NetLib::PeerType peerType)
@@ -43,17 +36,13 @@ int NetworkEntityFactory::CreateNetworkEntityObject(uint32_t networkEntityType, 
 
 	if (_peerType == NetLib::ServerMode)
 	{
-		//TODO Make the input component within a dedicated input entity and not specific from one entity. Also, deactivate it on server. Client should send inputs.
-		entity.AddComponent<InputComponent>(_inputController);
 		PlayerControllerConfiguration playerConfiguration;
 		playerConfiguration.movementSpeed = 250;
 		entity.AddComponent<PlayerControllerComponent>(networkVariableChangeHandler, networkEntityId, playerConfiguration);
-		//entity.AddComponent<ScriptComponent>().Bind<PlayerMovement>();
 	}
 	else
 	{
 		entity.AddComponent<RemotePlayerControllerComponent>(networkVariableChangeHandler, networkEntityId);
-		//entity.AddComponent<ScriptComponent>().Bind<PlayerDummyMovement>();
 	}
 
 	entity.AddComponent<PlayerNetworkComponent>(networkVariableChangeHandler, networkEntityId);

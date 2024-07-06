@@ -11,17 +11,19 @@
 
 void PlayerControllerSystem::Tick(EntityContainer& entityContainer, float elapsedTime) const
 {
+	const GameEntity inputEntity = entityContainer.GetFirstEntityOfType<InputComponent>();
+	const InputComponent& inputComponent = inputEntity.GetComponent<InputComponent>();
+
 	std::vector<GameEntity> playerEntities = entityContainer.GetEntitiesOfType<PlayerControllerComponent>();
 	auto it = playerEntities.begin();
 	for (; it != playerEntities.end(); ++it)
 	{
-		TickPlayerController(*it, elapsedTime);
+		TickPlayerController(*it, inputComponent, elapsedTime);
 	}
 }
 
-void PlayerControllerSystem::TickPlayerController(GameEntity& playerEntity, float elapsedTime) const
+void PlayerControllerSystem::TickPlayerController(GameEntity& playerEntity, const InputComponent& inputComponent, float elapsedTime) const
 {
-	const InputComponent& inputComponent = playerEntity.GetComponent<InputComponent>();
 	Vec2f inputs(inputComponent.inputController->GetAxis(HORIZONTAL_AXIS), inputComponent.inputController->GetAxis(VERTICAL_AXIS));
 	inputs.Normalize();
 
