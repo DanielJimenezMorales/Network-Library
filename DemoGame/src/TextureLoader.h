@@ -1,11 +1,11 @@
 #pragma once
+#include "ITextureLoader.h"
 #include <unordered_map>
 #include <string>
 
-class Texture;
 struct SDL_Renderer;
 
-class TextureLoader
+class TextureLoader : public ITextureLoader
 {
 public:
 	TextureLoader() : _renderer(nullptr), _stringFilePathToCachedTextureMap()
@@ -15,7 +15,7 @@ public:
 	~TextureLoader();
 
 	void Init(SDL_Renderer* renderer);
-	Texture* LoadTexture(const char* stringFilePath);
+	Texture* LoadTexture(const char* stringFilePath) override;
 
 private:
 	bool IsTextureCached(const char* stringFilePath) const;

@@ -12,12 +12,12 @@
 #include "KeyboardController.h"
 #include "InputActionIdsConfiguration.h"
 #include "InputHandler.h"
-#include "TextureLoader.h"
+#include "ITextureLoader.h"
 #include "PlayerControllerSystem.h"
 #include "RemotePlayerControllerSystem.h"
 #include "InputComponent.h"
 
-void SceneInitializer::InitializeScene(Scene& scene, NetLib::PeerType networkPeerType, TextureLoader* textureLoader, InputHandler& inputHandler) const
+void SceneInitializer::InitializeScene(Scene& scene, NetLib::PeerType networkPeerType, InputHandler& inputHandler) const
 {
     //Inputs
     KeyboardController* keyboard = new KeyboardController();
@@ -51,7 +51,6 @@ void SceneInitializer::InitializeScene(Scene& scene, NetLib::PeerType networkPee
     //TODO Make this initializer internal when calling to start
     NetLib::Initializer::Initialize();
     NetworkEntityFactory* networkEntityFactory = new NetworkEntityFactory();
-    networkEntityFactory->SetTextureLoader(textureLoader);
     networkEntityFactory->SetScene(&scene);
     networkEntityFactory->SetPeerType(networkPeerType);
     networkPeer->RegisterNetworkEntityFactory(networkEntityFactory);

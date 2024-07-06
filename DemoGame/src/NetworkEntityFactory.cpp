@@ -5,14 +5,10 @@
 #include "ScriptComponent.h"
 #include "PlayerNetworkComponent.h"
 #include "Scene.h"
-#include "TextureLoader.h"
+#include "ServiceLocator.h"
+#include "ITextureLoader.h"
 #include "PlayerControllerComponent.h"
 #include "RemotePlayerControllerComponent.h"
-
-void NetworkEntityFactory::SetTextureLoader(TextureLoader* textureLoader)
-{
-	_textureLoader = textureLoader;
-}
 
 void NetworkEntityFactory::SetScene(Scene* scene)
 {
@@ -26,7 +22,9 @@ void NetworkEntityFactory::SetPeerType(NetLib::PeerType peerType)
 
 int NetworkEntityFactory::CreateNetworkEntityObject(uint32_t networkEntityType, uint32_t networkEntityId, float posX, float posY, NetLib::NetworkVariableChangesHandler* networkVariableChangeHandler)
 {
-	Texture* texture = _textureLoader->LoadTexture("sprites/PlayerSprites/playerHead.png");
+	ServiceLocator& serviceLocator = ServiceLocator::GetInstance();
+	ITextureLoader& textureLoader = serviceLocator.GetTextureLoader();
+	Texture* texture = textureLoader.LoadTexture("sprites/PlayerSprites/playerHead.png");
 
 	GameEntity entity = _scene->CreateGameEntity();
 	TransformComponent& transform = entity.GetComponent<TransformComponent>();
