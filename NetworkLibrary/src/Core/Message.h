@@ -203,7 +203,6 @@ namespace NetLib
 
 		void Reset() override;
 
-	private:
 		uint16_t dataSize;
 		uint8_t* data;
 	};

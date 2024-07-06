@@ -17,6 +17,7 @@ namespace NetLib
 	class TimeResponseMessage;
 	class InGameResponseMessage;
 	class ReplicationMessage;
+	class IInputState;
 
 	enum ClientState
 	{
@@ -46,6 +47,8 @@ namespace NetLib
 		Client& operator=(const Client&) = delete;
 
 		~Client() override;
+
+		void SendInputs(const IInputState& inputState);
 
 	protected:
 		bool StartConcrete() override;

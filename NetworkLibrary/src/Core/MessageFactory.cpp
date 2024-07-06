@@ -128,6 +128,9 @@ namespace NetLib
 
         _messagePools[MessageType::Replication] = std::queue<std::unique_ptr<Message>>();
         InitializePool(_messagePools[MessageType::Replication], MessageType::Replication);
+
+        _messagePools[MessageType::Inputs] = std::queue<std::unique_ptr<Message>>();
+        InitializePool(_messagePools[MessageType::Inputs], MessageType::Inputs);
     }
 
     void MessageFactory::InitializePool(std::queue<std::unique_ptr<Message>>& pool, MessageType messageType)
@@ -193,6 +196,9 @@ namespace NetLib
             break;
         case MessageType::Replication:
             resultMessage = std::make_unique<ReplicationMessage>();
+            break;
+        case MessageType::Inputs:
+            resultMessage = std::make_unique<InputStateMessage>();
             break;
         default:
             LOG_ERROR("Can't create a new message. Invalid message type");
