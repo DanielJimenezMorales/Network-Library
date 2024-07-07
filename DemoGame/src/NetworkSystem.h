@@ -10,4 +10,7 @@ public:
 	NetworkSystem() {}
 	void PreTick(EntityContainer& entityContainer, float elapsedTime) const override;
 	void PosTick(EntityContainer& entityContainer, float elapsedTime) const override;
+
+private:
+	void SpawnRemotePeerConnect(EntityContainer& entityContainer) const;
 };

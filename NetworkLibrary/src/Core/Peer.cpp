@@ -139,7 +139,7 @@ namespace NetLib
 	void Peer::ConnectRemotePeer(RemotePeer& remotePeer)
 	{
 		remotePeer.SetConnected();
-		ExecuteOnRemotePeerConnect();
+		ExecuteOnRemotePeerConnect(remotePeer.GetClientIndex());
 	}
 
 	bool Peer::BindSocket(const Address& address) const
@@ -488,9 +488,9 @@ namespace NetLib
 		_onRemotePeerDisconnect.Execute();
 	}
 
-	void Peer::ExecuteOnRemotePeerConnect()
+	void Peer::ExecuteOnRemotePeerConnect(uint32_t remotePeerId)
 	{
-		_onRemotePeerConnect.Execute();
+		_onRemotePeerConnect.Execute(remotePeerId);
 	}
 
 	void Peer::StopInternal()

@@ -535,7 +535,7 @@ namespace Tests
             int numberOfTimesCalled = 0;
             bool isRunning = true;
 
-            auto callback = [&isRunning, &numberOfTimesCalled]()
+            auto callback = [&isRunning, &numberOfTimesCalled](uint32_t remotePeerId)
             {
                 isRunning = false;
                 ++numberOfTimesCalled;
@@ -607,7 +607,7 @@ namespace Tests
             int numberOfTimesCalled = 0;
             bool isRunning = true;
 
-            auto callback = [&isRunning, &numberOfTimesCalled]()
+            auto callback = [&isRunning, &numberOfTimesCalled](uint32_t remotePeerId)
             {
                 isRunning = false;
                 ++numberOfTimesCalled;

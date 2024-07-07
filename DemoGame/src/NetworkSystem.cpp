@@ -2,7 +2,6 @@
 #include "Client.h"
 #include "Server.h"
 #include "Logger.h"
-#include "CurrentTickComponent.h"
 #include "EntityContainer.h"
 #include "GameEntity.hpp"
 #include "NetworkPeerComponent.h"
@@ -21,6 +20,14 @@ void NetworkSystem::PreTick(EntityContainer& entityContainer, float elapsedTime)
 	{
 		networkPeerComponent.peer->PreTick();
 	}
+
+	//Process new remote peer connections
+	while (!networkPeerComponent.unprocessedConnectedRemotePeers.empty())
+	{
+		uint32_t unprocessedConnectedRemotePeerId = networkPeerComponent.unprocessedConnectedRemotePeers.front();
+		networkPeerComponent.unprocessedConnectedRemotePeers.pop();
+		SpawnRemotePeerConnect(entityContainer);
+	}
 }
 
 void NetworkSystem::PosTick(EntityContainer& entityContainer, float elapsedTime) const
@@ -28,19 +35,12 @@ void NetworkSystem::PosTick(EntityContainer& entityContainer, float elapsedTime)
 	GameEntity networkPeerEntity = entityContainer.GetFirstEntityOfType<NetworkPeerComponent>();
 	NetworkPeerComponent& networkPeerComponent = networkPeerEntity.GetComponent<NetworkPeerComponent>();
 	networkPeerComponent.peer->Tick(elapsedTime);
+}
 
-	GameEntity gameEntity = entityContainer.GetFirstEntityOfType<CurrentTickComponent>();
-	CurrentTickComponent& currentTickComponent = gameEntity.GetComponent<CurrentTickComponent>();
-
-	//TEMP
-	if (networkPeerComponent.peer->GetPeerType() == NetLib::PeerType::ClientMode)
-	{
-		return;
-	}
-	if (currentTickComponent.currentTick == 10)
-	{
-		//TODO Create an key-value map to store different factories depending on the entity type
-		//static_cast<NetLib::Server*>(networkPeerComponent.peer)->CreateNetworkEntity(10, 5, 256.f, 256.f);
-	}
-	++currentTickComponent.currentTick;
+void NetworkSystem::SpawnRemotePeerConnect(EntityContainer& entityContainer) const
+{
+	GameEntity networkPeerEntity = entityContainer.GetFirstEntityOfType<NetworkPeerComponent>();
+	NetworkPeerComponent& networkPeerComponent = networkPeerEntity.GetComponent<NetworkPeerComponent>();
+	NetLib::Server* serverPeer = networkPeerComponent.GetPeerAsServer();
+	serverPeer->CreateNetworkEntity(10, 5, 256.f, 256.f);
 }

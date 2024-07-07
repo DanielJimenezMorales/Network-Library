@@ -4,7 +4,6 @@
 #include "NetworkSystem.h"
 #include "GameEntity.hpp"
 #include "NetworkPeerComponent.h"
-#include "CurrentTickComponent.h"
 #include "Client.h"
 #include "Server.h"
 #include "Initializer.h"
@@ -16,7 +15,6 @@
 #include "PlayerControllerSystem.h"
 #include "RemotePlayerControllerSystem.h"
 #include "InputComponent.h"
-#include "ServerOnRemotePeerConnectDisconnectCallbacks.h"
 
 void SceneInitializer::InitializeScene(Scene& scene, NetLib::PeerType networkPeerType, InputHandler& inputHandler) const
 {
@@ -33,9 +31,6 @@ void SceneInitializer::InitializeScene(Scene& scene, NetLib::PeerType networkPee
 	//Populate entities
     GameEntity inputsEntity = scene.CreateGameEntity();
     inputsEntity.AddComponent<InputComponent>(keyboard);
-
-    GameEntity currentTickEntity = scene.CreateGameEntity();
-    currentTickEntity.AddComponent<CurrentTickComponent>();
 
     GameEntity networkPeerEntity = scene.CreateGameEntity();
     NetworkPeerComponent& networkPeerComponent = networkPeerEntity.AddComponent<NetworkPeerComponent>();
@@ -59,9 +54,7 @@ void SceneInitializer::InitializeScene(Scene& scene, NetLib::PeerType networkPee
 
     if (networkPeer->GetPeerType() == NetLib::PeerType::ServerMode)
     {
-        //TODO Delete this weird class and do it in other way
-        ServerOnRemotePeerConnectDisconnectCallbacks* serverCallbacks = new ServerOnRemotePeerConnectDisconnectCallbacks(&scene);
-        networkPeer->SubscribeToOnRemotePeerConnect(std::bind(&ServerOnRemotePeerConnectDisconnectCallbacks::OnRemotePeerConnect, serverCallbacks));
+        networkPeerComponent.TrackOnRemotePeerConnect();
     }
 
 	//Populate systems
