@@ -206,6 +206,7 @@ namespace NetLib
 		_header.Write(buffer);
 		buffer.WriteByte(replicationAction);
 		buffer.WriteInteger(networkEntityId);
+		buffer.WriteInteger(controlledByPeerId);
 		buffer.WriteInteger(replicatedClassId);
 		buffer.WriteShort(dataSize);
 		//TODO Create method called WriteData(data, size) in order to avoid this for loop
@@ -222,6 +223,7 @@ namespace NetLib
 
 		replicationAction = buffer.ReadByte();
 		networkEntityId = buffer.ReadInteger();
+		controlledByPeerId = buffer.ReadInteger();
 		replicatedClassId = buffer.ReadInteger();
 		dataSize = buffer.ReadShort();
 		if (dataSize > 0)
@@ -238,7 +240,7 @@ namespace NetLib
 
 	uint32_t ReplicationMessage::Size() const
 	{
-		return MessageHeader::Size() + sizeof(uint8_t) + (2 * sizeof(uint32_t)) + sizeof(uint16_t) + (dataSize * sizeof(uint8_t));
+		return MessageHeader::Size() + sizeof(uint8_t) + (3 * sizeof(uint32_t)) + sizeof(uint16_t) + (dataSize * sizeof(uint8_t));
 	}
 
 	void ReplicationMessage::Reset()

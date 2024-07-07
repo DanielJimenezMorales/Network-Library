@@ -20,8 +20,9 @@ void NetworkEntityFactory::SetPeerType(NetLib::PeerType peerType)
 	_peerType = peerType;
 }
 
-int NetworkEntityFactory::CreateNetworkEntityObject(uint32_t networkEntityType, uint32_t networkEntityId, float posX, float posY, NetLib::NetworkVariableChangesHandler* networkVariableChangeHandler)
+int NetworkEntityFactory::CreateNetworkEntityObject(uint32_t networkEntityType, uint32_t networkEntityId, uint32_t controlledByPeerId, float posX, float posY, NetLib::NetworkVariableChangesHandler* networkVariableChangeHandler)
 {
+	LOG_INFO("CONTROLLER BY PEER ID %u", controlledByPeerId);
 	ServiceLocator& serviceLocator = ServiceLocator::GetInstance();
 	ITextureLoader& textureLoader = serviceLocator.GetTextureLoader();
 	Texture* texture = textureLoader.LoadTexture("sprites/PlayerSprites/playerHead.png");

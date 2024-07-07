@@ -17,7 +17,7 @@ namespace NetLib
 
 	}
 
-	uint32_t Server::CreateNetworkEntity(uint32_t entityType, float posX, float posY)
+	uint32_t Server::CreateNetworkEntity(uint32_t entityType, uint32_t controlledByPeerId, float posX, float posY)
 	{
 		if (GetConnectionState() != PeerConnectionState::PCS_Connected)
 		{
@@ -25,7 +25,7 @@ namespace NetLib
 			return 0;
 		}
 
-		return _replicationManager.CreateNetworkEntity(entityType, posX, posY);
+		return _replicationManager.CreateNetworkEntity(entityType, controlledByPeerId, posX, posY);
 	}
 
 	void Server::DestroyNetworkEntity(uint32_t entityId)

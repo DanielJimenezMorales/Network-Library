@@ -51,6 +51,17 @@ namespace NetLib
 		LOG_INFO("Input state message created");
 	}
 
+	unsigned int Client::GetLocalClientId() const
+	{
+		if (GetConnectionState() != PeerConnectionState::PCS_Connected)
+		{
+			LOG_WARNING("Can not get the local client ID if the peer is not connected");
+			return 0;
+		}
+
+		return _clientIndex;
+	}
+
 	bool Client::StartConcrete()
 	{
 		sockaddr_in addressInfo;

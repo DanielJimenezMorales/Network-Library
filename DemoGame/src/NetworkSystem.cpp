@@ -39,7 +39,8 @@ void NetworkSystem::PosTick(EntityContainer& entityContainer, float elapsedTime)
 	}
 	if (currentTickComponent.currentTick == 10)
 	{
-		static_cast<NetLib::Server*>(networkPeerComponent.peer)->CreateNetworkEntity(10, 256.f, 256.f);
+		//TODO Create an key-value map to store different factories depending on the entity type
+		static_cast<NetLib::Server*>(networkPeerComponent.peer)->CreateNetworkEntity(10, 5, 256.f, 256.f);
 	}
 	++currentTickComponent.currentTick;
 }

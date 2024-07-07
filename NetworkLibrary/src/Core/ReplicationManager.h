@@ -29,7 +29,7 @@ namespace NetLib
 		ReplicationManager() : _nextNetworkEntityId(1), _networkEntityFactory(nullptr) {}
 
 		void RegisterNetworkEntityFactory(INetworkEntityFactory* entityFactory);
-		uint32_t CreateNetworkEntity(uint32_t entityType, float posX, float posY);
+		uint32_t CreateNetworkEntity(uint32_t entityType, uint32_t controlledByPeerId, float posX, float posY);
 		void RemoveNetworkEntity(uint32_t networkEntityId);
 
 		void Server_ReplicateWorldState();
@@ -41,8 +41,8 @@ namespace NetLib
 		void ClearSentReplicationMessages();
 
 	private:
-		std::unique_ptr<ReplicationMessage> CreateCreateReplicationMessage(uint32_t entityType, uint32_t networkEntityId, const Buffer& dataBuffer);
-		std::unique_ptr<ReplicationMessage> CreateUpdateReplicationMessage(uint32_t networkEntityId, const Buffer& buffer);
+		std::unique_ptr<ReplicationMessage> CreateCreateReplicationMessage(uint32_t entityType, uint32_t controlledByPeerId, uint32_t networkEntityId, const Buffer& dataBuffer);
+		std::unique_ptr<ReplicationMessage> CreateUpdateReplicationMessage(uint32_t entityType, uint32_t networkEntityId, uint32_t controlledByPeerId, const Buffer& buffer);
 		std::unique_ptr<ReplicationMessage> CreateDestroyReplicationMessage(uint32_t networkEntityId);
 
 		void ProcessReceivedCreateReplicationMessage(const ReplicationMessage& replicationMessage);

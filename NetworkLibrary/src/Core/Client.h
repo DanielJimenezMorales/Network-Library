@@ -49,6 +49,7 @@ namespace NetLib
 		~Client() override;
 
 		void SendInputs(const IInputState& inputState);
+		unsigned int GetLocalClientId() const;
 
 	protected:
 		bool StartConcrete() override;

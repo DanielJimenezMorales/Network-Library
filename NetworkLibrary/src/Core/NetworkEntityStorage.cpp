@@ -5,15 +5,15 @@ namespace NetLib
 {
 	bool NetworkEntityStorage::HasNetworkEntityId(uint32_t networkEntityId) const
 	{
-		auto it = _networkEntityIdToGameEntityIdMap.find(networkEntityId);
-		return it != _networkEntityIdToGameEntityIdMap.cend();
+		auto it = _networkEntityIdToDataMap.find(networkEntityId);
+		return it != _networkEntityIdToDataMap.cend();
 	}
 
-	bool NetworkEntityStorage::TryGetNetworkEntityFromId(uint32_t entityId, uint32_t& gameEntityId)
+	bool NetworkEntityStorage::TryGetNetworkEntityFromId(uint32_t entityId, NetworkEntityData& gameEntityId)
 	{
-		auto it = _networkEntityIdToGameEntityIdMap.find(entityId);
+		auto it = _networkEntityIdToDataMap.find(entityId);
 
-		if (it == _networkEntityIdToGameEntityIdMap.cend())
+		if (it == _networkEntityIdToDataMap.cend())
 		{
 			return false;
 		}
@@ -22,33 +22,33 @@ namespace NetLib
 		return true;
 	}
 
-	void NetworkEntityStorage::AddNetworkEntity(uint32_t networkEntityId, uint32_t gameEntityId)
+	void NetworkEntityStorage::AddNetworkEntity(uint32_t entityType, uint32_t networkEntityId, uint32_t controlledByPeerId, uint32_t gameEntityId)
 	{
-		assert(_networkEntityIdToGameEntityIdMap.find(networkEntityId) == _networkEntityIdToGameEntityIdMap.cend());
+		assert(_networkEntityIdToDataMap.find(networkEntityId) == _networkEntityIdToDataMap.cend());
 
-		_networkEntityIdToGameEntityIdMap[networkEntityId] = gameEntityId;
+		_networkEntityIdToDataMap[networkEntityId] = NetworkEntityData(entityType, networkEntityId, gameEntityId, controlledByPeerId);
 	}
 
-	std::unordered_map<uint32_t, uint32_t>::const_iterator NetworkEntityStorage::GetNetworkEntities() const
+	std::unordered_map<uint32_t, NetworkEntityData>::const_iterator NetworkEntityStorage::GetNetworkEntities() const
 	{
-		return _networkEntityIdToGameEntityIdMap.cbegin();
+		return _networkEntityIdToDataMap.cbegin();
 	}
 
-	std::unordered_map<uint32_t, uint32_t>::const_iterator NetworkEntityStorage::GetPastToEndNetworkEntities() const
+	std::unordered_map<uint32_t, NetworkEntityData>::const_iterator NetworkEntityStorage::GetPastToEndNetworkEntities() const
 	{
-		return _networkEntityIdToGameEntityIdMap.cend();
+		return _networkEntityIdToDataMap.cend();
 	}
 
 	bool NetworkEntityStorage::RemoveNetworkEntity(uint32_t networkEntityId)
 	{
-		auto it = _networkEntityIdToGameEntityIdMap.find(networkEntityId);
+		auto it = _networkEntityIdToDataMap.find(networkEntityId);
 
-		if (it == _networkEntityIdToGameEntityIdMap.end())
+		if (it == _networkEntityIdToDataMap.end())
 		{
 			return false;
 		}
 
-		_networkEntityIdToGameEntityIdMap.erase(it);
+		_networkEntityIdToDataMap.erase(it);
 		return true;
 	}
 }
