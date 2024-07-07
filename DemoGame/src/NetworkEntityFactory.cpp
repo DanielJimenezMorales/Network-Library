@@ -9,6 +9,8 @@
 #include "ITextureLoader.h"
 #include "PlayerControllerComponent.h"
 #include "RemotePlayerControllerComponent.h"
+#include "NetworkPeerComponent.h"
+#include "Client.h"
 
 void NetworkEntityFactory::SetScene(Scene* scene)
 {
@@ -27,21 +29,33 @@ int NetworkEntityFactory::CreateNetworkEntityObject(uint32_t networkEntityType, 
 	ITextureLoader& textureLoader = serviceLocator.GetTextureLoader();
 	Texture* texture = textureLoader.LoadTexture("sprites/PlayerSprites/playerHead.png");
 
+	const GameEntity networkPeerEntity = _scene->GetFirstEntityOfType<NetworkPeerComponent>();
+	const NetworkPeerComponent& networkPeerComponent = networkPeerEntity.GetComponent<NetworkPeerComponent>();
+
 	GameEntity entity = _scene->CreateGameEntity();
 	TransformComponent& transform = entity.GetComponent<TransformComponent>();
 	transform.position = Vec2f(posX, posY);
 
 	entity.AddComponent<SpriteRendererComponent>(texture);
 
-	if (_peerType == NetLib::ServerMode)
+	PlayerControllerConfiguration playerConfiguration;
+	playerConfiguration.movementSpeed = 250;
+
+	if(networkPeerComponent.peer->GetPeerType() == NetLib::ServerMode)
 	{
-		PlayerControllerConfiguration playerConfiguration;
-		playerConfiguration.movementSpeed = 250;
 		entity.AddComponent<PlayerControllerComponent>(networkVariableChangeHandler, networkEntityId, playerConfiguration);
 	}
 	else
 	{
-		entity.AddComponent<RemotePlayerControllerComponent>(networkVariableChangeHandler, networkEntityId);
+		const NetLib::Client* clientPeer = static_cast<NetLib::Client*>(networkPeerComponent.peer);
+		if (clientPeer->GetLocalClientId() == controlledByPeerId)
+		{
+			entity.AddComponent<PlayerControllerComponent>(networkVariableChangeHandler, networkEntityId, playerConfiguration);
+		}
+		else
+		{
+			entity.AddComponent<RemotePlayerControllerComponent>(networkVariableChangeHandler, networkEntityId);
+		}
 	}
 
 	entity.AddComponent<PlayerNetworkComponent>(networkVariableChangeHandler, networkEntityId);

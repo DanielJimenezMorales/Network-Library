@@ -133,6 +133,7 @@ inline GameEntity EntityContainer::GetFirstEntityOfType()
 	return GameEntity(*view.begin(), this);
 }
 
+//TODO For some reason this method throws a compilation error of type: C2440 '<function-style-cast>': cannot convert from 'initializer list' to 'GameEntity
 template<typename T>
 inline const GameEntity EntityContainer::GetFirstEntityOfType() const
 {

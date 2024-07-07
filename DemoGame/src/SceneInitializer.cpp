@@ -16,6 +16,7 @@
 #include "PlayerControllerSystem.h"
 #include "RemotePlayerControllerSystem.h"
 #include "InputComponent.h"
+#include "ServerOnRemotePeerConnectDisconnectCallbacks.h"
 
 void SceneInitializer::InitializeScene(Scene& scene, NetLib::PeerType networkPeerType, InputHandler& inputHandler) const
 {
@@ -55,6 +56,13 @@ void SceneInitializer::InitializeScene(Scene& scene, NetLib::PeerType networkPee
     networkEntityFactory->SetPeerType(networkPeerType);
     networkPeer->RegisterNetworkEntityFactory(networkEntityFactory);
     networkPeerComponent.peer = networkPeer;
+
+    if (networkPeer->GetPeerType() == NetLib::PeerType::ServerMode)
+    {
+        //TODO Delete this weird class and do it in other way
+        ServerOnRemotePeerConnectDisconnectCallbacks* serverCallbacks = new ServerOnRemotePeerConnectDisconnectCallbacks(&scene);
+        networkPeer->SubscribeToOnRemotePeerConnect(std::bind(&ServerOnRemotePeerConnectDisconnectCallbacks::OnRemotePeerConnect, serverCallbacks));
+    }
 
 	//Populate systems
     //TODO Create a system storage in order to be able to free them at the end

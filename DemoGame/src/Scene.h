@@ -31,6 +31,9 @@ public:
 
 	GameEntity CreateGameEntity();
 
+	template <typename T>
+	GameEntity GetFirstEntityOfType();
+
 private:
 	EntityContainer _entityContainer;
 	SpriteRendererSystem _spriteRendererSystem;
@@ -40,3 +43,9 @@ private:
 	std::vector<ITickSystem*> _tickSystems;
 	std::vector<IPosTickSystem*> _posTickSystems;
 };
+
+template<typename T>
+inline GameEntity Scene::GetFirstEntityOfType()
+{
+	return _entityContainer.GetFirstEntityOfType<T>();
+}
