@@ -7,10 +7,11 @@
 #include <queue>
 
 class INetworkEntityFactory;
+class IInputStateFactory;
 
 struct NetworkPeerComponent
 {
-	NetworkPeerComponent() : peer(nullptr), networkEntityFactories(), unprocessedConnectedRemotePeers(), isTrackingRemotePeerConnect(false), remotePeerConnectSubscriptionId(0)
+	NetworkPeerComponent() : peer(nullptr), networkEntityFactories(), inputStateFactory(nullptr), unprocessedConnectedRemotePeers(), isTrackingRemotePeerConnect(false), remotePeerConnectSubscriptionId(0)
 	{
 	}
 
@@ -29,12 +30,20 @@ struct NetworkPeerComponent
 			*it = nullptr;
 		}
 
+		if (inputStateFactory != nullptr)
+		{
+			delete inputStateFactory;
+			inputStateFactory = nullptr;
+		}
+
 		networkEntityFactories.clear();
 	}
 
 	//TODO free this memory correctly
 	NetLib::Peer* peer;
 	std::vector<INetworkEntityFactory*> networkEntityFactories;
+	NetLib::IInputStateFactory* inputStateFactory;
+
 	std::queue<uint32_t> unprocessedConnectedRemotePeers;
 	bool isTrackingRemotePeerConnect;
 	unsigned int remotePeerConnectSubscriptionId;

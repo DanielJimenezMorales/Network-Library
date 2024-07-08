@@ -15,6 +15,7 @@
 #include "PlayerControllerSystem.h"
 #include "RemotePlayerControllerSystem.h"
 #include "InputComponent.h"
+#include "InputStateFactory.h"
 
 void SceneInitializer::InitializeScene(Scene& scene, NetLib::PeerType networkPeerType, InputHandler& inputHandler) const
 {
@@ -54,6 +55,9 @@ void SceneInitializer::InitializeScene(Scene& scene, NetLib::PeerType networkPee
 
     if (networkPeer->GetPeerType() == NetLib::PeerType::ServerMode)
     {
+        InputStateFactory* inputStateFactory = new InputStateFactory();
+        networkPeerComponent.GetPeerAsServer()->RegisterInputStateFactory(inputStateFactory);
+        networkPeerComponent.inputStateFactory = inputStateFactory;
         networkPeerComponent.TrackOnRemotePeerConnect();
     }
 

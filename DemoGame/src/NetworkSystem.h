@@ -12,5 +12,5 @@ public:
 	void PosTick(EntityContainer& entityContainer, float elapsedTime) const override;
 
 private:
-	void SpawnRemotePeerConnect(EntityContainer& entityContainer) const;
+	void Server_SpawnRemotePeerConnect(EntityContainer& entityContainer) const;
 };

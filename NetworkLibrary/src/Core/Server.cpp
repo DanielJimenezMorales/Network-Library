@@ -7,12 +7,14 @@
 #include "Message.h"
 #include "MessageFactory.h"
 #include "TimeClock.h"
+#include "IInputState.h"
+#include "IInputStateFactory.h"
 
 #define SERVER_PORT 54000
 
 namespace NetLib
 {
-	Server::Server(int maxConnections) : Peer(PeerType::ServerMode, maxConnections, 1024, 1024)
+	Server::Server(int maxConnections) : Peer(PeerType::ServerMode, maxConnections, 1024, 1024), _remotePeerInputsHandler()
 	{
 
 	}
@@ -37,6 +39,18 @@ namespace NetLib
 		}
 
 		_replicationManager.RemoveNetworkEntity(entityId);
+	}
+
+	void Server::RegisterInputStateFactory(IInputStateFactory* factory)
+	{
+		//TODO Create a method for releasing all the inputs consumed during the current tick
+		assert(factory != nullptr);
+		_inputsFactory = factory;
+	}
+
+	const IInputState* Server::GetInputFromRemotePeer(uint32_t remotePeerId)
+	{
+		return _remotePeerInputsHandler.GetNextInputFromRemotePeer(remotePeerId);
 	}
 
 	Server::~Server()
@@ -105,6 +119,12 @@ namespace NetLib
 		{
 			const InGameMessage& inGameMessage = static_cast<const InGameMessage&>(message);
 			ProcessInGame(inGameMessage, remotePeer);
+			break;
+		}
+		case MessageType::Inputs:
+		{
+			const InputStateMessage& inputsMessage = static_cast<const InputStateMessage&>(message);
+			ProcessInputs(inputsMessage, remotePeer);
 			break;
 		}
 		default:
@@ -303,6 +323,16 @@ namespace NetLib
 		LOG_INFO("InGame ID: %llu", message.data);
 
 		CreateInGameResponseMessage(remotePeer, message.data);
+	}
+
+	void Server::ProcessInputs(const InputStateMessage& message, RemotePeer& remotePeer)
+	{
+		IInputState* inputState = _inputsFactory->Create();
+		assert(inputState != nullptr);
+
+		Buffer buffer(message.data, message.dataSize);
+		inputState->Deserialize(buffer);
+		_remotePeerInputsHandler.AddInputState(inputState, remotePeer.GetClientIndex());
 	}
 
 	void Server::ProcessDisconnection(const DisconnectionMessage& message, RemotePeer& remotePeer)

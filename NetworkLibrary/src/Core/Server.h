@@ -3,6 +3,7 @@
 #include <vector>
 
 #include "Peer.h"
+#include "RemotePeerInputsHandler.h"
 
 namespace NetLib
 {
@@ -11,7 +12,10 @@ namespace NetLib
 	class ConnectionChallengeResponseMessage;
 	class TimeRequestMessage;
 	class InGameMessage;
+	class InputStateMessage;
 	class DisconnectionMessage;
+	class IInputState;
+	class IInputStateFactory;
 
 	class Server : public Peer
 	{
@@ -23,6 +27,9 @@ namespace NetLib
 
 		uint32_t CreateNetworkEntity(uint32_t entityType, uint32_t controlledByPeerId, float posX, float posY);
 		void DestroyNetworkEntity(uint32_t entityId);
+
+		void RegisterInputStateFactory(IInputStateFactory* factory);
+		const IInputState* GetInputFromRemotePeer(uint32_t remotePeerId);
 
 		~Server() override;
 
@@ -40,6 +47,7 @@ namespace NetLib
 		void ProcessConnectionChallengeResponse(const ConnectionChallengeResponseMessage& message, RemotePeer& remotePeer);
 		void ProcessTimeRequest(const TimeRequestMessage& message, RemotePeer& remotePeer);
 		void ProcessInGame(const InGameMessage& message, RemotePeer& remotePeer);
+		void ProcessInputs(const InputStateMessage& message, RemotePeer& remotePeer);
 		void ProcessDisconnection(const DisconnectionMessage& message, RemotePeer& remotePeer);
 
 		/// <summary>
@@ -64,5 +72,8 @@ namespace NetLib
 		void TickReplication();
 
 		unsigned int _nextAssignedRemotePeerID = 1;
+
+		RemotePeerInputsHandler _remotePeerInputsHandler;
+		IInputStateFactory* _inputsFactory;
 	};
 }
