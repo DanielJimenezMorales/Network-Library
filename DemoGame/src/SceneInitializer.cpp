@@ -4,7 +4,6 @@
 #include "NetworkSystem.h"
 #include "GameEntity.hpp"
 #include "NetworkPeerComponent.h"
-#include "CurrentTickComponent.h"
 #include "Client.h"
 #include "Server.h"
 #include "Initializer.h"
@@ -14,8 +13,10 @@
 #include "InputHandler.h"
 #include "ITextureLoader.h"
 #include "PlayerControllerSystem.h"
+#include "ServerPlayerControllerSystem.h"
 #include "RemotePlayerControllerSystem.h"
 #include "InputComponent.h"
+#include "InputStateFactory.h"
 
 void SceneInitializer::InitializeScene(Scene& scene, NetLib::PeerType networkPeerType, InputHandler& inputHandler) const
 {
@@ -32,9 +33,6 @@ void SceneInitializer::InitializeScene(Scene& scene, NetLib::PeerType networkPee
 	//Populate entities
     GameEntity inputsEntity = scene.CreateGameEntity();
     inputsEntity.AddComponent<InputComponent>(keyboard);
-
-    GameEntity currentTickEntity = scene.CreateGameEntity();
-    currentTickEntity.AddComponent<CurrentTickComponent>();
 
     GameEntity networkPeerEntity = scene.CreateGameEntity();
     NetworkPeerComponent& networkPeerComponent = networkPeerEntity.AddComponent<NetworkPeerComponent>();
@@ -56,10 +54,26 @@ void SceneInitializer::InitializeScene(Scene& scene, NetLib::PeerType networkPee
     networkPeer->RegisterNetworkEntityFactory(networkEntityFactory);
     networkPeerComponent.peer = networkPeer;
 
+    if (networkPeer->GetPeerType() == NetLib::PeerType::ServerMode)
+    {
+        InputStateFactory* inputStateFactory = new InputStateFactory();
+        networkPeerComponent.GetPeerAsServer()->RegisterInputStateFactory(inputStateFactory);
+        networkPeerComponent.inputStateFactory = inputStateFactory;
+        networkPeerComponent.TrackOnRemotePeerConnect();
+    }
+
 	//Populate systems
     //TODO Create a system storage in order to be able to free them at the end
-    PlayerControllerSystem* playerControllerSystem = new PlayerControllerSystem();
-    scene.AddTickSystem(playerControllerSystem);
+    if (networkPeerType == NetLib::PeerType::ServerMode)
+    {
+        ServerPlayerControllerSystem* serverPlayerControllerSystem = new ServerPlayerControllerSystem();
+        scene.AddTickSystem(serverPlayerControllerSystem);
+    }
+    else if (networkPeerType == NetLib::PeerType::ClientMode)
+    {
+        PlayerControllerSystem* playerControllerSystem = new PlayerControllerSystem();
+        scene.AddTickSystem(playerControllerSystem);
+    }
 
     RemotePlayerControllerSystem* remotePlayerControllerSystem = new RemotePlayerControllerSystem();
     scene.AddTickSystem(remotePlayerControllerSystem);

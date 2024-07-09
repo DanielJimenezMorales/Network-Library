@@ -1,16 +1,7 @@
 #pragma once
 #include "NetworkVariable.h"
 #include "NetworkVariableChangesHandler.h"
-
-struct PlayerControllerConfiguration
-{
-	PlayerControllerConfiguration() :movementSpeed(0) {}
-	PlayerControllerConfiguration(const PlayerControllerConfiguration& other) : movementSpeed(other.movementSpeed)
-	{
-	}
-
-	uint32_t movementSpeed;
-};
+#include "PlayerControllerConfiguration.h"
 
 struct PlayerControllerComponent
 {

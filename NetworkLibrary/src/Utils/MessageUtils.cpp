@@ -47,6 +47,9 @@ namespace NetLib
 		case MessageType::Replication:
 			message = messageFactory.LendMessage(MessageType::Replication);
 			break;
+		case MessageType::Inputs:
+			message = messageFactory.LendMessage(MessageType::Inputs);
+			break;
 		default:
 			LOG_WARNING("Can't read message of type MessageType = %hhu. Ignoring it...", type);
 		}

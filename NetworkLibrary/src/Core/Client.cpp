@@ -7,6 +7,7 @@
 #include "MessageFactory.h"
 #include "RemotePeer.h"
 #include "TimeClock.h"
+#include "IInputState.h"
 
 namespace NetLib
 {
@@ -21,6 +22,44 @@ namespace NetLib
 
 	Client::~Client()
 	{
+	}
+
+	void Client::SendInputs(const IInputState& inputState)
+	{
+		RemotePeer* serverPeer = _remotePeersHandler.GetRemotePeerFromAddress(_serverAddress);
+		if (serverPeer == nullptr)
+		{
+			LOG_ERROR("Can not send inputs to server because server peer hasn't been found.");
+			return;
+		}
+
+		MessageFactory& messageFactory = MessageFactory::GetInstance();
+		std::unique_ptr<Message> message = messageFactory.LendMessage(MessageType::Inputs);
+		message->SetOrdered(false);
+		message->SetReliability(false);
+		std::unique_ptr<InputStateMessage> inputsMessage(static_cast<InputStateMessage*>(message.release()));
+
+		int dataSize = inputState.GetSize();
+		uint8_t* data = new uint8_t[dataSize];
+		Buffer inputDataBuffer(data, dataSize);
+		inputState.Serialize(inputDataBuffer);
+		inputsMessage->dataSize = dataSize;
+		inputsMessage->data = data;
+
+		serverPeer->AddMessage(std::move(inputsMessage));
+
+		LOG_INFO("Input state message created");
+	}
+
+	unsigned int Client::GetLocalClientId() const
+	{
+		if (GetConnectionState() != PeerConnectionState::PCS_Connected)
+		{
+			LOG_WARNING("Can not get the local client ID if the peer is not connected");
+			return 0;
+		}
+
+		return _clientIndex;
 	}
 
 	bool Client::StartConcrete()
@@ -225,7 +264,7 @@ namespace NetLib
 		}
 
 		LOG_INFO("Disconnection message received from server with reason code equal to %hhu. Disconnecting...", message.reason);
-		
+
 		StartDisconnectingRemotePeer(remotePeer.GetClientIndex(), false, ConnectionFailedReasonType::CFR_UNKNOWN);
 	}
 
@@ -326,7 +365,7 @@ namespace NetLib
 		}
 
 		std::unique_ptr<ConnectionChallengeResponseMessage> connectionChallengeResponseMessage(static_cast<ConnectionChallengeResponseMessage*>(message.release()));
-		
+
 		//Set connection challenge fields
 		connectionChallengeResponseMessage->prefix = remotePeer.GetDataPrefix();
 

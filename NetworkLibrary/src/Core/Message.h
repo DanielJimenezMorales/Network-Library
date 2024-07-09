@@ -175,7 +175,7 @@ namespace NetLib
 	class ReplicationMessage : public Message
 	{
 	public:
-		ReplicationMessage() : replicationAction(0), networkEntityId(0), replicatedClassId(0), dataSize(0), data(nullptr), Message(MessageType::Replication) {}
+		ReplicationMessage() : replicationAction(0), networkEntityId(0), controlledByPeerId(0), replicatedClassId(0), dataSize(0), data(nullptr), Message(MessageType::Replication) {}
 
 		void Write(Buffer& buffer) const override;
 		void Read(Buffer& buffer) override;
@@ -187,8 +187,24 @@ namespace NetLib
 
 		uint8_t replicationAction;
 		uint32_t networkEntityId;
+		uint32_t controlledByPeerId;
 		uint32_t replicatedClassId; //TODO If replication action is update or destroy, we don't care about this one
 		uint16_t dataSize; //TODO If replication action is destroy, we don't care about this one
 		uint8_t* data; //TODO Free this memory when calling MessageFactory::Release in order to avoid memory leaks
+	};
+
+	class InputStateMessage : public Message
+	{
+	public:
+		InputStateMessage() : dataSize(0), data(nullptr), Message(MessageType::Inputs) {}
+
+		void Write(Buffer& buffer) const override;
+		void Read(Buffer& buffer) override;
+		uint32_t Size() const override;
+
+		void Reset() override;
+
+		uint16_t dataSize;
+		uint8_t* data;
 	};
 }

@@ -136,7 +136,7 @@ namespace NetLib
 		void StopInternal();
 
 		//Delegates related
-		void ExecuteOnRemotePeerConnect();
+		void ExecuteOnRemotePeerConnect(uint32_t remotePeerId);
 		void ExecuteOnRemotePeerDisconnect();
 
 		PeerType _type;
@@ -158,7 +158,7 @@ namespace NetLib
 
 		Common::Delegate<> _onLocalPeerConnect;
 		Common::Delegate<ConnectionFailedReasonType> _onLocalPeerDisconnect;
-		Common::Delegate<> _onRemotePeerConnect;
+		Common::Delegate<uint32_t> _onRemotePeerConnect;
 		Common::Delegate<> _onRemotePeerDisconnect;
 	};
 

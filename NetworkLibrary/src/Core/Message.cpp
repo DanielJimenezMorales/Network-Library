@@ -206,6 +206,7 @@ namespace NetLib
 		_header.Write(buffer);
 		buffer.WriteByte(replicationAction);
 		buffer.WriteInteger(networkEntityId);
+		buffer.WriteInteger(controlledByPeerId);
 		buffer.WriteInteger(replicatedClassId);
 		buffer.WriteShort(dataSize);
 		//TODO Create method called WriteData(data, size) in order to avoid this for loop
@@ -222,6 +223,7 @@ namespace NetLib
 
 		replicationAction = buffer.ReadByte();
 		networkEntityId = buffer.ReadInteger();
+		controlledByPeerId = buffer.ReadInteger();
 		replicatedClassId = buffer.ReadInteger();
 		dataSize = buffer.ReadShort();
 		if (dataSize > 0)
@@ -238,7 +240,7 @@ namespace NetLib
 
 	uint32_t ReplicationMessage::Size() const
 	{
-		return MessageHeader::Size() + sizeof(uint8_t) + (2 * sizeof(uint32_t)) + sizeof(uint16_t) + (dataSize * sizeof(uint8_t));
+		return MessageHeader::Size() + sizeof(uint8_t) + (3 * sizeof(uint32_t)) + sizeof(uint16_t) + (dataSize * sizeof(uint8_t));
 	}
 
 	void ReplicationMessage::Reset()
@@ -251,6 +253,50 @@ namespace NetLib
 	}
 
 	ReplicationMessage::~ReplicationMessage()
+	{
+		if (data != nullptr)
+		{
+			delete[] data;
+			data = nullptr;
+		}
+	}
+
+	void InputStateMessage::Write(Buffer& buffer) const
+	{
+		_header.Write(buffer);
+
+		buffer.WriteShort(dataSize);
+		//TODO Create method called WriteData(data, size) in order to avoid this for loop
+		for (size_t i = 0; i < dataSize; ++i)
+		{
+			buffer.WriteByte(data[i]);
+		}
+	}
+
+	void InputStateMessage::Read(Buffer& buffer)
+	{
+		_header.type = MessageType::Inputs;
+		_header.ReadWithoutHeader(buffer);
+
+		dataSize = buffer.ReadShort();
+		if (dataSize > 0)
+		{
+			data = new uint8_t[dataSize];
+		}
+
+		//TODO Create method called ReadData(uint8_t& data, size) in order to avoid this for loop
+		for (size_t i = 0; i < dataSize; ++i)
+		{
+			data[i] = buffer.ReadByte();
+		}
+	}
+
+	uint32_t InputStateMessage::Size() const
+	{
+		return MessageHeader::Size() + sizeof(uint16_t) + (dataSize * sizeof(uint8_t));
+	}
+
+	void InputStateMessage::Reset()
 	{
 		if (data != nullptr)
 		{

@@ -16,6 +16,7 @@ namespace NetLib
 
 	static constexpr uint32_t INVALID_NETWORK_ENTITY_ID = 0;
 
+	//TODO Convert this to enum class
 	enum ReplicationActionType : uint8_t
 	{
 		RAT_CREATE = 0,
@@ -29,7 +30,7 @@ namespace NetLib
 		ReplicationManager() : _nextNetworkEntityId(1), _networkEntityFactory(nullptr) {}
 
 		void RegisterNetworkEntityFactory(INetworkEntityFactory* entityFactory);
-		uint32_t CreateNetworkEntity(uint32_t entityType, float posX, float posY);
+		uint32_t CreateNetworkEntity(uint32_t entityType, uint32_t controlledByPeerId, float posX, float posY);
 		void RemoveNetworkEntity(uint32_t networkEntityId);
 
 		void Server_ReplicateWorldState();
@@ -41,8 +42,8 @@ namespace NetLib
 		void ClearSentReplicationMessages();
 
 	private:
-		std::unique_ptr<ReplicationMessage> CreateCreateReplicationMessage(uint32_t entityType, uint32_t networkEntityId, const Buffer& dataBuffer);
-		std::unique_ptr<ReplicationMessage> CreateUpdateReplicationMessage(uint32_t networkEntityId, const Buffer& buffer);
+		std::unique_ptr<ReplicationMessage> CreateCreateReplicationMessage(uint32_t entityType, uint32_t controlledByPeerId, uint32_t networkEntityId, const Buffer& dataBuffer);
+		std::unique_ptr<ReplicationMessage> CreateUpdateReplicationMessage(uint32_t entityType, uint32_t networkEntityId, uint32_t controlledByPeerId, const Buffer& buffer);
 		std::unique_ptr<ReplicationMessage> CreateDestroyReplicationMessage(uint32_t networkEntityId);
 
 		void ProcessReceivedCreateReplicationMessage(const ReplicationMessage& replicationMessage);
@@ -58,6 +59,7 @@ namespace NetLib
 
 		uint32_t _nextNetworkEntityId;
 
+		//TODO Support multiple network entity factories depending on the entity_type
 		INetworkEntityFactory* _networkEntityFactory;
 		NetworkVariableChangesHandler _networkVariableChangesHandler;
 	};

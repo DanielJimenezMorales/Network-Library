@@ -7,7 +7,7 @@
 
 namespace NetLib
 {
-	std::unique_ptr<ReplicationMessage> ReplicationManager::CreateCreateReplicationMessage(uint32_t entityType, uint32_t networkEntityId, const Buffer& dataBuffer)
+	std::unique_ptr<ReplicationMessage> ReplicationManager::CreateCreateReplicationMessage(uint32_t entityType, uint32_t controlledByPeerId, uint32_t networkEntityId, const Buffer& dataBuffer)
 	{
 		//Get message from message factory
 		MessageFactory& messageFactory = MessageFactory::GetInstance();
@@ -21,6 +21,7 @@ namespace NetLib
 		std::unique_ptr<ReplicationMessage> replicationMessage(static_cast<ReplicationMessage*>(message.release()));
 		replicationMessage->replicationAction = ReplicationActionType::RAT_CREATE;
 		replicationMessage->networkEntityId = networkEntityId;
+		replicationMessage->controlledByPeerId = controlledByPeerId;
 		replicationMessage->replicatedClassId = entityType;
 		replicationMessage->data = dataBuffer.GetData();
 		replicationMessage->dataSize = dataBuffer.GetSize();
@@ -28,7 +29,8 @@ namespace NetLib
 		return std::move(replicationMessage);
 	}
 
-	std::unique_ptr<ReplicationMessage> ReplicationManager::CreateUpdateReplicationMessage(uint32_t networkEntityId, const Buffer& buffer)
+	//TODO Do we need the entity_type here too in case we need to create the entity from the update?
+	std::unique_ptr<ReplicationMessage> ReplicationManager::CreateUpdateReplicationMessage(uint32_t entityType, uint32_t networkEntityId, uint32_t controlledByPeerId, const Buffer& buffer)
 	{
 		//Get message from message factory
 		MessageFactory& messageFactory = MessageFactory::GetInstance();
@@ -42,6 +44,7 @@ namespace NetLib
 		std::unique_ptr<ReplicationMessage> replicationMessage(static_cast<ReplicationMessage*>(message.release()));
 		replicationMessage->replicationAction = ReplicationActionType::RAT_UPDATE;
 		replicationMessage->networkEntityId = networkEntityId;
+		replicationMessage->controlledByPeerId = controlledByPeerId;
 		replicationMessage->dataSize = buffer.GetSize();
 		replicationMessage->data = buffer.GetData();
 
@@ -80,11 +83,11 @@ namespace NetLib
 		LOG_INFO("DATA SIZE: %hu", replicationMessage.dataSize);
 		float posX = buffer.ReadFloat();
 		float posY = buffer.ReadFloat();
-		int gameEntity = _networkEntityFactory->CreateNetworkEntityObject(replicationMessage.replicatedClassId, networkEntityId, posX, posY, &_networkVariableChangesHandler);
+		int gameEntity = _networkEntityFactory->CreateNetworkEntityObject(replicationMessage.replicatedClassId, networkEntityId, replicationMessage.controlledByPeerId, posX, posY, &_networkVariableChangesHandler);
 		assert(gameEntity != -1);
 
 		//Add it to the network entities storage in order to avoid loosing it
-		_networkEntitiesStorage.AddNetworkEntity(networkEntityId, gameEntity);
+		_networkEntitiesStorage.AddNetworkEntity(replicationMessage.replicatedClassId, networkEntityId, replicationMessage.controlledByPeerId, gameEntity);
 	}
 
 	void ReplicationManager::ProcessReceivedUpdateReplicationMessage(const ReplicationMessage& replicationMessage)
@@ -95,11 +98,11 @@ namespace NetLib
 			LOG_INFO("Replication: Trying to update a network entity that doesn't exist. Entity ID: %u. Creating a new entity...", networkEntityId);
 
 			//If not found create a new one and update it
-			int gameEntity = _networkEntityFactory->CreateNetworkEntityObject(replicationMessage.replicatedClassId, networkEntityId, 0.f, 0.f, &_networkVariableChangesHandler);
+			int gameEntity = _networkEntityFactory->CreateNetworkEntityObject(replicationMessage.replicatedClassId, networkEntityId, replicationMessage.controlledByPeerId, 0.f, 0.f, &_networkVariableChangesHandler);
 			assert(gameEntity != -1);
 
 			//Add it to the network entities storage in order to avoid loosing it
-			_networkEntitiesStorage.AddNetworkEntity(networkEntityId, gameEntity);
+			_networkEntitiesStorage.AddNetworkEntity(replicationMessage.replicatedClassId, networkEntityId, replicationMessage.controlledByPeerId, gameEntity);
 			return;
 		}
 
@@ -119,21 +122,21 @@ namespace NetLib
 		_networkEntityFactory = entityFactory;
 	}
 
-	uint32_t ReplicationManager::CreateNetworkEntity(uint32_t entityType, float posX, float posY)
+	uint32_t ReplicationManager::CreateNetworkEntity(uint32_t entityType, uint32_t controlledByPeerId, float posX, float posY)
 	{
 		//Create object through its custom factory
-		int gameEntityId = _networkEntityFactory->CreateNetworkEntityObject(entityType, _nextNetworkEntityId, posX, posY, &_networkVariableChangesHandler);
+		int gameEntityId = _networkEntityFactory->CreateNetworkEntityObject(entityType, _nextNetworkEntityId, controlledByPeerId, posX, posY, &_networkVariableChangesHandler);
 		assert(gameEntityId != -1);
 
 		//Add it to the network entities storage in order to avoid loosing it
-		_networkEntitiesStorage.AddNetworkEntity(_nextNetworkEntityId, gameEntityId);
+		_networkEntitiesStorage.AddNetworkEntity(entityType, _nextNetworkEntityId, controlledByPeerId, gameEntityId);
 
 		//Prepare a Create replication message for interested clients
 		uint8_t* data = new uint8_t[8];
 		Buffer buffer(data, 8);
 		buffer.WriteFloat(posX);
 		buffer.WriteFloat(posY);
-		std::unique_ptr<ReplicationMessage> createMessage = CreateCreateReplicationMessage(entityType, _nextNetworkEntityId, buffer);
+		std::unique_ptr<ReplicationMessage> createMessage = CreateCreateReplicationMessage(entityType, controlledByPeerId, _nextNetworkEntityId, buffer);
 
 		//Store it into queue before broadcasting it
 		_pendingReplicationActionMessages.push(std::move(createMessage));
@@ -146,7 +149,7 @@ namespace NetLib
 	void ReplicationManager::RemoveNetworkEntity(uint32_t networkEntityId)
 	{
 		//Get game entity Id from network entity Id
-		uint32_t gameEntity;
+		NetworkEntityData gameEntity;
 		bool foundSuccesfully = _networkEntitiesStorage.TryGetNetworkEntityFromId(networkEntityId, gameEntity);
 		if (!foundSuccesfully)
 		{
@@ -155,7 +158,7 @@ namespace NetLib
 		}
 
 		//Destroy object through its custom factory
-		_networkEntityFactory->DestroyNetworkEntityObject(gameEntity);
+		_networkEntityFactory->DestroyNetworkEntityObject(gameEntity.inGameId);
 
 		std::unique_ptr<ReplicationMessage> destroyMessage = CreateDestroyReplicationMessage(networkEntityId);
 
@@ -173,9 +176,11 @@ namespace NetLib
 		MessageFactory& messageFactory = MessageFactory::GetInstance();
 		while (cit != citPastToEnd)
 		{
+			const NetworkEntityData networkEntityData = cit->second;
+
 			//TODO check that it has not been created with RAT_CREATE in the current tick
 			//Get network variable changes data
-			const EntityNetworkVariableChanges* entityNetworkVariableChanges = _networkVariableChangesHandler.GetChangesFromEntity(cit->first);
+			const EntityNetworkVariableChanges* entityNetworkVariableChanges = _networkVariableChangesHandler.GetChangesFromEntity(networkEntityData.id);
 			if (entityNetworkVariableChanges != nullptr)
 			{
 				size_t dataSize = entityNetworkVariableChanges->Size() + sizeof(uint16_t);
@@ -196,7 +201,7 @@ namespace NetLib
 					buffer.WriteFloat(changesIt->value);
 				}
 
-				std::unique_ptr<ReplicationMessage> message = CreateUpdateReplicationMessage(cit->first, buffer);
+				std::unique_ptr<ReplicationMessage> message = CreateUpdateReplicationMessage(networkEntityData.entityType, networkEntityData.id, networkEntityData.controlledByPeerId, buffer);
 				_pendingReplicationActionMessages.push(std::move(message));
 			}
 			++cit;

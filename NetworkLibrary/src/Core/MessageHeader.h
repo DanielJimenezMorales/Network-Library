@@ -17,7 +17,8 @@ namespace NetLib
 		InGameResponse = 7,
 		TimeRequest = 8,
 		TimeResponse = 9,
-		Replication = 10
+		Replication = 10,
+		Inputs = 11
 	};
 
 	struct MessageHeader

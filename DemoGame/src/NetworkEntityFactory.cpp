@@ -9,22 +9,30 @@
 #include "ITextureLoader.h"
 #include "PlayerControllerComponent.h"
 #include "RemotePlayerControllerComponent.h"
+#include "NetworkPeerComponent.h"
+#include "Client.h"
+#include "NetworkEntityComponent.h"
 
 void NetworkEntityFactory::SetScene(Scene* scene)
 {
 	_scene = scene;
 }
 
+//TODO Not useful anymore. Delete
 void NetworkEntityFactory::SetPeerType(NetLib::PeerType peerType)
 {
 	_peerType = peerType;
 }
 
-int NetworkEntityFactory::CreateNetworkEntityObject(uint32_t networkEntityType, uint32_t networkEntityId, float posX, float posY, NetLib::NetworkVariableChangesHandler* networkVariableChangeHandler)
+int NetworkEntityFactory::CreateNetworkEntityObject(uint32_t networkEntityType, uint32_t networkEntityId, uint32_t controlledByPeerId, float posX, float posY, NetLib::NetworkVariableChangesHandler* networkVariableChangeHandler)
 {
+	LOG_INFO("CONTROLLER BY PEER ID %u", controlledByPeerId);
 	ServiceLocator& serviceLocator = ServiceLocator::GetInstance();
 	ITextureLoader& textureLoader = serviceLocator.GetTextureLoader();
 	Texture* texture = textureLoader.LoadTexture("sprites/PlayerSprites/playerHead.png");
+
+	const GameEntity networkPeerEntity = _scene->GetFirstEntityOfType<NetworkPeerComponent>();
+	const NetworkPeerComponent& networkPeerComponent = networkPeerEntity.GetComponent<NetworkPeerComponent>();
 
 	GameEntity entity = _scene->CreateGameEntity();
 	TransformComponent& transform = entity.GetComponent<TransformComponent>();
@@ -32,15 +40,27 @@ int NetworkEntityFactory::CreateNetworkEntityObject(uint32_t networkEntityType, 
 
 	entity.AddComponent<SpriteRendererComponent>(texture);
 
-	if (_peerType == NetLib::ServerMode)
+	PlayerControllerConfiguration playerConfiguration;
+	playerConfiguration.movementSpeed = 250;
+
+	entity.AddComponent<NetworkEntityComponent>(networkEntityId, controlledByPeerId);
+
+	if (networkPeerComponent.peer->GetPeerType() == NetLib::ServerMode)
 	{
-		PlayerControllerConfiguration playerConfiguration;
-		playerConfiguration.movementSpeed = 250;
 		entity.AddComponent<PlayerControllerComponent>(networkVariableChangeHandler, networkEntityId, playerConfiguration);
 	}
 	else
 	{
-		entity.AddComponent<RemotePlayerControllerComponent>(networkVariableChangeHandler, networkEntityId);
+		const NetLib::Client* clientPeer = static_cast<NetLib::Client*>(networkPeerComponent.peer);
+		if (clientPeer->GetLocalClientId() == controlledByPeerId)
+		{
+			entity.AddComponent<PlayerControllerComponent>(networkVariableChangeHandler, networkEntityId, playerConfiguration);
+		}
+		else
+		{
+			LOG_WARNING("ME CREO EL LOCAL");
+			entity.AddComponent<RemotePlayerControllerComponent>(networkVariableChangeHandler, networkEntityId);
+		}
 	}
 
 	entity.AddComponent<PlayerNetworkComponent>(networkVariableChangeHandler, networkEntityId);
