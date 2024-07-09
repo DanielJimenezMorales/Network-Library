@@ -388,10 +388,12 @@ namespace NetLib
 				std::unique_ptr<Message> message = messageFactory.LendMessage(MessageType::Replication);
 				std::unique_ptr<ReplicationMessage> replicationMessage(static_cast<ReplicationMessage*>(message.release()));
 
+				//TODO Create an operator= or something like that to avoid this spaguetti code
 				replicationMessage->SetOrdered(pendingReplicationMessage->GetHeader().isOrdered);
 				replicationMessage->SetReliability(pendingReplicationMessage->GetHeader().isReliable);
 				replicationMessage->replicationAction = pendingReplicationMessage->replicationAction;
 				replicationMessage->networkEntityId = pendingReplicationMessage->networkEntityId;
+				replicationMessage->controlledByPeerId = pendingReplicationMessage->controlledByPeerId;
 				replicationMessage->replicatedClassId = pendingReplicationMessage->replicatedClassId;
 				replicationMessage->dataSize = pendingReplicationMessage->dataSize;
 				if (replicationMessage->dataSize > 0)

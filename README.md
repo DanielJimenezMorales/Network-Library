@@ -24,6 +24,7 @@ This repository contains four different projects:
    - Network variables
    - Automatic network change tracking
    - ECS friendly
+7. Server-side inputs buffer (Naive version so far)
 
 
 ## Demo game features: (IN PROGRESS)

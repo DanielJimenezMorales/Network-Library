@@ -55,7 +55,7 @@ struct NetworkPeerComponent
 		isTrackingRemotePeerConnect = true;
 	}
 
-	void AddUnprocessedConnectedRemotePeer(uint32_t remotePeerId) { unprocessedConnectedRemotePeers.push(0); };
+	void AddUnprocessedConnectedRemotePeer(uint32_t remotePeerId) { unprocessedConnectedRemotePeers.push(remotePeerId); };
 
 	NetLib::Client* GetPeerAsClient() const { assert(peer != nullptr); assert(peer->GetPeerType() == NetLib::PeerType::ClientMode); return static_cast<NetLib::Client*>(peer); }
 	NetLib::Server* GetPeerAsServer() const { assert(peer != nullptr); assert(peer->GetPeerType() == NetLib::PeerType::ServerMode); return static_cast<NetLib::Server*>(peer); }

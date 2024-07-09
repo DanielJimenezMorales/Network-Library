@@ -14,15 +14,33 @@
 
 void PlayerControllerSystem::Tick(EntityContainer& entityContainer, float elapsedTime) const
 {
+	std::vector<GameEntity> playerEntities = entityContainer.GetEntitiesOfType<PlayerControllerComponent>();
+	if (playerEntities.empty())
+	{
+		return;
+	}
+
+	const GameEntity networkPeerEntity = entityContainer.GetFirstEntityOfType<NetworkPeerComponent>();
+	const NetworkPeerComponent& networkPeerComponent = networkPeerEntity.GetComponent<NetworkPeerComponent>();
+	if (networkPeerComponent.peer->GetConnectionState() != NetLib::PCS_Connected)
+	{
+		return;
+	}
+
 	InputState inputState;
 	ProcessInputs(entityContainer, inputState);
-	//SendInputsToServer(entityContainer, inputState);
+	SendInputsToServer(entityContainer, inputState);
 
-	std::vector<GameEntity> playerEntities = entityContainer.GetEntitiesOfType<PlayerControllerComponent>();
 	auto it = playerEntities.begin();
 	for (; it != playerEntities.end(); ++it)
 	{
-		TickPlayerController(*it, inputState, elapsedTime);
+		TransformComponent& transform = it->GetComponent<TransformComponent>();
+		const PlayerControllerComponent& networkComponent = it->GetComponent<PlayerControllerComponent>();
+
+		transform.position = Vec2f(networkComponent.posX.Get(), networkComponent.posY.Get());
+
+		//TODO Enable this when client-side prediction and reconciliation is ready
+		//TickPlayerController(*it, inputState, elapsedTime);
 	}
 }
 

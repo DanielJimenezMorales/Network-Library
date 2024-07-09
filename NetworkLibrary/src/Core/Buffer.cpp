@@ -1,6 +1,7 @@
 #include "Buffer.h"
 #include <cassert>
 #include <cmath>
+#include <cstring>
 
 namespace NetLib
 {
@@ -43,7 +44,10 @@ namespace NetLib
 
 	void Buffer::WriteFloat(float value)
 	{
-		WriteInteger(value);
+		assert(_index + 4 <= _size);
+		//This memcpy needs to be done using memcpy to keep the bits configuration too
+		std::memcpy((_data + _index), &value, sizeof(uint32_t));
+		_index += 4;
 	}
 
 	uint64_t Buffer::ReadLong()
@@ -92,7 +96,13 @@ namespace NetLib
 
 	float Buffer::ReadFloat()
 	{
-		return ReadInteger();
+		assert(_index + 4 <= _size);
+		float value;
+		//This memcpy needs to be done using memcpy to recover the bits configuration too
+		std::memcpy(&value, (_data + _index), sizeof(float));
+
+		_index += 4;
+		return value;
 	}
 
 	void Buffer::ResetAccessIndex()

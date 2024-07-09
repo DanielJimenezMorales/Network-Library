@@ -26,7 +26,7 @@ void NetworkSystem::PreTick(EntityContainer& entityContainer, float elapsedTime)
 	{
 		uint32_t unprocessedConnectedRemotePeerId = networkPeerComponent.unprocessedConnectedRemotePeers.front();
 		networkPeerComponent.unprocessedConnectedRemotePeers.pop();
-		Server_SpawnRemotePeerConnect(entityContainer);
+		Server_SpawnRemotePeerConnect(entityContainer, unprocessedConnectedRemotePeerId);
 	}
 }
 
@@ -37,11 +37,11 @@ void NetworkSystem::PosTick(EntityContainer& entityContainer, float elapsedTime)
 	networkPeerComponent.peer->Tick(elapsedTime);
 }
 
-void NetworkSystem::Server_SpawnRemotePeerConnect(EntityContainer& entityContainer) const
+void NetworkSystem::Server_SpawnRemotePeerConnect(EntityContainer& entityContainer, uint32_t remotePeerId) const
 {
 	//Spawn its local player entity:
 	GameEntity networkPeerEntity = entityContainer.GetFirstEntityOfType<NetworkPeerComponent>();
 	NetworkPeerComponent& networkPeerComponent = networkPeerEntity.GetComponent<NetworkPeerComponent>();
 	NetLib::Server* serverPeer = networkPeerComponent.GetPeerAsServer();
-	serverPeer->CreateNetworkEntity(10, 5, 256.f, 256.f);
+	serverPeer->CreateNetworkEntity(10, remotePeerId, 256.f, 256.f);
 }

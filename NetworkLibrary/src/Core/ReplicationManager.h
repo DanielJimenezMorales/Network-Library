@@ -16,6 +16,7 @@ namespace NetLib
 
 	static constexpr uint32_t INVALID_NETWORK_ENTITY_ID = 0;
 
+	//TODO Convert this to enum class
 	enum ReplicationActionType : uint8_t
 	{
 		RAT_CREATE = 0,
@@ -58,6 +59,7 @@ namespace NetLib
 
 		uint32_t _nextNetworkEntityId;
 
+		//TODO Support multiple network entity factories depending on the entity_type
 		INetworkEntityFactory* _networkEntityFactory;
 		NetworkVariableChangesHandler _networkVariableChangesHandler;
 	};

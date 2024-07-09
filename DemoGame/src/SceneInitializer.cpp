@@ -13,6 +13,7 @@
 #include "InputHandler.h"
 #include "ITextureLoader.h"
 #include "PlayerControllerSystem.h"
+#include "ServerPlayerControllerSystem.h"
 #include "RemotePlayerControllerSystem.h"
 #include "InputComponent.h"
 #include "InputStateFactory.h"
@@ -63,8 +64,16 @@ void SceneInitializer::InitializeScene(Scene& scene, NetLib::PeerType networkPee
 
 	//Populate systems
     //TODO Create a system storage in order to be able to free them at the end
-    PlayerControllerSystem* playerControllerSystem = new PlayerControllerSystem();
-    scene.AddTickSystem(playerControllerSystem);
+    if (networkPeerType == NetLib::PeerType::ServerMode)
+    {
+        ServerPlayerControllerSystem* serverPlayerControllerSystem = new ServerPlayerControllerSystem();
+        scene.AddTickSystem(serverPlayerControllerSystem);
+    }
+    else if (networkPeerType == NetLib::PeerType::ClientMode)
+    {
+        PlayerControllerSystem* playerControllerSystem = new PlayerControllerSystem();
+        scene.AddTickSystem(playerControllerSystem);
+    }
 
     RemotePlayerControllerSystem* remotePlayerControllerSystem = new RemotePlayerControllerSystem();
     scene.AddTickSystem(remotePlayerControllerSystem);

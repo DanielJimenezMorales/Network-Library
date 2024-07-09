@@ -27,7 +27,7 @@ namespace NetLib
 
 		uint32_t CreateNetworkEntity(uint32_t entityType, uint32_t controlledByPeerId, float posX, float posY);
 		void DestroyNetworkEntity(uint32_t entityId);
-
+		//TODO Create a method for destroying all network entities controlled by a remote peer
 		void RegisterInputStateFactory(IInputStateFactory* factory);
 		const IInputState* GetInputFromRemotePeer(uint32_t remotePeerId);
 

@@ -263,6 +263,8 @@ namespace NetLib
 
 	void InputStateMessage::Write(Buffer& buffer) const
 	{
+		_header.Write(buffer);
+
 		buffer.WriteShort(dataSize);
 		//TODO Create method called WriteData(data, size) in order to avoid this for loop
 		for (size_t i = 0; i < dataSize; ++i)
@@ -273,6 +275,9 @@ namespace NetLib
 
 	void InputStateMessage::Read(Buffer& buffer)
 	{
+		_header.type = MessageType::Inputs;
+		_header.ReadWithoutHeader(buffer);
+
 		dataSize = buffer.ReadShort();
 		if (dataSize > 0)
 		{
@@ -288,7 +293,7 @@ namespace NetLib
 
 	uint32_t InputStateMessage::Size() const
 	{
-		return MessageHeader::Size() + (dataSize * sizeof(uint8_t));
+		return MessageHeader::Size() + sizeof(uint16_t) + (dataSize * sizeof(uint8_t));
 	}
 
 	void InputStateMessage::Reset()

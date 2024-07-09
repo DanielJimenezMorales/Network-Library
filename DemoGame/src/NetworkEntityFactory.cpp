@@ -11,12 +11,14 @@
 #include "RemotePlayerControllerComponent.h"
 #include "NetworkPeerComponent.h"
 #include "Client.h"
+#include "NetworkEntityComponent.h"
 
 void NetworkEntityFactory::SetScene(Scene* scene)
 {
 	_scene = scene;
 }
 
+//TODO Not useful anymore. Delete
 void NetworkEntityFactory::SetPeerType(NetLib::PeerType peerType)
 {
 	_peerType = peerType;
@@ -41,7 +43,9 @@ int NetworkEntityFactory::CreateNetworkEntityObject(uint32_t networkEntityType, 
 	PlayerControllerConfiguration playerConfiguration;
 	playerConfiguration.movementSpeed = 250;
 
-	if(networkPeerComponent.peer->GetPeerType() == NetLib::ServerMode)
+	entity.AddComponent<NetworkEntityComponent>(networkEntityId, controlledByPeerId);
+
+	if (networkPeerComponent.peer->GetPeerType() == NetLib::ServerMode)
 	{
 		entity.AddComponent<PlayerControllerComponent>(networkVariableChangeHandler, networkEntityId, playerConfiguration);
 	}
@@ -54,6 +58,7 @@ int NetworkEntityFactory::CreateNetworkEntityObject(uint32_t networkEntityType, 
 		}
 		else
 		{
+			LOG_WARNING("ME CREO EL LOCAL");
 			entity.AddComponent<RemotePlayerControllerComponent>(networkVariableChangeHandler, networkEntityId);
 		}
 	}
