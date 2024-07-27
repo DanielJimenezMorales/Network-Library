@@ -17,6 +17,7 @@
 #include "RemotePlayerControllerSystem.h"
 #include "InputComponent.h"
 #include "InputStateFactory.h"
+#include "CameraComponent.h"
 
 void SceneInitializer::InitializeScene(Scene& scene, NetLib::PeerType networkPeerType, InputHandler& inputHandler) const
 {
@@ -31,6 +32,10 @@ void SceneInitializer::InitializeScene(Scene& scene, NetLib::PeerType networkPee
     inputHandler.AddController(keyboard);
 
 	//Populate entities
+    GameEntity mainCameraEntity = scene.CreateGameEntity();
+    //TODO Do not hardcode width and height values
+    mainCameraEntity.AddComponent<CameraComponent>(Vec2f(0.f, 0.f), 512, 512);
+
     GameEntity inputsEntity = scene.CreateGameEntity();
     inputsEntity.AddComponent<InputComponent>(keyboard);
 

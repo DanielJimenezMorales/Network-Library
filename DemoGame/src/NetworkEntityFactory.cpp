@@ -41,7 +41,7 @@ int NetworkEntityFactory::CreateNetworkEntityObject(uint32_t networkEntityType, 
 	entity.AddComponent<SpriteRendererComponent>(texture);
 
 	PlayerControllerConfiguration playerConfiguration;
-	playerConfiguration.movementSpeed = 250;
+	playerConfiguration.movementSpeed = 25;
 
 	entity.AddComponent<NetworkEntityComponent>(networkEntityId, controlledByPeerId);
 
