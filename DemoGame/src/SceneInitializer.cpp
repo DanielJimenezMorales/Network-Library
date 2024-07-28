@@ -19,6 +19,10 @@
 #include "InputComponent.h"
 #include "InputStateFactory.h"
 #include "CameraComponent.h"
+#include "ServiceLocator.h"
+#include "SpriteRendererComponent.h"
+#include "CrosshairComponent.h"
+#include "CrosshairFollowMouseSystem.h"
 
 void SceneInitializer::InitializeScene(Scene& scene, NetLib::PeerType networkPeerType, InputHandler& inputHandler) const
 {
@@ -71,6 +75,22 @@ void SceneInitializer::InitializeScene(Scene& scene, NetLib::PeerType networkPee
 		networkPeerComponent.GetPeerAsServer()->RegisterInputStateFactory(inputStateFactory);
 		networkPeerComponent.inputStateFactory = inputStateFactory;
 		networkPeerComponent.TrackOnRemotePeerConnect();
+	}
+
+	if (networkPeer->GetPeerType() == NetLib::PeerType::ClientMode)
+	{
+		//Add crosshair if being a client
+		GameEntity crosshairEntity = scene.CreateGameEntity();
+
+		ServiceLocator& serviceLocator = ServiceLocator::GetInstance();
+		ITextureLoader& textureLoader = serviceLocator.GetTextureLoader();
+		Texture* texture = textureLoader.LoadTexture("sprites/Crosshair/crosshair.png");
+
+		crosshairEntity.AddComponent<SpriteRendererComponent>(texture);
+		crosshairEntity.AddComponent<CrosshairComponent>();
+
+		CrosshairFollowMouseSystem* crosshairFollowMouseSystem = new CrosshairFollowMouseSystem();
+		scene.AddUpdateSystem(crosshairFollowMouseSystem);
 	}
 
 	//Populate systems
