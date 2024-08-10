@@ -9,6 +9,8 @@
 #include "Vec2f.h"
 #include "Logger.h"
 
+#include <cmath>
+
 void SpriteRendererSystem::Render(EntityContainer& entityContainer, SDL_Renderer* renderer) const
 {
 	const GameEntity cameraEntity = entityContainer.GetFirstEntityOfType<CameraComponent>();
@@ -29,6 +31,14 @@ void SpriteRendererSystem::Render(EntityContainer& entityContainer, SDL_Renderer
 		destRect.y = screenPosition.Y() - (texture->GetDimensions().h / 2);
 		destRect.w = texture->GetDimensions().w;
 		destRect.h = texture->GetDimensions().h;
-		SDL_RenderCopy(renderer, texture->GetRaw(), &texture->GetDimensions(), &destRect);
+
+		double rotationAngles = 0;
+
+		float dotProduct = (transform.lookAtDirection.X() * transform.previousLookAtDirection.X()) + (transform.lookAtDirection.Y() * transform.previousLookAtDirection.Y());
+		float anglesInRadians = std::acosf(dotProduct);
+		rotationAngles = anglesInRadians * (180.0 / M_PI);
+
+		//SDL_RenderCopy(renderer, texture->GetRaw(), &texture->GetDimensions(), &destRect);
+		SDL_RenderCopyEx(renderer, texture->GetRaw(), &texture->GetDimensions(), &destRect, rotationAngles, nullptr, SDL_RendererFlip::SDL_FLIP_NONE);
 	}
 }

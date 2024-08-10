@@ -11,4 +11,5 @@ public:
 	virtual bool GetButtonPressed(int actionId) const = 0;
 	virtual bool GetButtonUp(int actionId) const = 0;
 	virtual void GetPosition(int& x, int& y) const = 0;
+	virtual void GetDelta(int& x, int& y) const = 0;
 };

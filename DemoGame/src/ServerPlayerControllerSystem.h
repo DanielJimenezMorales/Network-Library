@@ -17,4 +17,5 @@ private:
 	void TickPlayerController(GameEntity& playerEntity, const InputState& inputState, float elapsedTime) const;
 	Vec2f UpdatePosition(const Vec2f& inputs, const TransformComponent& transform, const PlayerControllerConfiguration& configuration, float elapsedTime) const;
 	void ApplyPosition(const Vec2f& position, TransformComponent& transform) const;
+	Vec2f UpdateLookAt(int32_t mouseDeltaX, int32_t mouseDeltaY, const TransformComponent& transform, const PlayerControllerConfiguration& configuration, float elapsedTime) const;
 };

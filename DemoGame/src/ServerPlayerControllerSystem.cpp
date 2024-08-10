@@ -48,6 +48,8 @@ void ServerPlayerControllerSystem::TickPlayerController(GameEntity& playerEntity
 
 	networkComponent.posX = updatedPosition.X();
 	networkComponent.posY = updatedPosition.Y();
+
+	Vec2f updatedLookAt = UpdateLookAt(inputState.mouseDeltaX, inputState.mouseDeltaY, transform, networkComponent.configuration, elapsedTime);
 }
 
 Vec2f ServerPlayerControllerSystem::UpdatePosition(const Vec2f& inputs, const TransformComponent& transform, const PlayerControllerConfiguration& configuration, float elapsedTime) const
@@ -63,4 +65,9 @@ Vec2f ServerPlayerControllerSystem::UpdatePosition(const Vec2f& inputs, const Tr
 void ServerPlayerControllerSystem::ApplyPosition(const Vec2f& position, TransformComponent& transform) const
 {
 	transform.position = position;
+}
+
+Vec2f ServerPlayerControllerSystem::UpdateLookAt(int32_t mouseDeltaX, int32_t mouseDeltaY, const TransformComponent& transform, const PlayerControllerConfiguration& configuration, float elapsedTime) const
+{
+	return Vec2f();
 }

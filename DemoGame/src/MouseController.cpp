@@ -9,8 +9,15 @@ void MouseController::AddButtonMap(const InputButton& inputButton)
 
 void MouseController::HandleEvent(const SDL_Event& event)
 {
-	if (event.type != SDL_MOUSEBUTTONDOWN && event.type != SDL_MOUSEBUTTONUP)
+	if (event.type != SDL_MOUSEBUTTONDOWN && event.type != SDL_MOUSEBUTTONUP && event.type != SDL_MOUSEMOTION)
 	{
+		return;
+	}
+
+	if (event.type == SDL_MOUSEMOTION)
+	{
+		_mouseDeltaX = event.motion.xrel;
+		_mouseDeltaY = event.motion.yrel;
 		return;
 	}
 
@@ -28,6 +35,9 @@ void MouseController::ResetEvents()
 
 		item.second.handledThisFrame = false;
 	}
+
+	_mouseDeltaX = 0;
+	_mouseDeltaY = 0;
 }
 
 void MouseController::UpdateUnhandledButtons()
@@ -77,6 +87,12 @@ bool MouseController::GetButtonUp(int actionId) const
 void MouseController::GetPosition(int& x, int& y) const
 {
 	SDL_GetMouseState(&x, &y);
+}
+
+void MouseController::GetDelta(int& x, int& y) const
+{
+	x = _mouseDeltaX;
+	y = _mouseDeltaY;
 }
 
 void MouseController::HandleButton(const SDL_Event& event)

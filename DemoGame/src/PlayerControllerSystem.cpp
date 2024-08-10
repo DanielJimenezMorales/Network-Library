@@ -3,6 +3,7 @@
 #include "GameEntity.hpp"
 #include "InputComponent.h"
 #include "IInputController.h"
+#include "ICursor.h"
 #include "Vec2f.h"
 #include "TransformComponent.h"
 #include "PlayerControllerComponent.h"
@@ -52,6 +53,7 @@ void PlayerControllerSystem::ProcessInputs(EntityContainer& entityContainer, Inp
 	outInputState.movement.X(inputComponent.inputController->GetAxis(HORIZONTAL_AXIS));
 	outInputState.movement.Y(inputComponent.inputController->GetAxis(VERTICAL_AXIS));
 	outInputState.movement.Normalize();
+	inputComponent.cursor->GetDelta(outInputState.mouseDeltaX, outInputState.mouseDeltaY);
 }
 
 void PlayerControllerSystem::SendInputsToServer(EntityContainer& entityContainer, const InputState& inputState) const
