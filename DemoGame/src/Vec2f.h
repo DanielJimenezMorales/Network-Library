@@ -4,8 +4,8 @@
 struct Vec2f
 {
 public:
-	Vec2f() :_x(0.f), _y(0.f) {};
-	Vec2f(float x, float y) : _x(x), _y(y) {}
+	constexpr Vec2f() :_x(0.f), _y(0.f) {};
+	constexpr Vec2f(float x, float y) : _x(x), _y(y) {}
 	Vec2f(const Vec2f& other) = default;
 
 	float X() const { return _x; }
