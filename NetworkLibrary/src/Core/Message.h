@@ -144,6 +144,7 @@ namespace NetLib
 		uint32_t serverTime;
 	};
 
+	//TODO Delete this type of messages. It is not useful anymore
 	class InGameMessage : public Message
 	{
 	public:
@@ -158,6 +159,7 @@ namespace NetLib
 		uint64_t data;
 	};
 
+	//TODO Delete this type of messages. It is not useful anymore
 	class InGameResponseMessage : public Message
 	{
 	public:

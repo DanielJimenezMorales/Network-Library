@@ -69,6 +69,8 @@ namespace NetLib
 		const EntityNetworkVariableChanges* GetChangesFromEntity(uint32_t networkEntityId);
 		void Clear();
 
+		void SetNextNetworkVariableId(NetworkVariableId new_value);
+
 	private:
 		NetworkVariableId _nextNetworkVariableId;
 
