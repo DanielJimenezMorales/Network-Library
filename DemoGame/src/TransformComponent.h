@@ -8,17 +8,22 @@
 struct TransformComponent
 {
 public:
-	TransformComponent() : _position(0.f, 0.f), _rotationAngle(0.f), _scale(1.f, 1.f) {}
-	TransformComponent(float x, float y) : _position(x, y), _rotationAngle(0.f), _scale(1.f, 1.f) {}
+	TransformComponent();
+	TransformComponent(float x, float y);
 
+	TransformComponent(const TransformComponent& other) = default;
+
+	//Position
 	Vec2f GetPosition() const { return _position; }
 	void SetPosition(const Vec2f& newPosition) { _position = newPosition; }
 
+	//Rotation
 	float GetRotationAngle() const { return _rotationAngle; }
 	void SetRotationAngle(float newRotationAngle);
 	void LookAt(const Vec2f& position);
 	Vec2f GetForwardVector() const;
 
+	//Scale
 	Vec2f GetScale() const { return _scale; }
 	void SetScale(const Vec2f& newScale) { _scale = newScale; }
 

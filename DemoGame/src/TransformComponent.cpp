@@ -2,6 +2,15 @@
 #include <SDL_stdinc.h>
 #include <cmath>
 
+
+TransformComponent::TransformComponent() : _position(0.f, 0.f), _rotationAngle(0.f), _scale(1.f, 1.f)
+{
+}
+
+TransformComponent::TransformComponent(float x, float y) : _position(x, y), _rotationAngle(0.f), _scale(1.f, 1.f)
+{
+}
+
 void TransformComponent::LookAt(const Vec2f& position)
 {
 	Vec2f direction = position - _position;
