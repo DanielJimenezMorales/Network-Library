@@ -54,7 +54,7 @@ void ServerPlayerControllerSystem::TickPlayerController(GameEntity& playerEntity
 
 Vec2f ServerPlayerControllerSystem::UpdatePosition(const Vec2f& inputs, const TransformComponent& transform, const PlayerControllerConfiguration& configuration, float elapsedTime) const
 {
-	Vec2f currentPosition = transform.position;
+	Vec2f currentPosition = transform.GetPosition();
 
 	currentPosition.AddToX(inputs.X() * configuration.movementSpeed * elapsedTime);
 	currentPosition.AddToY(inputs.Y() * configuration.movementSpeed * elapsedTime);
@@ -64,10 +64,11 @@ Vec2f ServerPlayerControllerSystem::UpdatePosition(const Vec2f& inputs, const Tr
 
 void ServerPlayerControllerSystem::ApplyPosition(const Vec2f& position, TransformComponent& transform) const
 {
-	transform.position = position;
+	transform.SetPosition(position);
 }
 
 Vec2f ServerPlayerControllerSystem::UpdateLookAt(int32_t mouseDeltaX, int32_t mouseDeltaY, const TransformComponent& transform, const PlayerControllerConfiguration& configuration, float elapsedTime) const
 {
+
 	return Vec2f();
 }

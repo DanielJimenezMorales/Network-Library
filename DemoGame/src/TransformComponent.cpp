@@ -4,7 +4,7 @@
 
 void TransformComponent::LookAt(const Vec2f& position)
 {
-	Vec2f direction = position - this->position;
+	Vec2f direction = position - _position;
 	direction.Normalize();
 
 	Vec2f forward = GetForwardVector();
@@ -22,6 +22,8 @@ void TransformComponent::LookAt(const Vec2f& position)
 Vec2f TransformComponent::GetForwardVector() const
 {
 	float angleInRadians = _rotationAngle * (M_PI / 180.f);
+
+	//Since the rotation direction is anti-clockwise, we need to do the sin and cos of negative angle instead of just the positive angle.
 	Vec2f forwardVector(std::sin(-angleInRadians), -cos(-angleInRadians));
 
 	return forwardVector;

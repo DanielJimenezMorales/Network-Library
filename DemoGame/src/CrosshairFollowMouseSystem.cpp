@@ -27,5 +27,5 @@ void CrosshairFollowMouseSystem::Update(EntityContainer& entityContainer, float 
 	//Update crosshair world position
 	GameEntity crosshairEntity = entityContainer.GetFirstEntityOfType<CrosshairComponent>();
 	TransformComponent& crosshairTransformComponent = crosshairEntity.GetComponent<TransformComponent>();
-	crosshairTransformComponent.position = mouseWorldPosition;
+	crosshairTransformComponent.SetPosition(mouseWorldPosition);
 }

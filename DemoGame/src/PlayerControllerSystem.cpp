@@ -38,7 +38,7 @@ void PlayerControllerSystem::Tick(EntityContainer& entityContainer, float elapse
 		TransformComponent& transform = it->GetComponent<TransformComponent>();
 		const PlayerControllerComponent& networkComponent = it->GetComponent<PlayerControllerComponent>();
 
-		transform.position = Vec2f(networkComponent.posX.Get(), networkComponent.posY.Get());
+		transform.SetPosition(Vec2f(networkComponent.posX.Get(), networkComponent.posY.Get()));
 
 		//TODO Enable this when client-side prediction and reconciliation is ready
 		//TickPlayerController(*it, inputState, elapsedTime);
@@ -79,7 +79,7 @@ void PlayerControllerSystem::TickPlayerController(GameEntity& playerEntity, cons
 
 Vec2f PlayerControllerSystem::UpdatePosition(const Vec2f& inputs, const TransformComponent& transform, const PlayerControllerConfiguration& configuration, float elapsedTime) const
 {
-	Vec2f currentPosition = transform.position;
+	Vec2f currentPosition = transform.GetPosition();
 
 	currentPosition.AddToX(inputs.X() * configuration.movementSpeed * elapsedTime);
 	currentPosition.AddToY(inputs.Y() * configuration.movementSpeed * elapsedTime);
@@ -89,5 +89,5 @@ Vec2f PlayerControllerSystem::UpdatePosition(const Vec2f& inputs, const Transfor
 
 void PlayerControllerSystem::ApplyPosition(const Vec2f& position, TransformComponent& transform) const
 {
-	transform.position = position;
+	transform.SetPosition(position);
 }
