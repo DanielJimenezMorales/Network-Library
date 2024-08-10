@@ -19,6 +19,7 @@ namespace NetLib
 		if (pairIdIt == _floatVariableIdToTypeMap.cend())
 		{
 			_floatVariableIdToTypeMap[pairId] = networkVariable;
+			LOG_INFO("Registering Network variable. Variable ID: %u, Entity ID: %u", pairId._networkVariableId, pairId._networkEntityId);
 		}
 		else
 		{
@@ -29,7 +30,7 @@ namespace NetLib
 	void NetworkVariableChangesHandler::UnregisterNetworkVariable(const NetworkVariable<float>& networkVariable)
 	{
 		NetworkVariablePairId pairId(networkVariable.GetId(), networkVariable.GetEntityId());
-		
+
 		auto pairIdIt = _floatVariableIdToTypeMap.find(pairId);
 		if (pairIdIt != _floatVariableIdToTypeMap.cend())
 		{
@@ -118,6 +119,13 @@ namespace NetLib
 	void NetworkVariableChangesHandler::Clear()
 	{
 		_networkEntityIdToChangesMap.clear();
+	}
+
+	void NetworkVariableChangesHandler::SetNextNetworkVariableId(NetworkVariableId new_value)
+	{
+		assert(new_value != INVALID_NETWORK_VARIABLE_ID);
+
+		_nextNetworkVariableId = new_value;
 	}
 
 	void NetworkVariableChangesHandler::IncrementNextNetworkVariableId()

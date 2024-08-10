@@ -45,6 +45,9 @@ int NetworkEntityFactory::CreateNetworkEntityObject(uint32_t networkEntityType, 
 
 	entity.AddComponent<NetworkEntityComponent>(networkEntityId, controlledByPeerId);
 
+	//For player entities, its network variables IDs will go from 1 to 100 both included.
+	networkVariableChangeHandler->SetNextNetworkVariableId(1);
+
 	if (networkPeerComponent.peer->GetPeerType() == NetLib::ServerMode)
 	{
 		entity.AddComponent<PlayerControllerComponent>(networkVariableChangeHandler, networkEntityId, playerConfiguration);

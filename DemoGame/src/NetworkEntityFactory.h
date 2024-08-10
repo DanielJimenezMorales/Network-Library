@@ -5,6 +5,9 @@
 class Scene;
 class NetworkVariableChangesHandler;
 
+/// <summary>
+/// Player network entities factory. IMPORTANT: Players will be using network variable ids from 1 to 100.
+/// </summary>
 class NetworkEntityFactory : public NetLib::INetworkEntityFactory
 {
 public:
