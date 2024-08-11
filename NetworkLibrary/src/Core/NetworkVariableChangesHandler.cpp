@@ -91,7 +91,7 @@ namespace NetLib
 				}
 				else
 				{
-					LOG_ERROR("Network variable not found when trying to assign new value from server");
+					LOG_ERROR("Network variable not found when trying to assign new value from server. Var ID: %u, Entity ID: %u", networkVariableId, networkEntityId);
 				}
 			}
 			else

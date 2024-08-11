@@ -66,7 +66,7 @@ int NetworkEntityFactory::CreateNetworkEntityObject(uint32_t networkEntityType, 
 		}
 	}
 
-	entity.AddComponent<PlayerNetworkComponent>(networkVariableChangeHandler, networkEntityId);
+	//entity.AddComponent<PlayerNetworkComponent>(networkVariableChangeHandler, networkEntityId);
 
 	return entity.GetId();
 }

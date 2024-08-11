@@ -47,12 +47,16 @@ public:
 	const std::vector<GameEntity> GetEntitiesOfBothTypes() const;
 
 	template <typename T>
+	T& GetFirstComponentOfType();
+
+	template <typename T>
+	const T& GetFirstComponentOfType() const;
+
+	template <typename T>
 	ComponentView<T> GetComponentsOfType();
 
 	template <typename T>
 	const ComponentView<T> GetComponentsOfType() const;
-
-	//TODO Create a version of GetEntityOfType that only returns components instead of GameEntity. Useful if we just simply want to process components and not the whole entity. Maybe call it GetEntityComponentsOfType...
 
 private:
 	entt::registry _entities;
@@ -128,18 +132,17 @@ inline const std::vector<GameEntity> EntityContainer::GetEntitiesOfType() const
 template<typename T>
 inline GameEntity EntityContainer::GetFirstEntityOfType()
 {
-	auto& view = _entities.view<T>();
-	assert(!view.empty());
-	return GameEntity(*view.begin(), this);
+	return const_cast<GameEntity&>(static_cast<const EntityContainer&>(*this).GetFirstEntityOfType<T>());
 }
 
-//TODO For some reason this method throws a compilation error of type: C2440 '<function-style-cast>': cannot convert from 'initializer list' to 'GameEntity
+//TODO For some reason this method throws a compilation error of type: C2440 '<function-style-cast>': cannot convert from 'initializer list' to 'GameEntity. Edit: This issue
+//has been solved by adding const_cast. However, not a really good quality solution. Dev should think in something better.
 template<typename T>
 inline const GameEntity EntityContainer::GetFirstEntityOfType() const
 {
 	auto& view = _entities.view<T>();
 	assert(!view.empty());
-	return GameEntity(*view.begin(), this);
+	return GameEntity(*view.begin(), const_cast<EntityContainer*>(this));
 }
 
 template<typename T1, typename T2>
@@ -157,6 +160,8 @@ inline std::vector<GameEntity> EntityContainer::GetEntitiesOfBothTypes()
 	return entitiesFound;
 }
 
+//TODO For some reason this method throws a compilation error of type: C2440 '<function-style-cast>': cannot convert from 'initializer list' to 'GameEntity. Edit: This issue
+//has been solved by adding const_cast. However, not a really good quality solution. Dev should think in something better.
 template<typename T1, typename T2>
 inline const std::vector<GameEntity> EntityContainer::GetEntitiesOfBothTypes() const
 {
@@ -166,10 +171,23 @@ inline const std::vector<GameEntity> EntityContainer::GetEntitiesOfBothTypes() c
 
 	for (auto& entity : view)
 	{
-		entitiesFound.emplace_back(entity, this);
+		entitiesFound.emplace_back(entity, const_cast<EntityContainer*>(this));
 	}
 
 	return entitiesFound;
+}
+
+template<typename T>
+inline T& EntityContainer::GetFirstComponentOfType()
+{
+	return const_cast<T&>(static_cast<const EntityContainer&>(*this).GetFirstComponentOfType<T>());
+}
+
+template<typename T>
+inline const T& EntityContainer::GetFirstComponentOfType() const
+{
+	GameEntity firstEntityOfType = GetFirstEntityOfType<T>();
+	return firstEntityOfType.GetComponent<T>();
 }
 
 template<typename T>

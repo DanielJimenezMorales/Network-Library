@@ -2,6 +2,7 @@
 #include <cassert>
 
 #include "entt.hpp"
+#include "SafePointer.hpp"
 #include "EntityContainer.h"
 
 class GameEntity
@@ -33,7 +34,9 @@ public:
 
 private:
 	entt::entity _ecsEntityId;
-	EntityContainer* _entityContainer;
+
+	//TODO Add SafePointer wrapper
+	SafePointer<EntityContainer> _entityContainer;
 
 	friend class EntityContainer;
 };
