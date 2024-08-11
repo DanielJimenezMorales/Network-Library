@@ -43,5 +43,5 @@ void NetworkSystem::Server_SpawnRemotePeerConnect(EntityContainer& entityContain
 	GameEntity networkPeerEntity = entityContainer.GetFirstEntityOfType<NetworkPeerComponent>();
 	NetworkPeerComponent& networkPeerComponent = networkPeerEntity.GetComponent<NetworkPeerComponent>();
 	NetLib::Server* serverPeer = networkPeerComponent.GetPeerAsServer();
-	serverPeer->CreateNetworkEntity(10, remotePeerId, 256.f, 256.f);
+	serverPeer->CreateNetworkEntity(10, remotePeerId, 0.f, 0.f);
 }

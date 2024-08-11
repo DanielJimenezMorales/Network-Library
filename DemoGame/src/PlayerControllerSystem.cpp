@@ -3,6 +3,7 @@
 #include "GameEntity.hpp"
 #include "InputComponent.h"
 #include "IInputController.h"
+#include "ICursor.h"
 #include "Vec2f.h"
 #include "TransformComponent.h"
 #include "PlayerControllerComponent.h"
@@ -10,6 +11,7 @@
 #include "InputState.h"
 #include "NetworkPeerComponent.h"
 #include "Client.h"
+#include "VirtualMouseComponent.h"
 #include <vector>
 
 void PlayerControllerSystem::Tick(EntityContainer& entityContainer, float elapsedTime) const
@@ -37,7 +39,8 @@ void PlayerControllerSystem::Tick(EntityContainer& entityContainer, float elapse
 		TransformComponent& transform = it->GetComponent<TransformComponent>();
 		const PlayerControllerComponent& networkComponent = it->GetComponent<PlayerControllerComponent>();
 
-		transform.position = Vec2f(networkComponent.posX.Get(), networkComponent.posY.Get());
+		transform.SetPosition(Vec2f(networkComponent.posX.Get(), networkComponent.posY.Get()));
+		transform.SetRotationAngle(networkComponent.rotationAngle.Get());
 
 		//TODO Enable this when client-side prediction and reconciliation is ready
 		//TickPlayerController(*it, inputState, elapsedTime);
@@ -46,12 +49,14 @@ void PlayerControllerSystem::Tick(EntityContainer& entityContainer, float elapse
 
 void PlayerControllerSystem::ProcessInputs(EntityContainer& entityContainer, InputState& outInputState) const
 {
-	const GameEntity inputEntity = entityContainer.GetFirstEntityOfType<InputComponent>();
-	const InputComponent& inputComponent = inputEntity.GetComponent<InputComponent>();
+	const InputComponent& inputComponent = entityContainer.GetFirstComponentOfType<InputComponent>();
 
 	outInputState.movement.X(inputComponent.inputController->GetAxis(HORIZONTAL_AXIS));
 	outInputState.movement.Y(inputComponent.inputController->GetAxis(VERTICAL_AXIS));
 	outInputState.movement.Normalize();
+
+	const VirtualMouseComponent& virtualMouseComponent = entityContainer.GetFirstComponentOfType<VirtualMouseComponent>();
+	outInputState.virtualMousePosition = virtualMouseComponent.position;
 }
 
 void PlayerControllerSystem::SendInputsToServer(EntityContainer& entityContainer, const InputState& inputState) const
@@ -61,31 +66,4 @@ void PlayerControllerSystem::SendInputsToServer(EntityContainer& entityContainer
 
 	NetLib::Client& networkClient = *static_cast<NetLib::Client*>(networkPeerComponent.peer);
 	networkClient.SendInputs(inputState);
-}
-
-void PlayerControllerSystem::TickPlayerController(GameEntity& playerEntity, const InputState& inputState, float elapsedTime) const
-{
-	TransformComponent& transform = playerEntity.GetComponent<TransformComponent>();
-
-	PlayerControllerComponent& networkComponent = playerEntity.GetComponent<PlayerControllerComponent>();
-	Vec2f updatedPosition = UpdatePosition(inputState.movement, transform, networkComponent.configuration, elapsedTime);
-	ApplyPosition(updatedPosition, transform);
-
-	networkComponent.posX = updatedPosition.X();
-	networkComponent.posY = updatedPosition.Y();
-}
-
-Vec2f PlayerControllerSystem::UpdatePosition(const Vec2f& inputs, const TransformComponent& transform, const PlayerControllerConfiguration& configuration, float elapsedTime) const
-{
-	Vec2f currentPosition = transform.position;
-
-	currentPosition.AddToX(inputs.X() * configuration.movementSpeed * elapsedTime);
-	currentPosition.AddToY(inputs.Y() * configuration.movementSpeed * elapsedTime);
-
-	return currentPosition;
-}
-
-void PlayerControllerSystem::ApplyPosition(const Vec2f& position, TransformComponent& transform) const
-{
-	transform.position = position;
 }

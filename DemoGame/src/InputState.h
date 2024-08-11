@@ -1,6 +1,7 @@
 #pragma once
 #include "IInputState.h"
 #include "Vec2f.h"
+#include <cstdint>
 
 class InputState : public NetLib::IInputState
 {
@@ -10,4 +11,5 @@ public:
 	void Deserialize(NetLib::Buffer& buffer) override;
 
 	Vec2f movement;
+	Vec2f virtualMousePosition;
 };

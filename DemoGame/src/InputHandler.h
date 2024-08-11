@@ -5,6 +5,7 @@
 #include "Logger.h"
 
 class IInputController;
+class ICursor;
 
 enum class ButtonState
 {
@@ -42,10 +43,12 @@ class InputHandler
 {
 public:
 	void AddController(IInputController* inputController);
+	void AddCursor(ICursor* cursor);
 	void PreHandleEvents();
 	void HandleEvent(const SDL_Event& event);
 	void PostHandleEvents();
 
 private:
 	std::vector<IInputController*> _controllers;
+	std::vector<ICursor*> _cursors;
 };

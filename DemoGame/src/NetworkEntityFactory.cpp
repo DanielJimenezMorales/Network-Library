@@ -36,12 +36,12 @@ int NetworkEntityFactory::CreateNetworkEntityObject(uint32_t networkEntityType, 
 
 	GameEntity entity = _scene->CreateGameEntity();
 	TransformComponent& transform = entity.GetComponent<TransformComponent>();
-	transform.position = Vec2f(posX, posY);
+	transform.SetPosition(Vec2f(posX, posY));
 
 	entity.AddComponent<SpriteRendererComponent>(texture);
 
 	PlayerControllerConfiguration playerConfiguration;
-	playerConfiguration.movementSpeed = 250;
+	playerConfiguration.movementSpeed = 25;
 
 	entity.AddComponent<NetworkEntityComponent>(networkEntityId, controlledByPeerId);
 
@@ -66,7 +66,7 @@ int NetworkEntityFactory::CreateNetworkEntityObject(uint32_t networkEntityType, 
 		}
 	}
 
-	entity.AddComponent<PlayerNetworkComponent>(networkVariableChangeHandler, networkEntityId);
+	//entity.AddComponent<PlayerNetworkComponent>(networkVariableChangeHandler, networkEntityId);
 
 	return entity.GetId();
 }
