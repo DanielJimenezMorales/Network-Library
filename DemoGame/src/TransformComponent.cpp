@@ -1,7 +1,7 @@
 #include "TransformComponent.h"
 #include <SDL_stdinc.h>
 #include <cmath>
-
+#include "Logger.h"
 
 TransformComponent::TransformComponent() : _position(0.f, 0.f), _rotationAngle(0.f), _scale(1.f, 1.f)
 {
@@ -14,7 +14,10 @@ TransformComponent::TransformComponent(float x, float y) : _position(x, y), _rot
 void TransformComponent::LookAt(const Vec2f& position)
 {
 	Vec2f direction = position - _position;
-	direction.Normalize();
+	if (direction == Vec2f(0, 0))
+	{
+		return;
+	}
 
 	Vec2f forward = GetForwardVector();
 
@@ -22,10 +25,29 @@ void TransformComponent::LookAt(const Vec2f& position)
 
 	float dotProduct = (direction.X() * forward.X()) + (direction.Y() * forward.Y());
 	float angleCosine = dotProduct / (direction.Magnitude() * forward.Magnitude());
-	float angleInRadians = std::acos(angleCosine);
+
+	//Check it because due to floating point precision error, it could happen.
+	if (angleCosine > 1.f)
+	{
+		angleCosine = 1.f;
+	}
+	else if (angleCosine < -1.f)
+	{
+		angleCosine = -1.f;
+	}
+
+	float angleInRadians = std::acosf(angleCosine);
+
+	//Calculate rotation direction
+	float crossProduct = (direction.X() * forward.Y()) - (forward.X() * direction.Y());
+	if (crossProduct < 0.f)
+	{
+		angleInRadians = -angleInRadians;
+	}
+
 	float angleInDegrees = angleInRadians * (180.f / M_PI);
 
-	SetRotationAngle(angleInDegrees);
+	SetRotationAngle(_rotationAngle + angleInDegrees);
 }
 
 Vec2f TransformComponent::GetForwardVector() const
@@ -33,7 +55,7 @@ Vec2f TransformComponent::GetForwardVector() const
 	float angleInRadians = _rotationAngle * (M_PI / 180.f);
 
 	//Since the rotation direction is anti-clockwise, we need to do the sin and cos of negative angle instead of just the positive angle.
-	Vec2f forwardVector(std::sin(-angleInRadians), -cos(-angleInRadians));
+	Vec2f forwardVector(std::sin(-angleInRadians), -std::cos(-angleInRadians));
 
 	return forwardVector;
 }

@@ -23,6 +23,8 @@
 #include "SpriteRendererComponent.h"
 #include "CrosshairComponent.h"
 #include "CrosshairFollowMouseSystem.h"
+#include "VirtualMouseComponent.h"
+#include "VirtualMouseSystem.h"
 
 void SceneInitializer::InitializeScene(Scene& scene, NetLib::PeerType networkPeerType, InputHandler& inputHandler) const
 {
@@ -32,7 +34,7 @@ void SceneInitializer::InitializeScene(Scene& scene, NetLib::PeerType networkPee
 	keyboard->AddButtonMap(button);
 	InputAxis axis(HORIZONTAL_AXIS, SDLK_d, SDLK_a);
 	keyboard->AddAxisMap(axis);
-	InputAxis axis2(VERTICAL_AXIS, SDLK_s, SDLK_w);
+	InputAxis axis2(VERTICAL_AXIS, SDLK_w, SDLK_s);
 	keyboard->AddAxisMap(axis2);
 	inputHandler.AddController(keyboard);
 
@@ -79,6 +81,13 @@ void SceneInitializer::InitializeScene(Scene& scene, NetLib::PeerType networkPee
 
 	if (networkPeer->GetPeerType() == NetLib::PeerType::ClientMode)
 	{
+		//Add virtual mouse
+		GameEntity virtualMouse = scene.CreateGameEntity();
+		virtualMouse.AddComponent<VirtualMouseComponent>();
+
+		VirtualMouseSystem* virtualMouseSystem = new VirtualMouseSystem();
+		scene.AddUpdateSystem(virtualMouseSystem);
+
 		//Add crosshair if being a client
 		GameEntity crosshairEntity = scene.CreateGameEntity();
 

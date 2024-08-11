@@ -14,5 +14,6 @@ void RemotePlayerControllerSystem::Tick(EntityContainer& entityContainer, float 
 		const RemotePlayerControllerComponent& networkComponent = it->GetComponent<RemotePlayerControllerComponent>();
 
 		transform.SetPosition(Vec2f(networkComponent.posX.Get(), networkComponent.posY.Get()));
+		transform.SetRotationAngle(networkComponent.rotationAngle.Get());
 	}
 }

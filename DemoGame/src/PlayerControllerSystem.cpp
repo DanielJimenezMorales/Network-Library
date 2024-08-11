@@ -11,6 +11,7 @@
 #include "InputState.h"
 #include "NetworkPeerComponent.h"
 #include "Client.h"
+#include "VirtualMouseComponent.h"
 #include <vector>
 
 void PlayerControllerSystem::Tick(EntityContainer& entityContainer, float elapsedTime) const
@@ -39,6 +40,7 @@ void PlayerControllerSystem::Tick(EntityContainer& entityContainer, float elapse
 		const PlayerControllerComponent& networkComponent = it->GetComponent<PlayerControllerComponent>();
 
 		transform.SetPosition(Vec2f(networkComponent.posX.Get(), networkComponent.posY.Get()));
+		transform.SetRotationAngle(networkComponent.rotationAngle.Get());
 
 		//TODO Enable this when client-side prediction and reconciliation is ready
 		//TickPlayerController(*it, inputState, elapsedTime);
@@ -47,13 +49,14 @@ void PlayerControllerSystem::Tick(EntityContainer& entityContainer, float elapse
 
 void PlayerControllerSystem::ProcessInputs(EntityContainer& entityContainer, InputState& outInputState) const
 {
-	const GameEntity inputEntity = entityContainer.GetFirstEntityOfType<InputComponent>();
-	const InputComponent& inputComponent = inputEntity.GetComponent<InputComponent>();
+	const InputComponent& inputComponent = entityContainer.GetFirstComponentOfType<InputComponent>();
 
 	outInputState.movement.X(inputComponent.inputController->GetAxis(HORIZONTAL_AXIS));
 	outInputState.movement.Y(inputComponent.inputController->GetAxis(VERTICAL_AXIS));
 	outInputState.movement.Normalize();
-	inputComponent.cursor->GetDelta(outInputState.mouseDeltaX, outInputState.mouseDeltaY);
+
+	const VirtualMouseComponent& virtualMouseComponent = entityContainer.GetFirstComponentOfType<VirtualMouseComponent>();
+	outInputState.virtualMousePosition = virtualMouseComponent.position;
 }
 
 void PlayerControllerSystem::SendInputsToServer(EntityContainer& entityContainer, const InputState& inputState) const

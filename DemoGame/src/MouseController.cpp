@@ -1,5 +1,4 @@
 #include "MouseController.h"
-#include "Logger.h"
 
 void MouseController::AddButtonMap(const InputButton& inputButton)
 {

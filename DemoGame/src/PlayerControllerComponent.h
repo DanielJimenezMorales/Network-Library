@@ -7,13 +7,12 @@ struct PlayerControllerComponent
 {
 public:
 	PlayerControllerComponent(NetLib::NetworkVariableChangesHandler* networkVariableChangesHandler, uint32_t networkEntityId, const PlayerControllerConfiguration& configuration) :
-		networkEntityId(networkEntityId), posX(networkVariableChangesHandler, networkEntityId), posY(networkVariableChangesHandler, networkEntityId), lookAtX(networkVariableChangesHandler, networkEntityId), lookAtY(networkVariableChangesHandler, networkEntityId), configuration(configuration) {};
+		networkEntityId(networkEntityId), posX(networkVariableChangesHandler, networkEntityId), posY(networkVariableChangesHandler, networkEntityId), rotationAngle(networkVariableChangesHandler, networkEntityId), configuration(configuration) {};
 
 	const PlayerControllerConfiguration configuration;
 	uint32_t networkEntityId;
 	NetLib::NetworkVariable<float> posX;
 	NetLib::NetworkVariable<float> posY;
 
-	NetLib::NetworkVariable<float> lookAtX;
-	NetLib::NetworkVariable<float> lookAtY;
+	NetLib::NetworkVariable<float> rotationAngle;
 };

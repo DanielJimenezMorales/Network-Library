@@ -11,6 +11,5 @@ public:
 	void Deserialize(NetLib::Buffer& buffer) override;
 
 	Vec2f movement;
-	int32_t mouseDeltaX;
-	int32_t mouseDeltaY;
+	Vec2f virtualMousePosition;
 };

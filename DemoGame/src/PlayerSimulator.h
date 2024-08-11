@@ -15,5 +15,5 @@ public:
 private:
 	static Vec2f UpdatePosition(const Vec2f& inputs, const TransformComponent& transform, const PlayerControllerConfiguration& configuration, float elapsedTime);
 	static void ApplyPosition(const Vec2f& position, TransformComponent& transform);
-	static Vec2f UpdateLookAt(int32_t mouseDeltaX, int32_t mouseDeltaY, const TransformComponent& transform, const PlayerControllerConfiguration& configuration, float elapsedTime);
+	static Vec2f UpdateLookAt(const Vec2f& virtualMousePosition, const TransformComponent& transform, const PlayerControllerConfiguration& configuration, float elapsedTime);
 };
