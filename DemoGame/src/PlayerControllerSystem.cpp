@@ -64,30 +64,3 @@ void PlayerControllerSystem::SendInputsToServer(EntityContainer& entityContainer
 	NetLib::Client& networkClient = *static_cast<NetLib::Client*>(networkPeerComponent.peer);
 	networkClient.SendInputs(inputState);
 }
-
-void PlayerControllerSystem::TickPlayerController(GameEntity& playerEntity, const InputState& inputState, float elapsedTime) const
-{
-	TransformComponent& transform = playerEntity.GetComponent<TransformComponent>();
-
-	PlayerControllerComponent& networkComponent = playerEntity.GetComponent<PlayerControllerComponent>();
-	Vec2f updatedPosition = UpdatePosition(inputState.movement, transform, networkComponent.configuration, elapsedTime);
-	ApplyPosition(updatedPosition, transform);
-
-	networkComponent.posX = updatedPosition.X();
-	networkComponent.posY = updatedPosition.Y();
-}
-
-Vec2f PlayerControllerSystem::UpdatePosition(const Vec2f& inputs, const TransformComponent& transform, const PlayerControllerConfiguration& configuration, float elapsedTime) const
-{
-	Vec2f currentPosition = transform.GetPosition();
-
-	currentPosition.AddToX(inputs.X() * configuration.movementSpeed * elapsedTime);
-	currentPosition.AddToY(inputs.Y() * configuration.movementSpeed * elapsedTime);
-
-	return currentPosition;
-}
-
-void PlayerControllerSystem::ApplyPosition(const Vec2f& position, TransformComponent& transform) const
-{
-	transform.SetPosition(position);
-}
