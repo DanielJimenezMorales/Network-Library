@@ -9,6 +9,22 @@ workspace "NetworkLibrary"
 		"Release"
 	}
 
+	flags
+	{
+		"MultiProcessorCompile",
+		-- "FatalWarnings",
+		"NoImplicitLink",
+		"NoIncrementalLink",
+		"NoManifest",
+		"RelativeLinks",
+		"UndefinedIdentifiers"
+	}
+
+	defines
+	{
+		"_HAS_EXCEPTIONS = 0"
+	}
+
 project "Common"
 	kind "StaticLib"
 	location "Common"
