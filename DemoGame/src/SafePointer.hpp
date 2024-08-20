@@ -1,5 +1,12 @@
 #pragma once
 
+/// <summary>
+/// The Safe Pointer is a wrapper that ensures safe usage of raw pointers concerning const-correctness.
+/// When you have a pointer as a member variable and want to ensure that within const member functions, 
+/// only the const methods of the pointer are accessible, use a SafePointer. 
+/// This approach turns your member variable into an object rather than a raw pointer, thereby enforcing const-correctness.
+/// </summary>
+/// <typeparam name="T">Raw pointer type</typeparam>
 template <typename T>
 class SafePointer
 {
