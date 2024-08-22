@@ -22,7 +22,7 @@ workspace "NetworkLibrary"
 
 	defines
 	{
-		"_HAS_EXCEPTIONS = 0"
+		"_HAS_EXCEPTIONS=0"
 	}
 
 project "Common"
