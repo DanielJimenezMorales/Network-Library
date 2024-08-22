@@ -2,7 +2,6 @@
 #include "GameEntity.hpp"
 #include "SpriteRendererComponent.h"
 #include "TransformComponent.h"
-#include "ScriptComponent.h"
 #include "PlayerNetworkComponent.h"
 #include "Scene.h"
 #include "ServiceLocator.h"

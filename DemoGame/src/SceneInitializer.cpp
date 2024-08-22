@@ -1,6 +1,5 @@
 #include "SceneInitializer.h"
 #include "Scene.h"
-#include "ScriptSystem.h"
 #include "NetworkSystem.h"
 #include "GameEntity.hpp"
 #include "NetworkPeerComponent.h"
@@ -117,10 +116,6 @@ void SceneInitializer::InitializeScene(Scene& scene, NetLib::PeerType networkPee
 
 	RemotePlayerControllerSystem* remotePlayerControllerSystem = new RemotePlayerControllerSystem();
 	scene.AddTickSystem(remotePlayerControllerSystem);
-
-	ScriptSystem* scriptSystem = new ScriptSystem();
-	scene.AddUpdateSystem(scriptSystem);
-	scene.AddTickSystem(scriptSystem);
 
 	NetworkSystem* networkSystem = new NetworkSystem();
 	scene.AddPreTickSystem(networkSystem);

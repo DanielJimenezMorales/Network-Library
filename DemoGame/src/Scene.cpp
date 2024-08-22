@@ -2,7 +2,6 @@
 
 #include <cassert>
 
-#include "ScriptComponent.h"
 #include "TransformComponent.h"
 #include "GameEntity.hpp"
 #include "IUpdateSystem.h"
