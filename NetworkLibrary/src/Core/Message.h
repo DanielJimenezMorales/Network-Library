@@ -144,36 +144,6 @@ namespace NetLib
 		uint32_t serverTime;
 	};
 
-	//TODO Delete this type of messages. It is not useful anymore
-	class InGameMessage : public Message
-	{
-	public:
-		InGameMessage() : data(0), Message(MessageType::InGame) {}
-
-		void Write(Buffer& buffer) const override;
-		void Read(Buffer& buffer) override;
-		uint32_t Size() const override;
-
-		~InGameMessage() override {};
-
-		uint64_t data;
-	};
-
-	//TODO Delete this type of messages. It is not useful anymore
-	class InGameResponseMessage : public Message
-	{
-	public:
-		InGameResponseMessage() : data(0), Message(MessageType::InGameResponse) {}
-
-		void Write(Buffer& buffer) const override;
-		void Read(Buffer& buffer) override;
-		uint32_t Size() const override;
-
-		~InGameResponseMessage() override {};
-
-		uint64_t data;
-	};
-
 	class ReplicationMessage : public Message
 	{
 	public:

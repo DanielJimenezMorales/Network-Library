@@ -120,12 +120,6 @@ namespace NetLib
         _messagePools[MessageType::TimeResponse] = std::queue<std::unique_ptr<Message>>();
         InitializePool(_messagePools[MessageType::TimeResponse], MessageType::TimeResponse);
 
-        _messagePools[MessageType::InGame] = std::queue<std::unique_ptr<Message>>();
-        InitializePool(_messagePools[MessageType::InGame], MessageType::InGame);
-
-        _messagePools[MessageType::InGameResponse] = std::queue<std::unique_ptr<Message>>();
-        InitializePool(_messagePools[MessageType::InGameResponse], MessageType::InGameResponse);
-
         _messagePools[MessageType::Replication] = std::queue<std::unique_ptr<Message>>();
         InitializePool(_messagePools[MessageType::Replication], MessageType::Replication);
 
@@ -187,12 +181,6 @@ namespace NetLib
             break;
         case MessageType::TimeResponse:
             resultMessage = std::make_unique<TimeResponseMessage>();
-            break;
-        case MessageType::InGame:
-            resultMessage = std::make_unique<InGameMessage>();
-            break;
-        case MessageType::InGameResponse:
-            resultMessage = std::make_unique<InGameResponseMessage>();
             break;
         case MessageType::Replication:
             resultMessage = std::make_unique<ReplicationMessage>();

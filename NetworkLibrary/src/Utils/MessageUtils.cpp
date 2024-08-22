@@ -38,12 +38,6 @@ namespace NetLib
 		case MessageType::TimeResponse:
 			message = messageFactory.LendMessage(MessageType::TimeResponse);
 			break;
-		case MessageType::InGame:
-			message = messageFactory.LendMessage(MessageType::InGame);
-			break;
-		case MessageType::InGameResponse:
-			message = messageFactory.LendMessage(MessageType::InGameResponse);
-			break;
 		case MessageType::Replication:
 			message = messageFactory.LendMessage(MessageType::Replication);
 			break;

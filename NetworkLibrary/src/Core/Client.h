@@ -15,7 +15,6 @@ namespace NetLib
 	class ConnectionDeniedMessage;
 	class DisconnectionMessage;
 	class TimeResponseMessage;
-	class InGameResponseMessage;
 	class ReplicationMessage;
 	class IInputState;
 
@@ -65,14 +64,12 @@ namespace NetLib
 		void ProcessConnectionRequestDenied(const ConnectionDeniedMessage& message);
 		void ProcessDisconnection(const DisconnectionMessage& message, RemotePeer& remotePeer);
 		void ProcessTimeResponse(const TimeResponseMessage& message);
-		void ProcessInGameResponse(const InGameResponseMessage& message);
 		void ProcessReplicationAction(const ReplicationMessage& message);
 
 		void CreateConnectionRequestMessage(RemotePeer& remotePeer);
 		void CreateConnectionChallengeResponse(RemotePeer& remotePeer);
 		void CreateTimeRequestMessage(RemotePeer& remotePeer);
-		void CreateInGameMessage(RemotePeer& remotePeer);
-
+		
 		void UpdateTimeRequestsElapsedTime(float elapsedTime);
 
 		void OnServerDisconnect();

@@ -142,13 +142,6 @@ namespace NetLib
 				ProcessTimeResponse(timeResponseMessage);
 			}
 			break;
-		case MessageType::InGameResponse:
-			if (_currentState == ClientState::CS_Connected)
-			{
-				const InGameResponseMessage& inGameResponseMessage = static_cast<const InGameResponseMessage&>(message);
-				ProcessInGameResponse(inGameResponseMessage);
-			}
-			break;
 		case MessageType::Replication:
 			if (_currentState == ClientState::CS_Connected)
 			{
@@ -191,7 +184,6 @@ namespace NetLib
 				LOG_ERROR("There is no Remote peer corresponding to IP: %s", _serverAddress.GetIP());
 				return;
 			}
-			CreateInGameMessage(*remotePeer);
 		}
 	}
 
@@ -320,11 +312,6 @@ namespace NetLib
 		LOG_INFO("SERVER TIME UPDATED. Local time: %f sec, Server time: %f sec", timeClock.GetLocalTimeSeconds(), timeClock.GetServerTimeSeconds());
 	}
 
-	void Client::ProcessInGameResponse(const InGameResponseMessage& message)
-	{
-		LOG_INFO("In game response ID = %llu", message.data);
-	}
-
 	void Client::ProcessReplicationAction(const ReplicationMessage& message)
 	{
 		_replicationManager.Client_ProcessReceivedReplicationMessage(message);
@@ -386,23 +373,6 @@ namespace NetLib
 		timeRequestMessage->remoteTime = timeClock.GetLocalTimeMilliseconds();
 
 		remotePeer.AddMessage(std::move(timeRequestMessage));
-	}
-
-	void Client::CreateInGameMessage(RemotePeer& remotePeer)
-	{
-		MessageFactory& messageFactory = MessageFactory::GetInstance();
-		std::unique_ptr<Message> message = messageFactory.LendMessage(MessageType::InGame);
-		if (message == nullptr)
-		{
-			LOG_ERROR("Can't create new Connection Challenge Response Message because the MessageFactory has returned a null message");
-			return;
-		}
-
-		std::unique_ptr<InGameMessage> inGameMessage(static_cast<InGameMessage*>(message.release()));
-		inGameMessage->SetOrdered(true);
-		inGameMessage->data = inGameMessageID;
-		inGameMessageID++;
-		remotePeer.AddMessage(std::move(inGameMessage));
 	}
 
 	void Client::UpdateTimeRequestsElapsedTime(float elapsedTime)

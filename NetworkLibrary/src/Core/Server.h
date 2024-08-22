@@ -11,7 +11,6 @@ namespace NetLib
 	class ConnectionRequestMessage;
 	class ConnectionChallengeResponseMessage;
 	class TimeRequestMessage;
-	class InGameMessage;
 	class InputStateMessage;
 	class DisconnectionMessage;
 	class IInputState;
@@ -46,7 +45,6 @@ namespace NetLib
 		void ProcessConnectionRequest(const ConnectionRequestMessage& message, const Address& address);
 		void ProcessConnectionChallengeResponse(const ConnectionChallengeResponseMessage& message, RemotePeer& remotePeer);
 		void ProcessTimeRequest(const TimeRequestMessage& message, RemotePeer& remotePeer);
-		void ProcessInGame(const InGameMessage& message, RemotePeer& remotePeer);
 		void ProcessInputs(const InputStateMessage& message, RemotePeer& remotePeer);
 		void ProcessDisconnection(const DisconnectionMessage& message, RemotePeer& remotePeer);
 
@@ -65,7 +63,6 @@ namespace NetLib
 		void CreateConnectionApprovedMessage(RemotePeer& remotePeer);
 		void CreateDisconnectionMessage(RemotePeer& remotePeer);
 		void CreateTimeResponseMessage(RemotePeer& remotePeer, const TimeRequestMessage& timeRequest);
-		void CreateInGameResponseMessage(RemotePeer& remotePeer, uint64_t data);
 		void SendConnectionDeniedPacket(const Address& address, ConnectionFailedReasonType reason) const;
 		void SendPacketToRemotePeer(const RemotePeer& remotePeer, const NetworkPacket& packet) const;
 

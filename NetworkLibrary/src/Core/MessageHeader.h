@@ -13,12 +13,10 @@ namespace NetLib
 		ConnectionChallenge = 3,
 		ConnectionChallengeResponse = 4,
 		Disconnection = 5,
-		InGame = 6,
-		InGameResponse = 7,
-		TimeRequest = 8,
-		TimeResponse = 9,
-		Replication = 10,
-		Inputs = 11
+		TimeRequest = 6,
+		TimeResponse = 7,
+		Replication = 8,
+		Inputs = 9
 	};
 
 	struct MessageHeader

@@ -115,12 +115,6 @@ namespace NetLib
 			ProcessDisconnection(disconnectionMessage, remotePeer);
 			break;
 		}
-		case MessageType::InGame:
-		{
-			const InGameMessage& inGameMessage = static_cast<const InGameMessage&>(message);
-			ProcessInGame(inGameMessage, remotePeer);
-			break;
-		}
 		case MessageType::Inputs:
 		{
 			const InputStateMessage& inputsMessage = static_cast<const InputStateMessage&>(message);
@@ -220,27 +214,6 @@ namespace NetLib
 		remotePeer.AddMessage(std::move(timeResponseMessage));
 	}
 
-	void Server::CreateInGameResponseMessage(RemotePeer& remotePeer, uint64_t data)
-	{
-		MessageFactory& messageFactory = MessageFactory::GetInstance();
-		std::unique_ptr<Message>message = messageFactory.LendMessage(MessageType::InGameResponse);
-		if (message == nullptr)
-		{
-			LOG_ERROR("Can't create new in game response Message because the MessageFactory has returned a null message");
-			return;
-		}
-
-		message->SetReliability(true);
-		message->SetOrdered(true);
-
-		std::unique_ptr<InGameResponseMessage> inGameResponseMessage(static_cast<InGameResponseMessage*>(message.release()));
-
-		inGameResponseMessage->data = data;
-		remotePeer.AddMessage(std::move(inGameResponseMessage));
-
-		LOG_INFO("In game response message created.");
-	}
-
 	void Server::CreateConnectionChallengeMessage(RemotePeer& remotePeer)
 	{
 		MessageFactory& messageFactory = MessageFactory::GetInstance();
@@ -316,13 +289,6 @@ namespace NetLib
 	{
 		LOG_INFO("PROCESSING TIME REQUEST");
 		CreateTimeResponseMessage(remotePeer, message);
-	}
-
-	void Server::ProcessInGame(const InGameMessage& message, RemotePeer& remotePeer)
-	{
-		LOG_INFO("InGame ID: %llu", message.data);
-
-		CreateInGameResponseMessage(remotePeer, message.data);
 	}
 
 	void Server::ProcessInputs(const InputStateMessage& message, RemotePeer& remotePeer)

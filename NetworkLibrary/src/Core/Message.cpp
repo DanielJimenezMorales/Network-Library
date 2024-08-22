@@ -163,44 +163,6 @@ namespace NetLib
 		return MessageHeader::Size() + (2 * sizeof(uint32_t));
 	}
 
-	void InGameMessage::Write(Buffer& buffer) const
-	{
-		_header.Write(buffer);
-		buffer.WriteLong(data);
-	}
-
-	void InGameMessage::Read(Buffer& buffer)
-	{
-		_header.type = MessageType::InGame;
-		_header.ReadWithoutHeader(buffer);
-
-		data = buffer.ReadLong();
-	}
-
-	uint32_t InGameMessage::Size() const
-	{
-		return MessageHeader::Size() + sizeof(uint64_t);
-	}
-
-	void InGameResponseMessage::Write(Buffer& buffer) const
-	{
-		_header.Write(buffer);
-		buffer.WriteLong(data);
-	}
-
-	void InGameResponseMessage::Read(Buffer& buffer)
-	{
-		_header.type = MessageType::InGameResponse;
-		_header.ReadWithoutHeader(buffer);
-
-		data = buffer.ReadLong();
-	}
-
-	uint32_t InGameResponseMessage::Size() const
-	{
-		return MessageHeader::Size() + sizeof(uint64_t);
-	}
-
 	void ReplicationMessage::Write(Buffer& buffer) const
 	{
 		_header.Write(buffer);
