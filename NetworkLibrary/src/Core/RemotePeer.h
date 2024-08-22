@@ -10,7 +10,7 @@
 namespace NetLib
 {
 	class Message;
-	class MessageHeader;
+	struct MessageHeader;
 
 	enum RemotePeerState : uint8_t
 	{

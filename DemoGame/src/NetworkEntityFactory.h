@@ -11,7 +11,9 @@ class NetworkVariableChangesHandler;
 class NetworkEntityFactory : public NetLib::INetworkEntityFactory
 {
 public:
-	NetworkEntityFactory() : NetLib::INetworkEntityFactory(), _scene(nullptr), _peerType(NetLib::PeerType::None) {};
+	NetworkEntityFactory() : NetLib::INetworkEntityFactory(), _scene(nullptr), _peerType(NetLib::PeerType::None) {}
+	~NetworkEntityFactory() {}
+
 	void SetScene(Scene* scene);
 	void SetPeerType(NetLib::PeerType peerType);
 	int CreateNetworkEntityObject(uint32_t networkEntityType, uint32_t networkEntityId, uint32_t controlledByPeerId, float posX, float posY, NetLib::NetworkVariableChangesHandler* networkVariableChangeHandler) override;

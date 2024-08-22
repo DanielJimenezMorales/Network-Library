@@ -48,7 +48,7 @@ namespace NetLib
 	private:
 		int GetIndexFromId(unsigned int id) const;
 
-		const int _maxConnections;
+		const unsigned int _maxConnections;
 		std::vector<bool> _remotePeerSlots;
 		std::vector<RemotePeer> _remotePeers;
 		std::unordered_set<RemotePeer*> _validRemotePeers;

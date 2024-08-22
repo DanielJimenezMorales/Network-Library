@@ -71,7 +71,7 @@ namespace NetLib
 	int RemotePeersHandler::FindFreeRemotePeerSlot() const
 	{
 		int freeIndex = -1;
-		for (int i = 0; i < _maxConnections; ++i)
+		for (unsigned int i = 0; i < _maxConnections; ++i)
 		{
 			if (!_remotePeerSlots[i])
 			{
