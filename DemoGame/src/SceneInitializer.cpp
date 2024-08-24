@@ -24,6 +24,9 @@
 #include "CrosshairFollowMouseSystem.h"
 #include "VirtualMouseComponent.h"
 #include "VirtualMouseSystem.h"
+#include "CollisionDetectionSystem.h"
+#include "CircleBounds2D.h"
+#include "TransformComponent.h"
 
 void SceneInitializer::InitializeScene(Scene& scene, NetLib::PeerType networkPeerType, InputHandler& inputHandler) const
 {
@@ -76,6 +79,21 @@ void SceneInitializer::InitializeScene(Scene& scene, NetLib::PeerType networkPee
 		networkPeerComponent.GetPeerAsServer()->RegisterInputStateFactory(inputStateFactory);
 		networkPeerComponent.inputStateFactory = inputStateFactory;
 		networkPeerComponent.TrackOnRemotePeerConnect();
+
+		//Add dummy collider entity
+		GameEntity colliderEntity = scene.CreateGameEntity();
+		TransformComponent& colliderEntityTransform = colliderEntity.GetComponent<TransformComponent>();
+		colliderEntityTransform.SetPosition(Vec2f(10.f, 10.f));
+		ServiceLocator& serviceLocator = ServiceLocator::GetInstance();
+		ITextureLoader& textureLoader = serviceLocator.GetTextureLoader();
+		Texture* texture2 = textureLoader.LoadTexture("sprites/PlayerSprites/PlayerHead.png");
+		colliderEntity.AddComponent<SpriteRendererComponent>(texture2);
+
+		CircleBounds2D* circleBounds2D = new CircleBounds2D(7.f);
+		colliderEntity.AddComponent<Collider2DComponent>(circleBounds2D);
+
+		CollisionDetectionSystem* collisionDetectionSystem = new CollisionDetectionSystem();
+		scene.AddPreTickSystem(collisionDetectionSystem);
 	}
 
 	if (networkPeer->GetPeerType() == NetLib::PeerType::ClientMode)
