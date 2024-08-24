@@ -4,6 +4,7 @@
 #include <vector>
 
 #include "SpriteRendererSystem.h"
+#include "GizmoRendererSystem.h"
 #include "EntityContainer.h"
 
 class GameEntity;
@@ -37,6 +38,7 @@ public:
 private:
 	EntityContainer _entityContainer;
 	SpriteRendererSystem _spriteRendererSystem;
+	GizmoRendererSystem _gizmoRendererSystem;
 
 	std::vector<IUpdateSystem*> _updateSystems;
 	std::vector<IPreTickSystem*> _preTickSystems;

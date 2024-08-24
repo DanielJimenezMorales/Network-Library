@@ -27,6 +27,7 @@
 #include "CollisionDetectionSystem.h"
 #include "CircleBounds2D.h"
 #include "TransformComponent.h"
+#include "ColliderGizmosCreatorSystem.h"
 
 void SceneInitializer::InitializeScene(Scene& scene, NetLib::PeerType networkPeerType, InputHandler& inputHandler) const
 {
@@ -89,7 +90,7 @@ void SceneInitializer::InitializeScene(Scene& scene, NetLib::PeerType networkPee
 		Texture* texture2 = textureLoader.LoadTexture("sprites/PlayerSprites/PlayerHead.png");
 		colliderEntity.AddComponent<SpriteRendererComponent>(texture2);
 
-		CircleBounds2D* circleBounds2D = new CircleBounds2D(7.f);
+		CircleBounds2D* circleBounds2D = new CircleBounds2D(5.f);
 		colliderEntity.AddComponent<Collider2DComponent>(circleBounds2D);
 
 		CollisionDetectionSystem* collisionDetectionSystem = new CollisionDetectionSystem();
@@ -138,4 +139,7 @@ void SceneInitializer::InitializeScene(Scene& scene, NetLib::PeerType networkPee
 	NetworkSystem* networkSystem = new NetworkSystem();
 	scene.AddPreTickSystem(networkSystem);
 	scene.AddPosTickSystem(networkSystem);
+
+	ColliderGizmosCreatorSystem* colliderGizmosCreatorSystem = new ColliderGizmosCreatorSystem();
+	scene.AddUpdateSystem(colliderGizmosCreatorSystem);
 }

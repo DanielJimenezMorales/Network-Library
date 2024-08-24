@@ -1,5 +1,6 @@
 #include "CircleBounds2D.h"
 #include "TransformComponent.h"
+#include "Gizmo.h"
 
 void CircleBounds2D::GetAxes(const TransformComponent& transform, std::vector<Vec2f>& outAxes) const
 {
@@ -27,4 +28,9 @@ void CircleBounds2D::ProjectAxis(const TransformComponent& transform, const Vec2
 Vec2f CircleBounds2D::GetClosestVertex(const TransformComponent& transform, const Vec2f& inputPoint) const
 {
 	return Vec2f();
+}
+
+Gizmo* CircleBounds2D::GetGizmo(const TransformComponent& transform) const
+{
+	return new CircleGizmo(transform.GetPosition(), radius);
 }

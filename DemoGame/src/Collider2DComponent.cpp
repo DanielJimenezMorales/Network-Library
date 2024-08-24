@@ -14,3 +14,8 @@ Vec2f Collider2DComponent::GetClosestVertex(const TransformComponent& transform,
 {
 	return _bounds->GetClosestVertex(transform, inputPoint);
 }
+
+Gizmo* Collider2DComponent::GetGizmo(const TransformComponent& transform) const
+{
+	return _bounds->GetGizmo(transform);
+}

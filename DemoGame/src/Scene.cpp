@@ -48,6 +48,7 @@ void Scene::PosTick(float tickElapsedTime)
 void Scene::Render(SDL_Renderer* renderer)
 {
 	_spriteRendererSystem.Render(_entityContainer, renderer);
+	_gizmoRendererSystem.Render(_entityContainer, renderer);
 }
 
 void Scene::AddUpdateSystem(IUpdateSystem* system)

@@ -44,9 +44,33 @@ void ServiceLocator::UnregisterTextureLoader()
 	_textureLoader = nullptr;
 }
 
+IGizmoQueryStorage& ServiceLocator::GetGizmoQueryStorage()
+{
+	if (_gizmoQueryStorage == nullptr)
+	{
+		return _nullGizmoQueryStorage;
+	}
+
+	return *_gizmoQueryStorage;
+}
+
+void ServiceLocator::RegisterGizmoQueryStorage(IGizmoQueryStorage* gizmoQueryStorage)
+{
+	assert(_gizmoQueryStorage == nullptr);
+	_gizmoQueryStorage = gizmoQueryStorage;
+}
+
+void ServiceLocator::UnregisterGizmoQueryStorage()
+{
+	assert(_gizmoQueryStorage != nullptr);
+	delete _gizmoQueryStorage;
+	_gizmoQueryStorage = nullptr;
+}
+
 void ServiceLocator::UnregisterAll()
 {
 	UnregisterTextureLoader();
+	UnregisterGizmoQueryStorage();
 }
 
 ServiceLocator* ServiceLocator::_instance = nullptr;
