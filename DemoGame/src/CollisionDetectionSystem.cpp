@@ -4,7 +4,6 @@
 #include "GameEntity.hpp"
 #include "CollisionUtils.h"
 #include "Logger.h"
-#include <vector>
 
 #include "Collider2DComponent.h"
 
@@ -22,15 +21,51 @@ void CollisionDetectionSystem::PreTick(EntityContainer& entityContainer, float e
 			const Collider2DComponent& colliderB = collision_entities[j].GetComponent<Collider2DComponent>();
 			TransformComponent& transformB = collision_entities[j].GetComponent<TransformComponent>();
 
-			if (AreTwoShapesColliding(colliderA, transformA, colliderB, transformB))
+			MinimumTranslationVector mtv;
+			if (AreTwoShapesColliding(colliderA, transformA, colliderB, transformB, mtv))
 			{
-				LOG_WARNING("OVERLAP");
+				LOG_WARNING("OVERLAP: MTV: %.2f", mtv.magnitude);
 			}
 		}
 	}
 }
 
-void GetAllAxes(const Collider2DComponent& collider1, const TransformComponent& transform1, const Collider2DComponent& collider2, const TransformComponent& transform2, std::vector<Vec2f>& outAxesVector)
+bool CollisionDetectionSystem::AreTwoShapesColliding(const Collider2DComponent& collider1, const TransformComponent& transform1, const Collider2DComponent& collider2, const TransformComponent& transform2, MinimumTranslationVector& outMtv) const
+{
+	std::vector<Vec2f> axesToCheck;
+	GetAllAxes(collider1, transform1, collider2, transform2, axesToCheck);
+	NormalizeAxes(axesToCheck);
+
+	Vec2f smallestAxis;
+	float smallestOverlapMagnitude = 200000.f; //TODO Set this to max float or something like that
+	auto cit = axesToCheck.cbegin();
+	for (; cit != axesToCheck.cend(); ++cit)
+	{
+		float minCollider1, maxCollider1, minCollider2, maxCollider2 = 0.f;
+		collider1.ProjectAxis(transform1, *cit, minCollider1, maxCollider1);
+		collider2.ProjectAxis(transform2, *cit, minCollider2, maxCollider2);
+
+		if (!DoProjectionsOverlap(minCollider1, maxCollider1, minCollider2, maxCollider2))
+		{
+			return false;
+		}
+		else
+		{
+			float projectionOverlapMagnitude = GetProjectionsOverlapMagnitude(minCollider1, maxCollider1, minCollider2, maxCollider2);
+			if (projectionOverlapMagnitude < smallestOverlapMagnitude)
+			{
+				smallestAxis = *cit;
+				smallestOverlapMagnitude = projectionOverlapMagnitude;
+			}
+		}
+	}
+
+	outMtv.direction = smallestAxis;
+	outMtv.magnitude = smallestOverlapMagnitude;
+	return true;
+}
+
+void CollisionDetectionSystem::GetAllAxes(const Collider2DComponent& collider1, const TransformComponent& transform1, const Collider2DComponent& collider2, const TransformComponent& transform2, std::vector<Vec2f>& outAxesVector) const
 {
 	if (collider1.GetShapeType() == CollisionShapeType::Convex && collider2.GetShapeType() == CollisionShapeType::Convex)
 	{
@@ -56,7 +91,7 @@ void GetAllAxes(const Collider2DComponent& collider1, const TransformComponent& 
 	}
 }
 
-void NormalizeAxes(std::vector<Vec2f>& axesVector)
+void CollisionDetectionSystem::NormalizeAxes(std::vector<Vec2f>& axesVector) const
 {
 	auto it = axesVector.begin();
 	for (; it != axesVector.end(); ++it)
@@ -65,26 +100,12 @@ void NormalizeAxes(std::vector<Vec2f>& axesVector)
 	}
 }
 
-bool AreTwoShapesColliding(const Collider2DComponent& collider1, const TransformComponent& transform1, const Collider2DComponent& collider2, const TransformComponent& transform2)
+bool CollisionDetectionSystem::DoProjectionsOverlap(float minProjection1, float maxProjection1, float minProjection2, float maxProjection2) const
 {
-	std::vector<Vec2f> axesToCheck;
-	GetAllAxes(collider1, transform1, collider2, transform2, axesToCheck);
-	NormalizeAxes(axesToCheck);
+	return (maxProjection1 >= minProjection2) && (maxProjection2 >= minProjection1);
+}
 
-	auto cit = axesToCheck.cbegin();
-	for (; cit != axesToCheck.cend(); ++cit)
-	{
-		float minCollider1, maxCollider1, minCollider2, maxCollider2 = 0.f;
-		collider1.ProjectAxis(transform1, *cit, minCollider1, maxCollider1);
-		collider2.ProjectAxis(transform2, *cit, minCollider2, maxCollider2);
-
-		bool doProjectionsOverlap = (maxCollider1 >= minCollider2) && (maxCollider2 >= minCollider1);
-
-		if (!doProjectionsOverlap)
-		{
-			return false;
-		}
-	}
-
-	return true;
+float CollisionDetectionSystem::GetProjectionsOverlapMagnitude(float minProjection1, float maxProjection1, float minProjection2, float maxProjection2) const
+{
+	return std::min(maxProjection1, maxProjection2) - std::max(minProjection1, minProjection2);
 }
