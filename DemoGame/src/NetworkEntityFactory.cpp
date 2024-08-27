@@ -11,6 +11,7 @@
 #include "NetworkPeerComponent.h"
 #include "Client.h"
 #include "NetworkEntityComponent.h"
+#include "CircleBounds2D.h"
 
 void NetworkEntityFactory::SetScene(Scene* scene)
 {
@@ -38,6 +39,9 @@ int NetworkEntityFactory::CreateNetworkEntityObject(uint32_t networkEntityType, 
 	transform.SetPosition(Vec2f(posX, posY));
 
 	entity.AddComponent<SpriteRendererComponent>(texture);
+
+	CircleBounds2D* circleBounds2D = new CircleBounds2D(5.f);
+	entity.AddComponent<Collider2DComponent>(circleBounds2D, false, CollisionResponseType::Dynamic);
 
 	PlayerControllerConfiguration playerConfiguration;
 	playerConfiguration.movementSpeed = 25;
