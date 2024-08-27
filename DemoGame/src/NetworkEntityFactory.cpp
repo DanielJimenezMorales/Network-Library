@@ -40,8 +40,8 @@ int NetworkEntityFactory::CreateNetworkEntityObject(uint32_t networkEntityType, 
 
 	entity.AddComponent<SpriteRendererComponent>(texture);
 
-	CircleBounds2D* circleBounds2D = new CircleBounds2D(7.f);
-	entity.AddComponent<Collider2DComponent>(circleBounds2D);
+	CircleBounds2D* circleBounds2D = new CircleBounds2D(5.f);
+	entity.AddComponent<Collider2DComponent>(circleBounds2D, false, CollisionResponseType::Dynamic);
 
 	PlayerControllerConfiguration playerConfiguration;
 	playerConfiguration.movementSpeed = 25;

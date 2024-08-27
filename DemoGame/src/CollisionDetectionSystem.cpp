@@ -25,6 +25,10 @@ void CollisionDetectionSystem::PreTick(EntityContainer& entityContainer, float e
 			if (AreTwoShapesColliding(colliderA, transformA, colliderB, transformB, mtv))
 			{
 				LOG_WARNING("OVERLAP: MTV: %.2f", mtv.magnitude);
+				if (!colliderA.IsTrigger() && !colliderB.IsTrigger())
+				{
+					ApplyCollisionResponse(colliderA, transformA, colliderB, transformB, mtv);
+				}
 			}
 		}
 	}
@@ -108,4 +112,27 @@ bool CollisionDetectionSystem::DoProjectionsOverlap(float minProjection1, float 
 float CollisionDetectionSystem::GetProjectionsOverlapMagnitude(float minProjection1, float maxProjection1, float minProjection2, float maxProjection2) const
 {
 	return std::min(maxProjection1, maxProjection2) - std::max(minProjection1, minProjection2);
+}
+
+void CollisionDetectionSystem::ApplyCollisionResponse(const Collider2DComponent& collider1, TransformComponent& transform1, const Collider2DComponent& collider2, TransformComponent& transform2, const MinimumTranslationVector& mtv) const
+{
+	Vec2f resultedTranslationVector = mtv.direction * mtv.magnitude;
+
+	if (collider1.GetCollisionResponse() == CollisionResponseType::Dynamic && collider2.GetCollisionResponse() == CollisionResponseType::Static)
+	{
+		transform1.SetPosition(transform1.GetPosition() - resultedTranslationVector);
+	}
+	else if (collider1.GetCollisionResponse() == CollisionResponseType::Static && collider2.GetCollisionResponse() == CollisionResponseType::Dynamic)
+	{
+		transform2.SetPosition(transform2.GetPosition() + resultedTranslationVector);
+	}
+	else if (collider1.GetCollisionResponse() == CollisionResponseType::Dynamic && collider2.GetCollisionResponse() == CollisionResponseType::Dynamic)
+	{
+		transform1.SetPosition(transform1.GetPosition() - (resultedTranslationVector / 2.f));
+		transform2.SetPosition(transform2.GetPosition() + (resultedTranslationVector / 2.f));
+	}
+	else
+	{
+		LOG_ERROR("Collision response not supported");
+	}
 }

@@ -32,4 +32,5 @@ private:
 	void NormalizeAxes(std::vector<Vec2f>& axesVector) const;
 	bool DoProjectionsOverlap(float minProjection1, float maxProjection1, float minProjection2, float maxProjection2) const;
 	float GetProjectionsOverlapMagnitude(float minProjection1, float maxProjection1, float minProjection2, float maxProjection2) const;
+	void ApplyCollisionResponse(const Collider2DComponent& collider1, TransformComponent& transform1, const Collider2DComponent& collider2, TransformComponent& transform2, const MinimumTranslationVector& mtv) const;
 };

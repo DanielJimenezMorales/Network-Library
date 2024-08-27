@@ -6,6 +6,12 @@
 struct TransformComponent;
 class Gizmo;
 
+enum class CollisionResponseType : uint8_t
+{
+	Static = 0,
+	Dynamic = 1
+};
+
 enum class CollisionShapeType : uint8_t
 {
 	Convex = 0,
@@ -36,7 +42,7 @@ private:
 struct Collider2DComponent
 {
 public:
-	Collider2DComponent(Bounds2D* bounds) : _bounds(bounds)
+	Collider2DComponent(Bounds2D* bounds, bool isTrigger, CollisionResponseType responseType) : _bounds(bounds), _isTrigger(isTrigger), _collisionResponseType(responseType)
 	{
 	}
 
@@ -54,6 +60,11 @@ public:
 	Vec2f GetClosestVertex(const TransformComponent& transform, const Vec2f& inputPoint) const;
 	Gizmo* GetGizmo(const TransformComponent& transform) const;
 
+	CollisionResponseType GetCollisionResponse() const { return _collisionResponseType; }
+	bool IsTrigger() const { return _isTrigger; }
+
 private:
 	Bounds2D* _bounds;
+	bool _isTrigger;
+	CollisionResponseType _collisionResponseType;
 };
