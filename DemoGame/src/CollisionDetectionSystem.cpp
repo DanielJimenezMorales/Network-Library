@@ -10,6 +10,7 @@
 void CollisionDetectionSystem::PreTick(EntityContainer& entityContainer, float elapsedTime) const
 {
 	std::vector<GameEntity> collision_entities = entityContainer.GetEntitiesOfBothTypes < Collider2DComponent, TransformComponent>();
+	SortCollidersByLeft(collision_entities);
 
 	for (uint32_t i = 0; i < collision_entities.size(); ++i)
 	{
@@ -20,6 +21,11 @@ void CollisionDetectionSystem::PreTick(EntityContainer& entityContainer, float e
 		{
 			const Collider2DComponent& colliderB = collision_entities[j].GetComponent<Collider2DComponent>();
 			TransformComponent& transformB = collision_entities[j].GetComponent<TransformComponent>();
+
+			if (colliderA.GetMaxX(transformA) < colliderB.GetMinX(transformB))
+			{
+				break;
+			}
 
 			MinimumTranslationVector mtv;
 			if (AreTwoShapesColliding(colliderA, transformA, colliderB, transformB, mtv))
@@ -67,6 +73,22 @@ bool CollisionDetectionSystem::AreTwoShapesColliding(const Collider2DComponent& 
 	outMtv.direction = smallestAxis;
 	outMtv.magnitude = smallestOverlapMagnitude;
 	return true;
+}
+
+void CollisionDetectionSystem::SortCollidersByLeft(std::vector<GameEntity>& collider_entities) const
+{
+	std::sort(collider_entities.begin(), collider_entities.end(), ReturnMinLeft);
+}
+
+bool ReturnMinLeft(const GameEntity& colliderEntityA, const GameEntity& colliderEntityB)
+{
+	const Collider2DComponent& colliderA = colliderEntityA.GetComponent<Collider2DComponent>();
+	const TransformComponent& transformA = colliderEntityA.GetComponent<TransformComponent>();
+
+	const Collider2DComponent& colliderB = colliderEntityB.GetComponent<Collider2DComponent>();
+	const TransformComponent& transformB = colliderEntityB.GetComponent<TransformComponent>();
+
+	return colliderA.GetMinX(transformA) < colliderB.GetMinX(transformB);
 }
 
 void CollisionDetectionSystem::GetAllAxes(const Collider2DComponent& collider1, const TransformComponent& transform1, const Collider2DComponent& collider2, const TransformComponent& transform2, std::vector<Vec2f>& outAxesVector) const

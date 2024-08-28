@@ -15,6 +15,16 @@ Vec2f Collider2DComponent::GetClosestVertex(const TransformComponent& transform,
 	return _bounds->GetClosestVertex(transform, inputPoint);
 }
 
+float Collider2DComponent::GetMinX(const TransformComponent& transform) const
+{
+	return _bounds->GetMinX(transform);
+}
+
+float Collider2DComponent::GetMaxX(const TransformComponent& transform) const
+{
+	return _bounds->GetMaxX(transform);
+}
+
 Gizmo* Collider2DComponent::GetGizmo(const TransformComponent& transform) const
 {
 	return _bounds->GetGizmo(transform);

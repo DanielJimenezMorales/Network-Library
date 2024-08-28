@@ -12,6 +12,9 @@ public:
 	void ProjectAxis(const TransformComponent& transform, const Vec2f& axis, float& outMin, float& outMax) const override;
 	Vec2f GetClosestVertex(const TransformComponent& transform, const Vec2f& inputPoint) const override;
 
+	float GetMinX(const TransformComponent& transform) const override;
+	float GetMaxX(const TransformComponent& transform) const override;
+
 	Gizmo* GetGizmo(const TransformComponent& transform) const override;
 
 private:

@@ -32,6 +32,10 @@ public:
 	void GetAxes(const TransformComponent& transform, std::vector<Vec2f>& outAxes) const;
 	void ProjectAxis(const TransformComponent& transform, const Vec2f& axis, float& outMin, float& outMax) const;
 	Vec2f GetClosestVertex(const TransformComponent& transform, const Vec2f& inputPoint) const;
+
+	float GetMinX(const TransformComponent& transform) const;
+	float GetMaxX(const TransformComponent& transform) const;
+
 	Gizmo* GetGizmo(const TransformComponent& transform) const;
 
 	CollisionResponseType GetCollisionResponse() const { return _collisionResponseType; }

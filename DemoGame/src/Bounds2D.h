@@ -21,6 +21,9 @@ public:
 	virtual void ProjectAxis(const TransformComponent& transform, const Vec2f& axis, float& outMin, float& outMax) const = 0;
 	virtual Vec2f GetClosestVertex(const TransformComponent& transform, const Vec2f& inputPoint) const = 0;
 
+	virtual float GetMinX(const TransformComponent& transform) const = 0;
+	virtual float GetMaxX(const TransformComponent& transform) const = 0;
+
 	virtual Gizmo* GetGizmo(const TransformComponent& transform) const = 0;
 
 protected:
