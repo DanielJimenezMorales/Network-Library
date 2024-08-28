@@ -1,10 +1,8 @@
-#include "Gizmo.h"
+#include "Circle2DGizmo.h"
 #include "CameraComponent.h"
 
-void CircleGizmo::Render(const CameraComponent& cameraComponent, SDL_Renderer* renderer) const
+void CircleGizmo::RenderConcrete(const CameraComponent& cameraComponent, SDL_Renderer* renderer) const
 {
-	Gizmo::Render(cameraComponent, renderer);
-
 	// Start at the top of the circle
 	float x = _radius;
 	float y = 0;

@@ -1,7 +1,8 @@
 #include "CircleBounds2D.h"
 #include "TransformComponent.h"
-#include "Gizmo.h"
+#include "Circle2DGizmo.h"
 
+//TODO Change name to this file
 void CircleBounds2D::GetAxes(const TransformComponent& transform, std::vector<Vec2f>& outAxes) const
 {
 	//Circle axes are calculated apart since it is not a default convex polygon but a curve shape
