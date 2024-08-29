@@ -27,28 +27,28 @@ namespace NetLib
 		}
 	}
 
-	uint64_t TimeClock::GetLocalTimeMilliseconds() const
+	uint64 TimeClock::GetLocalTimeMilliseconds() const
 	{
 		auto currentTime = std::chrono::steady_clock::now();
 		std::chrono::duration<long long, std::milli> duration = std::chrono::round<std::chrono::milliseconds>(currentTime - _startTime);
 		return duration.count();
 	}
 
-	double TimeClock::GetLocalTimeSeconds() const
+	float64 TimeClock::GetLocalTimeSeconds() const
 	{
 		auto currentTime = std::chrono::steady_clock::now();
-		std::chrono::duration<double> duration = currentTime - _startTime;
+		std::chrono::duration<float64> duration = currentTime - _startTime;
 		return duration.count();
 	}
 
-	double TimeClock::GetServerTimeSeconds() const
+	float64 TimeClock::GetServerTimeSeconds() const
 	{
 		return GetLocalTimeSeconds() + _serverClockTimeDeltaSeconds;
 	}
 
-	double TimeClock::GetElapsedTimeSeconds() const
+	float64 TimeClock::GetElapsedTimeSeconds() const
 	{
-		std::chrono::duration<double> elapsedTimeSeconds = _elapsedTimeNanoseconds;
+		std::chrono::duration<float64> elapsedTimeSeconds = _elapsedTimeNanoseconds;
 		return elapsedTimeSeconds.count();
 	}
 
@@ -60,7 +60,7 @@ namespace NetLib
 		_lastTimeUpdate = current;
 	}
 
-	void TimeClock::SetServerClockTimeDelta(double newValue)
+	void TimeClock::SetServerClockTimeDelta(float64 newValue)
 	{
 		LOG_INFO("Adjusting Server's clock time delta. Old value: %f sec, New value: %f sec, Difference: %f sec", _serverClockTimeDeltaSeconds, newValue, (_serverClockTimeDeltaSeconds - newValue));
 

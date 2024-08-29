@@ -6,11 +6,11 @@ namespace NetLib
 	//Evaluate if supporting address creation from hostname such as hello.com. In order to do that you will need to use getaddrinfo
 	//and create a DNS petition which takes wayyyy longer than using just a normal IP. If so, do it in a separate thread.
 
-	Address::Address(const std::string& ip, uint16_t port)
+	Address::Address(const std::string& ip, uint16 port)
 	{
 		_addressInfo.sin_family = AF_INET;
 		_addressInfo.sin_port = htons(port);
-		int iResult = inet_pton(AF_INET, ip.c_str(), &_addressInfo.sin_addr);
+		int32 iResult = inet_pton(AF_INET, ip.c_str(), &_addressInfo.sin_addr);
 		if (iResult == -1)
 		{
 			LOG_ERROR("Error at converting IP string into address. Error code: %d", WSAGetLastError());

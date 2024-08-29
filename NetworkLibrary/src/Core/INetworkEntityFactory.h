@@ -1,5 +1,5 @@
 #pragma once
-#include <cstdint>
+#include "NumericTypes.h"
 
 namespace NetLib
 {
@@ -11,8 +11,8 @@ namespace NetLib
 		INetworkEntityFactory() {}
 		virtual ~INetworkEntityFactory() {}
 
-		virtual int CreateNetworkEntityObject(uint32_t networkEntityType, uint32_t networkEntityId, uint32_t controlledByPeerId, float posX, float posY,
+		virtual int32 CreateNetworkEntityObject(uint32 networkEntityType, uint32 networkEntityId, uint32 controlledByPeerId, float32 posX, float32 posY,
 			NetworkVariableChangesHandler* networkVariableChangeHandler) = 0;
-		virtual void DestroyNetworkEntityObject(uint32_t gameEntity) = 0;
+		virtual void DestroyNetworkEntityObject(uint32 gameEntity) = 0;
 	};
 }

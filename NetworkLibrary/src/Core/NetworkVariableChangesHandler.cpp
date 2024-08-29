@@ -4,7 +4,7 @@
 
 namespace NetLib
 {
-	void NetworkVariableChangesHandler::RegisterNetworkVariable(NetworkVariable<float>* networkVariable)
+	void NetworkVariableChangesHandler::RegisterNetworkVariable(NetworkVariable<float32>* networkVariable)
 	{
 		assert(networkVariable->GetId() == INVALID_NETWORK_VARIABLE_ID);
 
@@ -14,7 +14,7 @@ namespace NetLib
 		_variableIdToTypeMap[networkVariable->GetId()] = networkVariable->GetType();
 		NetworkVariablePairId pairId(networkVariable->GetId(), networkVariable->GetEntityId());
 
-		//TODO Check for the right Type. In this case we only have float so there is no issue but in the future when we have more types, consider using a switch
+		//TODO Check for the right Type. In this case we only have float32 so there is no issue but in the future when we have more types, consider using a switch
 		auto pairIdIt = _floatVariableIdToTypeMap.find(pairId);
 		if (pairIdIt == _floatVariableIdToTypeMap.cend())
 		{
@@ -27,7 +27,7 @@ namespace NetLib
 		}
 	}
 
-	void NetworkVariableChangesHandler::UnregisterNetworkVariable(const NetworkVariable<float>& networkVariable)
+	void NetworkVariableChangesHandler::UnregisterNetworkVariable(const NetworkVariable<float32>& networkVariable)
 	{
 		NetworkVariablePairId pairId(networkVariable.GetId(), networkVariable.GetEntityId());
 
@@ -42,9 +42,9 @@ namespace NetLib
 		}
 	}
 
-	void NetworkVariableChangesHandler::AddChange(NetworkVariableChangeData<float> variableChange)
+	void NetworkVariableChangesHandler::AddChange(NetworkVariableChangeData<float32> variableChange)
 	{
-		uint32_t networkEntityId = variableChange.networkEntityId;
+		uint32 networkEntityId = variableChange.networkEntityId;
 		auto entityFoundIt = _networkEntityIdToChangesMap.find(networkEntityId);
 
 		if (entityFoundIt != _networkEntityIdToChangesMap.end())
@@ -60,22 +60,22 @@ namespace NetLib
 
 	void NetworkVariableChangesHandler::CollectAllChanges()
 	{
-		auto floatVariablesIt = _floatVariableIdToTypeMap.cbegin();
+		auto float32VariablesIt = _floatVariableIdToTypeMap.cbegin();
 
-		for (; floatVariablesIt != _floatVariableIdToTypeMap.cend(); ++floatVariablesIt)
+		for (; float32VariablesIt != _floatVariableIdToTypeMap.cend(); ++float32VariablesIt)
 		{
-			AddChange(floatVariablesIt->second->GetChange());
+			AddChange(float32VariablesIt->second->GetChange());
 		}
 	}
 
 	void NetworkVariableChangesHandler::ProcessVariableChanges(Buffer& buffer)
 	{
-		uint16_t numberOfChanges = buffer.ReadShort();
+		uint16 numberOfChanges = buffer.ReadShort();
 
-		for (uint16_t i = 0; i < numberOfChanges; ++i)
+		for (uint16 i = 0; i < numberOfChanges; ++i)
 		{
-			uint32_t networkVariableId = buffer.ReadInteger();
-			uint32_t networkEntityId = buffer.ReadInteger();
+			uint32 networkVariableId = buffer.ReadInteger();
+			uint32 networkEntityId = buffer.ReadInteger();
 
 			NetworkVariableType type;
 			auto networkVariableTypeIt = _variableIdToTypeMap.find(networkVariableId);
@@ -102,7 +102,7 @@ namespace NetLib
 		}
 	}
 
-	const EntityNetworkVariableChanges* NetworkVariableChangesHandler::GetChangesFromEntity(uint32_t networkEntityId)
+	const EntityNetworkVariableChanges* NetworkVariableChangesHandler::GetChangesFromEntity(uint32 networkEntityId)
 	{
 		EntityNetworkVariableChanges* result = nullptr;
 

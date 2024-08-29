@@ -1,18 +1,18 @@
 #pragma once
-#include <cstdint>
+#include "NumericTypes.h"
 #include <type_traits>
 
 namespace NetLib
 {
-	typedef uint32_t NetworkVariableId;
+	typedef uint32 NetworkVariableId;
 	static constexpr NetworkVariableId INVALID_NETWORK_VARIABLE_ID = 0;
 
 	class NetworkVariableChangesHandler;
 
-	enum NetworkVariableType : uint8_t
+	enum NetworkVariableType : uint8
 	{
 		NVT_Invalid = 0,
-		NVT_Float = 1
+		NVT_float32 = 1
 	};
 
 	template <typename T>
@@ -20,10 +20,10 @@ namespace NetLib
 	{
 	public:
 		NetworkVariableChangeData() = default;
-		NetworkVariableChangeData(T value, uint32_t networkVariableId, uint32_t networkEntityId) : value(value), networkVariableId(networkVariableId), networkEntityId(networkEntityId) {}
+		NetworkVariableChangeData(T value, uint32 networkVariableId, uint32 networkEntityId) : value(value), networkVariableId(networkVariableId), networkEntityId(networkEntityId) {}
 		T value;
-		uint32_t networkVariableId;
-		uint32_t networkEntityId;
+		uint32 networkVariableId;
+		uint32 networkEntityId;
 	};
 
 	template <typename T>
@@ -31,21 +31,21 @@ namespace NetLib
 	{
 		//Supported types
 		static_assert(
-			std::is_same<T, uint8_t>::value ||
-			std::is_same<T, uint16_t>::value ||
-			std::is_same<T, uint32_t>::value ||
-			std::is_same<T, uint64_t>::value ||
+			std::is_same<T, uint8>::value ||
+			std::is_same<T, uint16>::value ||
+			std::is_same<T, uint32>::value ||
+			std::is_same<T, uint64>::value ||
 			std::is_same<T, int>::value ||
-			std::is_same<T, float>::value
+			std::is_same<T, float32>::value
 			, "Type not supported for Network variable");
 
 	public:
-		NetworkVariable(NetworkVariableChangesHandler* networkVariableChangesHandler, uint32_t networkEntityId) :
+		NetworkVariable(NetworkVariableChangesHandler* networkVariableChangesHandler, uint32 networkEntityId) :
 			_networkVariableChangesHandler(networkVariableChangesHandler), _networkEntityId(networkEntityId), _id(INVALID_NETWORK_VARIABLE_ID)
 		{
-			if (std::is_same<T, float>())
+			if (std::is_same<T, float32>())
 			{
-				_type = NVT_Float;
+				_type = NVT_float32;
 			}
 
 			RegisterVariable();
@@ -76,13 +76,13 @@ namespace NetLib
 
 		T Get() const { return _value; };
 		NetworkVariableType GetType() const { return _type; };
-		uint32_t GetId() const { return _id; };
-		uint32_t GetEntityId() const { return _networkEntityId; };
+		uint32 GetId() const { return _id; };
+		uint32 GetEntityId() const { return _networkEntityId; };
 
 	private:
 		T _value;
-		uint32_t _id;
-		uint32_t _networkEntityId;
+		uint32 _id;
+		uint32 _networkEntityId;
 		NetworkVariableType _type;
 
 		NetworkVariableChangesHandler* _networkVariableChangesHandler;

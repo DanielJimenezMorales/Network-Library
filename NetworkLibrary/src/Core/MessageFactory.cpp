@@ -6,7 +6,7 @@ namespace NetLib
 {
     MessageFactory* MessageFactory::_instance = nullptr;
 
-    void MessageFactory::CreateInstance(unsigned int size)
+    void MessageFactory::CreateInstance(uint32 size)
     {
         if (_instance != nullptr)
         {
@@ -21,7 +21,7 @@ namespace NetLib
         return *_instance;
     }
 
-    MessageFactory::MessageFactory(unsigned int size)
+    MessageFactory::MessageFactory(uint32 size)
     {
         _initialSize = size;
         InitializePools();
@@ -129,7 +129,7 @@ namespace NetLib
 
     void MessageFactory::InitializePool(std::queue<std::unique_ptr<Message>>& pool, MessageType messageType)
     {
-        for (unsigned int i = 0; i < _initialSize; ++i)
+        for (uint32 i = 0; i < _initialSize; ++i)
         {
             std::unique_ptr<Message> message = CreateMessage(messageType);
             assert(message != nullptr);

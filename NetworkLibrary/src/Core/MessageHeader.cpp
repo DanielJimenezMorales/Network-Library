@@ -9,7 +9,7 @@ namespace NetLib
 		buffer.WriteByte(type);
 		buffer.WriteShort(messageSequenceNumber);
 
-		uint8_t flags = 0;
+		uint8 flags = 0;
 		if (isReliable)
 		{
 			BitwiseUtils::SetBitAtIndex(flags, 0);
@@ -32,7 +32,7 @@ namespace NetLib
 	void MessageHeader::ReadWithoutHeader(Buffer& buffer)
 	{
 		messageSequenceNumber = buffer.ReadShort();
-		uint8_t flags = buffer.ReadByte();
+		uint8 flags = buffer.ReadByte();
 		isReliable = BitwiseUtils::GetBitAtIndex(flags, 0);
 		isOrdered = BitwiseUtils::GetBitAtIndex(flags, 1);
 	}

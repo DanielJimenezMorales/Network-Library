@@ -1,5 +1,5 @@
 #pragma once
-#include <cstdint>
+#include "NumericTypes.h"
 #include "MessageHeader.h"
 
 namespace NetLib
@@ -8,14 +8,14 @@ namespace NetLib
 	{
 	public:
 		MessageHeader GetHeader() const { return _header; }
-		void SetHeaderPacketSequenceNumber(uint16_t packetSequenceNumber) { _header.messageSequenceNumber = packetSequenceNumber; }
+		void SetHeaderPacketSequenceNumber(uint16 packetSequenceNumber) { _header.messageSequenceNumber = packetSequenceNumber; }
 		void SetReliability(bool isReliable) { _header.isReliable = isReliable; };
 		void SetOrdered(bool isOrdered) { _header.isOrdered = isOrdered; }
 
 		virtual void Write(Buffer& buffer) const = 0;
 		//Read it without the message header type
 		virtual void Read(Buffer& buffer) = 0;
-		virtual uint32_t Size() const = 0;
+		virtual uint32 Size() const = 0;
 
 		//TODO Temp, until I find a better way to clean Replication's data field
 		virtual void Reset() {};
@@ -35,11 +35,11 @@ namespace NetLib
 
 		void Write(Buffer& buffer) const override;
 		void Read(Buffer& buffer) override;
-		uint32_t Size() const override;
+		uint32 Size() const override;
 
 		~ConnectionRequestMessage() override {};
 
-		uint64_t clientSalt;
+		uint64 clientSalt;
 	};
 
 	class ConnectionChallengeMessage : public Message
@@ -49,12 +49,12 @@ namespace NetLib
 
 		void Write(Buffer& buffer) const override;
 		void Read(Buffer& buffer) override;
-		uint32_t Size() const override;
+		uint32 Size() const override;
 
 		~ConnectionChallengeMessage() override {};
 
-		uint64_t clientSalt;
-		uint64_t serverSalt;
+		uint64 clientSalt;
+		uint64 serverSalt;
 	};
 
 	class ConnectionChallengeResponseMessage : public Message
@@ -64,11 +64,11 @@ namespace NetLib
 
 		void Write(Buffer& buffer) const override;
 		void Read(Buffer& buffer) override;
-		uint32_t Size() const override;
+		uint32 Size() const override;
 
 		~ConnectionChallengeResponseMessage() override {};
 
-		uint64_t prefix;
+		uint64 prefix;
 	};
 
 	class ConnectionAcceptedMessage : public Message
@@ -78,12 +78,12 @@ namespace NetLib
 
 		void Write(Buffer& buffer) const override;
 		void Read(Buffer& buffer) override;
-		uint32_t Size() const override;
+		uint32 Size() const override;
 
 		~ConnectionAcceptedMessage() override {};
 
-		uint64_t prefix;
-		uint16_t clientIndexAssigned;
+		uint64 prefix;
+		uint16 clientIndexAssigned;
 	};
 
 	class ConnectionDeniedMessage : public Message
@@ -93,11 +93,11 @@ namespace NetLib
 
 		void Write(Buffer& buffer) const override;
 		void Read(Buffer& buffer) override;
-		uint32_t Size() const override;
+		uint32 Size() const override;
 
 		~ConnectionDeniedMessage() override {};
 
-		uint8_t reason;
+		uint8 reason;
 	};
 
 	class DisconnectionMessage : public Message
@@ -107,12 +107,12 @@ namespace NetLib
 
 		void Write(Buffer& buffer) const override;
 		void Read(Buffer& buffer) override;
-		uint32_t Size() const override;
+		uint32 Size() const override;
 
 		~DisconnectionMessage() override {};
 
-		uint64_t prefix;
-		uint8_t reason;
+		uint64 prefix;
+		uint8 reason;
 	};
 
 	class TimeRequestMessage : public Message
@@ -122,11 +122,11 @@ namespace NetLib
 
 		void Write(Buffer& buffer) const override;
 		void Read(Buffer& buffer) override;
-		uint32_t Size() const override;
+		uint32 Size() const override;
 
 		~TimeRequestMessage() override {};
 
-		uint32_t remoteTime;
+		uint32 remoteTime;
 	};
 
 	class TimeResponseMessage : public Message
@@ -136,12 +136,12 @@ namespace NetLib
 
 		void Write(Buffer& buffer) const override;
 		void Read(Buffer& buffer) override;
-		uint32_t Size() const override;
+		uint32 Size() const override;
 
 		~TimeResponseMessage() override {};
 
-		uint32_t remoteTime;
-		uint32_t serverTime;
+		uint32 remoteTime;
+		uint32 serverTime;
 	};
 
 	class ReplicationMessage : public Message
@@ -151,18 +151,18 @@ namespace NetLib
 
 		void Write(Buffer& buffer) const override;
 		void Read(Buffer& buffer) override;
-		uint32_t Size() const override; //TODO Make this also dynamic based on replication action. Now it is set to its worst case
+		uint32 Size() const override; //TODO Make this also dynamic based on replication action. Now it is set to its worst case
 
 		void Reset() override;
 
 		~ReplicationMessage() override;
 
-		uint8_t replicationAction;
-		uint32_t networkEntityId;
-		uint32_t controlledByPeerId;
-		uint32_t replicatedClassId; //TODO If replication action is update or destroy, we don't care about this one
-		uint16_t dataSize; //TODO If replication action is destroy, we don't care about this one
-		uint8_t* data; //TODO Free this memory when calling MessageFactory::Release in order to avoid memory leaks
+		uint8 replicationAction;
+		uint32 networkEntityId;
+		uint32 controlledByPeerId;
+		uint32 replicatedClassId; //TODO If replication action is update or destroy, we don't care about this one
+		uint16 dataSize; //TODO If replication action is destroy, we don't care about this one
+		uint8* data; //TODO Free this memory when calling MessageFactory::Release in order to avoid memory leaks
 	};
 
 	class InputStateMessage : public Message
@@ -172,11 +172,11 @@ namespace NetLib
 
 		void Write(Buffer& buffer) const override;
 		void Read(Buffer& buffer) override;
-		uint32_t Size() const override;
+		uint32 Size() const override;
 
 		void Reset() override;
 
-		uint16_t dataSize;
-		uint8_t* data;
+		uint16 dataSize;
+		uint8* data;
 	};
 }

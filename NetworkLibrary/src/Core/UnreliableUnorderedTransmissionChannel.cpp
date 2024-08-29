@@ -44,7 +44,7 @@ namespace NetLib
 		return std::move(message);
 	}
 
-	unsigned int UnreliableUnorderedTransmissionChannel::GetSizeOfNextUnsentMessage() const
+	uint32 UnreliableUnorderedTransmissionChannel::GetSizeOfNextUnsentMessage() const
 	{
 		if (!ArePendingMessagesToSend())
 		{
@@ -89,30 +89,30 @@ namespace NetLib
 		return false;
 	}
 
-	uint32_t UnreliableUnorderedTransmissionChannel::GenerateACKs() const
+	uint32 UnreliableUnorderedTransmissionChannel::GenerateACKs() const
 	{
 		return 0;
 	}
 
-	void UnreliableUnorderedTransmissionChannel::ProcessACKs(uint32_t acks, uint16_t lastAckedMessageSequenceNumber)
+	void UnreliableUnorderedTransmissionChannel::ProcessACKs(uint32 acks, uint16 lastAckedMessageSequenceNumber)
 	{
 	}
 
-	bool UnreliableUnorderedTransmissionChannel::IsMessageDuplicated(uint16_t messageSequenceNumber) const
+	bool UnreliableUnorderedTransmissionChannel::IsMessageDuplicated(uint16 messageSequenceNumber) const
 	{
 		return false;
 	}
 
-	void UnreliableUnorderedTransmissionChannel::Update(float deltaTime)
+	void UnreliableUnorderedTransmissionChannel::Update(float32 deltaTime)
 	{
 	}
 
-	uint16_t UnreliableUnorderedTransmissionChannel::GetLastMessageSequenceNumberAcked() const
+	uint16 UnreliableUnorderedTransmissionChannel::GetLastMessageSequenceNumberAcked() const
 	{
 		return 0;
 	}
 
-	unsigned int UnreliableUnorderedTransmissionChannel::GetRTTMilliseconds() const
+	uint32 UnreliableUnorderedTransmissionChannel::GetRTTMilliseconds() const
 	{
 		return 0;
 	}

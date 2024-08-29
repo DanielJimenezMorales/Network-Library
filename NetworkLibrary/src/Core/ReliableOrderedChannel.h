@@ -19,7 +19,7 @@ namespace NetLib
 		}
 
 		bool isAcked;
-		uint16_t sequenceNumber;
+		uint16 sequenceNumber;
 	};
 
 	class ReliableOrderedChannel : public TransmissionChannel
@@ -35,7 +35,7 @@ namespace NetLib
 		void AddMessageToSend(std::unique_ptr<Message> message) override;
 		bool ArePendingMessagesToSend() const override;
 		std::unique_ptr<Message> GetMessageToSend() override;
-		unsigned int GetSizeOfNextUnsentMessage() const override;
+		uint32 GetSizeOfNextUnsentMessage() const override;
 
 		void AddReceivedMessage(std::unique_ptr<Message> message) override;
 		bool ArePendingReadyToProcessMessages() const override;
@@ -43,17 +43,17 @@ namespace NetLib
 
 		void SeUnsentACKsToFalse() override;
 		bool AreUnsentACKs() const override;
-		uint32_t GenerateACKs() const override;
-		void ProcessACKs(uint32_t acks, uint16_t lastAckedMessageSequenceNumber) override;
-		bool IsMessageDuplicated(uint16_t messageSequenceNumber) const override;
+		uint32 GenerateACKs() const override;
+		void ProcessACKs(uint32 acks, uint16 lastAckedMessageSequenceNumber) override;
+		bool IsMessageDuplicated(uint16 messageSequenceNumber) const override;
 
-		void Update(float deltaTime) override;
+		void Update(float32 deltaTime) override;
 
-		uint16_t GetLastMessageSequenceNumberAcked() const override;
+		uint16 GetLastMessageSequenceNumberAcked() const override;
 
 		void Reset() override;
 
-		unsigned int GetRTTMilliseconds() const override;
+		uint32 GetRTTMilliseconds() const override;
 
 		~ReliableOrderedChannel();
 
@@ -65,49 +65,49 @@ namespace NetLib
 		//Collection of reliable messages that have not already been acked
 		std::list<std::unique_ptr<Message>> _unackedReliableMessages;
 		//Timeouts of _unackedReliableMessages
-		std::list<float> _unackedReliableMessageTimeouts;
+		std::list<float32> _unackedReliableMessageTimeouts;
 		//Retransmission timeout when RTT is zero
-		const float _initialTimeout = 0.5f;
+		const float32 _initialTimeout = 0.5f;
 		//Flag to check if are there pending ACKs to send
 		bool _areUnsentACKs;
 		//Last reliable message sequence acked
-		uint16_t _lastMessageSequenceNumberAcked;
+		uint16 _lastMessageSequenceNumberAcked;
 		//Collection of reliable message entries to handle ACKs
 		std::vector<ReliableMessageEntry> _reliableMessageEntries;
-		unsigned int _reliableMessageEntriesBufferSize;
+		uint32 _reliableMessageEntriesBufferSize;
 		//Elapsed time since start of the program that each reliable message was sent (For RTT purposes)
-		std::unordered_map<uint16_t, uint16_t> _unackedMessagesSendTimes;
+		std::unordered_map<uint16, uint16> _unackedMessagesSendTimes;
 
 		//RTT RELATED
 		//Message RTT values waiting to be added to the current RTT value
-		std::queue<uint16_t> _messagesRTTToProcess;
+		std::queue<uint16> _messagesRTTToProcess;
 		//Current RTT value in milliseconds
-		uint16_t _rttMilliseconds;
+		uint16 _rttMilliseconds;
 
 		//ORDERED RELATED
 		//Collection of messages waiting for a previous message in order to guarantee ordered delivery
 		std::list<std::unique_ptr<Message>> _orderedMessagesWaitingForPrevious;
 		//Next message sequence number expected to guarantee ordered transmission
-		unsigned int _nextOrderedMessageSequenceNumber;
+		uint32 _nextOrderedMessageSequenceNumber;
 
 		bool AreUnackedMessagesToResend() const;
 		std::unique_ptr<Message> GetUnackedMessageToResend();
-		int GetNextUnackedMessageIndexToResend() const;
+		int32 GetNextUnackedMessageIndexToResend() const;
 		void AddUnackedReliableMessage(std::unique_ptr<Message> message);
 
-		void AckReliableMessage(uint16_t messageSequenceNumber);
-		bool DoesUnorderedMessagesContainsSequence(uint16_t sequence, unsigned int& index) const;
+		void AckReliableMessage(uint16 messageSequenceNumber);
+		bool DoesUnorderedMessagesContainsSequence(uint16 sequence, uint32& index) const;
 		bool AddOrderedMessage(std::unique_ptr<Message> message);
-		bool TryRemoveUnackedReliableMessageFromSequence(uint16_t sequence);
-		int GetPendingUnackedReliableMessageIndexFromSequence(uint16_t sequence) const;
-		std::unique_ptr<Message> DeleteUnackedReliableMessageAtIndex(unsigned int index);
+		bool TryRemoveUnackedReliableMessageFromSequence(uint16 sequence);
+		int32 GetPendingUnackedReliableMessageIndexFromSequence(uint16 sequence) const;
+		std::unique_ptr<Message> DeleteUnackedReliableMessageAtIndex(uint32 index);
 
-		const ReliableMessageEntry& GetReliableMessageEntry(uint16_t sequenceNumber) const;
-		unsigned int GetRollingBufferIndex(uint16_t index) const { return index % _reliableMessageEntriesBufferSize; };
+		const ReliableMessageEntry& GetReliableMessageEntry(uint16 sequenceNumber) const;
+		uint32 GetRollingBufferIndex(uint16 index) const { return index % _reliableMessageEntriesBufferSize; };
 
-		void AddMessageRTTValueToProcess(uint16_t messageRTT);
+		void AddMessageRTTValueToProcess(uint16 messageRTT);
 		void UpdateRTT();
-		float GetRetransmissionTimeout() const;
+		float32 GetRetransmissionTimeout() const;
 
 		void ClearMessages();
 	};

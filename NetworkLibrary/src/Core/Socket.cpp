@@ -12,7 +12,7 @@ namespace NetLib
 	SocketResult Socket::InitializeSocketsLibrary()
 	{
 		WSADATA wsaData;
-		int iResult = WSAStartup(MAKEWORD(2, 2), &wsaData);//Init WS. You need to pass it the version (1.0, 1.1, 2.2...) and a pointer to WSADATA which contains info about the WS impl.
+		int32 iResult = WSAStartup(MAKEWORD(2, 2), &wsaData);//Init WS. You need to pass it the version (1.0, 1.1, 2.2...) and a pointer to WSADATA which contains info about the WS impl.
 		if (iResult != 0)
 		{
 			LOG_ERROR("WSAStartup failed: %d", iResult);
@@ -22,7 +22,7 @@ namespace NetLib
 		return SocketResult::SOKT_SUCCESS;
 	}
 
-	int Socket::GetLastError() const
+	int32 Socket::GetLastError() const
 	{
 		return WSAGetLastError();
 	}
@@ -40,7 +40,7 @@ namespace NetLib
 		}
 
 		unsigned long listenSocketBlockingMode = status ? 0 : 1;
-		int iResult = ioctlsocket(_listenSocket, FIONBIO, &listenSocketBlockingMode);
+		int32 iResult = ioctlsocket(_listenSocket, FIONBIO, &listenSocketBlockingMode);
 		if (iResult == SOCKET_ERROR)
 		{
 			LOG_ERROR("Socket error. Error while setting blocking mode, to %lu. Error code %d", listenSocketBlockingMode, GetLastError());
@@ -85,7 +85,7 @@ namespace NetLib
 			return SocketResult::SOKT_ERR;
 		}
 
-		int iResult = closesocket(_listenSocket);
+		int32 iResult = closesocket(_listenSocket);
 		if (iResult == SOCKET_ERROR)
 		{
 			LOG_ERROR("Socket error. Error while closing the socket. Error code %d", GetLastError());
@@ -131,7 +131,7 @@ namespace NetLib
 		return SocketResult::SOKT_SUCCESS;
 	}
 
-	SocketResult Socket::ReceiveFrom(uint8_t* incomingDataBuffer, unsigned int incomingDataBufferSize, Address* remoteAddress, unsigned int& numberOfBytesRead) const
+	SocketResult Socket::ReceiveFrom(uint8* incomingDataBuffer, uint32 incomingDataBufferSize, Address* remoteAddress, uint32& numberOfBytesRead) const
 	{
 		if (incomingDataBuffer == nullptr || !IsValid())
 		{
@@ -139,15 +139,15 @@ namespace NetLib
 		}
 
 		sockaddr_in incomingAddress;
-		int incomingAddressSize = sizeof(incomingAddress);
+		int32 incomingAddressSize = sizeof(incomingAddress);
 		ZeroMemory(&incomingAddress, incomingAddressSize);
 
-		int bytesIn = recvfrom(_listenSocket, (char*)incomingDataBuffer, incomingDataBufferSize, 0, (sockaddr*)&incomingAddress, &incomingAddressSize);
+		int32 bytesIn = recvfrom(_listenSocket, (char*)incomingDataBuffer, incomingDataBufferSize, 0, (sockaddr*)&incomingAddress, &incomingAddressSize);
 		*remoteAddress = Address(incomingAddress);
 
 		if (bytesIn == SOCKET_ERROR)
 		{
-			int error = GetLastError();
+			int32 error = GetLastError();
 
 			if (error == WSAEMSGSIZE)
 			{
@@ -177,7 +177,7 @@ namespace NetLib
 		return SocketResult::SOKT_SUCCESS;
 	}
 
-	SocketResult Socket::SendTo(const uint8_t* dataBuffer, unsigned int dataBufferSize, const Address& remoteAddress) const
+	SocketResult Socket::SendTo(const uint8* dataBuffer, uint32 dataBufferSize, const Address& remoteAddress) const
 	{
 		if (dataBuffer == nullptr || !IsValid())
 		{
@@ -189,9 +189,9 @@ namespace NetLib
 			LOG_WARNING("Socket warning. Trying to send a packet bigger than the MTU size theshold. This could result in Packet Fragmentation and as a consequence worse network conditions. Packet size: %u, MTU size threshold: %u", dataBufferSize, _defaultMTUSize);
 		}
 
-		int addressSize = sizeof(remoteAddress.GetInfo());
+		int32 addressSize = sizeof(remoteAddress.GetInfo());
 
-		int bytesSent = sendto(_listenSocket, (char*)dataBuffer, dataBufferSize, 0, (sockaddr*)&remoteAddress.GetInfo(), addressSize);
+		int32 bytesSent = sendto(_listenSocket, (char*)dataBuffer, dataBufferSize, 0, (sockaddr*)&remoteAddress.GetInfo(), addressSize);
 		if (bytesSent == SOCKET_ERROR)
 		{
 			LOG_ERROR("Socket error. Error while sending data. Error code %d", GetLastError());

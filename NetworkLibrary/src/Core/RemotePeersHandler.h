@@ -2,7 +2,7 @@
 #include <vector>
 #include <queue>
 #include <unordered_set>
-#include <cstdint>
+#include "NumericTypes.h"
 
 #include "RemotePeer.h"
 
@@ -10,7 +10,7 @@ namespace NetLib
 {
 	class Address;
 
-	enum RemotePeersHandlerResult : uint8_t
+	enum RemotePeersHandlerResult : uint8
 	{
 		RPH_ERROR = 0,
 		RPH_SUCCESS = 1,
@@ -20,35 +20,35 @@ namespace NetLib
 
 	//If the local peer does not receive any message from a remote peer during REMOTE_PEER_INACTIVITY_TIME seconds it will be considered inactive and it will
 	//be disconnected with ConnectionFailedReasonType::CFR_TIMEOUT reason
-	const float REMOTE_PEER_INACTIVITY_TIME = 5.0f;
+	const float32 REMOTE_PEER_INACTIVITY_TIME = 5.0f;
 
 	class RemotePeersHandler
 	{
 	public:
-		RemotePeersHandler(unsigned int maxConnections);
+		RemotePeersHandler(uint32 maxConnections);
 
-		void TickRemotePeers(float elapsedTime);
+		void TickRemotePeers(float32 elapsedTime);
 
-		bool AddRemotePeer(const Address& addressInfo, uint16_t id, uint64_t clientSalt, uint64_t serverSalt);
-		int FindFreeRemotePeerSlot() const;
+		bool AddRemotePeer(const Address& addressInfo, uint16 id, uint64 clientSalt, uint64 serverSalt);
+		int32 FindFreeRemotePeerSlot() const;
 		RemotePeer* GetRemotePeerFromAddress(const Address& address);
-		RemotePeer* GetRemotePeerFromId(unsigned int id);
+		RemotePeer* GetRemotePeerFromId(uint32 id);
 		bool IsRemotePeerAlreadyConnected(const Address& address) const;
-		bool DoesRemotePeerIdExist(unsigned int id) const;
+		bool DoesRemotePeerIdExist(uint32 id) const;
 		RemotePeersHandlerResult IsRemotePeerAbleToConnect(const Address& address) const;
 
 		std::unordered_set<RemotePeer*>::iterator GetValidRemotePeersIterator();
 		std::unordered_set<RemotePeer*>::iterator GetValidRemotePeersPastTheEndIterator();
 
 		void RemoveAllRemotePeers();
-		bool RemoveRemotePeer(unsigned int remotePeerId);
+		bool RemoveRemotePeer(uint32 remotePeerId);
 
 		~RemotePeersHandler();
 
 	private:
-		int GetIndexFromId(unsigned int id) const;
+		int32 GetIndexFromId(uint32 id) const;
 
-		const unsigned int _maxConnections;
+		const uint32 _maxConnections;
 		std::vector<bool> _remotePeerSlots;
 		std::vector<RemotePeer> _remotePeers;
 		std::unordered_set<RemotePeer*> _validRemotePeers;

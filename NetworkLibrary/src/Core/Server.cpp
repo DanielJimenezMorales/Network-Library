@@ -14,12 +14,12 @@
 
 namespace NetLib
 {
-	Server::Server(int maxConnections) : Peer(PeerType::ServerMode, maxConnections, 1024, 1024), _remotePeerInputsHandler()
+	Server::Server(int32 maxConnections) : Peer(PeerType::ServerMode, maxConnections, 1024, 1024), _remotePeerInputsHandler()
 	{
 
 	}
 
-	uint32_t Server::CreateNetworkEntity(uint32_t entityType, uint32_t controlledByPeerId, float posX, float posY)
+	uint32 Server::CreateNetworkEntity(uint32 entityType, uint32 controlledByPeerId, float32 posX, float32 posY)
 	{
 		if (GetConnectionState() != PeerConnectionState::PCS_Connected)
 		{
@@ -30,7 +30,7 @@ namespace NetLib
 		return _replicationManager.CreateNetworkEntity(entityType, controlledByPeerId, posX, posY);
 	}
 
-	void Server::DestroyNetworkEntity(uint32_t entityId)
+	void Server::DestroyNetworkEntity(uint32 entityId)
 	{
 		if (GetConnectionState() != PeerConnectionState::PCS_Connected)
 		{
@@ -48,7 +48,7 @@ namespace NetLib
 		_inputsFactory = factory;
 	}
 
-	const IInputState* Server::GetInputFromRemotePeer(uint32_t remotePeerId)
+	const IInputState* Server::GetInputFromRemotePeer(uint32 remotePeerId)
 	{
 		return _remotePeerInputsHandler.GetNextInputFromRemotePeer(remotePeerId);
 	}
@@ -71,16 +71,16 @@ namespace NetLib
 		return true;
 	}
 
-	void Server::TickConcrete(float elapsedTime)
+	void Server::TickConcrete(float32 elapsedTime)
 	{
 		TickReplication();
 	}
 
-	uint64_t Server::GenerateServerSalt() const
+	uint64 Server::GenerateServerSalt() const
 	{
 		//TODO Change this in order to get another random generator that generates 64bit numbers
 		srand(time(NULL) + 3589);
-		uint64_t serverSalt = rand();
+		uint64 serverSalt = rand();
 		return serverSalt;
 	}
 
@@ -148,8 +148,8 @@ namespace NetLib
 
 		if (isAbleToConnectResult == RemotePeersHandlerResult::RPH_SUCCESS)//If there is green light keep with the connection pipeline.
 		{
-			uint64_t clientSalt = message.clientSalt;
-			uint64_t serverSalt = GenerateServerSalt();
+			uint64 clientSalt = message.clientSalt;
+			uint64 serverSalt = GenerateServerSalt();
 			AddRemotePeer(address, _nextAssignedRemotePeerID, clientSalt, serverSalt);
 			++_nextAssignedRemotePeerID;
 
@@ -265,7 +265,7 @@ namespace NetLib
 			return;
 		}
 
-		uint64_t dataPrefix = message.prefix;
+		uint64 dataPrefix = message.prefix;
 
 		if (remotePeer.GetDataPrefix() == dataPrefix)
 		{
@@ -303,7 +303,7 @@ namespace NetLib
 
 	void Server::ProcessDisconnection(const DisconnectionMessage& message, RemotePeer& remotePeer)
 	{
-		uint64_t dataPrefix = message.prefix;
+		uint64 dataPrefix = message.prefix;
 		if (dataPrefix != remotePeer.GetDataPrefix())
 		{
 			LOG_WARNING("Packet prefix does not match. Skipping message...");
@@ -365,7 +365,7 @@ namespace NetLib
 				if (replicationMessage->dataSize > 0)
 				{
 					//TODO Figure out if I can improve this. So far, for large snapshot updates data this can become heavy and slow. Can I avoid the copy somehow?
-					uint8_t* data = new uint8_t[replicationMessage->dataSize];
+					uint8* data = new uint8[replicationMessage->dataSize];
 					std::memcpy(data, pendingReplicationMessage->data, replicationMessage->dataSize);
 					replicationMessage->data = data;
 				}

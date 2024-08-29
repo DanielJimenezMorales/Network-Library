@@ -18,9 +18,9 @@ namespace NetLib
 		clientSalt = buffer.ReadLong();
 	}
 
-	uint32_t ConnectionRequestMessage::Size() const
+	uint32 ConnectionRequestMessage::Size() const
 	{
-		return MessageHeader::Size() + sizeof(uint64_t);
+		return MessageHeader::Size() + sizeof(uint64);
 	}
 
 	void ConnectionChallengeMessage::Write(Buffer& buffer) const
@@ -39,9 +39,9 @@ namespace NetLib
 		serverSalt = buffer.ReadLong();
 	}
 
-	uint32_t ConnectionChallengeMessage::Size() const
+	uint32 ConnectionChallengeMessage::Size() const
 	{
-		return MessageHeader::Size() + (sizeof(uint64_t) * 2);
+		return MessageHeader::Size() + (sizeof(uint64) * 2);
 	}
 
 	void ConnectionChallengeResponseMessage::Write(Buffer& buffer) const
@@ -58,9 +58,9 @@ namespace NetLib
 		prefix = buffer.ReadLong();
 	}
 
-	uint32_t ConnectionChallengeResponseMessage::Size() const
+	uint32 ConnectionChallengeResponseMessage::Size() const
 	{
-		return MessageHeader::Size() + sizeof(uint64_t);
+		return MessageHeader::Size() + sizeof(uint64);
 	}
 
 	void ConnectionAcceptedMessage::Write(Buffer& buffer) const
@@ -79,9 +79,9 @@ namespace NetLib
 		clientIndexAssigned = buffer.ReadShort();
 	}
 
-	uint32_t ConnectionAcceptedMessage::Size() const
+	uint32 ConnectionAcceptedMessage::Size() const
 	{
-		return MessageHeader::Size() + sizeof(uint64_t) + sizeof(uint16_t);
+		return MessageHeader::Size() + sizeof(uint64) + sizeof(uint16);
 	}
 
 	void ConnectionDeniedMessage::Write(Buffer& buffer) const
@@ -97,9 +97,9 @@ namespace NetLib
 		reason = buffer.ReadByte();
 	}
 
-	uint32_t ConnectionDeniedMessage::Size() const
+	uint32 ConnectionDeniedMessage::Size() const
 	{
-		return MessageHeader::Size() + sizeof(uint8_t);
+		return MessageHeader::Size() + sizeof(uint8);
 	}
 
 	void DisconnectionMessage::Write(Buffer& buffer) const
@@ -118,9 +118,9 @@ namespace NetLib
 		reason = buffer.ReadByte();
 	}
 
-	uint32_t DisconnectionMessage::Size() const
+	uint32 DisconnectionMessage::Size() const
 	{
-		return MessageHeader::Size() + sizeof(uint64_t) + sizeof(uint8_t);
+		return MessageHeader::Size() + sizeof(uint64) + sizeof(uint8);
 	}
 
 	void TimeRequestMessage::Write(Buffer& buffer) const
@@ -137,9 +137,9 @@ namespace NetLib
 		remoteTime = buffer.ReadInteger();
 	}
 
-	uint32_t TimeRequestMessage::Size() const
+	uint32 TimeRequestMessage::Size() const
 	{
-		return MessageHeader::Size() + sizeof(uint32_t);
+		return MessageHeader::Size() + sizeof(uint32);
 	}
 
 	void TimeResponseMessage::Write(Buffer& buffer) const
@@ -158,9 +158,9 @@ namespace NetLib
 		serverTime = buffer.ReadInteger();
 	}
 
-	uint32_t TimeResponseMessage::Size() const
+	uint32 TimeResponseMessage::Size() const
 	{
-		return MessageHeader::Size() + (2 * sizeof(uint32_t));
+		return MessageHeader::Size() + (2 * sizeof(uint32));
 	}
 
 	void ReplicationMessage::Write(Buffer& buffer) const
@@ -190,19 +190,19 @@ namespace NetLib
 		dataSize = buffer.ReadShort();
 		if (dataSize > 0)
 		{
-			data = new uint8_t[dataSize];
+			data = new uint8[dataSize];
 		}
 
-		//TODO Create method called ReadData(uint8_t& data, size) in order to avoid this for loop
+		//TODO Create method called ReadData(uint8& data, size) in order to avoid this for loop
 		for (size_t i = 0; i < dataSize; ++i)
 		{
 			data[i] = buffer.ReadByte();
 		}
 	}
 
-	uint32_t ReplicationMessage::Size() const
+	uint32 ReplicationMessage::Size() const
 	{
-		return MessageHeader::Size() + sizeof(uint8_t) + (3 * sizeof(uint32_t)) + sizeof(uint16_t) + (dataSize * sizeof(uint8_t));
+		return MessageHeader::Size() + sizeof(uint8) + (3 * sizeof(uint32)) + sizeof(uint16) + (dataSize * sizeof(uint8));
 	}
 
 	void ReplicationMessage::Reset()
@@ -243,19 +243,19 @@ namespace NetLib
 		dataSize = buffer.ReadShort();
 		if (dataSize > 0)
 		{
-			data = new uint8_t[dataSize];
+			data = new uint8[dataSize];
 		}
 
-		//TODO Create method called ReadData(uint8_t& data, size) in order to avoid this for loop
+		//TODO Create method called ReadData(uint8& data, size) in order to avoid this for loop
 		for (size_t i = 0; i < dataSize; ++i)
 		{
 			data[i] = buffer.ReadByte();
 		}
 	}
 
-	uint32_t InputStateMessage::Size() const
+	uint32 InputStateMessage::Size() const
 	{
-		return MessageHeader::Size() + sizeof(uint16_t) + (dataSize * sizeof(uint8_t));
+		return MessageHeader::Size() + sizeof(uint16) + (dataSize * sizeof(uint8));
 	}
 
 	void InputStateMessage::Reset()

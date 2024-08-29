@@ -1,5 +1,5 @@
 #pragma once
-#include <cstdint>
+#include "NumericTypes.h"
 #include <vector>
 #include <unordered_map>
 
@@ -11,27 +11,27 @@ namespace NetLib
 	struct EntityNetworkVariableChanges
 	{
 	public:
-		uint32_t networkEntityId;
-		std::vector<NetworkVariableChangeData<float>> floatChanges;
+		uint32 networkEntityId;
+		std::vector<NetworkVariableChangeData<float32>> floatChanges;
 
-		void AddChange(NetworkVariableChangeData<float> change)
+		void AddChange(NetworkVariableChangeData<float32> change)
 		{
 			floatChanges.push_back(change);
 		}
 
 		size_t Size() const
 		{
-			return (sizeof(uint32_t) + sizeof(float) + sizeof(uint32_t)) * floatChanges.size();
+			return (sizeof(uint32) + sizeof(float32) + sizeof(uint32)) * floatChanges.size();
 		}
 	};
 
 	struct NetworkVariablePairId
 	{
 		NetworkVariableId _networkVariableId;
-		uint32_t _networkEntityId;
+		uint32 _networkEntityId;
 
 		NetworkVariablePairId() = default;
-		NetworkVariablePairId(NetworkVariableId networkVariableId, uint32_t networkEntityId) : _networkVariableId(networkVariableId), _networkEntityId(networkEntityId) {}
+		NetworkVariablePairId(NetworkVariableId networkVariableId, uint32 networkEntityId) : _networkVariableId(networkVariableId), _networkEntityId(networkEntityId) {}
 
 		bool operator==(const NetworkVariablePairId& other) const
 		{
@@ -59,14 +59,14 @@ namespace NetLib
 	{
 	public:
 		NetworkVariableChangesHandler() : _nextNetworkVariableId(INVALID_NETWORK_VARIABLE_ID + 1) {};
-		void RegisterNetworkVariable(NetworkVariable<float>* networkVariable);
-		void UnregisterNetworkVariable(const NetworkVariable<float>& networkVariable);
-		void AddChange(NetworkVariableChangeData<float> variableChange);
+		void RegisterNetworkVariable(NetworkVariable<float32>* networkVariable);
+		void UnregisterNetworkVariable(const NetworkVariable<float32>& networkVariable);
+		void AddChange(NetworkVariableChangeData<float32> variableChange);
 
 		void CollectAllChanges();
 		void ProcessVariableChanges(Buffer& buffer);
 
-		const EntityNetworkVariableChanges* GetChangesFromEntity(uint32_t networkEntityId);
+		const EntityNetworkVariableChanges* GetChangesFromEntity(uint32 networkEntityId);
 		void Clear();
 
 		void SetNextNetworkVariableId(NetworkVariableId new_value);
@@ -75,10 +75,10 @@ namespace NetLib
 		NetworkVariableId _nextNetworkVariableId;
 
 		std::unordered_map<NetworkVariableId, NetworkVariableType> _variableIdToTypeMap;
-		std::unordered_map<NetworkVariablePairId, NetworkVariable<float>*, CustomNetworkVariablePairIdHash> _floatVariableIdToTypeMap;
+		std::unordered_map<NetworkVariablePairId, NetworkVariable<float32>*, CustomNetworkVariablePairIdHash> _floatVariableIdToTypeMap;
 
 		//Only for collecting local changes
-		std::unordered_map<uint32_t, EntityNetworkVariableChanges> _networkEntityIdToChangesMap;
+		std::unordered_map<uint32, EntityNetworkVariableChanges> _networkEntityIdToChangesMap;
 
 		void IncrementNextNetworkVariableId();
 	};

@@ -1,6 +1,6 @@
 #pragma once
 
-//Define this before any include in order to be able to use std::numeric_limits<uint64_t>::min() and std::numeric_limits<uint64_t>::max() methods and not getting errors with the ones
+//Define this before any include in order to be able to use std::numeric_limits<uint64>::min() and std::numeric_limits<uint64>::max() methods and not getting errors with the ones
 //from Windows.h
 #define NOMINMAX
 #include <list>
@@ -28,19 +28,19 @@ namespace NetLib
 
 	//TIME SYNC CONSTANTS
 	//Number of RTT to calculate an average RTT for adjusting Server's clock delta time
-	const unsigned int TIME_REQUEST_RTT_BUFFER_SIZE = 10;
+	const uint32 TIME_REQUEST_RTT_BUFFER_SIZE = 10;
 	//In order to get an accurate clock sync within the first ticks, the client will send a burst of time requests to calculate a Server's clock delta time rapidly.
 	//Note: In this case, the '+ 1' is in case one of the burst messages get lost
-	const unsigned int NUMBER_OF_INITIAL_TIME_REQUESTS_BURST = TIME_REQUEST_RTT_BUFFER_SIZE + 1;
+	const uint32 NUMBER_OF_INITIAL_TIME_REQUESTS_BURST = TIME_REQUEST_RTT_BUFFER_SIZE + 1;
 	//This will discard the X biggest and smallest RTTs from the Adjusted RTT in order to get rid of possible outliers. This value must be smaller than half TIME_REQUEST_RTT_BUFFER_SIZE
-	const unsigned int NUMBER_OF_RTTS_CONSIDERED_OUTLIERS_PER_SIDE = 1;
+	const uint32 NUMBER_OF_RTTS_CONSIDERED_OUTLIERS_PER_SIDE = 1;
 	//How often the client will send a time request message to adjust Server's clock delta time
-	const float TIME_REQUESTS_FREQUENCY_SECONDS = 1.0f;
+	const float32 TIME_REQUESTS_FREQUENCY_SECONDS = 1.0f;
 
 	class Client : public Peer
 	{
 	public:
-		Client(float serverMaxInactivityTimeout);
+		Client(float32 serverMaxInactivityTimeout);
 		Client(const Client&) = delete;
 
 		Client& operator=(const Client&) = delete;
@@ -48,17 +48,17 @@ namespace NetLib
 		~Client() override;
 
 		void SendInputs(const IInputState& inputState);
-		unsigned int GetLocalClientId() const;
+		uint32 GetLocalClientId() const;
 
 	protected:
 		bool StartConcrete() override;
 		void ProcessMessageFromPeer(const Message& message, RemotePeer& remotePeer) override;
 		void ProcessMessageFromUnknownPeer(const Message& message, const Address& address) override;
-		void TickConcrete(float elapsedTime) override;
+		void TickConcrete(float32 elapsedTime) override;
 		bool StopConcrete() override;
 
 	private:
-		uint64_t GenerateClientSaltNumber();
+		uint64 GenerateClientSaltNumber();
 		void ProcessConnectionChallenge(const ConnectionChallengeMessage& message, RemotePeer& remotePeer);
 		void ProcessConnectionRequestAccepted(const ConnectionAcceptedMessage& message, RemotePeer& remotePeer);
 		void ProcessConnectionRequestDenied(const ConnectionDeniedMessage& message);
@@ -70,19 +70,19 @@ namespace NetLib
 		void CreateConnectionChallengeResponse(RemotePeer& remotePeer);
 		void CreateTimeRequestMessage(RemotePeer& remotePeer);
 		
-		void UpdateTimeRequestsElapsedTime(float elapsedTime);
+		void UpdateTimeRequestsElapsedTime(float32 elapsedTime);
 
 		void OnServerDisconnect();
 
 		Address _serverAddress;
 		ClientState _currentState;
-		unsigned int _clientIndex;
+		uint32 _clientIndex;
 
-		unsigned int inGameMessageID; //Only for RUDP testing purposes. Delete later!
+		uint32 inGameMessageID; //Only for RUDP testing purposes. Delete later!
 
 		//Time requests related
-		float _timeSinceLastTimeRequest;
-		unsigned int _numberOfInitialTimeRequestBurstLeft;
-		std::list<unsigned int> _timeRequestRTTs;
+		float32 _timeSinceLastTimeRequest;
+		uint32 _numberOfInitialTimeRequestBurstLeft;
+		std::list<uint32> _timeRequestRTTs;
 	};
 }

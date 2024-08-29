@@ -1,5 +1,5 @@
 #pragma once
-#include <cstdint>
+#include "NumericTypes.h"
 #include <unordered_map>
 #include <queue>
 #include <memory>
@@ -14,10 +14,10 @@ namespace NetLib
 {
 	class INetworkEntityFactory;
 
-	static constexpr uint32_t INVALID_NETWORK_ENTITY_ID = 0;
+	static constexpr uint32 INVALID_NETWORK_ENTITY_ID = 0;
 
 	//TODO Convert this to enum class
-	enum ReplicationActionType : uint8_t
+	enum ReplicationActionType : uint8
 	{
 		RAT_CREATE = 0,
 		RAT_UPDATE = 1,
@@ -30,8 +30,8 @@ namespace NetLib
 		ReplicationManager() : _nextNetworkEntityId(1), _networkEntityFactory(nullptr) {}
 
 		void RegisterNetworkEntityFactory(INetworkEntityFactory* entityFactory);
-		uint32_t CreateNetworkEntity(uint32_t entityType, uint32_t controlledByPeerId, float posX, float posY);
-		void RemoveNetworkEntity(uint32_t networkEntityId);
+		uint32 CreateNetworkEntity(uint32 entityType, uint32 controlledByPeerId, float32 posX, float32 posY);
+		void RemoveNetworkEntity(uint32 networkEntityId);
 
 		void Server_ReplicateWorldState();
 		void Client_ProcessReceivedReplicationMessage(const ReplicationMessage& replicationMessage);
@@ -42,9 +42,9 @@ namespace NetLib
 		void ClearSentReplicationMessages();
 
 	private:
-		std::unique_ptr<ReplicationMessage> CreateCreateReplicationMessage(uint32_t entityType, uint32_t controlledByPeerId, uint32_t networkEntityId, const Buffer& dataBuffer);
-		std::unique_ptr<ReplicationMessage> CreateUpdateReplicationMessage(uint32_t entityType, uint32_t networkEntityId, uint32_t controlledByPeerId, const Buffer& buffer);
-		std::unique_ptr<ReplicationMessage> CreateDestroyReplicationMessage(uint32_t networkEntityId);
+		std::unique_ptr<ReplicationMessage> CreateCreateReplicationMessage(uint32 entityType, uint32 controlledByPeerId, uint32 networkEntityId, const Buffer& dataBuffer);
+		std::unique_ptr<ReplicationMessage> CreateUpdateReplicationMessage(uint32 entityType, uint32 networkEntityId, uint32 controlledByPeerId, const Buffer& buffer);
+		std::unique_ptr<ReplicationMessage> CreateDestroyReplicationMessage(uint32 networkEntityId);
 
 		void ProcessReceivedCreateReplicationMessage(const ReplicationMessage& replicationMessage);
 		void ProcessReceivedUpdateReplicationMessage(const ReplicationMessage& replicationMessage);
@@ -57,7 +57,7 @@ namespace NetLib
 		std::queue<std::unique_ptr<ReplicationMessage>> _pendingReplicationActionMessages;
 		std::queue<std::unique_ptr<ReplicationMessage>> _sentReplicationMessages;
 
-		uint32_t _nextNetworkEntityId;
+		uint32 _nextNetworkEntityId;
 
 		//TODO Support multiple network entity factories depending on the entity_type
 		INetworkEntityFactory* _networkEntityFactory;

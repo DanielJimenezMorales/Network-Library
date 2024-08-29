@@ -1,5 +1,5 @@
 #pragma once
-#include <cstdint>
+#include "NumericTypes.h"
 #include <unordered_map>
 
 namespace NetLib
@@ -7,14 +7,14 @@ namespace NetLib
 	struct NetworkEntityData
 	{
 		NetworkEntityData() = default;
-		NetworkEntityData(uint32_t entityType, uint32_t id, uint32_t gameEntityId, uint32_t controlledByPeerId) : entityType(entityType), id(id), inGameId(gameEntityId), controlledByPeerId(controlledByPeerId)
+		NetworkEntityData(uint32 entityType, uint32 id, uint32 gameEntityId, uint32 controlledByPeerId) : entityType(entityType), id(id), inGameId(gameEntityId), controlledByPeerId(controlledByPeerId)
 		{
 		}
 
-		uint32_t entityType;
-		uint32_t id;
-		uint32_t inGameId;
-		uint32_t controlledByPeerId;
+		uint32 entityType;
+		uint32 id;
+		uint32 inGameId;
+		uint32 controlledByPeerId;
 	};
 
 	class NetworkEntityStorage
@@ -22,14 +22,14 @@ namespace NetLib
 	public:
 		NetworkEntityStorage() = default;
 
-		bool HasNetworkEntityId(uint32_t networkEntityId) const;
-		bool TryGetNetworkEntityFromId(uint32_t entityId, NetworkEntityData& gameEntityId);
-		void AddNetworkEntity(uint32_t entityType, uint32_t networkEntityId, uint32_t controlledByPeerId, uint32_t gameEntityId);
-		bool RemoveNetworkEntity(uint32_t networkEntityId);
-		std::unordered_map<uint32_t, NetworkEntityData>::const_iterator GetNetworkEntities() const;
-		std::unordered_map<uint32_t, NetworkEntityData>::const_iterator GetPastToEndNetworkEntities() const;
+		bool HasNetworkEntityId(uint32 networkEntityId) const;
+		bool TryGetNetworkEntityFromId(uint32 entityId, NetworkEntityData& gameEntityId);
+		void AddNetworkEntity(uint32 entityType, uint32 networkEntityId, uint32 controlledByPeerId, uint32 gameEntityId);
+		bool RemoveNetworkEntity(uint32 networkEntityId);
+		std::unordered_map<uint32, NetworkEntityData>::const_iterator GetNetworkEntities() const;
+		std::unordered_map<uint32, NetworkEntityData>::const_iterator GetPastToEndNetworkEntities() const;
 
 	private:
-		std::unordered_map<uint32_t, NetworkEntityData> _networkEntityIdToDataMap;
+		std::unordered_map<uint32, NetworkEntityData> _networkEntityIdToDataMap;
 	};
 }

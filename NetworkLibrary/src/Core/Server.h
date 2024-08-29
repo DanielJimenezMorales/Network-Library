@@ -19,16 +19,16 @@ namespace NetLib
 	class Server : public Peer
 	{
 	public:
-		Server(int maxConnections);
+		Server(int32 maxConnections);
 		Server(const Server&) = delete;
 
 		Server& operator=(const Server&) = delete;
 
-		uint32_t CreateNetworkEntity(uint32_t entityType, uint32_t controlledByPeerId, float posX, float posY);
-		void DestroyNetworkEntity(uint32_t entityId);
+		uint32 CreateNetworkEntity(uint32 entityType, uint32 controlledByPeerId, float32 posX, float32 posY);
+		void DestroyNetworkEntity(uint32 entityId);
 		//TODO Create a method for destroying all network entities controlled by a remote peer
 		void RegisterInputStateFactory(IInputStateFactory* factory);
-		const IInputState* GetInputFromRemotePeer(uint32_t remotePeerId);
+		const IInputState* GetInputFromRemotePeer(uint32 remotePeerId);
 
 		~Server() override;
 
@@ -36,11 +36,11 @@ namespace NetLib
 		bool StartConcrete() override;
 		void ProcessMessageFromPeer(const Message& message, RemotePeer& remotePeer) override;
 		void ProcessMessageFromUnknownPeer(const Message& message, const Address& address) override;
-		void TickConcrete(float elapsedTime) override;
+		void TickConcrete(float32 elapsedTime) override;
 		bool StopConcrete() override;
 
 	private:
-		uint64_t GenerateServerSalt() const;
+		uint64 GenerateServerSalt() const;
 
 		void ProcessConnectionRequest(const ConnectionRequestMessage& message, const Address& address);
 		void ProcessConnectionChallengeResponse(const ConnectionChallengeResponseMessage& message, RemotePeer& remotePeer);
@@ -57,7 +57,7 @@ namespace NetLib
 		/// 1 = Is already connected.
 		/// -1 = Unable to connect, the server has reached its maximum connections.
 		/// </returns>
-		//int IsRemotePeerAbleToConnect(const Address& address) const;
+		//int32 IsRemotePeerAbleToConnect(const Address& address) const;
 
 		void CreateConnectionChallengeMessage(RemotePeer& remotePeer);
 		void CreateConnectionApprovedMessage(RemotePeer& remotePeer);
@@ -68,7 +68,7 @@ namespace NetLib
 
 		void TickReplication();
 
-		unsigned int _nextAssignedRemotePeerID = 1;
+		uint32 _nextAssignedRemotePeerID = 1;
 
 		RemotePeerInputsHandler _remotePeerInputsHandler;
 		IInputStateFactory* _inputsFactory;

@@ -11,7 +11,7 @@
 
 namespace NetLib
 {
-	Client::Client(float serverMaxInactivityTimeout) : Peer(PeerType::ClientMode, 1, 1024, 1024),
+	Client::Client(float32 serverMaxInactivityTimeout) : Peer(PeerType::ClientMode, 1, 1024, 1024),
 		_serverAddress("127.0.0.1", 54000),
 		inGameMessageID(0),
 		_timeSinceLastTimeRequest(0.0f),
@@ -39,8 +39,8 @@ namespace NetLib
 		message->SetReliability(false);
 		std::unique_ptr<InputStateMessage> inputsMessage(static_cast<InputStateMessage*>(message.release()));
 
-		int dataSize = inputState.GetSize();
-		uint8_t* data = new uint8_t[dataSize];
+		int32 dataSize = inputState.GetSize();
+		uint8* data = new uint8[dataSize];
 		Buffer inputDataBuffer(data, dataSize);
 		inputState.Serialize(inputDataBuffer);
 		inputsMessage->dataSize = dataSize;
@@ -51,7 +51,7 @@ namespace NetLib
 		LOG_INFO("Input state message created");
 	}
 
-	unsigned int Client::GetLocalClientId() const
+	uint32 Client::GetLocalClientId() const
 	{
 		if (GetConnectionState() != PeerConnectionState::PCS_Connected)
 		{
@@ -69,7 +69,7 @@ namespace NetLib
 		addressInfo.sin_port = 0; //This is zero so the system picks up a random port number
 
 		char ip[] = "127.0.0.1";
-		int iResult = inet_pton(addressInfo.sin_family, ip, &addressInfo.sin_addr);
+		int32 iResult = inet_pton(addressInfo.sin_family, ip, &addressInfo.sin_addr);
 		if (iResult == -1)
 		{
 			LOG_ERROR("Error at converting IP string into address. Error code: %d", WSAGetLastError());
@@ -84,7 +84,7 @@ namespace NetLib
 
 		_currentState = ClientState::CS_SendingConnectionRequest;
 
-		uint64_t clientSalt = GenerateClientSaltNumber();
+		uint64 clientSalt = GenerateClientSaltNumber();
 		AddRemotePeer(_serverAddress, 0, clientSalt, 0);
 
 		SubscribeToOnRemotePeerDisconnect(std::bind(&NetLib::Client::OnServerDisconnect, this));
@@ -94,7 +94,7 @@ namespace NetLib
 		return true;
 	}
 
-	uint64_t Client::GenerateClientSaltNumber()
+	uint64 Client::GenerateClientSaltNumber()
 	{
 		//TODO Change this for a better generator. rand is not generating a full 64bit integer since its maximum is roughly 32767. I have tried to use mt19937_64 but I think I get a conflict with winsocks and std::uniform_int_distribution
 		srand(time(NULL));
@@ -160,7 +160,7 @@ namespace NetLib
 		LOG_WARNING("Client does not process messages from unknown peers. Ignoring it...");
 	}
 
-	void Client::TickConcrete(float elapsedTime)
+	void Client::TickConcrete(float32 elapsedTime)
 	{
 		if (_currentState == ClientState::CS_SendingConnectionRequest || _currentState == ClientState::CS_SendingConnectionChallengeResponse)
 		{
@@ -197,8 +197,8 @@ namespace NetLib
 	{
 		LOG_INFO("Challenge packet received from server");
 
-		uint64_t clientSalt = message.clientSalt;
-		uint64_t serverSalt = message.serverSalt;
+		uint64 clientSalt = message.clientSalt;
+		uint64 serverSalt = message.serverSalt;
 		if (remotePeer.GetClientSalt() != clientSalt)
 		{
 			LOG_WARNING("The generated salt number does not match the server's challenge client salt number. Aborting operation");
@@ -222,7 +222,7 @@ namespace NetLib
 			return;
 		}
 
-		uint64_t remoteDataPrefix = message.prefix;
+		uint64 remoteDataPrefix = message.prefix;
 		if (remoteDataPrefix != remotePeer.GetDataPrefix())
 		{
 			LOG_WARNING("Packet prefix does not match. Skipping packet...");
@@ -248,7 +248,7 @@ namespace NetLib
 
 	void Client::ProcessDisconnection(const DisconnectionMessage& message, RemotePeer& remotePeer)
 	{
-		uint64_t dataPrefix = message.prefix;
+		uint64 dataPrefix = message.prefix;
 		if (dataPrefix != remotePeer.GetDataPrefix())
 		{
 			LOG_WARNING("Packet prefix does not match. Skipping message...");
@@ -266,7 +266,7 @@ namespace NetLib
 
 		//Add new RTT to buffer
 		TimeClock& timeClock = TimeClock::GetInstance();
-		unsigned int rtt = timeClock.GetLocalTimeMilliseconds() - message.remoteTime;
+		uint32 rtt = timeClock.GetLocalTimeMilliseconds() - message.remoteTime;
 		_timeRequestRTTs.push_back(rtt);
 
 		if (_timeRequestRTTs.size() == TIME_REQUEST_RTT_BUFFER_SIZE + 1)
@@ -275,27 +275,27 @@ namespace NetLib
 		}
 
 		//Get RTT to adjust server's clock elapsed time
-		unsigned int meanRTT = 0;
+		uint32 meanRTT = 0;
 		if (_timeRequestRTTs.size() == TIME_REQUEST_RTT_BUFFER_SIZE)
 		{
 			//Sort RTTs and remove the smallest and biggest values (They are considered outliers!)
-			std::list<unsigned int> sortedTimeRequestRTTs = _timeRequestRTTs;
+			std::list<uint32> sortedTimeRequestRTTs = _timeRequestRTTs;
 			sortedTimeRequestRTTs.sort();
 
 			//Remove potential outliers
-			for (unsigned int i = 0; i < NUMBER_OF_RTTS_CONSIDERED_OUTLIERS_PER_SIDE; ++i)
+			for (uint32 i = 0; i < NUMBER_OF_RTTS_CONSIDERED_OUTLIERS_PER_SIDE; ++i)
 			{
 				sortedTimeRequestRTTs.pop_back();
 				sortedTimeRequestRTTs.pop_front();
 			}
 
-			std::list<unsigned int>::const_iterator cit = sortedTimeRequestRTTs.cbegin();
+			std::list<uint32>::const_iterator cit = sortedTimeRequestRTTs.cbegin();
 			for (; cit != sortedTimeRequestRTTs.cend(); ++cit)
 			{
 				meanRTT += *cit;
 			}
 
-			const unsigned int NUMBER_OF_VALID_RTT_TO_AVERAGE = TIME_REQUEST_RTT_BUFFER_SIZE - (2 * NUMBER_OF_RTTS_CONSIDERED_OUTLIERS_PER_SIDE);
+			const uint32 NUMBER_OF_VALID_RTT_TO_AVERAGE = TIME_REQUEST_RTT_BUFFER_SIZE - (2 * NUMBER_OF_RTTS_CONSIDERED_OUTLIERS_PER_SIDE);
 
 			meanRTT /= NUMBER_OF_VALID_RTT_TO_AVERAGE;
 		}
@@ -305,8 +305,8 @@ namespace NetLib
 		}
 
 		//Calculate server clock delta time
-		unsigned int serverClockElapsedTimeMilliseconds = message.serverTime - message.remoteTime - (meanRTT / 2);
-		double serverClockElapsedTimeSeconds = static_cast<double>(serverClockElapsedTimeMilliseconds) / 1000;
+		uint32 serverClockElapsedTimeMilliseconds = message.serverTime - message.remoteTime - (meanRTT / 2);
+		float64 serverClockElapsedTimeSeconds = static_cast<float64>(serverClockElapsedTimeMilliseconds) / 1000;
 		timeClock.SetServerClockTimeDelta(serverClockElapsedTimeSeconds);
 
 		LOG_INFO("SERVER TIME UPDATED. Local time: %f sec, Server time: %f sec", timeClock.GetLocalTimeSeconds(), timeClock.GetServerTimeSeconds());
@@ -375,7 +375,7 @@ namespace NetLib
 		remotePeer.AddMessage(std::move(timeRequestMessage));
 	}
 
-	void Client::UpdateTimeRequestsElapsedTime(float elapsedTime)
+	void Client::UpdateTimeRequestsElapsedTime(float32 elapsedTime)
 	{
 		if (_numberOfInitialTimeRequestBurstLeft > 0)
 		{

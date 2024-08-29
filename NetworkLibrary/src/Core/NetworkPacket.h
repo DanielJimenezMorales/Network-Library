@@ -1,5 +1,5 @@
 #pragma once
-#include <cstdint>
+#include "NumericTypes.h"
 #include <deque>
 #include <memory>
 
@@ -11,20 +11,20 @@ namespace NetLib
 	struct NetworkPacketHeader
 	{
 		NetworkPacketHeader() : lastAckedSequenceNumber(0), ackBits(0), channelType(0) {}
-		NetworkPacketHeader(uint16_t ack, uint32_t ack_bits, uint8_t channel_type) : lastAckedSequenceNumber(ack), ackBits(ack_bits), channelType(channel_type) {}
+		NetworkPacketHeader(uint16 ack, uint32 ack_bits, uint8 channel_type) : lastAckedSequenceNumber(ack), ackBits(ack_bits), channelType(channel_type) {}
 
 		void Write(Buffer& buffer) const;
 		void Read(Buffer& buffer);
 
-		static uint32_t Size() { return sizeof(uint16_t) + sizeof(uint32_t) + sizeof(uint8_t); };
+		static uint32 Size() { return sizeof(uint16) + sizeof(uint32) + sizeof(uint8); };
 
-		void SetACKs(uint32_t acks) { ackBits = acks; };
-		void SetHeaderLastAcked(uint16_t lastAckedMessage) { lastAckedSequenceNumber = lastAckedMessage; };
-		void SetChannelType(uint8_t type) { channelType = type; };
+		void SetACKs(uint32 acks) { ackBits = acks; };
+		void SetHeaderLastAcked(uint16 lastAckedMessage) { lastAckedSequenceNumber = lastAckedMessage; };
+		void SetChannelType(uint8 type) { channelType = type; };
 
-		uint16_t lastAckedSequenceNumber;
-		uint32_t ackBits;
-		uint8_t channelType;
+		uint16 lastAckedSequenceNumber;
+		uint32 ackBits;
+		uint8 channelType;
 	};
 
 	class NetworkPacket
@@ -45,20 +45,20 @@ namespace NetLib
 
 		bool AddMessage(std::unique_ptr<Message> message);
 		std::unique_ptr<Message> GetMessages();
-		unsigned int GetNumberOfMessages() const { return _messages.size(); }
+		uint32 GetNumberOfMessages() const { return _messages.size(); }
 
-		uint32_t Size() const;
-		unsigned int MaxSize() const { return _defaultMTUSizeInBytes; };
-		bool CanMessageFit(unsigned int sizeOfMessagesInBytes) const;
+		uint32 Size() const;
+		uint32 MaxSize() const { return _defaultMTUSizeInBytes; };
+		bool CanMessageFit(uint32 sizeOfMessagesInBytes) const;
 
-		void SetHeaderACKs(uint32_t acks) { _header.SetACKs(acks); };
-		void SetHeaderLastAcked(uint16_t lastAckedMessage) { _header.SetHeaderLastAcked(lastAckedMessage); };
-		void SetHeaderChannelType(uint8_t channelType) { _header.SetChannelType(channelType); };
+		void SetHeaderACKs(uint32 acks) { _header.SetACKs(acks); };
+		void SetHeaderLastAcked(uint16 lastAckedMessage) { _header.SetHeaderLastAcked(lastAckedMessage); };
+		void SetHeaderChannelType(uint8 channelType) { _header.SetChannelType(channelType); };
 
 		~NetworkPacket();
 
 	private:
-		const unsigned int _defaultMTUSizeInBytes;
+		const uint32 _defaultMTUSizeInBytes;
 		NetworkPacketHeader _header;
 		std::deque<std::unique_ptr<Message>> _messages;
 

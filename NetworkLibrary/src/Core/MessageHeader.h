@@ -1,11 +1,11 @@
 #pragma once
-#include <cstdint>
+#include "NumericTypes.h"
 
 namespace NetLib
 {
 	class Buffer;
 
-	enum MessageType : uint8_t
+	enum MessageType : uint8
 	{
 		ConnectionRequest = 0,
 		ConnectionAccepted = 1,
@@ -21,19 +21,19 @@ namespace NetLib
 
 	struct MessageHeader
 	{
-		MessageHeader(MessageType messageType, uint16_t packetSequenceNumber, bool isReliable, bool isOrdered) : type(messageType), messageSequenceNumber(packetSequenceNumber), isReliable(isReliable), isOrdered(isOrdered) {}
+		MessageHeader(MessageType messageType, uint16 packetSequenceNumber, bool isReliable, bool isOrdered) : type(messageType), messageSequenceNumber(packetSequenceNumber), isReliable(isReliable), isOrdered(isOrdered) {}
 
 		MessageHeader(const MessageHeader& other) : type(other.type), messageSequenceNumber(other.messageSequenceNumber), isReliable(other.isReliable), isOrdered(other.isOrdered) {}
 
 		void Write(Buffer& buffer) const;
 		void Read(Buffer& buffer);
 		void ReadWithoutHeader(Buffer& buffer);
-		static uint32_t Size() { return sizeof(MessageType) + sizeof(uint16_t) + sizeof(uint8_t); }
+		static uint32 Size() { return sizeof(MessageType) + sizeof(uint16) + sizeof(uint8); }
 
 		~MessageHeader() {}
 
 		MessageType type;
-		uint16_t messageSequenceNumber;
+		uint16 messageSequenceNumber;
 		bool isReliable;
 		bool isOrdered;
 	};
