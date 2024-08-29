@@ -183,7 +183,7 @@ namespace NetLib
 			const EntityNetworkVariableChanges* entityNetworkVariableChanges = _networkVariableChangesHandler.GetChangesFromEntity(networkEntityData.id);
 			if (entityNetworkVariableChanges != nullptr)
 			{
-				size_t dataSize = entityNetworkVariableChanges->Size() + sizeof(uint16);
+				uint32 dataSize = entityNetworkVariableChanges->Size() + sizeof(uint16);
 				uint8* data = new uint8[dataSize];
 				Buffer buffer(data, dataSize);
 

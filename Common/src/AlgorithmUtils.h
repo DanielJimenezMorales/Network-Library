@@ -1,11 +1,11 @@
 #pragma once
-#include <cstdint>
+#include "NumericTypes.h"
 
 namespace Common
 {
 	class AlgorithmUtils
 	{
 	public:
-		static uint16_t ExponentialMovingAverage(uint16_t previousValue, uint16_t currentValue, unsigned int alfa);
+		static uint16 ExponentialMovingAverage(uint16 previousValue, uint16 currentValue, uint32 alfa);
 	};
 }

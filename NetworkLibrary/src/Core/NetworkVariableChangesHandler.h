@@ -19,7 +19,7 @@ namespace NetLib
 			floatChanges.push_back(change);
 		}
 
-		size_t Size() const
+		uint32 Size() const
 		{
 			return (sizeof(uint32) + sizeof(float32) + sizeof(uint32)) * floatChanges.size();
 		}
@@ -49,7 +49,7 @@ namespace NetLib
 	class CustomNetworkVariablePairIdHash
 	{
 	public:
-		size_t operator()(const NetworkVariablePairId& pairId) const
+		uint32 operator()(const NetworkVariablePairId& pairId) const
 		{
 			return (pairId._networkVariableId * 31) + pairId._networkEntityId;
 		}

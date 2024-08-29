@@ -172,7 +172,7 @@ namespace NetLib
 		buffer.WriteInteger(replicatedClassId);
 		buffer.WriteShort(dataSize);
 		//TODO Create method called WriteData(data, size) in order to avoid this for loop
-		for (size_t i = 0; i < dataSize; ++i)
+		for (uint16 i = 0; i < dataSize; ++i)
 		{
 			buffer.WriteByte(data[i]);
 		}
@@ -194,7 +194,7 @@ namespace NetLib
 		}
 
 		//TODO Create method called ReadData(uint8& data, size) in order to avoid this for loop
-		for (size_t i = 0; i < dataSize; ++i)
+		for (uint16 i = 0; i < dataSize; ++i)
 		{
 			data[i] = buffer.ReadByte();
 		}
@@ -229,7 +229,7 @@ namespace NetLib
 
 		buffer.WriteShort(dataSize);
 		//TODO Create method called WriteData(data, size) in order to avoid this for loop
-		for (size_t i = 0; i < dataSize; ++i)
+		for (uint32 i = 0; i < dataSize; ++i)
 		{
 			buffer.WriteByte(data[i]);
 		}
@@ -247,7 +247,7 @@ namespace NetLib
 		}
 
 		//TODO Create method called ReadData(uint8& data, size) in order to avoid this for loop
-		for (size_t i = 0; i < dataSize; ++i)
+		for (uint16 i = 0; i < dataSize; ++i)
 		{
 			data[i] = buffer.ReadByte();
 		}
