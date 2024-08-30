@@ -4,7 +4,7 @@
 struct CircleBounds2D : public Bounds2D
 {
 public:
-	CircleBounds2D(float radius) : Bounds2D(CollisionShapeType::Circle), radius(radius)
+	CircleBounds2D(float32 radius) : Bounds2D(CollisionShapeType::Circle), radius(radius)
 	{
 	}
 
@@ -12,11 +12,11 @@ public:
 	void ProjectAxis(const TransformComponent& transform, const Vec2f& axis, float& outMin, float& outMax) const override;
 	Vec2f GetClosestVertex(const TransformComponent& transform, const Vec2f& inputPoint) const override;
 
-	float GetMinX(const TransformComponent& transform) const override;
-	float GetMaxX(const TransformComponent& transform) const override;
+	float32 GetMinX(const TransformComponent& transform) const override;
+	float32 GetMaxX(const TransformComponent& transform) const override;
 
 	Gizmo* GetGizmo(const TransformComponent& transform) const override;
 
 private:
-	float radius;
+	float32 radius;
 };

@@ -4,11 +4,11 @@
 void CircleGizmo::RenderConcrete(const CameraComponent& cameraComponent, SDL_Renderer* renderer) const
 {
 	// Start at the top of the circle
-	float x = _radius;
-	float y = 0;
+	float32 x = _radius;
+	float32 y = 0;
 
 	// Decision parameter (initial value)
-	float decisionOver2 = 1 - x;
+	float32 decisionOver2 = 1 - x;
 
 	// We loop until x < y, covering one octant
 	while (y <= x) {

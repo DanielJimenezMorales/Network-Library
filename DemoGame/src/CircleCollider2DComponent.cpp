@@ -21,7 +21,7 @@ void CircleBounds2D::ProjectAxis(const TransformComponent& transform, const Vec2
 	*/
 
 	const Vec2f center = transform.GetPosition();
-	float centerProjection = (center.X() * axis.X()) + (center.Y() * axis.Y());
+	float32 centerProjection = (center.X() * axis.X()) + (center.Y() * axis.Y());
 	outMin = centerProjection - radius;
 	outMax = centerProjection + radius;
 }
@@ -31,12 +31,12 @@ Vec2f CircleBounds2D::GetClosestVertex(const TransformComponent& transform, cons
 	return Vec2f();
 }
 
-float CircleBounds2D::GetMinX(const TransformComponent& transform) const
+float32 CircleBounds2D::GetMinX(const TransformComponent& transform) const
 {
 	return transform.GetPosition().X() - radius;
 }
 
-float CircleBounds2D::GetMaxX(const TransformComponent& transform) const
+float32 CircleBounds2D::GetMaxX(const TransformComponent& transform) const
 {
 	return transform.GetPosition().X() + radius;
 }

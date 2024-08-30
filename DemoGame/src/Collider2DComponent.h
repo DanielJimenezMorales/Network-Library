@@ -7,7 +7,7 @@
 struct TransformComponent;
 class Gizmo;
 
-enum class CollisionResponseType : uint8_t
+enum class CollisionResponseType : uint8
 {
 	Static = 0,
 	Dynamic = 1
@@ -33,8 +33,8 @@ public:
 	void ProjectAxis(const TransformComponent& transform, const Vec2f& axis, float& outMin, float& outMax) const;
 	Vec2f GetClosestVertex(const TransformComponent& transform, const Vec2f& inputPoint) const;
 
-	float GetMinX(const TransformComponent& transform) const;
-	float GetMaxX(const TransformComponent& transform) const;
+	float32 GetMinX(const TransformComponent& transform) const;
+	float32 GetMaxX(const TransformComponent& transform) const;
 
 	Gizmo* GetGizmo(const TransformComponent& transform) const;
 

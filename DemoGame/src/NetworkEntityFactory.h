@@ -16,8 +16,8 @@ public:
 
 	void SetScene(Scene* scene);
 	void SetPeerType(NetLib::PeerType peerType);
-	int CreateNetworkEntityObject(uint32_t networkEntityType, uint32_t networkEntityId, uint32_t controlledByPeerId, float posX, float posY, NetLib::NetworkVariableChangesHandler* networkVariableChangeHandler) override;
-	void DestroyNetworkEntityObject(uint32_t gameEntity) override;
+	int32 CreateNetworkEntityObject(uint32 networkEntityType, uint32 networkEntityId, uint32 controlledByPeerId, float32 posX, float32 posY, NetLib::NetworkVariableChangesHandler* networkVariableChangeHandler) override;
+	void DestroyNetworkEntityObject(uint32 gameEntity) override;
 
 private:
 	Scene* _scene;

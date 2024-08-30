@@ -1,5 +1,5 @@
 #pragma once
-#include <cstdint>
+#include "NumericTypes.h"
 #include "SDL.h"
 
 struct CameraComponent;
@@ -16,12 +16,12 @@ public:
 	}
 
 protected:
-	Gizmo(uint8_t r, uint8_t g, uint8_t b, uint8_t a) : r(r), g(g), b(b), a(a)
+	Gizmo(uint8 r, uint8 g, uint8 b, uint8 a) : r(r), g(g), b(b), a(a)
 	{
 	}
 
 	virtual void RenderConcrete(const CameraComponent& cameraComponent, SDL_Renderer* renderer) const = 0;
 
 private:
-	const uint8_t r, g, b, a;
+	const uint8 r, g, b, a;
 };

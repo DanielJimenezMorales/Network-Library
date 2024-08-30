@@ -5,7 +5,7 @@
 class CircleGizmo : public Gizmo
 {
 public:
-	CircleGizmo(const Vec2f& position, float radius) : Gizmo(0, 255, 0, 255), _position(position), _radius(radius)
+	CircleGizmo(const Vec2f& position, float32 radius) : Gizmo(0, 255, 0, 255), _position(position), _radius(radius)
 	{
 	}
 
@@ -14,5 +14,5 @@ protected:
 
 private:
 	const Vec2f _position;
-	const float _radius;
+	const float32 _radius;
 };

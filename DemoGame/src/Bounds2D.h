@@ -5,7 +5,7 @@
 struct TransformComponent;
 class Gizmo;
 
-enum class CollisionShapeType : uint8_t
+enum class CollisionShapeType : uint8
 {
 	Convex = 0,
 	Circle = 1,
@@ -21,8 +21,8 @@ public:
 	virtual void ProjectAxis(const TransformComponent& transform, const Vec2f& axis, float& outMin, float& outMax) const = 0;
 	virtual Vec2f GetClosestVertex(const TransformComponent& transform, const Vec2f& inputPoint) const = 0;
 
-	virtual float GetMinX(const TransformComponent& transform) const = 0;
-	virtual float GetMaxX(const TransformComponent& transform) const = 0;
+	virtual float32 GetMinX(const TransformComponent& transform) const = 0;
+	virtual float32 GetMaxX(const TransformComponent& transform) const = 0;
 
 	virtual Gizmo* GetGizmo(const TransformComponent& transform) const = 0;
 

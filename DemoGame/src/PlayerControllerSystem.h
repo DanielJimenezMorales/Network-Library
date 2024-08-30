@@ -16,7 +16,7 @@ public:
 	{
 	}
 	
-	void Tick(EntityContainer& entityContainer, float elapsedTime) const;
+	void Tick(EntityContainer& entityContainer, float32 elapsedTime) const;
 
 private:
 	void ProcessInputs(EntityContainer& entityContainer, InputState& outInputState) const;

@@ -8,5 +8,5 @@ struct PlayerControllerConfiguration
 	{
 	}
 
-	uint32_t movementSpeed;
+	uint32 movementSpeed;
 };

@@ -1,45 +1,46 @@
 #pragma once
+#include "NumericTypes.h"
 #include <math.h>
 
 struct Vec2f
 {
 public:
 	constexpr Vec2f() :_x(0.f), _y(0.f) {};
-	constexpr Vec2f(float x, float y) : _x(x), _y(y) {}
+	constexpr Vec2f(float32 x, float32 y) : _x(x), _y(y) {}
 	Vec2f(const Vec2f& other) = default;
 
-	float X() const { return _x; }
-	float Y() const { return _y; }
+	float32 X() const { return _x; }
+	float32 Y() const { return _y; }
 
-	void X(float newX) { _x = newX; }
-	void Y(float newY) { _y = newY; }
+	void X(float32 newX) { _x = newX; }
+	void Y(float32 newY) { _y = newY; }
 
-	void AddToX(float newX) { _x += newX; }
-	void AddToY(float newY) { _y += newY; }
+	void AddToX(float32 newX) { _x += newX; }
+	void AddToY(float32 newY) { _y += newY; }
 
 	// +
 	Vec2f operator+(const Vec2f& rhs) const { return Vec2f(_x + rhs._x, _y + rhs._y); }
-	Vec2f operator+(float rhs) const { return Vec2f(_x + rhs, _y + rhs); }
-	friend Vec2f operator+(float lhs, const Vec2f& rhs) { return rhs + lhs; }
+	Vec2f operator+(float32 rhs) const { return Vec2f(_x + rhs, _y + rhs); }
+	friend Vec2f operator+(float32 lhs, const Vec2f& rhs) { return rhs + lhs; }
 
 	// -
 	Vec2f operator-(const Vec2f& rhs) const{ return Vec2f(_x - rhs._x, _y - rhs._y); }
-	Vec2f operator-(float rhs) const{ return Vec2f(_x - rhs, _y - rhs); }
+	Vec2f operator-(float32 rhs) const{ return Vec2f(_x - rhs, _y - rhs); }
 
 	// *
-	Vec2f operator*(float rhs) const{ return Vec2f(_x * rhs, _y * rhs); }
-	friend Vec2f operator*(float lhs, const Vec2f& rhs) { return rhs * lhs; }
+	Vec2f operator*(float32 rhs) const{ return Vec2f(_x * rhs, _y * rhs); }
+	friend Vec2f operator*(float32 lhs, const Vec2f& rhs) { return rhs * lhs; }
 
 	// /
-	Vec2f operator/(float rhs) const { return Vec2f(_x / rhs, _y / rhs); }
+	Vec2f operator/(float32 rhs) const { return Vec2f(_x / rhs, _y / rhs); }
 
-	Vec2f& operator+=(float rhs) { _x += rhs; _y += rhs; return *this; }
+	Vec2f& operator+=(float32 rhs) { _x += rhs; _y += rhs; return *this; }
 
-	Vec2f& operator-=(float rhs){ _x -= rhs; _y -= rhs; return *this; }
+	Vec2f& operator-=(float32 rhs){ _x -= rhs; _y -= rhs; return *this; }
 
-	Vec2f& operator*=(float rhs) { _x *= rhs; _y *= rhs; return *this; }
+	Vec2f& operator*=(float32 rhs) { _x *= rhs; _y *= rhs; return *this; }
 
-	Vec2f& operator/=(float rhs) { _x /= rhs; _y /= rhs; return *this; }
+	Vec2f& operator/=(float32 rhs) { _x /= rhs; _y /= rhs; return *this; }
 
 	Vec2f& operator=(const Vec2f& rhs) { _x = rhs._x; _y = rhs._y; return *this; }
 
@@ -55,17 +56,17 @@ public:
 		}
 	}
 
-	float Dot(const Vec2f& other) const
+	float32 Dot(const Vec2f& other) const
 	{
 		return (_x * other._x) + (_y * other._y);
 	}
 
-	float Magnitude() const
+	float32 Magnitude() const
 	{
 		return sqrt(SqMagnitude());
 	}
 
-	float SqMagnitude() const
+	float32 SqMagnitude() const
 	{
 		return (_x * _x) + (_y * _y);
 	}
@@ -87,9 +88,9 @@ public:
 	}
 
 private:
-	float _x;
-	float _y;
+	float32 _x;
+	float32 _y;
 
-	static constexpr float _EPSILON = 1.0e-04f;
+	static constexpr float32 _EPSILON = 1.0e-04f;
 };
 

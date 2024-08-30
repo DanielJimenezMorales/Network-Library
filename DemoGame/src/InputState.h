@@ -6,7 +6,7 @@
 class InputState : public NetLib::IInputState
 {
 public:
-	int GetSize() const override;
+	int32 GetSize() const override;
 	void Serialize(NetLib::Buffer& buffer) const override;
 	void Deserialize(NetLib::Buffer& buffer) override;
 

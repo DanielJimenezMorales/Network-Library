@@ -3,10 +3,10 @@
 
 struct NetworkEntityComponent
 {
-	NetworkEntityComponent(uint32_t entityId, uint32_t controlledByPeerId) : networkEntityId(entityId), controlledByPeerId(controlledByPeerId)
+	NetworkEntityComponent(uint32 entityId, uint32 controlledByPeerId) : networkEntityId(entityId), controlledByPeerId(controlledByPeerId)
 	{
 	}
 
-	uint32_t networkEntityId;
-	uint32_t controlledByPeerId;
+	uint32 networkEntityId;
+	uint32 controlledByPeerId;
 };

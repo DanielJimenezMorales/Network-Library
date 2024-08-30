@@ -4,8 +4,8 @@
 #include "Scene.h"
 #include "InputHandler.h"
 
-const unsigned int FIXED_FRAMES_PER_SECOND = 50;
-const float FIXED_FRAME_TARGET_DURATION = 1.0f / FIXED_FRAMES_PER_SECOND;
+const uint32 FIXED_FRAMES_PER_SECOND = 50;
+const float32 FIXED_FRAME_TARGET_DURATION = 1.0f / FIXED_FRAMES_PER_SECOND;
 
 class Game
 {
@@ -17,14 +17,14 @@ public:
 	bool Release();
 
 private:
-	int InitSDL();
-	int CreateWindowAndRenderer();
+	int32 InitSDL();
+	int32 CreateWindowAndRenderer();
 
 	void HandleEvents();
-	void PreTick(float tickElapsedTime);
-	void Tick(float tickElapsedTime);
-	void PosTick(float tickElapsedTime);
-	void Update(float elapsedTime);
+	void PreTick(float32 tickElapsedTime);
+	void Tick(float32 tickElapsedTime);
+	void PosTick(float32 tickElapsedTime);
+	void Update(float32 elapsedTime);
 	void Render();
 
 	SDL_Window* _window;

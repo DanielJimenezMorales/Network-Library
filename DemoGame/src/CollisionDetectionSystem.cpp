@@ -7,17 +7,17 @@
 
 #include "Collider2DComponent.h"
 
-void CollisionDetectionSystem::PreTick(EntityContainer& entityContainer, float elapsedTime) const
+void CollisionDetectionSystem::PreTick(EntityContainer& entityContainer, float32 elapsedTime) const
 {
 	std::vector<GameEntity> collision_entities = entityContainer.GetEntitiesOfBothTypes < Collider2DComponent, TransformComponent>();
 	SortCollidersByLeft(collision_entities);
 
-	for (uint32_t i = 0; i < collision_entities.size(); ++i)
+	for (uint32 i = 0; i < collision_entities.size(); ++i)
 	{
 		const Collider2DComponent& colliderA = collision_entities[i].GetComponent<Collider2DComponent>();
 		TransformComponent& transformA = collision_entities[i].GetComponent<TransformComponent>();
 
-		for (uint32_t j = i + 1; j < collision_entities.size(); ++j)
+		for (uint32 j = i + 1; j < collision_entities.size(); ++j)
 		{
 			const Collider2DComponent& colliderB = collision_entities[j].GetComponent<Collider2DComponent>();
 			TransformComponent& transformB = collision_entities[j].GetComponent<TransformComponent>();
@@ -47,11 +47,11 @@ bool CollisionDetectionSystem::AreTwoShapesColliding(const Collider2DComponent& 
 	NormalizeAxes(axesToCheck);
 
 	Vec2f smallestAxis;
-	float smallestOverlapMagnitude = 200000.f; //TODO Set this to max float or something like that
+	float32 smallestOverlapMagnitude = 200000.f; //TODO Set this to max float32 or something like that
 	auto cit = axesToCheck.cbegin();
 	for (; cit != axesToCheck.cend(); ++cit)
 	{
-		float minCollider1, maxCollider1, minCollider2, maxCollider2 = 0.f;
+		float32 minCollider1, maxCollider1, minCollider2, maxCollider2 = 0.f;
 		collider1.ProjectAxis(transform1, *cit, minCollider1, maxCollider1);
 		collider2.ProjectAxis(transform2, *cit, minCollider2, maxCollider2);
 
@@ -61,7 +61,7 @@ bool CollisionDetectionSystem::AreTwoShapesColliding(const Collider2DComponent& 
 		}
 		else
 		{
-			float projectionOverlapMagnitude = GetProjectionsOverlapMagnitude(minCollider1, maxCollider1, minCollider2, maxCollider2);
+			float32 projectionOverlapMagnitude = GetProjectionsOverlapMagnitude(minCollider1, maxCollider1, minCollider2, maxCollider2);
 			if (projectionOverlapMagnitude < smallestOverlapMagnitude)
 			{
 				smallestAxis = *cit;
@@ -126,12 +126,12 @@ void CollisionDetectionSystem::NormalizeAxes(std::vector<Vec2f>& axesVector) con
 	}
 }
 
-bool CollisionDetectionSystem::DoProjectionsOverlap(float minProjection1, float maxProjection1, float minProjection2, float maxProjection2) const
+bool CollisionDetectionSystem::DoProjectionsOverlap(float32 minProjection1, float32 maxProjection1, float32 minProjection2, float32 maxProjection2) const
 {
 	return (maxProjection1 >= minProjection2) && (maxProjection2 >= minProjection1);
 }
 
-float CollisionDetectionSystem::GetProjectionsOverlapMagnitude(float minProjection1, float maxProjection1, float minProjection2, float maxProjection2) const
+float32 CollisionDetectionSystem::GetProjectionsOverlapMagnitude(float32 minProjection1, float32 maxProjection1, float32 minProjection2, float32 maxProjection2) const
 {
 	return std::min(maxProjection1, maxProjection2) - std::max(minProjection1, minProjection2);
 }

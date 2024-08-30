@@ -4,5 +4,5 @@
 class RemotePlayerControllerSystem : public ITickSystem
 {
 public:
-	void Tick(EntityContainer& entityContainer, float elapsedTime) const;
+	void Tick(EntityContainer& entityContainer, float32 elapsedTime) const;
 };

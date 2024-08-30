@@ -9,7 +9,7 @@
 #include "ITickSystem.h"
 #include "IPosTickSystem.h"
 
-void Scene::Update(float elapsedTime)
+void Scene::Update(float32 elapsedTime)
 {
 	auto it = _updateSystems.begin();
 	for (; it != _updateSystems.end(); ++it)
@@ -18,7 +18,7 @@ void Scene::Update(float elapsedTime)
 	}
 }
 
-void Scene::PreTick(float tickElapsedTime)
+void Scene::PreTick(float32 tickElapsedTime)
 {
 	auto it = _preTickSystems.begin();
 	for (; it != _preTickSystems.end(); ++it)
@@ -27,7 +27,7 @@ void Scene::PreTick(float tickElapsedTime)
 	}
 }
 
-void Scene::Tick(float tickElapsedTime)
+void Scene::Tick(float32 tickElapsedTime)
 {
 	auto it = _tickSystems.begin();
 	for (; it != _tickSystems.end(); ++it)
@@ -36,7 +36,7 @@ void Scene::Tick(float tickElapsedTime)
 	}
 }
 
-void Scene::PosTick(float tickElapsedTime)
+void Scene::PosTick(float32 tickElapsedTime)
 {
 	auto it = _posTickSystems.begin();
 	for (; it != _posTickSystems.end(); ++it)

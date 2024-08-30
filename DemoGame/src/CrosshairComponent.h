@@ -3,5 +3,5 @@
 struct CrosshairComponent
 {
 public:
-	int temp;
+	int32 temp;
 };
