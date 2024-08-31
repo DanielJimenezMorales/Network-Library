@@ -8,14 +8,14 @@
 #include "IGizmoQueryStorage.h"
 #include <cassert>
 
-void ColliderGizmosCreatorSystem::Update(EntityContainer& entityContainer, float elapsedTime) const
+void ColliderGizmosCreatorSystem::Update(EntityContainer& entityContainer, float32 elapsedTime) const
 {
 	std::vector<GameEntity> collision_entities = entityContainer.GetEntitiesOfBothTypes < Collider2DComponent, TransformComponent>();
 
 	ServiceLocator& serviceLocator = ServiceLocator::GetInstance();
 	IGizmoQueryStorage& gizmoQueryStorage = serviceLocator.GetGizmoQueryStorage();
 
-	for (uint32_t i = 0; i < collision_entities.size(); ++i)
+	for (uint32 i = 0; i < collision_entities.size(); ++i)
 	{
 		const Collider2DComponent& collider = collision_entities[i].GetComponent<Collider2DComponent>();
 		TransformComponent& transform = collision_entities[i].GetComponent<TransformComponent>();

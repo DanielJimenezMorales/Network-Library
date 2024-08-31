@@ -3,9 +3,9 @@
 
 struct CameraComponent
 {
-	static constexpr uint32_t PIXELS_PER_WORLD_UNIT = 10;
+	static constexpr uint32 PIXELS_PER_WORLD_UNIT = 10;
 
-	CameraComponent(const Vec2f& position, int width, int height) : position(position), width(width), height(height)
+	CameraComponent(const Vec2f& position, int32 width, int32 height) : position(position), width(width), height(height)
 	{
 	}
 
@@ -37,10 +37,10 @@ struct CameraComponent
 		return screenPosition;
 	}
 
-	int GetScreenWidth() const { return width; }
-	int GetScreenHeight() const { return height; }
+	int32 GetScreenWidth() const { return width; }
+	int32 GetScreenHeight() const { return height; }
 
 	Vec2f position;
-	int width;
-	int height;
+	int32 width;
+	int32 height;
 };

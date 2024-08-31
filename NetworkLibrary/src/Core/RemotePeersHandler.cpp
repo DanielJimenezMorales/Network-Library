@@ -6,22 +6,22 @@
 
 namespace NetLib
 {
-	RemotePeersHandler::RemotePeersHandler(unsigned int maxConnections) : _maxConnections(maxConnections)
+	RemotePeersHandler::RemotePeersHandler(uint32 maxConnections) : _maxConnections(maxConnections)
 	{
 		_remotePeerSlots.reserve(_maxConnections);
 		_remotePeers.reserve(_maxConnections);
 		_validRemotePeers.reserve(_maxConnections);
 
-		for (unsigned int i = 0; i < _maxConnections; ++i)
+		for (uint32 i = 0; i < _maxConnections; ++i)
 		{
 			_remotePeerSlots.push_back(false); //You could use vector.resize in these ones.
 			_remotePeers.emplace_back();
 		}
 	}
 
-	void RemotePeersHandler::TickRemotePeers(float elapsedTime)
+	void RemotePeersHandler::TickRemotePeers(float32 elapsedTime)
 	{
-		for (unsigned int i = 0; i < _maxConnections; ++i)
+		for (uint32 i = 0; i < _maxConnections; ++i)
 		{
 			if (_remotePeerSlots[i])
 			{
@@ -36,10 +36,10 @@ namespace NetLib
 		}
 	}
 
-	bool RemotePeersHandler::AddRemotePeer(const Address& addressInfo, uint16_t id, uint64_t clientSalt, uint64_t serverSalt)
+	bool RemotePeersHandler::AddRemotePeer(const Address& addressInfo, uint16 id, uint64 clientSalt, uint64 serverSalt)
 	{
 		//TODO Check for every single possible error scenario. Is already connected? Is it maxConnections full? etc. Return error code
-		int slotIndex = FindFreeRemotePeerSlot();
+		int32 slotIndex = FindFreeRemotePeerSlot();
 		if (slotIndex == -1)
 		{
 			return false;
@@ -68,10 +68,10 @@ namespace NetLib
 		return RemotePeersHandlerResult::RPH_SUCCESS;
 	}
 
-	int RemotePeersHandler::FindFreeRemotePeerSlot() const
+	int32 RemotePeersHandler::FindFreeRemotePeerSlot() const
 	{
-		int freeIndex = -1;
-		for (unsigned int i = 0; i < _maxConnections; ++i)
+		int32 freeIndex = -1;
+		for (uint32 i = 0; i < _maxConnections; ++i)
 		{
 			if (!_remotePeerSlots[i])
 			{
@@ -86,7 +86,7 @@ namespace NetLib
 	RemotePeer* RemotePeersHandler::GetRemotePeerFromAddress(const Address& address)
 	{
 		RemotePeer* result = nullptr;
-		for (unsigned int i = 0; i < _maxConnections; ++i)
+		for (uint32 i = 0; i < _maxConnections; ++i)
 		{
 			if (!_remotePeerSlots[i])
 			{
@@ -103,10 +103,10 @@ namespace NetLib
 		return result;
 	}
 
-	RemotePeer* RemotePeersHandler::GetRemotePeerFromId(unsigned int id)
+	RemotePeer* RemotePeersHandler::GetRemotePeerFromId(uint32 id)
 	{
 		RemotePeer* result = nullptr;
-		for (unsigned int i = 0; i < _maxConnections; ++i)
+		for (uint32 i = 0; i < _maxConnections; ++i)
 		{
 			if (!_remotePeerSlots[i])
 			{
@@ -126,7 +126,7 @@ namespace NetLib
 	bool RemotePeersHandler::IsRemotePeerAlreadyConnected(const Address& address) const
 	{
 		bool found = false;
-		for (unsigned int i = 0; i < _maxConnections; ++i)
+		for (uint32 i = 0; i < _maxConnections; ++i)
 		{
 			if (!_remotePeerSlots[i])
 			{
@@ -143,7 +143,7 @@ namespace NetLib
 		return found;
 	}
 
-	bool RemotePeersHandler::DoesRemotePeerIdExist(unsigned int id) const
+	bool RemotePeersHandler::DoesRemotePeerIdExist(uint32 id) const
 	{
 		bool result = false;
 
@@ -167,7 +167,7 @@ namespace NetLib
 
 	void RemotePeersHandler::RemoveAllRemotePeers()
 	{
-		for (unsigned int i = 0; i < _maxConnections; ++i)
+		for (uint32 i = 0; i < _maxConnections; ++i)
 		{
 			if (_remotePeerSlots[i])
 			{
@@ -176,9 +176,9 @@ namespace NetLib
 		}
 	}
 
-	bool RemotePeersHandler::RemoveRemotePeer(unsigned int remotePeerId)
+	bool RemotePeersHandler::RemoveRemotePeer(uint32 remotePeerId)
 	{
-		int id = GetIndexFromId(remotePeerId);
+		int32 id = GetIndexFromId(remotePeerId);
 		if (id != -1)
 		{
 			_remotePeerSlots[id] = false;
@@ -194,10 +194,10 @@ namespace NetLib
 		return false;
 	}
 
-	int RemotePeersHandler::GetIndexFromId(unsigned int id) const
+	int32 RemotePeersHandler::GetIndexFromId(uint32 id) const
 	{
-		int index = -1;
-		for (unsigned int i = 0; i < _maxConnections; ++i)
+		int32 index = -1;
+		for (uint32 i = 0; i < _maxConnections; ++i)
 		{
 			if (_remotePeerSlots[i])
 			{

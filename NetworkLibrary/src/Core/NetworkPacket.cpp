@@ -40,7 +40,7 @@ namespace NetLib
 	{
 		_header.Write(buffer);
 
-		uint8_t numberOfMessages = _messages.size();
+		uint8 numberOfMessages = _messages.size();
 		buffer.WriteByte(numberOfMessages);
 
 		for (std::deque<std::unique_ptr<Message>>::const_iterator cit = _messages.cbegin(); cit != _messages.cend(); ++cit)
@@ -54,9 +54,9 @@ namespace NetLib
 	{
 		_header.Read(buffer);
 
-		uint8_t numberOfMessages = buffer.ReadByte();
+		uint8 numberOfMessages = buffer.ReadByte();
 
-		for (unsigned int i = 0; i < numberOfMessages; ++i)
+		for (uint32 i = 0; i < numberOfMessages; ++i)
 		{
 			std::unique_ptr<Message> message = MessageUtils::ReadMessage(buffer);
 			if (message != nullptr)
@@ -84,9 +84,9 @@ namespace NetLib
 		return std::move(message);
 	}
 
-	uint32_t NetworkPacket::Size() const
+	uint32 NetworkPacket::Size() const
 	{
-		uint32_t packetSize = NetworkPacketHeader::Size();
+		uint32 packetSize = NetworkPacketHeader::Size();
 		packetSize += 1; //We store in 1 byte the number of messages that this packet contains
 
 		std::deque<std::unique_ptr<Message>>::const_iterator iterator = _messages.cbegin();
@@ -99,7 +99,7 @@ namespace NetLib
 		return packetSize;
 	}
 
-	bool NetworkPacket::CanMessageFit(unsigned int sizeOfMessagesInBytes) const
+	bool NetworkPacket::CanMessageFit(uint32 sizeOfMessagesInBytes) const
 	{
 		return (sizeOfMessagesInBytes + Size() < MaxSize());
 	}

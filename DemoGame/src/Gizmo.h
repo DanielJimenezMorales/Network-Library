@@ -1,6 +1,5 @@
 #pragma once
-#include "Vec2f.h"
-#include <cstdint>
+#include "NumericTypes.h"
 #include "SDL.h"
 
 struct CameraComponent;
@@ -8,31 +7,21 @@ struct CameraComponent;
 class Gizmo
 {
 public:
-	Gizmo(uint8_t r, uint8_t g, uint8_t b, uint8_t a) : r(r), g(g), b(b), a(a)
-	{
-	}
-
 	virtual ~Gizmo() {}
 
-	virtual void Render(const CameraComponent& cameraComponent, SDL_Renderer* renderer) const
+	void Render(const CameraComponent& cameraComponent, SDL_Renderer* renderer) const
 	{
 		SDL_SetRenderDrawColor(renderer, r, g, b, a);
+		RenderConcrete(cameraComponent, renderer);
 	}
 
-private:
-	const uint8_t r, g, b, a;
-};
-
-class CircleGizmo : public Gizmo
-{
-public:
-	CircleGizmo(const Vec2f& position, float radius) : Gizmo(0, 255, 0, 255), _position(position), _radius(radius)
+protected:
+	Gizmo(uint8 r, uint8 g, uint8 b, uint8 a) : r(r), g(g), b(b), a(a)
 	{
 	}
 
-	void Render(const CameraComponent& cameraComponent, SDL_Renderer* renderer) const override;
+	virtual void RenderConcrete(const CameraComponent& cameraComponent, SDL_Renderer* renderer) const = 0;
 
 private:
-	const Vec2f _position;
-	const float _radius;
+	const uint8 r, g, b, a;
 };

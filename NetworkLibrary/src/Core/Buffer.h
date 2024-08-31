@@ -1,12 +1,12 @@
 #pragma once
-#include <cstdint>
+#include "NumericTypes.h"
 
 namespace NetLib
 {
 	class Buffer
 	{
 	public:
-		Buffer(uint8_t* data, int size) : _data(data), _size(size)
+		Buffer(uint8* data, int32 size) : _data(data), _size(size)
 		{
 			_index = 0;
 		}
@@ -15,27 +15,27 @@ namespace NetLib
 		{
 		}
 
-		int GetSize() const { return _size; }
-		uint8_t* GetData() const { return _data; }
+		int32 GetSize() const { return _size; }
+		uint8* GetData() const { return _data; }
 		void Clear();
 
-		void WriteLong(uint64_t value);
-		void WriteInteger(uint32_t value);
-		void WriteShort(uint16_t value);
-		void WriteByte(uint8_t value);
-		void WriteFloat(float value);
+		void WriteLong(uint64 value);
+		void WriteInteger(uint32 value);
+		void WriteShort(uint16 value);
+		void WriteByte(uint8 value);
+		void WriteFloat(float32 value);
 
-		uint64_t ReadLong();
-		uint32_t ReadInteger();
-		uint16_t ReadShort();
-		uint8_t ReadByte();
-		float ReadFloat();
+		uint64 ReadLong();
+		uint32 ReadInteger();
+		uint16 ReadShort();
+		uint8 ReadByte();
+		float32 ReadFloat();
 
 		void ResetAccessIndex();
 
 	private:
-		uint8_t* _data;
-		int _size;
-		int _index;
+		uint8* _data;
+		int32 _size;
+		int32 _index;
 	};
 }

@@ -1,7 +1,7 @@
 #include "InputState.h"
 #include "Buffer.h"
 
-int InputState::GetSize() const
+int32 InputState::GetSize() const
 {
     return (4 * sizeof(float));
 }

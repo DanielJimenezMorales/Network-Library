@@ -1,5 +1,5 @@
 #pragma once
-#include <cstdint>
+#include "NumericTypes.h"
 #include <vector>
 #include <list>
 
@@ -19,7 +19,7 @@ namespace NetLib
 	class RemotePeer;
 	class NetworkEntityFactory;
 
-	enum ConnectionFailedReasonType : uint8_t
+	enum ConnectionFailedReasonType : uint8
 	{
 		CFR_UNKNOWN = 0,			//Unexpect
 		CFR_TIMEOUT = 1,			//The peer is inactive
@@ -30,19 +30,19 @@ namespace NetLib
 
 	struct RemotePeerDisconnectionData
 	{
-		unsigned int id;
+		uint32 id;
 		bool shouldNotify;
 		ConnectionFailedReasonType reason;
 	};
 
-	enum PeerType : uint8_t
+	enum PeerType : uint8
 	{
 		None = 0,
 		ClientMode = 1,
 		ServerMode = 2
 	};
 
-	enum PeerConnectionState : uint8_t
+	enum PeerConnectionState : uint8
 	{
 		PCS_Disconnected = 0,
 		PCS_Connecting = 1,
@@ -55,7 +55,7 @@ namespace NetLib
 	public:
 		bool Start();
 		bool PreTick();
-		bool Tick(float elapsedTime);
+		bool Tick(float32 elapsedTime);
 		bool Stop();
 
 		PeerConnectionState GetConnectionState() const { return _connectionState; }
@@ -64,22 +64,22 @@ namespace NetLib
 
 		//Delegates related
 		template<typename Functor>
-		unsigned int SubscribeToOnLocalPeerConnect(Functor&& functor);
-		void UnsubscribeToOnPeerConnected(unsigned int id);
+		uint32 SubscribeToOnLocalPeerConnect(Functor&& functor);
+		void UnsubscribeToOnPeerConnected(uint32 id);
 		template<typename Functor>
-		unsigned int SubscribeToOnLocalPeerDisconnect(Functor&& functor);
-		void UnsubscribeToOnPeerDisconnected(unsigned int id);
+		uint32 SubscribeToOnLocalPeerDisconnect(Functor&& functor);
+		void UnsubscribeToOnPeerDisconnected(uint32 id);
 		template<typename Functor>
-		unsigned int SubscribeToOnRemotePeerDisconnect(Functor&& functor);
-		void UnsubscribeToOnRemotePeerDisconnect(unsigned int id);
+		uint32 SubscribeToOnRemotePeerDisconnect(Functor&& functor);
+		void UnsubscribeToOnRemotePeerDisconnect(uint32 id);
 		template<typename Functor>
-		unsigned int SubscribeToOnRemotePeerConnect(Functor&& functor);
-		void UnsubscribeToOnRemotePeerConnect(unsigned int id);
+		uint32 SubscribeToOnRemotePeerConnect(Functor&& functor);
+		void UnsubscribeToOnRemotePeerConnect(uint32 id);
 
 		virtual ~Peer();
 
 	protected:
-		Peer(PeerType type, unsigned int maxConnections, unsigned int receiveBufferSize, unsigned int sendBufferSize);
+		Peer(PeerType type, uint32 maxConnections, uint32 receiveBufferSize, uint32 sendBufferSize);
 		Peer(const Peer&) = delete;
 
 		Peer& operator=(const Peer&) = delete;
@@ -87,15 +87,15 @@ namespace NetLib
 		virtual bool StartConcrete() = 0;
 		virtual void ProcessMessageFromPeer(const Message& message, RemotePeer& remotePeer) = 0;
 		virtual void ProcessMessageFromUnknownPeer(const Message& message, const Address& address) = 0;
-		virtual void TickConcrete(float elapsedTime) = 0;
+		virtual void TickConcrete(float32 elapsedTime) = 0;
 		virtual bool StopConcrete() = 0;
 
 		void SendPacketToAddress(const NetworkPacket& packet, const Address& address) const;
-		bool AddRemotePeer(const Address& addressInfo, uint16_t id, uint64_t clientSalt, uint64_t serverSalt);
+		bool AddRemotePeer(const Address& addressInfo, uint16 id, uint64 clientSalt, uint64 serverSalt);
 		void ConnectRemotePeer(RemotePeer& remotePeer);
 		bool BindSocket(const Address& address) const;
 
-		void StartDisconnectingRemotePeer(unsigned int id, bool shouldNotify, ConnectionFailedReasonType reason);
+		void StartDisconnectingRemotePeer(uint32 id, bool shouldNotify, ConnectionFailedReasonType reason);
 
 		void RequestStop(bool shouldNotifyRemotePeers, ConnectionFailedReasonType reason);
 
@@ -114,7 +114,7 @@ namespace NetLib
 		void SetConnectionState(PeerConnectionState state);
 
 		//Remote peer related
-		void TickRemotePeers(float elapsedTime);
+		void TickRemotePeers(float32 elapsedTime);
 		void DisconnectAllRemotePeers(bool shouldNotify, ConnectionFailedReasonType reason);
 		void DisconnectRemotePeer(const RemotePeer& remotePeer, bool shouldNotify, ConnectionFailedReasonType reason);
 
@@ -130,13 +130,13 @@ namespace NetLib
 
 		void SendDataToAddress(const Buffer& buffer, const Address& address) const;
 
-		bool DoesRemotePeerIdExistInPendingDisconnections(unsigned int id) const;
+		bool DoesRemotePeerIdExistInPendingDisconnections(uint32 id) const;
 		void FinishRemotePeersDisconnection();
 
 		void StopInternal();
 
 		//Delegates related
-		void ExecuteOnRemotePeerConnect(uint32_t remotePeerId);
+		void ExecuteOnRemotePeerConnect(uint32 remotePeerId);
 		void ExecuteOnRemotePeerDisconnect();
 
 		PeerType _type;
@@ -144,10 +144,10 @@ namespace NetLib
 		Address _address;
 		Socket _socket;
 
-		unsigned int _receiveBufferSize;
-		uint8_t* _receiveBuffer;
-		unsigned int _sendBufferSize;
-		uint8_t* _sendBuffer;
+		uint32 _receiveBufferSize;
+		uint8* _receiveBuffer;
+		uint32 _sendBufferSize;
+		uint8* _sendBuffer;
 
 		//Stop request
 		bool _isStopRequested;
@@ -158,30 +158,30 @@ namespace NetLib
 
 		Common::Delegate<> _onLocalPeerConnect;
 		Common::Delegate<ConnectionFailedReasonType> _onLocalPeerDisconnect;
-		Common::Delegate<uint32_t> _onRemotePeerConnect;
+		Common::Delegate<uint32> _onRemotePeerConnect;
 		Common::Delegate<> _onRemotePeerDisconnect;
 	};
 
 
 	template<typename Functor>
-	inline unsigned int Peer::SubscribeToOnLocalPeerConnect(Functor&& functor)
+	inline uint32 Peer::SubscribeToOnLocalPeerConnect(Functor&& functor)
 	{
 		return _onLocalPeerConnect.AddSubscriber(std::forward<Functor>(functor));
 	}
 
 	template<typename Functor>
-	inline unsigned int Peer::SubscribeToOnLocalPeerDisconnect(Functor&& functor)
+	inline uint32 Peer::SubscribeToOnLocalPeerDisconnect(Functor&& functor)
 	{
 		return _onLocalPeerDisconnect.AddSubscriber(std::forward<Functor>(functor));
 	}
 
 	template<typename Functor>
-	inline unsigned int Peer::SubscribeToOnRemotePeerDisconnect(Functor&& functor)
+	inline uint32 Peer::SubscribeToOnRemotePeerDisconnect(Functor&& functor)
 	{
 		return _onRemotePeerDisconnect.AddSubscriber(std::forward<Functor>(functor));
 	}
 	template<typename Functor>
-	inline unsigned int Peer::SubscribeToOnRemotePeerConnect(Functor&& functor)
+	inline uint32 Peer::SubscribeToOnRemotePeerConnect(Functor&& functor)
 	{
 		return _onRemotePeerConnect.AddSubscriber(std::forward<Functor>(functor));
 	}

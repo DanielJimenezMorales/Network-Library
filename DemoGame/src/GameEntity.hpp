@@ -13,6 +13,21 @@ public:
 	GameEntity(const GameEntity& other) = default;
 	~GameEntity() {};
 
+	GameEntity& operator=(const GameEntity& other)
+	{
+		if (this == &other)
+		{
+			return *this;
+		}
+
+		_ecsEntityId = other._ecsEntityId;
+		_entityContainer = other._entityContainer;
+		return *this;
+	}
+
+	bool operator==(const GameEntity& other) { return _ecsEntityId == other._ecsEntityId && _entityContainer == other._entityContainer; }
+	bool operator!=(const GameEntity& other) { return !(*this == other); }
+
 	uint32_t GetId() const { return static_cast<uint32_t>(_ecsEntityId); }
 
 	bool IsValid() const { return _entityContainer != nullptr; };

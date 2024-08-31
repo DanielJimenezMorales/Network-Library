@@ -24,7 +24,7 @@ void NetworkEntityFactory::SetPeerType(NetLib::PeerType peerType)
 	_peerType = peerType;
 }
 
-int NetworkEntityFactory::CreateNetworkEntityObject(uint32_t networkEntityType, uint32_t networkEntityId, uint32_t controlledByPeerId, float posX, float posY, NetLib::NetworkVariableChangesHandler* networkVariableChangeHandler)
+int32 NetworkEntityFactory::CreateNetworkEntityObject(uint32 networkEntityType, uint32 networkEntityId, uint32 controlledByPeerId, float32 posX, float32 posY, NetLib::NetworkVariableChangesHandler* networkVariableChangeHandler)
 {
 	LOG_INFO("CONTROLLER BY PEER ID %u", controlledByPeerId);
 	ServiceLocator& serviceLocator = ServiceLocator::GetInstance();
@@ -74,6 +74,6 @@ int NetworkEntityFactory::CreateNetworkEntityObject(uint32_t networkEntityType, 
 	return entity.GetId();
 }
 
-void NetworkEntityFactory::DestroyNetworkEntityObject(uint32_t gameEntity)
+void NetworkEntityFactory::DestroyNetworkEntityObject(uint32 gameEntity)
 {
 }

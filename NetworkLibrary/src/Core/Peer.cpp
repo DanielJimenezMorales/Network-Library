@@ -52,7 +52,7 @@ namespace NetLib
 		return true;
 	}
 
-	bool Peer::Tick(float elapsedTime)
+	bool Peer::Tick(float32 elapsedTime)
 	{
 		if (_connectionState == PeerConnectionState::PCS_Disconnected)
 		{
@@ -87,12 +87,12 @@ namespace NetLib
 		_replicationManager.RegisterNetworkEntityFactory(entityFactory);
 	}
 
-	void Peer::UnsubscribeToOnRemotePeerDisconnect(unsigned int id)
+	void Peer::UnsubscribeToOnRemotePeerDisconnect(uint32 id)
 	{
 		_onRemotePeerDisconnect.DeleteSubscriber(id);
 	}
 
-	void Peer::UnsubscribeToOnRemotePeerConnect(unsigned int id)
+	void Peer::UnsubscribeToOnRemotePeerConnect(uint32 id)
 	{
 		_onRemotePeerConnect.DeleteSubscriber(id);
 	}
@@ -103,7 +103,7 @@ namespace NetLib
 		delete[] _sendBuffer;
 	}
 
-	Peer::Peer(PeerType type, unsigned int maxConnections, unsigned int receiveBufferSize, unsigned int sendBufferSize) :
+	Peer::Peer(PeerType type, uint32 maxConnections, uint32 receiveBufferSize, uint32 sendBufferSize) :
 		_type(type),
 		_connectionState(PeerConnectionState::PCS_Disconnected),
 		_socket(),
@@ -117,8 +117,8 @@ namespace NetLib
 		_stopRequestShouldNotifyRemotePeers(false),
 		_stopRequestReason(ConnectionFailedReasonType::CFR_UNKNOWN)
 	{
-		_receiveBuffer = new uint8_t[_receiveBufferSize];
-		_sendBuffer = new uint8_t[_sendBufferSize];
+		_receiveBuffer = new uint8[_receiveBufferSize];
+		_sendBuffer = new uint8[_sendBufferSize];
 	}
 
 	void Peer::SendPacketToAddress(const NetworkPacket& packet, const Address& address) const
@@ -129,7 +129,7 @@ namespace NetLib
 		_socket.SendTo(_sendBuffer, packet.Size(), address);
 	}
 
-	bool Peer::AddRemotePeer(const Address& addressInfo, uint16_t id, uint64_t clientSalt, uint64_t serverSalt)
+	bool Peer::AddRemotePeer(const Address& addressInfo, uint16 id, uint64 clientSalt, uint64 serverSalt)
 	{
 		bool addedSuccesfully = _remotePeersHandler.AddRemotePeer(addressInfo, id, clientSalt, serverSalt);
 
@@ -211,12 +211,12 @@ namespace NetLib
 		_onLocalPeerDisconnect.Execute(reason);
 	}
 
-	void Peer::UnsubscribeToOnPeerConnected(unsigned int id)
+	void Peer::UnsubscribeToOnPeerConnected(uint32 id)
 	{
 		_onLocalPeerConnect.DeleteSubscriber(id);
 	}
 
-	void Peer::UnsubscribeToOnPeerDisconnected(unsigned int id)
+	void Peer::UnsubscribeToOnPeerDisconnected(uint32 id)
 	{
 		_onLocalPeerDisconnect.DeleteSubscriber(id);
 	}
@@ -224,7 +224,7 @@ namespace NetLib
 	void Peer::ProcessReceivedData()
 	{
 		Address remoteAddress = Address::GetInvalid();
-		unsigned int numberOfBytesRead = 0;
+		uint32 numberOfBytesRead = 0;
 		bool arePendingDatagramsToRead = true;
 
 		do
@@ -268,8 +268,8 @@ namespace NetLib
 		//Process packet ACKs
 		if (isPacketFromRemotePeer)
 		{
-			uint32_t acks = packet.GetHeader().ackBits;
-			uint16_t lastAckedMessageSequenceNumber = packet.GetHeader().lastAckedSequenceNumber;
+			uint32 acks = packet.GetHeader().ackBits;
+			uint16 lastAckedMessageSequenceNumber = packet.GetHeader().lastAckedSequenceNumber;
 			TransmissionChannelType channelType = static_cast<TransmissionChannelType>(packet.GetHeader().channelType);
 			remotePeer->ProcessACKs(acks, lastAckedMessageSequenceNumber, channelType);
 		}
@@ -311,7 +311,7 @@ namespace NetLib
 		}
 	}
 
-	void Peer::TickRemotePeers(float elapsedTime)
+	void Peer::TickRemotePeers(float32 elapsedTime)
 	{
 		auto validRemotePeersIt = _remotePeersHandler.GetValidRemotePeersIterator();
 		auto pastTheEndIt = _remotePeersHandler.GetValidRemotePeersPastTheEndIterator();
@@ -393,10 +393,10 @@ namespace NetLib
 		}
 
 		//Set packet header fields
-		uint32_t acks = remotePeer.GenerateACKs(type);
+		uint32 acks = remotePeer.GenerateACKs(type);
 		packet.SetHeaderACKs(acks);
 
-		uint16_t lastAckedMessageSequenceNumber = remotePeer.GetLastMessageSequenceNumberAcked(type);
+		uint16 lastAckedMessageSequenceNumber = remotePeer.GetLastMessageSequenceNumberAcked(type);
 		packet.SetHeaderLastAcked(lastAckedMessageSequenceNumber);
 
 		packet.SetHeaderChannelType(type);
@@ -417,7 +417,7 @@ namespace NetLib
 		_socket.SendTo(buffer.GetData(), buffer.GetSize(), address);
 	}
 
-	void Peer::StartDisconnectingRemotePeer(unsigned int id, bool shouldNotify, ConnectionFailedReasonType reason)
+	void Peer::StartDisconnectingRemotePeer(uint32 id, bool shouldNotify, ConnectionFailedReasonType reason)
 	{
 		RemotePeer* remotePeer = _remotePeersHandler.GetRemotePeerFromId(id);
 
@@ -436,7 +436,7 @@ namespace NetLib
 		}
 	}
 
-	bool Peer::DoesRemotePeerIdExistInPendingDisconnections(unsigned int id) const
+	bool Peer::DoesRemotePeerIdExistInPendingDisconnections(uint32 id) const
 	{
 		bool doesIdAlreadyExist = false;
 		auto cit = _remotePeerPendingDisconnections.cbegin();
@@ -488,7 +488,7 @@ namespace NetLib
 		_onRemotePeerDisconnect.Execute();
 	}
 
-	void Peer::ExecuteOnRemotePeerConnect(uint32_t remotePeerId)
+	void Peer::ExecuteOnRemotePeerConnect(uint32 remotePeerId)
 	{
 		_onRemotePeerConnect.Execute(remotePeerId);
 	}

@@ -18,7 +18,7 @@ namespace NetLib
 		void AddMessageToSend(std::unique_ptr<Message> message) override;
 		bool ArePendingMessagesToSend() const override;
 		std::unique_ptr<Message> GetMessageToSend() override;
-		unsigned int GetSizeOfNextUnsentMessage() const override;
+		uint32 GetSizeOfNextUnsentMessage() const override;
 
 		void AddReceivedMessage(std::unique_ptr<Message> message) override;
 		bool ArePendingReadyToProcessMessages() const override;
@@ -26,15 +26,15 @@ namespace NetLib
 
 		void SeUnsentACKsToFalse() override;
 		bool AreUnsentACKs() const override;
-		uint32_t GenerateACKs() const override;
-		void ProcessACKs(uint32_t acks, uint16_t lastAckedMessageSequenceNumber) override;
-		bool IsMessageDuplicated(uint16_t messageSequenceNumber) const override;
+		uint32 GenerateACKs() const override;
+		void ProcessACKs(uint32 acks, uint16 lastAckedMessageSequenceNumber) override;
+		bool IsMessageDuplicated(uint16 messageSequenceNumber) const override;
 
-		void Update(float deltaTime) override;
+		void Update(float32 deltaTime) override;
 
-		uint16_t GetLastMessageSequenceNumberAcked() const override;
+		uint16 GetLastMessageSequenceNumberAcked() const override;
 
-		unsigned int GetRTTMilliseconds() const override;
+		uint32 GetRTTMilliseconds() const override;
 
 		void Reset() override;
 
@@ -44,8 +44,8 @@ namespace NetLib
 		void FreeSentMessage(MessageFactory& messageFactory, std::unique_ptr<Message> message) override;
 
 	private:
-		uint32_t _lastMessageSequenceNumberReceived;
+		uint32 _lastMessageSequenceNumberReceived;
 
-		bool IsSequenceNumberNewerThanLastReceived(uint32_t sequenceNumber) const;
+		bool IsSequenceNumberNewerThanLastReceived(uint32 sequenceNumber) const;
 	};
 }

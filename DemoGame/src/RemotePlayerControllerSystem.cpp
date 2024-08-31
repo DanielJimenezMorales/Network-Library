@@ -4,7 +4,7 @@
 #include "RemotePlayerControllerComponent.h"
 #include <vector>
 
-void RemotePlayerControllerSystem::Tick(EntityContainer& entityContainer, float elapsedTime) const
+void RemotePlayerControllerSystem::Tick(EntityContainer& entityContainer, float32 elapsedTime) const
 {
 	std::vector<GameEntity> remotePlayerEntities = entityContainer.GetEntitiesOfType< RemotePlayerControllerComponent>();
 	auto it = remotePlayerEntities.begin();

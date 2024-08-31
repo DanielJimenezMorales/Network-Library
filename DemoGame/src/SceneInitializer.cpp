@@ -91,7 +91,7 @@ void SceneInitializer::InitializeScene(Scene& scene, NetLib::PeerType networkPee
 		colliderEntity.AddComponent<SpriteRendererComponent>(texture2);
 
 		CircleBounds2D* circleBounds2D = new CircleBounds2D(5.f);
-		colliderEntity.AddComponent<Collider2DComponent>(circleBounds2D, true, CollisionResponseType::Static);
+		colliderEntity.AddComponent<Collider2DComponent>(circleBounds2D, false, CollisionResponseType::Static);
 
 		CollisionDetectionSystem* collisionDetectionSystem = new CollisionDetectionSystem();
 		scene.AddPreTickSystem(collisionDetectionSystem);

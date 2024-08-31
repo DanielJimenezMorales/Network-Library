@@ -1,6 +1,6 @@
 #pragma once
 #include <chrono>
-#include <cstdint>
+#include "NumericTypes.h"
 
 namespace NetLib
 {
@@ -11,14 +11,14 @@ namespace NetLib
 		static TimeClock& GetInstance();
 		static void DeleteInstance();
 
-		uint64_t GetLocalTimeMilliseconds() const;
-		double GetLocalTimeSeconds() const;
-		double GetServerTimeSeconds() const;
-		double GetElapsedTimeSeconds() const;
+		uint64 GetLocalTimeMilliseconds() const;
+		float64 GetLocalTimeSeconds() const;
+		float64 GetServerTimeSeconds() const;
+		float64 GetElapsedTimeSeconds() const;
 
 		void UpdateLocalTime();
 
-		void SetServerClockTimeDelta(double newValue);
+		void SetServerClockTimeDelta(float64 newValue);
 
 	private:
 		TimeClock();
@@ -31,6 +31,6 @@ namespace NetLib
 		std::chrono::time_point<std::chrono::steady_clock> _lastTimeUpdate;
 		std::chrono::duration<long long, std::nano> _elapsedTimeNanoseconds;
 
-		double _serverClockTimeDeltaSeconds;
+		float64 _serverClockTimeDeltaSeconds;
 	};
 }

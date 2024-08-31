@@ -1,6 +1,7 @@
 #include "TextureLoader.h"
 #include "Logger.h"
 #include "Texture.h"
+#include "NumericTypes.h"
 #include <SDL_image.h>
 #include <cassert>
 
@@ -63,7 +64,7 @@ Texture* TextureLoader::CreateTexture(const char* stringFilePath)
 	SDL_FreeSurface(imageSurface);
 
 	SDL_Rect sourceTextureRect;
-	int result = SDL_QueryTexture(imageTexture, NULL, NULL, &sourceTextureRect.w, &sourceTextureRect.h);
+	int32 result = SDL_QueryTexture(imageTexture, NULL, NULL, &sourceTextureRect.w, &sourceTextureRect.h);
 	if (result != 0)
 	{
 		LOG_ERROR("Can't query texture at %s. Query error code: %d. SDL error: %s", stringFilePath, result, SDL_GetError());

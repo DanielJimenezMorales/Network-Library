@@ -1,5 +1,5 @@
 #pragma once
-#include <cstdint>
+#include "NumericTypes.h"
 #include <unordered_map>
 #include <queue>
 
@@ -12,7 +12,7 @@ namespace NetLib
 	public:
 		void AddInputState(IInputState* input);
 		IInputState* GetNextInputState();
-		uint32_t GetNumberOfInputsBuffered() const;
+		uint32 GetNumberOfInputsBuffered() const;
 	private:
 		std::queue<IInputState*> _inputsBuffered;
 	};
@@ -20,10 +20,10 @@ namespace NetLib
 	class RemotePeerInputsHandler
 	{
 	public:
-		void AddInputState(IInputState* input, uint32_t remotePeerId);
-		const IInputState* GetNextInputFromRemotePeer(uint32_t remotePeerId);
-		void RemoveRemotePeer(uint32_t remotePeerId);
+		void AddInputState(IInputState* input, uint32 remotePeerId);
+		const IInputState* GetNextInputFromRemotePeer(uint32 remotePeerId);
+		void RemoveRemotePeer(uint32 remotePeerId);
 	private:
-		std::unordered_map<uint32_t, RemotePeerInputsBuffer> _remotePeerIdToInputsBufferMap;
+		std::unordered_map<uint32, RemotePeerInputsBuffer> _remotePeerIdToInputsBufferMap;
 	};
 }

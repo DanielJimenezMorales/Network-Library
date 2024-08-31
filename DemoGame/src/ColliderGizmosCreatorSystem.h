@@ -4,5 +4,5 @@
 class ColliderGizmosCreatorSystem : public IUpdateSystem
 {
 public:
-	void Update(EntityContainer& entityContainer, float elapsedTime) const;
+	void Update(EntityContainer& entityContainer, float32 elapsedTime) const;
 };

@@ -3,7 +3,7 @@
 void MouseController::AddButtonMap(const InputButton& inputButton)
 {
 	_actionToButtonMap[inputButton.actionId] = inputButton;
-	_keyToButtonActionMap[static_cast<uint8_t>(inputButton.code)] = inputButton.actionId;
+	_keyToButtonActionMap[static_cast<uint8>(inputButton.code)] = inputButton.actionId;
 }
 
 void MouseController::HandleEvent(const SDL_Event& event)
@@ -50,7 +50,7 @@ void MouseController::UpdateUnhandledButtons()
 	}
 }
 
-bool MouseController::GetButtonDown(int actionId) const
+bool MouseController::GetButtonDown(int32 actionId) const
 {
 	auto inputButton = _actionToButtonMap.find(actionId);
 	if (inputButton == _actionToButtonMap.cend())
@@ -61,7 +61,7 @@ bool MouseController::GetButtonDown(int actionId) const
 	return (inputButton->second.currentState == ButtonState::Pressed && inputButton->second.previousState != ButtonState::Pressed);
 }
 
-bool MouseController::GetButtonPressed(int actionId) const
+bool MouseController::GetButtonPressed(int32 actionId) const
 {
 	auto inputButton = _actionToButtonMap.find(actionId);
 	if (inputButton == _actionToButtonMap.cend())
@@ -72,7 +72,7 @@ bool MouseController::GetButtonPressed(int actionId) const
 	return inputButton->second.currentState == ButtonState::Pressed;
 }
 
-bool MouseController::GetButtonUp(int actionId) const
+bool MouseController::GetButtonUp(int32 actionId) const
 {
 	auto inputButton = _actionToButtonMap.find(actionId);
 	if (inputButton == _actionToButtonMap.cend())
@@ -83,12 +83,12 @@ bool MouseController::GetButtonUp(int actionId) const
 	return inputButton->second.currentState == ButtonState::Released;
 }
 
-void MouseController::GetPosition(int& x, int& y) const
+void MouseController::GetPosition(int32& x, int32& y) const
 {
 	SDL_GetMouseState(&x, &y);
 }
 
-void MouseController::GetDelta(int& x, int& y) const
+void MouseController::GetDelta(int32& x, int32& y) const
 {
 	x = _mouseDeltaX;
 	y = _mouseDeltaY;
@@ -96,7 +96,7 @@ void MouseController::GetDelta(int& x, int& y) const
 
 void MouseController::HandleButton(const SDL_Event& event)
 {
-	uint8_t code = event.button.button;
+	uint8 code = event.button.button;
 	auto action = _keyToButtonActionMap.find(code);
 	if (action == _keyToButtonActionMap.cend())
 	{

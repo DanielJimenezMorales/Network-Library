@@ -13,10 +13,10 @@ public:
 	void HandleEvent(const SDL_Event& event) override;
 	void ResetEvents() override;
 	void UpdateUnhandledButtons() override;
-	bool GetButtonDown(int actionId) const override;
-	bool GetButtonPressed(int actionId) const override;
-	bool GetButtonUp(int actionId) const override;
-	float GetAxis(int actionId) const override;
+	bool GetButtonDown(int32 actionId) const override;
+	bool GetButtonPressed(int32 actionId) const override;
+	bool GetButtonUp(int32 actionId) const override;
+	float32 GetAxis(int32 actionId) const override;
 
 private:
 	void HandleButton(const SDL_Event& event);

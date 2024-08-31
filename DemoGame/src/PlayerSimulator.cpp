@@ -6,7 +6,7 @@
 #include "PlayerControllerComponent.h"
 #include "Logger.h"
 
-void PlayerSimulator::Simulate(const InputState& inputs, GameEntity& playerEntity, float elapsedTime)
+void PlayerSimulator::Simulate(const InputState& inputs, GameEntity& playerEntity, float32 elapsedTime)
 {
 	TransformComponent& transform = playerEntity.GetComponent<TransformComponent>();
 	if (inputs.movement.X() != 0 || inputs.movement.Y() != 0)
@@ -26,7 +26,7 @@ void PlayerSimulator::Simulate(const InputState& inputs, GameEntity& playerEntit
 	networkComponent.rotationAngle = transform.GetRotationAngle();
 }
 
-Vec2f PlayerSimulator::UpdatePosition(const Vec2f& inputs, const TransformComponent& transform, const PlayerControllerConfiguration& configuration, float elapsedTime)
+Vec2f PlayerSimulator::UpdatePosition(const Vec2f& inputs, const TransformComponent& transform, const PlayerControllerConfiguration& configuration, float32 elapsedTime)
 {
 	Vec2f currentPosition = transform.GetPosition();
 
@@ -41,7 +41,7 @@ void PlayerSimulator::ApplyPosition(const Vec2f& position, TransformComponent& t
 	transform.SetPosition(position);
 }
 
-Vec2f PlayerSimulator::UpdateLookAt(const Vec2f& virtualMousePosition, const TransformComponent& transform, const PlayerControllerConfiguration& configuration, float elapsedTime)
+Vec2f PlayerSimulator::UpdateLookAt(const Vec2f& virtualMousePosition, const TransformComponent& transform, const PlayerControllerConfiguration& configuration, float32 elapsedTime)
 {
 	return Vec2f();
 }

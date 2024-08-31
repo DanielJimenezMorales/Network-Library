@@ -6,14 +6,14 @@
 #include "InputComponent.h"
 #include "ICursor.h"
 
-void VirtualMouseSystem::Update(EntityContainer& entityContainer, float elapsedTime) const
+void VirtualMouseSystem::Update(EntityContainer& entityContainer, float32 elapsedTime) const
 {
 	ComponentView<VirtualMouseComponent> virtualMouseComponents = entityContainer.GetComponentsOfType<VirtualMouseComponent>();
 
 	const CameraComponent& cameraComponent = entityContainer.GetFirstComponentOfType<CameraComponent>();
 	const InputComponent& inputComponent = entityContainer.GetFirstComponentOfType<InputComponent>();
 
-	int mouseDeltaX, mouseDeltaY = 0;
+	int32 mouseDeltaX, mouseDeltaY = 0;
 	inputComponent.cursor->GetDelta(mouseDeltaX, mouseDeltaY);
 
 	//The minus Y here is because SDL tracks positive Y downwards

@@ -1,7 +1,8 @@
 #include "CircleBounds2D.h"
 #include "TransformComponent.h"
-#include "Gizmo.h"
+#include "Circle2DGizmo.h"
 
+//TODO Change name to this file
 void CircleBounds2D::GetAxes(const TransformComponent& transform, std::vector<Vec2f>& outAxes) const
 {
 	//Circle axes are calculated apart since it is not a default convex polygon but a curve shape
@@ -20,7 +21,7 @@ void CircleBounds2D::ProjectAxis(const TransformComponent& transform, const Vec2
 	*/
 
 	const Vec2f center = transform.GetPosition();
-	float centerProjection = (center.X() * axis.X()) + (center.Y() * axis.Y());
+	float32 centerProjection = (center.X() * axis.X()) + (center.Y() * axis.Y());
 	outMin = centerProjection - radius;
 	outMax = centerProjection + radius;
 }
@@ -28,6 +29,16 @@ void CircleBounds2D::ProjectAxis(const TransformComponent& transform, const Vec2
 Vec2f CircleBounds2D::GetClosestVertex(const TransformComponent& transform, const Vec2f& inputPoint) const
 {
 	return Vec2f();
+}
+
+float32 CircleBounds2D::GetMinX(const TransformComponent& transform) const
+{
+	return transform.GetPosition().X() - radius;
+}
+
+float32 CircleBounds2D::GetMaxX(const TransformComponent& transform) const
+{
+	return transform.GetPosition().X() + radius;
 }
 
 Gizmo* CircleBounds2D::GetGizmo(const TransformComponent& transform) const

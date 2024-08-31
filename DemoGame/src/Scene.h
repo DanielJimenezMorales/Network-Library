@@ -1,4 +1,5 @@
 #pragma once
+#include "NumericTypes.h"
 
 #include <SDL_image.h>
 #include <vector>
@@ -19,10 +20,10 @@ public:
 	Scene() : _entityContainer(), _updateSystems(), _tickSystems() {}
 	~Scene() {};
 
-	void Update(float elapsedTime);
-	void PreTick(float tickElapsedTime);
-	void Tick(float tickElapsedTime);
-	void PosTick(float tickElapsedTime);
+	void Update(float32 elapsedTime);
+	void PreTick(float32 tickElapsedTime);
+	void Tick(float32 tickElapsedTime);
+	void PosTick(float32 tickElapsedTime);
 	void Render(SDL_Renderer* renderer);
 
 	void AddUpdateSystem(IUpdateSystem* system);

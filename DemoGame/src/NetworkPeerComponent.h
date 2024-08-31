@@ -22,18 +22,18 @@ struct NetworkPeerComponent
 	std::vector<INetworkEntityFactory*> networkEntityFactories;
 	NetLib::IInputStateFactory* inputStateFactory;
 
-	std::queue<uint32_t> unprocessedConnectedRemotePeers;
+	std::queue<uint32> unprocessedConnectedRemotePeers;
 	bool isTrackingRemotePeerConnect;
-	unsigned int remotePeerConnectSubscriptionId;
+	uint32 remotePeerConnectSubscriptionId;
 
 	void TrackOnRemotePeerConnect()
 	{
-		auto callback = [&](uint32_t remotePeerId) {this->AddUnprocessedConnectedRemotePeer(remotePeerId); };
+		auto callback = [&](uint32 remotePeerId) {this->AddUnprocessedConnectedRemotePeer(remotePeerId); };
 		remotePeerConnectSubscriptionId = peer->SubscribeToOnRemotePeerConnect(callback);
 		isTrackingRemotePeerConnect = true;
 	}
 
-	void AddUnprocessedConnectedRemotePeer(uint32_t remotePeerId) { unprocessedConnectedRemotePeers.push(remotePeerId); };
+	void AddUnprocessedConnectedRemotePeer(uint32 remotePeerId) { unprocessedConnectedRemotePeers.push(remotePeerId); };
 
 	NetLib::Client* GetPeerAsClient() const { assert(peer != nullptr); assert(peer->GetPeerType() == NetLib::PeerType::ClientMode); return static_cast<NetLib::Client*>(peer); }
 	NetLib::Server* GetPeerAsServer() const { assert(peer != nullptr); assert(peer->GetPeerType() == NetLib::PeerType::ServerMode); return static_cast<NetLib::Server*>(peer); }

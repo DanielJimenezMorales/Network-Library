@@ -7,24 +7,52 @@
 
 #include "Collider2DComponent.h"
 
-void CollisionDetectionSystem::PreTick(EntityContainer& entityContainer, float elapsedTime) const
+bool ReturnMinLeft(const GameEntity& colliderEntityA, const GameEntity& colliderEntityB)
+{
+	const Collider2DComponent& colliderA = colliderEntityA.GetComponent<Collider2DComponent>();
+	const TransformComponent& transformA = colliderEntityA.GetComponent<TransformComponent>();
+
+	const Collider2DComponent& colliderB = colliderEntityB.GetComponent<Collider2DComponent>();
+	const TransformComponent& transformB = colliderEntityB.GetComponent<TransformComponent>();
+
+	return colliderA.GetMinX(transformA) < colliderB.GetMinX(transformB);
+}
+
+void CollisionDetectionSystem::PreTick(EntityContainer& entityContainer, float32 elapsedTime) const
+{
+	TickSweepAndPrune(entityContainer);
+}
+
+void CollisionDetectionSystem::TickSweepAndPrune(EntityContainer& entityContainer) const
 {
 	std::vector<GameEntity> collision_entities = entityContainer.GetEntitiesOfBothTypes < Collider2DComponent, TransformComponent>();
 
-	for (uint32_t i = 0; i < collision_entities.size(); ++i)
+	//Sort by left in order to optimize the number of collision queries later.
+	SortCollidersByLeft(collision_entities);
+
+	for (uint32 i = 0; i < collision_entities.size(); ++i)
 	{
+		//Get first object collider & transform components
 		const Collider2DComponent& colliderA = collision_entities[i].GetComponent<Collider2DComponent>();
 		TransformComponent& transformA = collision_entities[i].GetComponent<TransformComponent>();
 
-		for (uint32_t j = i + 1; j < collision_entities.size(); ++j)
+		for (uint32 j = i + 1; j < collision_entities.size(); ++j)
 		{
+			//Get second object collider & transform components
 			const Collider2DComponent& colliderB = collision_entities[j].GetComponent<Collider2DComponent>();
 			TransformComponent& transformB = collision_entities[j].GetComponent<TransformComponent>();
 
-			MinimumTranslationVector mtv;
-			if (AreTwoShapesColliding(colliderA, transformA, colliderB, transformB, mtv))
+			//Check if these two objects have any collision possibilities. If not, don't check the first object anymore since the colliders are ordered by left,
+			//it means the rest of colliders won't have any collision possibilities either.
+			if (colliderA.GetMaxX(transformA) < colliderB.GetMinX(transformB))
 			{
-				LOG_WARNING("OVERLAP: MTV: %.2f", mtv.magnitude);
+				break;
+			}
+
+			//Check for collision and if success, get the MTV for collision response
+			MinimumTranslationVector mtv;
+			if (AreTwoShapesCollidingUsingSAT(colliderA, transformA, colliderB, transformB, mtv))
+			{
 				if (!colliderA.IsTrigger() && !colliderB.IsTrigger())
 				{
 					ApplyCollisionResponse(colliderA, transformA, colliderB, transformB, mtv);
@@ -34,28 +62,24 @@ void CollisionDetectionSystem::PreTick(EntityContainer& entityContainer, float e
 	}
 }
 
-bool CollisionDetectionSystem::AreTwoShapesColliding(const Collider2DComponent& collider1, const TransformComponent& transform1, const Collider2DComponent& collider2, const TransformComponent& transform2, MinimumTranslationVector& outMtv) const
+bool CollisionDetectionSystem::AreTwoShapesCollidingUsingSAT(const Collider2DComponent& collider1, const TransformComponent& transform1, const Collider2DComponent& collider2, const TransformComponent& transform2, MinimumTranslationVector& outMtv) const
 {
 	std::vector<Vec2f> axesToCheck;
 	GetAllAxes(collider1, transform1, collider2, transform2, axesToCheck);
 	NormalizeAxes(axesToCheck);
 
 	Vec2f smallestAxis;
-	float smallestOverlapMagnitude = 200000.f; //TODO Set this to max float or something like that
+	float32 smallestOverlapMagnitude = MAX_FLOAT32;
 	auto cit = axesToCheck.cbegin();
 	for (; cit != axesToCheck.cend(); ++cit)
 	{
-		float minCollider1, maxCollider1, minCollider2, maxCollider2 = 0.f;
+		float32 minCollider1, maxCollider1, minCollider2, maxCollider2 = 0.f;
 		collider1.ProjectAxis(transform1, *cit, minCollider1, maxCollider1);
 		collider2.ProjectAxis(transform2, *cit, minCollider2, maxCollider2);
 
-		if (!DoProjectionsOverlap(minCollider1, maxCollider1, minCollider2, maxCollider2))
+		float32 projectionOverlapMagnitude = GetProjectionsOverlapMagnitude(minCollider1, maxCollider1, minCollider2, maxCollider2);
+		if (projectionOverlapMagnitude > 0.f)
 		{
-			return false;
-		}
-		else
-		{
-			float projectionOverlapMagnitude = GetProjectionsOverlapMagnitude(minCollider1, maxCollider1, minCollider2, maxCollider2);
 			if (projectionOverlapMagnitude < smallestOverlapMagnitude)
 			{
 				smallestAxis = *cit;
@@ -67,6 +91,11 @@ bool CollisionDetectionSystem::AreTwoShapesColliding(const Collider2DComponent& 
 	outMtv.direction = smallestAxis;
 	outMtv.magnitude = smallestOverlapMagnitude;
 	return true;
+}
+
+void CollisionDetectionSystem::SortCollidersByLeft(std::vector<GameEntity>& collider_entities) const
+{
+	std::sort(collider_entities.begin(), collider_entities.end(), ReturnMinLeft);
 }
 
 void CollisionDetectionSystem::GetAllAxes(const Collider2DComponent& collider1, const TransformComponent& transform1, const Collider2DComponent& collider2, const TransformComponent& transform2, std::vector<Vec2f>& outAxesVector) const
@@ -104,14 +133,19 @@ void CollisionDetectionSystem::NormalizeAxes(std::vector<Vec2f>& axesVector) con
 	}
 }
 
-bool CollisionDetectionSystem::DoProjectionsOverlap(float minProjection1, float maxProjection1, float minProjection2, float maxProjection2) const
+float32 CollisionDetectionSystem::GetProjectionsOverlapMagnitude(float32 minProjection1, float32 maxProjection1, float32 minProjection2, float32 maxProjection2) const
 {
-	return (maxProjection1 >= minProjection2) && (maxProjection2 >= minProjection1);
+	if (!DoProjectionsOverlap(minProjection1, maxProjection1, minProjection2, maxProjection2))
+	{
+		return 0.f;
+	}
+
+	return std::min(maxProjection1, maxProjection2) - std::max(minProjection1, minProjection2);
 }
 
-float CollisionDetectionSystem::GetProjectionsOverlapMagnitude(float minProjection1, float maxProjection1, float minProjection2, float maxProjection2) const
+bool CollisionDetectionSystem::DoProjectionsOverlap(float32 minProjection1, float32 maxProjection1, float32 minProjection2, float32 maxProjection2) const
 {
-	return std::min(maxProjection1, maxProjection2) - std::max(minProjection1, minProjection2);
+	return (maxProjection1 >= minProjection2) && (maxProjection2 >= minProjection1);
 }
 
 void CollisionDetectionSystem::ApplyCollisionResponse(const Collider2DComponent& collider1, TransformComponent& transform1, const Collider2DComponent& collider2, TransformComponent& transform2, const MinimumTranslationVector& mtv) const
@@ -130,6 +164,10 @@ void CollisionDetectionSystem::ApplyCollisionResponse(const Collider2DComponent&
 	{
 		transform1.SetPosition(transform1.GetPosition() - (resultedTranslationVector / 2.f));
 		transform2.SetPosition(transform2.GetPosition() + (resultedTranslationVector / 2.f));
+	}
+	else if (collider1.GetCollisionResponse() == CollisionResponseType::Static && collider2.GetCollisionResponse() == CollisionResponseType::Static)
+	{
+		LOG_ERROR("Collision response between two static colliders is not supported");
 	}
 	else
 	{

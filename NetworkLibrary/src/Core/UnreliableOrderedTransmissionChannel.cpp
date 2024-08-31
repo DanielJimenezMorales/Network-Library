@@ -45,7 +45,7 @@ namespace NetLib
 		std::unique_ptr<Message> message(std::move(_unsentMessages[0]));
 		_unsentMessages.erase(_unsentMessages.begin());
 
-		uint16_t sequenceNumber = GetNextMessageSequenceNumber();
+		uint16 sequenceNumber = GetNextMessageSequenceNumber();
 		IncreaseMessageSequenceNumber();
 
 		message->SetHeaderPacketSequenceNumber(sequenceNumber);
@@ -53,7 +53,7 @@ namespace NetLib
 		return std::move(message);
 	}
 
-	unsigned int UnreliableOrderedTransmissionChannel::GetSizeOfNextUnsentMessage() const
+	uint32 UnreliableOrderedTransmissionChannel::GetSizeOfNextUnsentMessage() const
 	{
 		if (!ArePendingMessagesToSend())
 		{
@@ -106,31 +106,31 @@ namespace NetLib
 		return false;
 	}
 
-	uint32_t UnreliableOrderedTransmissionChannel::GenerateACKs() const
+	uint32 UnreliableOrderedTransmissionChannel::GenerateACKs() const
 	{
 		return 0;
 	}
 
-	void UnreliableOrderedTransmissionChannel::ProcessACKs(uint32_t acks, uint16_t lastAckedMessageSequenceNumber)
+	void UnreliableOrderedTransmissionChannel::ProcessACKs(uint32 acks, uint16 lastAckedMessageSequenceNumber)
 	{
 		//This channel is not supporting ACKs since it is unreliable. So do nothing
 	}
 
-	bool UnreliableOrderedTransmissionChannel::IsMessageDuplicated(uint16_t messageSequenceNumber) const
+	bool UnreliableOrderedTransmissionChannel::IsMessageDuplicated(uint16 messageSequenceNumber) const
 	{
 		return false;
 	}
 
-	void UnreliableOrderedTransmissionChannel::Update(float deltaTime)
+	void UnreliableOrderedTransmissionChannel::Update(float32 deltaTime)
 	{
 	}
 
-	uint16_t UnreliableOrderedTransmissionChannel::GetLastMessageSequenceNumberAcked() const
+	uint16 UnreliableOrderedTransmissionChannel::GetLastMessageSequenceNumberAcked() const
 	{
 		return 0;
 	}
 
-	unsigned int UnreliableOrderedTransmissionChannel::GetRTTMilliseconds() const
+	uint32 UnreliableOrderedTransmissionChannel::GetRTTMilliseconds() const
 	{
 		return 0;
 	}
@@ -150,7 +150,7 @@ namespace NetLib
 		messageFactory.ReleaseMessage(std::move(message));
 	}
 
-	bool UnreliableOrderedTransmissionChannel::IsSequenceNumberNewerThanLastReceived(uint32_t sequenceNumber) const
+	bool UnreliableOrderedTransmissionChannel::IsSequenceNumberNewerThanLastReceived(uint32 sequenceNumber) const
 	{
 		//The second part of the if is to support the case when sequence number reaches its limit value and wraps around
 		if (sequenceNumber > _lastMessageSequenceNumberReceived || (_lastMessageSequenceNumberReceived - sequenceNumber) >= UINT32_HALF)

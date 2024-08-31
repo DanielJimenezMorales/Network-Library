@@ -8,7 +8,7 @@
 #include "PlayerSimulator.h"
 #include <vector>
 
-void ServerPlayerControllerSystem::Tick(EntityContainer& entityContainer, float elapsedTime) const
+void ServerPlayerControllerSystem::Tick(EntityContainer& entityContainer, float32 elapsedTime) const
 {
 	GameEntity& networkPeerEntity = entityContainer.GetFirstEntityOfType<NetworkPeerComponent>();
 	NetworkPeerComponent& networkPeerComponent = networkPeerEntity.GetComponent<NetworkPeerComponent>();

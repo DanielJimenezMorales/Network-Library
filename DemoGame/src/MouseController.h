@@ -1,4 +1,5 @@
 #pragma once
+#include "NumericTypes.h"
 #include "ICursor.h"
 #include "InputHandler.h"
 #include <unordered_map>
@@ -14,11 +15,11 @@ public:
 	void HandleEvent(const SDL_Event& event) override;
 	void ResetEvents() override;
 	void UpdateUnhandledButtons() override;
-	bool GetButtonDown(int actionId) const override;
-	bool GetButtonPressed(int actionId) const override;
-	bool GetButtonUp(int actionId) const override;
-	void GetPosition(int& x, int& y) const override;
-	void GetDelta(int& x, int& y) const override;
+	bool GetButtonDown(int32 actionId) const override;
+	bool GetButtonPressed(int32 actionId) const override;
+	bool GetButtonUp(int32 actionId) const override;
+	void GetPosition(int32& x, int32& y) const override;
+	void GetDelta(int32& x, int32& y) const override;
 
 private:
 	void HandleButton(const SDL_Event& event);
@@ -27,8 +28,8 @@ private:
 	void SetInputButtonState(InputButton& button, ButtonState newState);
 
 	std::unordered_map<int, InputButton> _actionToButtonMap;
-	std::unordered_map<uint8_t, int> _keyToButtonActionMap;
+	std::unordered_map<uint8, int> _keyToButtonActionMap;
 
-	int _mouseDeltaX;
-	int _mouseDeltaY;
+	int32 _mouseDeltaX;
+	int32 _mouseDeltaY;
 };

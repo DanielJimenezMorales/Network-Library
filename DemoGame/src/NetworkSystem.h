@@ -9,10 +9,10 @@ class NetworkSystem : public IPreTickSystem, public IPosTickSystem
 {
 public:
 	NetworkSystem() {}
-	void PreTick(EntityContainer& entityContainer, float elapsedTime) const override;
-	void PosTick(EntityContainer& entityContainer, float elapsedTime) const override;
+	void PreTick(EntityContainer& entityContainer, float32 elapsedTime) const override;
+	void PosTick(EntityContainer& entityContainer, float32 elapsedTime) const override;
 
 private:
-	void Server_SpawnRemotePeerConnect(EntityContainer& entityContainer, uint32_t remotePeerId) const;
+	void Server_SpawnRemotePeerConnect(EntityContainer& entityContainer, uint32 remotePeerId) const;
 	//TODO Add another callback for despawn entities
 };

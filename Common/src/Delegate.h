@@ -1,4 +1,5 @@
 #pragma once
+#include "NumericTypes.h"
 #include <vector>
 
 #include "fixed_size_function.hpp"
@@ -14,16 +15,16 @@ namespace Common
 	public:
 		Delegate()
 		{
-			const unsigned int initialSize = 3;
+			const uint32 initialSize = 3;
 			Init(initialSize);
 		}
 
 		template<typename Functor>
-		unsigned int AddSubscriber(Functor&& function)
+		uint32 AddSubscriber(Functor&& function)
 		{
 			//TODO add mutex here
-			int index = -1;
-			for (size_t i = 0; i < _subscribers.size(); ++i)
+			int32 index = -1;
+			for (uint32 i = 0; i < _subscribers.size(); ++i)
 			{
 				if (!_subscribers[i])
 				{
@@ -32,7 +33,7 @@ namespace Common
 				}
 			}
 			
-			unsigned int idToReturn = 0;
+			uint32 idToReturn = 0;
 			if (index != -1)
 			{
 				_subscribers[index] = std::forward<Functor>(function);
@@ -49,10 +50,10 @@ namespace Common
 			return idToReturn;
 		}
 
-		void DeleteSubscriber(unsigned int id)
+		void DeleteSubscriber(uint32 id)
 		{
 			//TODO add mutex here
-			for (size_t i = 0; i < _ids.size(); ++i)
+			for (uint32 i = 0; i < _ids.size(); ++i)
 			{
 				if (_ids[i] == id)
 				{
@@ -65,7 +66,7 @@ namespace Common
 		void DeleteAllSubscribers()
 		{
 			//TODO add mutex here
-			for (size_t i = 0; i < _subscribers.size(); ++i)
+			for (uint32 i = 0; i < _subscribers.size(); ++i)
 			{
 				_subscribers[i].reset();
 			}
@@ -74,7 +75,7 @@ namespace Common
 		void Execute(Parameters... params)
 		{
 			//TODO make this thread-safe. Maybe a temp copy of the subscribers in order to safely loop them?
-			for (unsigned int i = 0; i < _subscribers.size(); ++i)
+			for (uint32 i = 0; i < _subscribers.size(); ++i)
 			{
 				if (_subscribers[i])
 				{
@@ -84,12 +85,12 @@ namespace Common
 		}
 
 	private:
-		void Init(unsigned int initialSize)
+		void Init(uint32 initialSize)
 		{
 			_subscribers.reserve(initialSize);
 			_ids.reserve(initialSize);
 
-			for (unsigned int i = 0; i < initialSize; ++i)
+			for (uint32 i = 0; i < initialSize; ++i)
 			{
 				_subscribers.emplace_back();
 				_ids.emplace_back(nextId);
@@ -103,11 +104,11 @@ namespace Common
 			++nextId;
 		}
 
-		std::vector<unsigned int> _ids;
+		std::vector<uint32> _ids;
 		std::vector<fixed_size_function<void(Parameters...), 128, construct_type::copy_and_move>> _subscribers;
-		static unsigned int nextId;
+		static uint32 nextId;
 	};
 
 	template<typename... Parameters>
-	unsigned int Delegate<Parameters...>::nextId = 0;
+	uint32 Delegate<Parameters...>::nextId = 0;
 }

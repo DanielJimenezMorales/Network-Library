@@ -6,7 +6,7 @@
 #include "Vec2f.h"
 #include "VirtualMouseComponent.h"
 
-void CrosshairFollowMouseSystem::Update(EntityContainer& entityContainer, float elapsedTime) const
+void CrosshairFollowMouseSystem::Update(EntityContainer& entityContainer, float32 elapsedTime) const
 {
 	VirtualMouseComponent& virtualMouseComponent = entityContainer.GetFirstComponentOfType<VirtualMouseComponent>();
 

@@ -14,7 +14,7 @@
 #include "VirtualMouseComponent.h"
 #include <vector>
 
-void PlayerControllerSystem::Tick(EntityContainer& entityContainer, float elapsedTime) const
+void PlayerControllerSystem::Tick(EntityContainer& entityContainer, float32 elapsedTime) const
 {
 	std::vector<GameEntity> playerEntities = entityContainer.GetEntitiesOfType<PlayerControllerComponent>();
 	if (playerEntities.empty())

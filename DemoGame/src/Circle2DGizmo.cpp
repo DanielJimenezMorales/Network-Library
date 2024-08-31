@@ -1,16 +1,14 @@
-#include "Gizmo.h"
+#include "Circle2DGizmo.h"
 #include "CameraComponent.h"
 
-void CircleGizmo::Render(const CameraComponent& cameraComponent, SDL_Renderer* renderer) const
+void CircleGizmo::RenderConcrete(const CameraComponent& cameraComponent, SDL_Renderer* renderer) const
 {
-	Gizmo::Render(cameraComponent, renderer);
-
 	// Start at the top of the circle
-	float x = _radius;
-	float y = 0;
+	float32 x = _radius;
+	float32 y = 0;
 
 	// Decision parameter (initial value)
-	float decisionOver2 = 1 - x;
+	float32 decisionOver2 = 1 - x;
 
 	// We loop until x < y, covering one octant
 	while (y <= x) {

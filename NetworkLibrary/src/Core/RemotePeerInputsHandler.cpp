@@ -19,12 +19,12 @@ namespace NetLib
 		return inputToReturn;
 	}
 
-	uint32_t RemotePeerInputsBuffer::GetNumberOfInputsBuffered() const
+	uint32 RemotePeerInputsBuffer::GetNumberOfInputsBuffered() const
 	{
 		return _inputsBuffered.size();
 	}
 
-	void RemotePeerInputsHandler::AddInputState(IInputState* input, uint32_t remotePeerId)
+	void RemotePeerInputsHandler::AddInputState(IInputState* input, uint32 remotePeerId)
 	{
 		auto remotePeerFoundIt = _remotePeerIdToInputsBufferMap.find(remotePeerId);
 		if (remotePeerFoundIt != _remotePeerIdToInputsBufferMap.end())
@@ -38,7 +38,7 @@ namespace NetLib
 		}
 	}
 
-	const IInputState* RemotePeerInputsHandler::GetNextInputFromRemotePeer(uint32_t remotePeerId)
+	const IInputState* RemotePeerInputsHandler::GetNextInputFromRemotePeer(uint32 remotePeerId)
 	{
 		auto remotePeerFoundIt = _remotePeerIdToInputsBufferMap.find(remotePeerId);
 		if (remotePeerFoundIt == _remotePeerIdToInputsBufferMap.end())
@@ -54,7 +54,7 @@ namespace NetLib
 		return remotePeerFoundIt->second.GetNextInputState();
 	}
 
-	void RemotePeerInputsHandler::RemoveRemotePeer(uint32_t remotePeerId)
+	void RemotePeerInputsHandler::RemoveRemotePeer(uint32 remotePeerId)
 	{
 		auto remotePeerFoundIt = _remotePeerIdToInputsBufferMap.find(remotePeerId);
 		if (remotePeerFoundIt != _remotePeerIdToInputsBufferMap.end())

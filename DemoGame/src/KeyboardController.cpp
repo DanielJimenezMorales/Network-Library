@@ -48,7 +48,7 @@ void KeyboardController::UpdateUnhandledButtons()
 	}
 }
 
-bool KeyboardController::GetButtonDown(int actionId) const
+bool KeyboardController::GetButtonDown(int32 actionId) const
 {
 	auto inputButton = _actionToButtonMap.find(actionId);
 	if (inputButton == _actionToButtonMap.cend())
@@ -59,7 +59,7 @@ bool KeyboardController::GetButtonDown(int actionId) const
 	return (inputButton->second.currentState == ButtonState::Pressed && inputButton->second.previousState != ButtonState::Pressed);
 }
 
-bool KeyboardController::GetButtonPressed(int actionId) const
+bool KeyboardController::GetButtonPressed(int32 actionId) const
 {
 	auto inputButton = _actionToButtonMap.find(actionId);
 	if (inputButton == _actionToButtonMap.cend())
@@ -70,7 +70,7 @@ bool KeyboardController::GetButtonPressed(int actionId) const
 	return inputButton->second.currentState == ButtonState::Pressed;
 }
 
-bool KeyboardController::GetButtonUp(int actionId) const
+bool KeyboardController::GetButtonUp(int32 actionId) const
 {
 	auto inputButton = _actionToButtonMap.find(actionId);
 	if (inputButton == _actionToButtonMap.cend())
@@ -81,7 +81,7 @@ bool KeyboardController::GetButtonUp(int actionId) const
 	return inputButton->second.currentState == ButtonState::Released;
 }
 
-float KeyboardController::GetAxis(int actionId) const
+float32 KeyboardController::GetAxis(int32 actionId) const
 {
 	auto axis = _actionToAxisMap.find(actionId);
 	if (axis == _actionToAxisMap.cend())
@@ -94,7 +94,7 @@ float KeyboardController::GetAxis(int actionId) const
 
 void KeyboardController::HandleButton(const SDL_Event& event)
 {
-	int code = event.key.keysym.sym;
+	int32 code = event.key.keysym.sym;
 	auto action = _keyToButtonActionMap.find(code);
 	if (action == _keyToButtonActionMap.cend())
 	{
@@ -115,7 +115,7 @@ void KeyboardController::HandleButton(const SDL_Event& event)
 
 void KeyboardController::HandleAxis(const SDL_Event& event)
 {
-	int code = event.key.keysym.sym;
+	int32 code = event.key.keysym.sym;
 	auto action = _keyToAxisActionMap.find(code);
 	if (action == _keyToAxisActionMap.cend())
 	{

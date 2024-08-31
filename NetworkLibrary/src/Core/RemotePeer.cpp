@@ -24,7 +24,7 @@ namespace NetLib
 	{
 		TransmissionChannel* transmissionChannel = nullptr;
 
-		for (unsigned int i = 0; i < GetNumberOfTransmissionChannels(); ++i)
+		for (uint32 i = 0; i < GetNumberOfTransmissionChannels(); ++i)
 		{
 			if (_transmissionChannels[i]->GetType() == channelType)
 			{
@@ -40,7 +40,7 @@ namespace NetLib
 	{
 		const TransmissionChannel* transmissionChannel = nullptr;
 
-		for (unsigned int i = 0; i < GetNumberOfTransmissionChannels(); ++i)
+		for (uint32 i = 0; i < GetNumberOfTransmissionChannels(); ++i)
 		{
 			if (_transmissionChannels[i]->GetType() == channelType)
 			{
@@ -64,7 +64,7 @@ namespace NetLib
 		InitTransmissionChannels();
 	}
 
-	RemotePeer::RemotePeer(const sockaddr_in& addressInfo, uint16_t id, float maxInactivityTime, uint64_t clientSalt, uint64_t serverSalt) :
+	RemotePeer::RemotePeer(const sockaddr_in& addressInfo, uint16 id, float32 maxInactivityTime, uint64 clientSalt, uint64 serverSalt) :
 		_address(Address::GetInvalid()),
 		_nextPacketSequenceNumber(0),
 		_currentState(RemotePeerState::Disconnected)
@@ -78,7 +78,7 @@ namespace NetLib
 		Disconnect();
 
 		//Free transmission channel memory
-		for (unsigned int i = 0; i < _transmissionChannels.size(); ++i)
+		for (uint32 i = 0; i < _transmissionChannels.size(); ++i)
 		{
 			delete _transmissionChannels[i];
 			_transmissionChannels[i] = nullptr;
@@ -87,9 +87,9 @@ namespace NetLib
 		_transmissionChannels.clear();
 	}
 
-	uint16_t RemotePeer::GetLastMessageSequenceNumberAcked(TransmissionChannelType channelType) const
+	uint16 RemotePeer::GetLastMessageSequenceNumberAcked(TransmissionChannelType channelType) const
 	{
-		uint16_t lastMessageSequenceNumberAcked = 0;
+		uint16 lastMessageSequenceNumberAcked = 0;
 
 		const TransmissionChannel* transmissionChannel = GetTransmissionChannelFromType(channelType);
 		if (transmissionChannel != nullptr)
@@ -100,7 +100,7 @@ namespace NetLib
 		return lastMessageSequenceNumberAcked;
 	}
 
-	void RemotePeer::Connect(const sockaddr_in& addressInfo, uint16_t id, float maxInactivityTime, uint64_t clientSalt, uint64_t serverSalt)
+	void RemotePeer::Connect(const sockaddr_in& addressInfo, uint16 id, float32 maxInactivityTime, uint64 clientSalt, uint64 serverSalt)
 	{
 		_address = Address(addressInfo);
 		_id = id;
@@ -111,7 +111,7 @@ namespace NetLib
 		_currentState = RemotePeerState::Connecting;
 	}
 
-	void RemotePeer::Tick(float elapsedTime)
+	void RemotePeer::Tick(float32 elapsedTime)
 	{
 		_inactivityTimeLeft -= elapsedTime;
 
@@ -121,7 +121,7 @@ namespace NetLib
 		}
 
 		//Update transmission channels
-		for (unsigned int i = 0; i < GetNumberOfTransmissionChannels(); ++i)
+		for (uint32 i = 0; i < GetNumberOfTransmissionChannels(); ++i)
 		{
 			_transmissionChannels[i]->Update(elapsedTime);
 		}
@@ -190,9 +190,9 @@ namespace NetLib
 		return std::move(message);
 	}
 
-	unsigned int RemotePeer::GetSizeOfNextUnsentMessage(TransmissionChannelType channelType) const
+	uint32 RemotePeer::GetSizeOfNextUnsentMessage(TransmissionChannelType channelType) const
 	{
-		unsigned int size = 0;
+		uint32 size = 0;
 
 		const TransmissionChannel* transmissionChannel = GetTransmissionChannelFromType(channelType);
 		if (transmissionChannel != nullptr)
@@ -205,7 +205,7 @@ namespace NetLib
 
 	void RemotePeer::FreeSentMessages()
 	{
-		for (unsigned int i = 0; i < GetNumberOfTransmissionChannels(); ++i)
+		for (uint32 i = 0; i < GetNumberOfTransmissionChannels(); ++i)
 		{
 			_transmissionChannels[i]->FreeSentMessages();
 		}
@@ -222,7 +222,7 @@ namespace NetLib
 
 	void RemotePeer::FreeProcessedMessages()
 	{
-		for (unsigned int i = 0; i < GetNumberOfTransmissionChannels(); ++i)
+		for (uint32 i = 0; i < GetNumberOfTransmissionChannels(); ++i)
 		{
 			_transmissionChannels[i]->FreeProcessedMessages();
 		}
@@ -250,9 +250,9 @@ namespace NetLib
 		return areUnsentACKs;
 	}
 
-	uint32_t RemotePeer::GenerateACKs(TransmissionChannelType channelType) const
+	uint32 RemotePeer::GenerateACKs(TransmissionChannelType channelType) const
 	{
-		uint32_t acks = 0;
+		uint32 acks = 0;
 
 		const TransmissionChannel* transmissionChannel = GetTransmissionChannelFromType(channelType);
 		if (transmissionChannel != nullptr)
@@ -263,7 +263,7 @@ namespace NetLib
 		return acks;
 	}
 
-	void RemotePeer::ProcessACKs(uint32_t acks, uint16_t lastAckedMessageSequenceNumber, TransmissionChannelType channelType)
+	void RemotePeer::ProcessACKs(uint32 acks, uint16 lastAckedMessageSequenceNumber, TransmissionChannelType channelType)
 	{
 		TransmissionChannel* transmissionChannel = GetTransmissionChannelFromType(channelType);
 		if (transmissionChannel != nullptr)
@@ -294,7 +294,7 @@ namespace NetLib
 	{
 		bool areReadyToProcessMessages = false;
 
-		for (unsigned int i = 0; i < GetNumberOfTransmissionChannels(); ++i)
+		for (uint32 i = 0; i < GetNumberOfTransmissionChannels(); ++i)
 		{
 			if (_transmissionChannels[i]->ArePendingReadyToProcessMessages())
 			{
@@ -310,7 +310,7 @@ namespace NetLib
 	{
 		const Message* message = nullptr;
 
-		for (unsigned int i = 0; i < GetNumberOfTransmissionChannels(); ++i)
+		for (uint32 i = 0; i < GetNumberOfTransmissionChannels(); ++i)
 		{
 			if (_transmissionChannels[i]->ArePendingReadyToProcessMessages())
 			{
@@ -328,7 +328,7 @@ namespace NetLib
 		channelTypes.reserve(GetNumberOfTransmissionChannels());
 
 		std::vector<TransmissionChannel*>::const_iterator cit = _transmissionChannels.cbegin();
-		for (unsigned int i = 0; i < GetNumberOfTransmissionChannels(); ++i)
+		for (uint32 i = 0; i < GetNumberOfTransmissionChannels(); ++i)
 		{
 			channelTypes.push_back((*(cit + i))->GetType());
 		}
@@ -336,19 +336,19 @@ namespace NetLib
 		return channelTypes;
 	}
 
-	unsigned int RemotePeer::GetNumberOfTransmissionChannels() const
+	uint32 RemotePeer::GetNumberOfTransmissionChannels() const
 	{
 		return _transmissionChannels.size();
 	}
 
-	unsigned int RemotePeer::GetRTTMilliseconds() const
+	uint32 RemotePeer::GetRTTMilliseconds() const
 	{
-		unsigned int rtt = 0;
-		unsigned int numberOfTransmissionChannels = 0;
+		uint32 rtt = 0;
+		uint32 numberOfTransmissionChannels = 0;
 
-		for (unsigned int i = 0; i < numberOfTransmissionChannels; ++i)
+		for (uint32 i = 0; i < numberOfTransmissionChannels; ++i)
 		{
-			unsigned int transmissionChannelRTT = _transmissionChannels[i]->GetRTTMilliseconds();
+			uint32 transmissionChannelRTT = _transmissionChannels[i]->GetRTTMilliseconds();
 			if (transmissionChannelRTT > 0)
 			{
 				rtt += transmissionChannelRTT;
@@ -367,7 +367,7 @@ namespace NetLib
 	void RemotePeer::Disconnect()
 	{
 		//Reset transmission channels
-		for (unsigned int i = 0; i < GetNumberOfTransmissionChannels(); ++i)
+		for (uint32 i = 0; i < GetNumberOfTransmissionChannels(); ++i)
 		{
 			_transmissionChannels[i]->Reset();
 		}

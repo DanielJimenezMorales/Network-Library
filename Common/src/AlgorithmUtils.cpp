@@ -4,11 +4,11 @@
 
 namespace Common
 {
-    uint16_t AlgorithmUtils::ExponentialMovingAverage(uint16_t previousValue, uint16_t currentValue, unsigned int alfa)
+    uint16 AlgorithmUtils::ExponentialMovingAverage(uint16 previousValue, uint16 currentValue, uint32 alfa)
     {
         assert(alfa <= 100);
 
-        uint16_t emaValue = (((100 - alfa) * previousValue) + (alfa * currentValue)) / 100;
+        uint16 emaValue = (((100 - alfa) * previousValue) + (alfa * currentValue)) / 100;
         return emaValue;
     }
 }

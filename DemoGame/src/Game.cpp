@@ -13,10 +13,10 @@ bool Game::Init()
 	LOG_INFO("Server: 0");
 	LOG_INFO("Client: 1");
 
-	int clientOrServer;
+	int32 clientOrServer;
 	std::cin >> clientOrServer;
 
-	int result = InitSDL();
+	int32 result = InitSDL();
 	if (result != 0)
 	{
 		LOG_ERROR("Error while initializing SDL. Error code: %s", SDL_GetError());
@@ -65,7 +65,7 @@ bool Game::Init()
 void Game::GameLoop()
 {
 	NetLib::TimeClock& timeClock = NetLib::TimeClock::GetInstance();
-	double accumulator = 0.0;
+	float64 accumulator = 0.0;
 
 	while (_isRunning)
 	{
@@ -108,22 +108,22 @@ void Game::HandleEvents()
 	_inputHandler.PostHandleEvents();
 }
 
-void Game::PreTick(float tickElapsedTime)
+void Game::PreTick(float32 tickElapsedTime)
 {
 	_activeScene.PreTick(tickElapsedTime);
 }
 
-void Game::Tick(float tickElapsedTime)
+void Game::Tick(float32 tickElapsedTime)
 {
 	_activeScene.Tick(tickElapsedTime);
 }
 
-void Game::PosTick(float tickElapsedTime)
+void Game::PosTick(float32 tickElapsedTime)
 {
 	_activeScene.PosTick(tickElapsedTime);
 }
 
-void Game::Update(float elapsedTime)
+void Game::Update(float32 elapsedTime)
 {
 	_activeScene.Update(elapsedTime);
 }
@@ -152,12 +152,12 @@ bool Game::Release()
 	return true;
 }
 
-int Game::InitSDL()
+int32 Game::InitSDL()
 {
 	return SDL_Init(SDL_INIT_EVERYTHING);
 }
 
-int Game::CreateWindowAndRenderer()
+int32 Game::CreateWindowAndRenderer()
 {
 	return SDL_CreateWindowAndRenderer(512, 512, SDL_WINDOW_SHOWN, &_window, &_renderer);
 }
