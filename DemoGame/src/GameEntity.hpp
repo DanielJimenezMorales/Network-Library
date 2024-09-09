@@ -28,6 +28,7 @@ public:
 	bool operator==(const GameEntity& other) { return _ecsEntityId == other._ecsEntityId && _entityContainer == other._entityContainer; }
 	bool operator!=(const GameEntity& other) { return !(*this == other); }
 
+	//TODO Change this for uint32 from numeric types
 	uint32_t GetId() const { return static_cast<uint32_t>(_ecsEntityId); }
 
 	bool IsValid() const { return _entityContainer != nullptr; };

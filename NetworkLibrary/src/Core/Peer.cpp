@@ -84,7 +84,7 @@ namespace NetLib
 
 	void Peer::RegisterNetworkEntityFactory(INetworkEntityFactory* entityFactory)
 	{
-		_replicationManager.RegisterNetworkEntityFactory(entityFactory);
+		_networkEntityFactoryRegistry.RegisterNetworkEntityFactory(entityFactory);
 	}
 
 	void Peer::UnsubscribeToOnRemotePeerDisconnect(uint32 id)
@@ -115,7 +115,8 @@ namespace NetLib
 		_onLocalPeerDisconnect(),
 		_isStopRequested(false),
 		_stopRequestShouldNotifyRemotePeers(false),
-		_stopRequestReason(ConnectionFailedReasonType::CFR_UNKNOWN)
+		_stopRequestReason(ConnectionFailedReasonType::CFR_UNKNOWN),
+		_networkEntityFactoryRegistry()
 	{
 		_receiveBuffer = new uint8[_receiveBufferSize];
 		_sendBuffer = new uint8[_sendBufferSize];

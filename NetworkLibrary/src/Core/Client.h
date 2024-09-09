@@ -7,6 +7,7 @@
 
 #include "Peer.h"
 #include "Address.h"
+#include "ReplicationMessagesProcessor.h"
 
 namespace NetLib
 {
@@ -84,5 +85,7 @@ namespace NetLib
 		float32 _timeSinceLastTimeRequest;
 		uint32 _numberOfInitialTimeRequestBurstLeft;
 		std::list<uint32> _timeRequestRTTs;
+
+		ReplicationMessagesProcessor _replicationMessagesProcessor;
 	};
 }
