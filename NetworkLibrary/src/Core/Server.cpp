@@ -9,12 +9,14 @@
 #include "TimeClock.h"
 #include "IInputState.h"
 #include "IInputStateFactory.h"
+#include "ReplicationManager.h"
 
 #define SERVER_PORT 54000
 
 namespace NetLib
 {
-	Server::Server(int32 maxConnections) : Peer(PeerType::ServerMode, maxConnections, 1024, 1024), _remotePeerInputsHandler()
+	Server::Server(int32 maxConnections) : Peer(PeerType::ServerMode, maxConnections, 1024, 1024), _remotePeerInputsHandler(),
+		_replicationManager(&_networkEntityFactoryRegistry)
 	{
 
 	}

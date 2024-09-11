@@ -16,7 +16,7 @@ namespace NetLib
 		inGameMessageID(0),
 		_timeSinceLastTimeRequest(0.0f),
 		_numberOfInitialTimeRequestBurstLeft(NUMBER_OF_INITIAL_TIME_REQUESTS_BURST),
-		_currentState(ClientState::CS_Disconnected)
+		_currentState(ClientState::CS_Disconnected), _replicationMessagesProcessor(&_networkEntityFactoryRegistry)
 	{
 	}
 
@@ -314,7 +314,7 @@ namespace NetLib
 
 	void Client::ProcessReplicationAction(const ReplicationMessage& message)
 	{
-		_replicationManager.Client_ProcessReceivedReplicationMessage(message);
+		_replicationMessagesProcessor.Client_ProcessReceivedReplicationMessage(message);
 	}
 
 	void Client::CreateConnectionRequestMessage(RemotePeer& remotePeer)

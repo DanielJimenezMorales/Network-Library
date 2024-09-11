@@ -4,6 +4,7 @@
 
 #include "Peer.h"
 #include "RemotePeerInputsHandler.h"
+#include "ReplicationManager.h"
 
 namespace NetLib
 {
@@ -72,5 +73,7 @@ namespace NetLib
 
 		RemotePeerInputsHandler _remotePeerInputsHandler;
 		IInputStateFactory* _inputsFactory;
+
+		ReplicationManager _replicationManager;
 	};
 }

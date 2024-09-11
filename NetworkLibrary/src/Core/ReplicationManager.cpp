@@ -4,6 +4,8 @@
 #include "Logger.h"
 #include "MessageFactory.h"
 #include "INetworkEntityFactory.h"
+#include "ReplicationActionType.h"
+#include "NetworkEntityFactoryRegistry.h"
 
 namespace NetLib
 {
@@ -19,7 +21,7 @@ namespace NetLib
 
 		//Set specific replication message data
 		std::unique_ptr<ReplicationMessage> replicationMessage(static_cast<ReplicationMessage*>(message.release()));
-		replicationMessage->replicationAction = ReplicationActionType::RAT_CREATE;
+		replicationMessage->replicationAction = static_cast<uint8>(ReplicationActionType::CREATE);
 		replicationMessage->networkEntityId = networkEntityId;
 		replicationMessage->controlledByPeerId = controlledByPeerId;
 		replicationMessage->replicatedClassId = entityType;
@@ -42,7 +44,7 @@ namespace NetLib
 
 		//Set specific replication message data
 		std::unique_ptr<ReplicationMessage> replicationMessage(static_cast<ReplicationMessage*>(message.release()));
-		replicationMessage->replicationAction = ReplicationActionType::RAT_UPDATE;
+		replicationMessage->replicationAction = static_cast<uint8>(ReplicationActionType::UPDATE);
 		replicationMessage->networkEntityId = networkEntityId;
 		replicationMessage->controlledByPeerId = controlledByPeerId;
 		replicationMessage->dataSize = buffer.GetSize();
@@ -63,7 +65,7 @@ namespace NetLib
 
 		//Set specific replication message data
 		std::unique_ptr<ReplicationMessage> replicationMessage(static_cast<ReplicationMessage*>(message.release()));
-		replicationMessage->replicationAction = ReplicationActionType::RAT_DESTROY;
+		replicationMessage->replicationAction = static_cast<uint8>(ReplicationActionType::DESTROY);
 		replicationMessage->networkEntityId = networkEntityId;
 
 		return std::move(replicationMessage);
@@ -83,7 +85,7 @@ namespace NetLib
 		LOG_INFO("DATA SIZE: %hu", replicationMessage.dataSize);
 		float32 posX = buffer.ReadFloat();
 		float32 posY = buffer.ReadFloat();
-		int32 gameEntity = _networkEntityFactory->CreateNetworkEntityObject(replicationMessage.replicatedClassId, networkEntityId, replicationMessage.controlledByPeerId, posX, posY, &_networkVariableChangesHandler);
+		int32 gameEntity = _networkEntityFactoryRegistry->CreateNetworkEntity(replicationMessage.replicatedClassId, networkEntityId, replicationMessage.controlledByPeerId, posX, posY, &_networkVariableChangesHandler);
 		assert(gameEntity != -1);
 
 		//Add it to the network entities storage in order to avoid loosing it
@@ -98,7 +100,7 @@ namespace NetLib
 			LOG_INFO("Replication: Trying to update a network entity that doesn't exist. Entity ID: %u. Creating a new entity...", networkEntityId);
 
 			//If not found create a new one and update it
-			int32 gameEntity = _networkEntityFactory->CreateNetworkEntityObject(replicationMessage.replicatedClassId, networkEntityId, replicationMessage.controlledByPeerId, 0.f, 0.f, &_networkVariableChangesHandler);
+			int32 gameEntity = _networkEntityFactoryRegistry->CreateNetworkEntity(replicationMessage.replicatedClassId, networkEntityId, replicationMessage.controlledByPeerId, 0.f, 0.f, &_networkVariableChangesHandler);
 			assert(gameEntity != -1);
 
 			//Add it to the network entities storage in order to avoid loosing it
@@ -117,15 +119,10 @@ namespace NetLib
 		RemoveNetworkEntity(networkEntityId);
 	}
 
-	void ReplicationManager::RegisterNetworkEntityFactory(INetworkEntityFactory* entityFactory)
-	{
-		_networkEntityFactory = entityFactory;
-	}
-
 	uint32 ReplicationManager::CreateNetworkEntity(uint32 entityType, uint32 controlledByPeerId, float32 posX, float32 posY)
 	{
 		//Create object through its custom factory
-		int32 gameEntityId = _networkEntityFactory->CreateNetworkEntityObject(entityType, _nextNetworkEntityId, controlledByPeerId, posX, posY, &_networkVariableChangesHandler);
+		int32 gameEntityId = _networkEntityFactoryRegistry->CreateNetworkEntity(entityType, _nextNetworkEntityId, controlledByPeerId, posX, posY, &_networkVariableChangesHandler);
 		assert(gameEntityId != -1);
 
 		//Add it to the network entities storage in order to avoid loosing it
@@ -158,7 +155,7 @@ namespace NetLib
 		}
 
 		//Destroy object through its custom factory
-		_networkEntityFactory->DestroyNetworkEntityObject(gameEntity.inGameId);
+		_networkEntityFactoryRegistry->RemoveNetworkEntity(gameEntity.inGameId);
 
 		std::unique_ptr<ReplicationMessage> destroyMessage = CreateDestroyReplicationMessage(networkEntityId);
 
@@ -168,12 +165,12 @@ namespace NetLib
 
 	void ReplicationManager::Server_ReplicateWorldState()
 	{
+		//Get all Network variable changes
 		_networkVariableChangesHandler.CollectAllChanges();
 
 		auto cit = _networkEntitiesStorage.GetNetworkEntities();
 		auto citPastToEnd = _networkEntitiesStorage.GetPastToEndNetworkEntities();
 
-		MessageFactory& messageFactory = MessageFactory::GetInstance();
 		while (cit != citPastToEnd)
 		{
 			const NetworkEntityData networkEntityData = cit->second;
@@ -215,13 +212,13 @@ namespace NetLib
 		ReplicationActionType type = static_cast<ReplicationActionType>(replicationMessage.replicationAction);
 		switch (type)
 		{
-		case ReplicationActionType::RAT_CREATE:
+		case ReplicationActionType::CREATE:
 			ProcessReceivedCreateReplicationMessage(replicationMessage);
 			break;
-		case ReplicationActionType::RAT_UPDATE:
+		case ReplicationActionType::UPDATE:
 			ProcessReceivedUpdateReplicationMessage(replicationMessage);
 			break;
-		case ReplicationActionType::RAT_DESTROY:
+		case ReplicationActionType::DESTROY:
 			ProcessReceivedDestroyReplicationMessage(replicationMessage);
 			break;
 		default:

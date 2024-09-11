@@ -8,7 +8,7 @@
 #include "TransmissionChannel.h"
 #include "Delegate.h"
 #include "RemotePeersHandler.h"
-#include "ReplicationManager.h"
+#include "NetworkEntityFactoryRegistry.h"
 
 class Buffer;
 
@@ -17,6 +17,7 @@ namespace NetLib
 	class Message;
 	class NetworkPacket;
 	class RemotePeer;
+	class Buffer;
 	class NetworkEntityFactory;
 
 	enum ConnectionFailedReasonType : uint8
@@ -104,7 +105,8 @@ namespace NetLib
 		void ExecuteOnLocalPeerDisconnect(ConnectionFailedReasonType reason);
 
 		RemotePeersHandler _remotePeersHandler;
-		ReplicationManager _replicationManager;
+
+		NetworkEntityFactoryRegistry _networkEntityFactoryRegistry;
 
 	private:
 		void ProcessReceivedData();

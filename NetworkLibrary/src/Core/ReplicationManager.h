@@ -12,24 +12,15 @@
 
 namespace NetLib
 {
-	class INetworkEntityFactory;
+	class NetworkEntityFactoryRegistry;
 
 	static constexpr uint32 INVALID_NETWORK_ENTITY_ID = 0;
-
-	//TODO Convert this to enum class
-	enum ReplicationActionType : uint8
-	{
-		RAT_CREATE = 0,
-		RAT_UPDATE = 1,
-		RAT_DESTROY = 2
-	};
 
 	class ReplicationManager
 	{
 	public:
-		ReplicationManager() : _nextNetworkEntityId(1), _networkEntityFactory(nullptr) {}
+		ReplicationManager(NetworkEntityFactoryRegistry* networkEntityFactoryRegistry) : _nextNetworkEntityId(1), _networkEntityFactoryRegistry(networkEntityFactoryRegistry) {}
 
-		void RegisterNetworkEntityFactory(INetworkEntityFactory* entityFactory);
 		uint32 CreateNetworkEntity(uint32 entityType, uint32 controlledByPeerId, float32 posX, float32 posY);
 		void RemoveNetworkEntity(uint32 networkEntityId);
 
@@ -59,8 +50,7 @@ namespace NetLib
 
 		uint32 _nextNetworkEntityId;
 
-		//TODO Support multiple network entity factories depending on the entity_type
-		INetworkEntityFactory* _networkEntityFactory;
+		NetworkEntityFactoryRegistry* _networkEntityFactoryRegistry;
 		NetworkVariableChangesHandler _networkVariableChangesHandler;
 	};
 }
