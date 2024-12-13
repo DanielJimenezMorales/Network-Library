@@ -4,7 +4,7 @@
 #include "Logger.h"
 #include "MessageFactory.h"
 #include "INetworkEntityFactory.h"
-#include "ReplicationActionType.h"
+#include "replication/ReplicationActionType.h"
 #include "NetworkEntityFactoryRegistry.h"
 
 namespace NetLib

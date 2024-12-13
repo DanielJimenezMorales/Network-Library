@@ -7,7 +7,7 @@
 
 #include "Peer.h"
 #include "Address.h"
-#include "ReplicationMessagesProcessor.h"
+#include "replication/ReplicationMessagesProcessor.h"
 
 namespace NetLib
 {

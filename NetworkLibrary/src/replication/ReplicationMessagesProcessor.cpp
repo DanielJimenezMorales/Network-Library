@@ -3,7 +3,7 @@
 #include "Buffer.h"
 #include "Logger.h"
 #include "NumericTypes.h"
-#include "ReplicationActionType.h"
+#include "replication/ReplicationActionType.h"
 #include "NetworkEntityFactoryRegistry.h"
 
 #include <cassert>

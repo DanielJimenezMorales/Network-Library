@@ -63,15 +63,14 @@ project "NetworkLibrary"
 
 	files
 	{
-		"%{prj.name}/src/Core/**.h",
-		"%{prj.name}/src/Core/**.cpp",
-		"%{prj.name}/src/Utils/**.h",
-		"%{prj.name}/src/Utils/**.cpp"
+		"%{prj.name}/src/**.h",
+		"%{prj.name}/src/**.cpp"
 	}
 
 	includedirs
 	{
 		"Common/src/",
+		"%{prj.name}/src/",
 		"%{prj.name}/src/Core/",
 		"%{prj.name}/src/Utils/"
 	}
@@ -124,6 +123,7 @@ project "DemoGame"
 	{
 		"Common/src/",
 		"NetworkLibrary/src/Core/",
+		"NetworkLibrary/src/",
 		"NetworkLibrary/src/Utils/",
 		"%{prj.name}/src/",
 
@@ -191,6 +191,7 @@ project "Tests"
 		"Common/src/",
 		"NetworkLibrary/src/Core/",
 		"NetworkLibrary/src/Utils/",
+		"NetworkLibrary/src/replication/",
 		"%{prj.name}/src/"
 	}
 

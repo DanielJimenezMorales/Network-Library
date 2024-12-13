@@ -9,7 +9,7 @@
 #include "TimeClock.h"
 #include "IInputState.h"
 #include "IInputStateFactory.h"
-#include "ReplicationManager.h"
+#include "replication/ReplicationManager.h"
 
 #define SERVER_PORT 54000
 
