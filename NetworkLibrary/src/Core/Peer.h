@@ -5,10 +5,12 @@
 
 #include "Address.h"
 #include "Socket.h"
-#include "transmission_channels/TransmissionChannel.h"
 #include "Delegate.h"
 #include "RemotePeersHandler.h"
-#include "NetworkEntityFactoryRegistry.h"
+
+#include "transmission_channels/TransmissionChannel.h"
+
+#include "replication/NetworkEntityFactoryRegistry.h"
 
 class Buffer;
 

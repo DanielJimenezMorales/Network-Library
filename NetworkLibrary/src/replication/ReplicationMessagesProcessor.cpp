@@ -3,8 +3,9 @@
 #include "Buffer.h"
 #include "Logger.h"
 #include "NumericTypes.h"
+
 #include "replication/ReplicationActionType.h"
-#include "NetworkEntityFactoryRegistry.h"
+#include "replication/NetworkEntityFactoryRegistry.h"
 
 #include <cassert>
 

@@ -5,10 +5,11 @@
 #include <memory>
 #include <functional>
 
-#include "NetworkEntityStorage.h"
 #include "Message.h"
 #include "Buffer.h"
 #include "NetworkVariableChangesHandler.h"
+
+#include "replication/NetworkEntityStorage.h"
 
 namespace NetLib
 {

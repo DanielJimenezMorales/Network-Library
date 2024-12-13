@@ -1,6 +1,7 @@
 #pragma once
-#include "NetworkEntityStorage.h"
 #include "NetworkVariableChangesHandler.h"
+
+#include "replication/NetworkEntityStorage.h"
 
 namespace NetLib
 {
