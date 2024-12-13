@@ -1,7 +1,7 @@
 #pragma once
 #include <memory>
 
-#include "TransmissionChannel.h"
+#include "transmission_channels/TransmissionChannel.h"
 #include "Message.h"
 
 namespace NetLib

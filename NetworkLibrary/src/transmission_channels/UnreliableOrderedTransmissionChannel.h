@@ -1,5 +1,5 @@
 #pragma once
-#include "TransmissionChannel.h"
+#include "transmission_channels/TransmissionChannel.h"
 
 #define UINT32_HALF 2147483647
 
