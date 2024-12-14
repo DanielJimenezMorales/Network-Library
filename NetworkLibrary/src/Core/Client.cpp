@@ -1,9 +1,11 @@
+#include "client.h"
+
 #include <memory>
 
-#include "Client.h"
 #include "Logger.h"
-#include "RemotePeer.h"
-#include "TimeClock.h"
+
+#include "core/remote_peer.h"
+#include "core/time_clock.h"
 
 #include "inputs/i_input_state.h"
 

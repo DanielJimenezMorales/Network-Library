@@ -2,7 +2,7 @@
 
 #include <vector>
 
-#include "Peer.h"
+#include "core/peer.h"
 
 #include "inputs/remote_peer_inputs_handler.h"
 

@@ -1,9 +1,10 @@
 #pragma once
 #include "NumericTypes.h"
+
 #include <vector>
 #include <unordered_map>
 
-#include "Buffer.h"
+#include "core/buffer.h"
 
 #include "replication/network_variable.hpp"
 

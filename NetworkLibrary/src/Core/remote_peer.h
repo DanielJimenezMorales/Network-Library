@@ -1,9 +1,10 @@
 #pragma once
-#include "NumericTypes.h"
 #include <map>
 #include <memory>
 
-#include "Address.h"
+#include "core/address.h"
+
+#include "NumericTypes.h"
 #include "Logger.h"
 
 #include "transmission_channels/transmission_channel.h"

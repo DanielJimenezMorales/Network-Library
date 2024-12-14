@@ -3,10 +3,11 @@
 #include <vector>
 #include <list>
 
-#include "Address.h"
-#include "Socket.h"
 #include "Delegate.h"
-#include "RemotePeersHandler.h"
+
+#include "core/address.h"
+#include "core/socket.h"
+#include "core/remote_peers_handler.h"
 
 #include "transmission_channels/transmission_channel.h"
 

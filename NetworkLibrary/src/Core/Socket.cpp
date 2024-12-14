@@ -1,5 +1,7 @@
-#include "Socket.h"
-#include "Address.h"
+#include "socket.h"
+
+#include "core/address.h"
+
 #include "Logger.h"
 
 namespace NetLib

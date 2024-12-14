@@ -1,9 +1,11 @@
+#include "server.h"
+
 #include <cassert>
 #include <memory>
 
-#include "Server.h"
 #include "Logger.h"
-#include "TimeClock.h"
+
+#include "core/time_clock.h"
 
 #include "inputs/i_input_state.h"
 #include "inputs/i_input_state_factory.h"

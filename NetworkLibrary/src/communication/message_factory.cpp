@@ -1,6 +1,7 @@
 #include "message_factory.h"
 
 #include <cassert>
+
 #include "Logger.h"
 
 namespace NetLib

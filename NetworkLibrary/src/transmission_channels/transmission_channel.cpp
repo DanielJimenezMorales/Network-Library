@@ -2,7 +2,7 @@
 
 #include <cassert>
 
-#include "MessageFactory.h"
+#include "communication/message_factory.h"
 
 namespace NetLib
 {

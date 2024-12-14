@@ -1,7 +1,8 @@
 #include "message_utils.h"
 
-#include "Buffer.h"
 #include "Logger.h"
+
+#include "core/buffer.h"
 
 #include "communication/message_factory.h"
 

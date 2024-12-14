@@ -1,6 +1,7 @@
 #include "replication_manager.h"
 
 #include <cassert>
+
 #include "Logger.h"
 
 #include "communication/message_factory.h"

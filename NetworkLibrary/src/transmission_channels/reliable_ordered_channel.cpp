@@ -2,11 +2,14 @@
 
 #include <memory>
 
-#include "Message.h"
-#include "BitwiseUtils.h"
+#include "communication/message.h"
+#include "communication/message_factory.h"
+
+#include "utils/bitwise_utils.h"
+
+#include "core/time_clock.h"
+
 #include "Logger.h"
-#include "MessageFactory.h"
-#include "TimeClock.h"
 #include "AlgorithmUtils.h"
 
 namespace NetLib

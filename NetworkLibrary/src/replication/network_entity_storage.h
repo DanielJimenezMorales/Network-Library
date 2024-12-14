@@ -1,5 +1,6 @@
 #pragma once
 #include "NumericTypes.h"
+
 #include <unordered_map>
 
 namespace NetLib

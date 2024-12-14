@@ -1,9 +1,11 @@
 #pragma once
 #include <cassert>
 #include <vector>
-#include "Peer.h"
-#include "Client.h"
-#include "Server.h"
+
+#include "core/peer.h"
+#include "core/client.h"
+#include "core/server.h"
+
 #include <queue>
 
 class INetworkEntityFactory;

@@ -70,9 +70,7 @@ project "NetworkLibrary"
 	includedirs
 	{
 		"Common/src/",
-		"%{prj.name}/src/",
-		"%{prj.name}/src/Core/",
-		"%{prj.name}/src/Utils/"
+		"%{prj.name}/src/"
 	}
 
 	dependson
@@ -122,9 +120,7 @@ project "DemoGame"
 	includedirs
 	{
 		"Common/src/",
-		"NetworkLibrary/src/Core/",
 		"NetworkLibrary/src/",
-		"NetworkLibrary/src/Utils/",
 		"%{prj.name}/src/",
 
 		"vendor/sdl2/SDL2-2.30.1/include/",

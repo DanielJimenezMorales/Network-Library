@@ -1,7 +1,7 @@
+#include "remote_peer.h"
+
 #include <cassert>
 #include <memory>
-
-#include "RemotePeer.h"
 
 #include "communication/message.h"
 

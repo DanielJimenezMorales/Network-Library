@@ -1,13 +1,16 @@
+#include "peer.h"
+
 #include <memory>
 #include <cassert>
 
-#include "Peer.h"
-#include "NetworkPacket.h"
-#include "Message.h"
+#include "communication/network_packet.h"
+#include "communication/message.h"
+#include "communication/message_factory.h"
+
 #include "Logger.h"
-#include "Buffer.h"
-#include "RemotePeer.h"
-#include "MessageFactory.h"
+
+#include "core/buffer.h"
+#include "core/remote_peer.h"
 
 namespace NetLib
 {

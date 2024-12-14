@@ -1,5 +1,6 @@
 #pragma once
 #include "NumericTypes.h"
+
 #include <queue>
 #include <vector>
 #include <memory>

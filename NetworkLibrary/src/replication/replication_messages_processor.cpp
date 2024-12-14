@@ -1,6 +1,7 @@
 #include "replication_messages_processor.h"
 
-#include "Buffer.h"
+#include "core/buffer.h"
+
 #include "Logger.h"
 #include "NumericTypes.h"
 

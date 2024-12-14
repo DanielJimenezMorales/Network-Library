@@ -1,11 +1,12 @@
 #pragma once
 #include "NumericTypes.h"
+
 #include <unordered_map>
 #include <queue>
 #include <memory>
 #include <functional>
 
-#include "Buffer.h"
+#include "core/buffer.h"
 
 #include "communication/message.h"
 

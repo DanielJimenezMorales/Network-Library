@@ -1,5 +1,6 @@
 #pragma once
 #include "NumericTypes.h"
+
 #include <cassert>
 
 namespace NetLib

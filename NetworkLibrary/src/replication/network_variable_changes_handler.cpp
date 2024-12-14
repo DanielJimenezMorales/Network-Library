@@ -1,6 +1,7 @@
 #include "network_variable_changes_handler.h"
 
 #include "Logger.h"
+
 #include <cassert>
 
 namespace NetLib

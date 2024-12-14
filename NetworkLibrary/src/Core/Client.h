@@ -5,8 +5,8 @@
 #define NOMINMAX
 #include <list>
 
-#include "Peer.h"
-#include "Address.h"
+#include "core/peer.h"
+#include "core/address.h"
 
 #include "replication/replication_messages_processor.h"
 

@@ -2,9 +2,10 @@
 #include <vector>
 #include <queue>
 #include <unordered_set>
+
 #include "NumericTypes.h"
 
-#include "RemotePeer.h"
+#include "core/remote_peer.h"
 
 namespace NetLib
 {

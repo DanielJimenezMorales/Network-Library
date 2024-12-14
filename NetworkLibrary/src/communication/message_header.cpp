@@ -1,7 +1,8 @@
 #include "message_header.h"
 
-#include "Buffer.h"
-#include "BitwiseUtils.h"
+#include "core/buffer.h"
+
+#include "utils/bitwise_utils.h"
 
 namespace NetLib
 {

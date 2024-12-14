@@ -1,6 +1,8 @@
-#include "Message.h"
-#include "Buffer.h"
+#include "message.h"
+
 #include "Logger.h"
+
+#include "core/buffer.h"
 
 namespace NetLib
 {

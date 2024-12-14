@@ -1,7 +1,7 @@
 #include "network_packet.h"
 #include <cassert>
 
-#include "Buffer.h"
+#include "core/buffer.h"
 
 #include "communication/message.h"
 #include "communication/message_utils.h"

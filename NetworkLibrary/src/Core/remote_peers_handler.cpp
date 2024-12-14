@@ -1,8 +1,9 @@
+#include "remote_peers_handler.h"
+
 #include <cassert>
 
-#include "RemotePeersHandler.h"
-#include "Address.h"
-#include "Peer.h"
+#include "core/address.h"
+#include "core/peer.h"
 
 namespace NetLib
 {
