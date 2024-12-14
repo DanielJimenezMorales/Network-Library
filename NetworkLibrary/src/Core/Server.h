@@ -3,7 +3,8 @@
 #include <vector>
 
 #include "Peer.h"
-#include "RemotePeerInputsHandler.h"
+
+#include "inputs/remote_peer_inputs_handler.h"
 
 #include "replication/replication_manager.h"
 

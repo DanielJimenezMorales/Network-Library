@@ -1,5 +1,5 @@
 #pragma once
-#include "IInputStateFactory.h"
+#include "inputs/i_input_state_factory.h"
 
 class InputStateFactory : public NetLib::IInputStateFactory
 {

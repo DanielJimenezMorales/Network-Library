@@ -1,6 +1,8 @@
-#include "RemotePeerInputsHandler.h"
-#include "IInputState.h"
+#include "remote_peer_inputs_handler.h"
+
 #include <cassert>
+
+#include "inputs/i_input_state.h"
 
 namespace NetLib
 {

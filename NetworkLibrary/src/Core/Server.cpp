@@ -4,8 +4,9 @@
 #include "Server.h"
 #include "Logger.h"
 #include "TimeClock.h"
-#include "IInputState.h"
-#include "IInputStateFactory.h"
+
+#include "inputs/i_input_state.h"
+#include "inputs/i_input_state_factory.h"
 
 #include "communication/message.h"
 #include "communication/message_factory.h"

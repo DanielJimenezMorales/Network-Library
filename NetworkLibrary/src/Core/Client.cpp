@@ -4,7 +4,8 @@
 #include "Logger.h"
 #include "RemotePeer.h"
 #include "TimeClock.h"
-#include "IInputState.h"
+
+#include "inputs/i_input_state.h"
 
 #include "communication/message.h"
 #include "communication/message_factory.h"
