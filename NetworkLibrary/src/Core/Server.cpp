@@ -3,12 +3,13 @@
 
 #include "Server.h"
 #include "Logger.h"
-#include "NetworkPacket.h"
-#include "Message.h"
-#include "MessageFactory.h"
 #include "TimeClock.h"
 #include "IInputState.h"
 #include "IInputStateFactory.h"
+
+#include "communication/message.h"
+#include "communication/message_factory.h"
+#include "communication/network_packet.h"
 
 #include "replication/replication_manager.h"
 

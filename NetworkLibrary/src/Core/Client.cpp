@@ -1,13 +1,14 @@
 #include <memory>
 
 #include "Client.h"
-#include "Message.h"
 #include "Logger.h"
-#include "NetworkPacket.h"
-#include "MessageFactory.h"
 #include "RemotePeer.h"
 #include "TimeClock.h"
 #include "IInputState.h"
+
+#include "communication/message.h"
+#include "communication/message_factory.h"
+#include "communication/network_packet.h"
 
 namespace NetLib
 {

@@ -1,7 +1,7 @@
 #pragma once
 #include <memory>
 
-#include "Message.h"
+#include "communication/message.h"
 
 #include "transmission_channels/transmission_channel.h"
 

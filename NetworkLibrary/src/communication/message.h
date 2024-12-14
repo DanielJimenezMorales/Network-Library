@@ -1,6 +1,7 @@
 #pragma once
 #include "NumericTypes.h"
-#include "MessageHeader.h"
+
+#include "communication/message_header.h"
 
 namespace NetLib
 {

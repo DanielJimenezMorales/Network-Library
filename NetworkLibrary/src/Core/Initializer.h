@@ -1,6 +1,7 @@
 #pragma once
 #include "TimeClock.h"
-#include "MessageFactory.h"
+
+#include "communication/message_factory.h"
 
 namespace NetLib
 {

@@ -2,7 +2,8 @@
 #include <memory>
 
 #include "RemotePeer.h"
-#include "Message.h"
+
+#include "communication/message.h"
 
 #include "transmission_channels/unreliable_ordered_transmission_channel.h"
 #include "transmission_channels/unreliable_unordered_transmission_channel.h"

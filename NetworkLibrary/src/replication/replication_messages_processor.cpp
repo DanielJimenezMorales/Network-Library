@@ -1,9 +1,10 @@
 #include "replication_messages_processor.h"
 
-#include "Message.h"
 #include "Buffer.h"
 #include "Logger.h"
 #include "NumericTypes.h"
+
+#include "communication/message.h"
 
 #include "replication/replication_action_type.h"
 #include "replication/network_entity_factory_registry.h"

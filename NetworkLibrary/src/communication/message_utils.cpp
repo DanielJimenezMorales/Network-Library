@@ -1,7 +1,9 @@
-#include "MessageUtils.h"
-#include "MessageFactory.h"
+#include "message_utils.h"
+
 #include "Buffer.h"
 #include "Logger.h"
+
+#include "communication/message_factory.h"
 
 namespace NetLib
 {

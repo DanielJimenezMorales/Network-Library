@@ -1,10 +1,11 @@
+#include "network_packet.h"
 #include <cassert>
 
-#include "NetworkPacket.h"
 #include "Buffer.h"
-#include "Message.h"
-#include "MessageUtils.h"
-#include "MessageFactory.h"
+
+#include "communication/message.h"
+#include "communication/message_utils.h"
+#include "communication/message_factory.h"
 
 namespace NetLib
 {

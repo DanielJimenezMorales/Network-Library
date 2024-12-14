@@ -5,8 +5,9 @@
 #include <memory>
 #include <functional>
 
-#include "Message.h"
 #include "Buffer.h"
+
+#include "communication/message.h"
 
 #include "replication/network_variable_changes_handler.h"
 #include "replication/network_entity_storage.h"

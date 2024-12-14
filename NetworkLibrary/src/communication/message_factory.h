@@ -3,7 +3,7 @@
 #include <unordered_map>
 #include <memory>
 
-#include "Message.h"
+#include "communication/message.h"
 
 namespace NetLib
 {

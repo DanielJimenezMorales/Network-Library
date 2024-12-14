@@ -2,7 +2,8 @@
 
 #include <cassert>
 #include "Logger.h"
-#include "MessageFactory.h"
+
+#include "communication/message_factory.h"
 
 #include "replication/i_network_entity_factory.h"
 #include "replication/replication_action_type.h"

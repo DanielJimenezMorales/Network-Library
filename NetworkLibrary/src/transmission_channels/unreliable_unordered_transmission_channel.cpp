@@ -1,5 +1,6 @@
 #include "unreliable_unordered_transmission_channel.h"
-#include "MessageFactory.h"
+
+#include "communication/message_factory.h"
 
 namespace NetLib
 {
