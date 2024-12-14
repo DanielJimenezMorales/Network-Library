@@ -10,7 +10,7 @@
 
 #include "transmission_channels/transmission_channel.h"
 
-#include "replication/NetworkEntityFactoryRegistry.h"
+#include "replication/network_entity_factory_registry.h"
 
 class Buffer;
 

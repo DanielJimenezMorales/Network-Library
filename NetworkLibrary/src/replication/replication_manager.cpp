@@ -1,12 +1,12 @@
-#include "ReplicationManager.h"
+#include "replication_manager.h"
 
 #include <cassert>
 #include "Logger.h"
 #include "MessageFactory.h"
-#include "INetworkEntityFactory.h"
 
-#include "replication/ReplicationActionType.h"
-#include "replication/NetworkEntityFactoryRegistry.h"
+#include "replication/i_network_entity_factory.h"
+#include "replication/replication_action_type.h"
+#include "replication/network_entity_factory_registry.h"
 
 namespace NetLib
 {

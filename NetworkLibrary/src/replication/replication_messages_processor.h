@@ -1,7 +1,7 @@
 #pragma once
 #include "NetworkVariableChangesHandler.h"
 
-#include "replication/NetworkEntityStorage.h"
+#include "replication/network_entity_storage.h"
 
 namespace NetLib
 {

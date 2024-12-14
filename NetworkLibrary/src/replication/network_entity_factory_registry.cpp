@@ -1,5 +1,6 @@
-#include "NetworkEntityFactoryRegistry.h"
-#include "INetworkEntityFactory.h"
+#include "network_entity_factory_registry.h"
+
+#include "replication/i_network_entity_factory.h"
 
 #include <cassert>
 

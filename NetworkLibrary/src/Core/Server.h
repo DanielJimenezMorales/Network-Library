@@ -4,7 +4,8 @@
 
 #include "Peer.h"
 #include "RemotePeerInputsHandler.h"
-#include "replication/ReplicationManager.h"
+
+#include "replication/replication_manager.h"
 
 namespace NetLib
 {

@@ -1,11 +1,12 @@
-#include "ReplicationMessagesProcessor.h"
+#include "replication_messages_processor.h"
+
 #include "Message.h"
 #include "Buffer.h"
 #include "Logger.h"
 #include "NumericTypes.h"
 
-#include "replication/ReplicationActionType.h"
-#include "replication/NetworkEntityFactoryRegistry.h"
+#include "replication/replication_action_type.h"
+#include "replication/network_entity_factory_registry.h"
 
 #include <cassert>
 

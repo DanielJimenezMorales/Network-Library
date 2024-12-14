@@ -1,5 +1,6 @@
+#include "network_entity_storage.h"
+
 #include <cassert>
-#include "NetworkEntityStorage.h"
 
 namespace NetLib
 {
