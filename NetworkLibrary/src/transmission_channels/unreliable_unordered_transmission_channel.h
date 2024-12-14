@@ -1,19 +1,23 @@
 #pragma once
-#include "transmission_channels/TransmissionChannel.h"
+#include <memory>
 
-#define UINT32_HALF 2147483647
+#include "Message.h"
+
+#include "transmission_channels/transmission_channel.h"
 
 namespace NetLib
 {
-	class UnreliableOrderedTransmissionChannel : public TransmissionChannel
+	class MessageFactory;
+
+	class UnreliableUnorderedTransmissionChannel : public TransmissionChannel
 	{
 	public:
-		UnreliableOrderedTransmissionChannel();
-		UnreliableOrderedTransmissionChannel(const UnreliableOrderedTransmissionChannel&) = delete;
-		UnreliableOrderedTransmissionChannel(UnreliableOrderedTransmissionChannel&& other) noexcept;
+		UnreliableUnorderedTransmissionChannel();
+		UnreliableUnorderedTransmissionChannel(const UnreliableUnorderedTransmissionChannel&) = delete;
+		UnreliableUnorderedTransmissionChannel(UnreliableUnorderedTransmissionChannel&& other) noexcept;
 
-		UnreliableOrderedTransmissionChannel& operator=(const UnreliableOrderedTransmissionChannel&) = delete;
-		UnreliableOrderedTransmissionChannel& operator=(UnreliableOrderedTransmissionChannel&& other) noexcept;
+		UnreliableUnorderedTransmissionChannel& operator=(const UnreliableUnorderedTransmissionChannel&) = delete;
+		UnreliableUnorderedTransmissionChannel& operator=(UnreliableUnorderedTransmissionChannel&& other) noexcept;
 
 		void AddMessageToSend(std::unique_ptr<Message> message) override;
 		bool ArePendingMessagesToSend() const override;
@@ -33,19 +37,13 @@ namespace NetLib
 		void Update(float32 deltaTime) override;
 
 		uint16 GetLastMessageSequenceNumberAcked() const override;
-
 		uint32 GetRTTMilliseconds() const override;
 
-		void Reset() override;
-
-		~UnreliableOrderedTransmissionChannel();
+		~UnreliableUnorderedTransmissionChannel();
 
 	protected:
 		void FreeSentMessage(MessageFactory& messageFactory, std::unique_ptr<Message> message) override;
 
 	private:
-		uint32 _lastMessageSequenceNumberReceived;
-
-		bool IsSequenceNumberNewerThanLastReceived(uint32 sequenceNumber) const;
 	};
 }

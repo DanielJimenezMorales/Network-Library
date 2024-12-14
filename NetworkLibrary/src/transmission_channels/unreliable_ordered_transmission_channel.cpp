@@ -1,6 +1,6 @@
 #include <memory>
 
-#include "UnreliableOrderedTransmissionChannel.h"
+#include "unreliable_ordered_transmission_channel.h"
 #include "MessageFactory.h"
 
 namespace NetLib

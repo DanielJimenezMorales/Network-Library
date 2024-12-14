@@ -4,8 +4,9 @@
 #include <memory>
 
 #include "Address.h"
-#include "transmission_channels/TransmissionChannel.h"
 #include "Logger.h"
+
+#include "transmission_channels/transmission_channel.h"
 
 namespace NetLib
 {

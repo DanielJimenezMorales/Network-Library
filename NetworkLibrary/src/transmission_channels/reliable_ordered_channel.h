@@ -2,7 +2,7 @@
 #include <list>
 #include <unordered_map>
 
-#include "transmission_channels/TransmissionChannel.h"
+#include "transmission_channels/transmission_channel.h"
 
 namespace NetLib
 {

@@ -3,9 +3,10 @@
 
 #include "RemotePeer.h"
 #include "Message.h"
-#include "transmission_channels/UnreliableOrderedTransmissionChannel.h"
-#include "transmission_channels/UnreliableUnorderedTransmissionChannel.h"
-#include "transmission_channels/ReliableOrderedChannel.h"
+
+#include "transmission_channels/unreliable_ordered_transmission_channel.h"
+#include "transmission_channels/unreliable_unordered_transmission_channel.h"
+#include "transmission_channels/reliable_ordered_channel.h"
 
 namespace NetLib
 {

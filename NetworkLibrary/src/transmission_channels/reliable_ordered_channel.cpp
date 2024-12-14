@@ -1,6 +1,7 @@
+#include "reliable_ordered_channel.h"
+
 #include <memory>
 
-#include "ReliableOrderedChannel.h"
 #include "Message.h"
 #include "BitwiseUtils.h"
 #include "Logger.h"

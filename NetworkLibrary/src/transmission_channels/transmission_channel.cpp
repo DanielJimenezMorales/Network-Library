@@ -1,6 +1,7 @@
+#include "transmission_channel.h"
+
 #include <cassert>
 
-#include "TransmissionChannel.h"
 #include "MessageFactory.h"
 
 namespace NetLib

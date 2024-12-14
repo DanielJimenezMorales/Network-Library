@@ -8,7 +8,7 @@
 #include "Delegate.h"
 #include "RemotePeersHandler.h"
 
-#include "transmission_channels/TransmissionChannel.h"
+#include "transmission_channels/transmission_channel.h"
 
 #include "replication/NetworkEntityFactoryRegistry.h"
 
