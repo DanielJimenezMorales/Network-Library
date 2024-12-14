@@ -1,5 +1,5 @@
 #pragma once
-#include "Peer.h"
+#include "core/peer.h"
 
 class Scene;
 class InputHandler;

@@ -1,6 +1,6 @@
 #include "NetworkSystem.h"
-#include "Client.h"
-#include "Server.h"
+#include "core/client.h"
+#include "core/server.h"
 #include "Logger.h"
 #include "EntityContainer.h"
 #include "GameEntity.hpp"

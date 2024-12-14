@@ -1,5 +1,5 @@
 #pragma once
-#include "Peer.h"
+#include "core/peer.h"
 
 #include "replication/i_network_entity_factory.h"
 

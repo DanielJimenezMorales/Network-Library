@@ -9,7 +9,7 @@
 #include "PlayerControllerComponent.h"
 #include "RemotePlayerControllerComponent.h"
 #include "NetworkPeerComponent.h"
-#include "Client.h"
+#include "core/client.h"
 #include "NetworkEntityComponent.h"
 #include "CircleBounds2D.h"
 
