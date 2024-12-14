@@ -4,7 +4,8 @@
 #include <unordered_map>
 
 #include "Buffer.h"
-#include "NetworkVariable.h"
+
+#include "replication/network_variable.hpp"
 
 namespace NetLib
 {

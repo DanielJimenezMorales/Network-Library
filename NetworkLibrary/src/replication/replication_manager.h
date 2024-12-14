@@ -7,8 +7,8 @@
 
 #include "Message.h"
 #include "Buffer.h"
-#include "NetworkVariableChangesHandler.h"
 
+#include "replication/network_variable_changes_handler.h"
 #include "replication/network_entity_storage.h"
 
 namespace NetLib
