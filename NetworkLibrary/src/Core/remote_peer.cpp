@@ -62,18 +62,19 @@ namespace NetLib
 	    , _inactivityTimeLeft( 0 )
 	    , _nextPacketSequenceNumber( 0 )
 	    , _currentState( RemotePeerState::Disconnected )
+	    , _transmissionChannels()
 	{
 		InitTransmissionChannels();
 	}
 
-	RemotePeer::RemotePeer( const sockaddr_in& addressInfo, uint16 id, float32 maxInactivityTime, uint64 clientSalt,
+	RemotePeer::RemotePeer( const Address& address, uint16 id, float32 maxInactivityTime, uint64 clientSalt,
 	                        uint64 serverSalt )
 	    : _address( Address::GetInvalid() )
 	    , _nextPacketSequenceNumber( 0 )
 	    , _currentState( RemotePeerState::Disconnected )
 	{
 		InitTransmissionChannels();
-		Connect( addressInfo, id, maxInactivityTime, clientSalt, serverSalt );
+		Connect( address, id, maxInactivityTime, clientSalt, serverSalt );
 	}
 
 	RemotePeer::~RemotePeer()
@@ -103,10 +104,10 @@ namespace NetLib
 		return lastMessageSequenceNumberAcked;
 	}
 
-	void RemotePeer::Connect( const sockaddr_in& addressInfo, uint16 id, float32 maxInactivityTime, uint64 clientSalt,
+	void RemotePeer::Connect( const Address& address, uint16 id, float32 maxInactivityTime, uint64 clientSalt,
 	                          uint64 serverSalt )
 	{
-		_address = Address( addressInfo );
+		_address = address;
 		_id = id;
 		_maxInactivityTime = maxInactivityTime;
 		_inactivityTimeLeft = _maxInactivityTime;

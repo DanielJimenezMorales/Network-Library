@@ -75,7 +75,10 @@ namespace NetLib
 			return SocketResult::SOKT_ERR;
 		}
 
-		if ( bind( _listenSocket, ( sockaddr* ) &address.GetInfo(), sizeof( address.GetInfo() ) ) == SOCKET_ERROR )
+		const sockaddr_in& s = address.GetSockAddr();
+		// If address port is 0 this function will pick up a random port number
+		if ( bind( _listenSocket, ( sockaddr* ) &address.GetSockAddr(), sizeof( address.GetSockAddr() ) ) ==
+		     SOCKET_ERROR )
 		{
 			LOG_ERROR( "Socket error. Error while binding the listen socket. Error code %d", GetLastError() );
 			return SocketResult::SOKT_ERR;
@@ -137,7 +140,7 @@ namespace NetLib
 		return SocketResult::SOKT_SUCCESS;
 	}
 
-	SocketResult Socket::ReceiveFrom( uint8* incomingDataBuffer, uint32 incomingDataBufferSize, Address* remoteAddress,
+	SocketResult Socket::ReceiveFrom( uint8* incomingDataBuffer, uint32 incomingDataBufferSize, Address& remoteAddress,
 	                                  uint32& numberOfBytesRead ) const
 	{
 		if ( incomingDataBuffer == nullptr || !IsValid() )
@@ -151,7 +154,6 @@ namespace NetLib
 
 		int32 bytesIn = recvfrom( _listenSocket, ( char* ) incomingDataBuffer, incomingDataBufferSize, 0,
 		                          ( sockaddr* ) &incomingAddress, &incomingAddressSize );
-		*remoteAddress = Address( incomingAddress );
 
 		if ( bytesIn == SOCKET_ERROR )
 		{
@@ -178,9 +180,11 @@ namespace NetLib
 			}
 		}
 
+		remoteAddress.SetFromSockAddr(incomingAddress);
+
 		numberOfBytesRead = bytesIn;
 
-		LOG_INFO( "Socket info. Data received from %s:%hu", remoteAddress->GetIP().c_str(), remoteAddress->GetPort() );
+		LOG_INFO( "Socket info. Data received from %s:%hu", remoteAddress.GetIP().c_str(), remoteAddress.GetPort() );
 
 		return SocketResult::SOKT_SUCCESS;
 	}
@@ -200,10 +204,8 @@ namespace NetLib
 			             dataBufferSize, _defaultMTUSize );
 		}
 
-		int32 addressSize = sizeof( remoteAddress.GetInfo() );
-
 		int32 bytesSent = sendto( _listenSocket, ( char* ) dataBuffer, dataBufferSize, 0,
-		                          ( sockaddr* ) &remoteAddress.GetInfo(), addressSize );
+		                          ( sockaddr* ) &remoteAddress.GetSockAddr(), sizeof( remoteAddress.GetSockAddr() ) );
 		if ( bytesSent == SOCKET_ERROR )
 		{
 			LOG_ERROR( "Socket error. Error while sending data. Error code %d", GetLastError() );

@@ -44,7 +44,7 @@ namespace NetLib
 
 		public:
 			RemotePeer();
-			RemotePeer( const sockaddr_in& addressInfo, uint16 id, float32 maxInactivityTime, uint64 clientSalt,
+			RemotePeer( const Address& address, uint16 id, float32 maxInactivityTime, uint64 clientSalt,
 			            uint64 serverSalt );
 			RemotePeer( const RemotePeer& ) = delete;
 			RemotePeer( RemotePeer&& other ) = default; // This must be here since Peer.h has a std::vector<RemotePeer>
@@ -64,7 +64,7 @@ namespace NetLib
 			/// <param name="maxInactivityTime">Maximum number of seconds without receiving information from this client
 			/// to consider it "Inactive"</param> <param name="dataPrefix">Client's data encryption prefix generated
 			/// during the connection pipeline</param>
-			void Connect( const sockaddr_in& addressInfo, uint16 id, float32 maxInactivityTime, uint64 clientSalt,
+			void Connect( const Address& address, uint16 id, float32 maxInactivityTime, uint64 clientSalt,
 			              uint64 serverSalt );
 
 			void SetConnected() { _currentState = RemotePeerState::Connected; }

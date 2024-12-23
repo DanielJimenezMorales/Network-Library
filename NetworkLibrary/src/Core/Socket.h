@@ -23,7 +23,7 @@ namespace NetLib
 
 			SocketResult Start();
 			SocketResult Bind( const Address& address ) const;
-			SocketResult ReceiveFrom( uint8* incomingDataBuffer, uint32 incomingDataBufferSize, Address* remoteAddress,
+			SocketResult ReceiveFrom( uint8* incomingDataBuffer, uint32 incomingDataBufferSize, Address& remoteAddress,
 			                          uint32& numberOfBytesRead ) const;
 			SocketResult SendTo( const uint8* dataBuffer, uint32 dataBufferSize, const Address& remoteAddress ) const;
 			SocketResult Close();

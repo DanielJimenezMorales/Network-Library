@@ -236,7 +236,7 @@ namespace NetLib
 		do
 		{
 			SocketResult result =
-			    _socket.ReceiveFrom( _receiveBuffer, _receiveBufferSize, &remoteAddress, numberOfBytesRead );
+			    _socket.ReceiveFrom( _receiveBuffer, _receiveBufferSize, remoteAddress, numberOfBytesRead );
 
 			if ( result == SocketResult::SOKT_SUCCESS )
 			{

@@ -23,6 +23,7 @@ namespace NetLib
 	    , _numberOfInitialTimeRequestBurstLeft( NUMBER_OF_INITIAL_TIME_REQUESTS_BURST )
 	    , _currentState( ClientState::CS_Disconnected )
 	    , _replicationMessagesProcessor( &_networkEntityFactoryRegistry )
+	    , _clientIndex( 0 )
 	{
 	}
 
@@ -70,23 +71,7 @@ namespace NetLib
 
 	bool Client::StartConcrete()
 	{
-		sockaddr_in addressInfo;
-		addressInfo.sin_family = AF_INET;
-		addressInfo.sin_port = 0; // This is zero so the system picks up a random port number
-
-		char ip[] = "127.0.0.1";
-		int32 iResult = inet_pton( addressInfo.sin_family, ip, &addressInfo.sin_addr );
-		if ( iResult == -1 )
-		{
-			LOG_ERROR( "Error at converting IP string into address. Error code: %d", WSAGetLastError() );
-		}
-		else if ( iResult == 0 )
-		{
-			LOG_ERROR( "The IP string: %s is not valid", ip );
-		}
-
-		Address address = Address( addressInfo );
-		BindSocket( address );
+		BindSocket( Address( "127.0.0.1", 0 ) ); // Port is zero so the system picks up a random port number
 
 		_currentState = ClientState::CS_SendingConnectionRequest;
 

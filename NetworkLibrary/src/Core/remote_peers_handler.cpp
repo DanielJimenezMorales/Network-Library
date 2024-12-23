@@ -50,8 +50,7 @@ namespace NetLib
 		}
 
 		_remotePeerSlots[ slotIndex ] = true;
-		_remotePeers[ slotIndex ].Connect( addressInfo.GetInfo(), id, REMOTE_PEER_INACTIVITY_TIME, clientSalt,
-		                                   serverSalt );
+		_remotePeers[ slotIndex ].Connect( addressInfo, id, REMOTE_PEER_INACTIVITY_TIME, clientSalt, serverSalt );
 
 		auto it = _validRemotePeers.insert( &( _remotePeers[ slotIndex ] ) );
 		assert( it.second ); // If the element was already there it means that we are trying to add it again. ERROR!!
