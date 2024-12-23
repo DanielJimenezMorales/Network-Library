@@ -7,8 +7,7 @@
 namespace NetLib
 {
 	Socket::Socket()
-	    : _defaultMTUSize( 1500 )
-	    , _listenSocket( INVALID_SOCKET )
+	    : _listenSocket( INVALID_SOCKET )
 	{
 	}
 
@@ -184,7 +183,9 @@ namespace NetLib
 
 		numberOfBytesRead = bytesIn;
 
-		LOG_INFO( "Socket info. Data received from %s:%hu", remoteAddress.GetIP().c_str(), remoteAddress.GetPort() );
+		std::string ip_and_port;
+		remoteAddress.GetFull( ip_and_port );
+		LOG_INFO( "Socket info. Data received from %s", ip_and_port.c_str() );
 
 		return SocketResult::SOKT_SUCCESS;
 	}
@@ -196,12 +197,12 @@ namespace NetLib
 			return SocketResult::SOKT_ERR;
 		}
 
-		if ( dataBufferSize > _defaultMTUSize )
+		if ( dataBufferSize > MTU_SIZE_BYTES )
 		{
 			LOG_WARNING( "Socket warning. Trying to send a packet bigger than the MTU size theshold. This could result "
 			             "in Packet Fragmentation and as a consequence worse network conditions. Packet size: %u, MTU "
 			             "size threshold: %u",
-			             dataBufferSize, _defaultMTUSize );
+			             dataBufferSize, MTU_SIZE_BYTES );
 		}
 
 		const int32 bytesSent =
@@ -213,7 +214,9 @@ namespace NetLib
 			return SocketResult::SOKT_ERR;
 		}
 
-		LOG_INFO( "Socket info. Data sent to %s:%hu", remoteAddress.GetIP().c_str(), remoteAddress.GetPort() );
+		std::string ip_and_port;
+		remoteAddress.GetFull( ip_and_port );
+		LOG_INFO( "Socket info. Data sent to %s", ip_and_port.c_str() );
 
 		return SocketResult::SOKT_SUCCESS;
 	}

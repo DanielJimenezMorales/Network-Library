@@ -16,7 +16,7 @@
 namespace NetLib
 {
 	Client::Client( float32 serverMaxInactivityTimeout )
-	    : Peer( PeerType::ClientMode, 1, 1024, 1024 )
+	    : Peer( PeerType::CLIENT, 1, 1024, 1024 )
 	    , _serverAddress( "127.0.0.1", 54000 )
 	    , inGameMessageID( 0 )
 	    , _timeSinceLastTimeRequest( 0.0f )

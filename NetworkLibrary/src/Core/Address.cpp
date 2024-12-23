@@ -8,6 +8,32 @@ namespace NetLib
 	// getaddrinfo and create a DNS petition which takes wayyyy longer than using just a normal IP. If so, do it in a
 	// separate thread.
 
+	Address::Address( const std::string& ip, uint32 port )
+	    : _ip( ip )
+	    , _ipVersion( IPVersion::IPV4 )
+	    , _port( port )
+	    , _addressInfo()
+	{
+		InitSockAddr();
+	}
+
+	bool Address::operator==( const Address& other ) const
+	{
+		return _ip == other._ip && _port == other._port && _ipVersion == other._ipVersion;
+	}
+
+	bool Address::operator!=( const Address& other ) const
+	{
+		return !( *this == other );
+	}
+
+	void Address::GetFull( std::string& buffer ) const
+	{
+		buffer.append( _ip.c_str() );
+		buffer.append( ":" );
+		buffer.append( std::to_string( _port ) );
+	}
+
 	void Address::InitSockAddr()
 	{
 		_addressInfo.sin_family = ( _ipVersion == IPVersion::IPV4 ) ? AF_INET : AF_INET6;
@@ -38,26 +64,5 @@ namespace NetLib
 
 		_ipVersion = ( _addressInfo.sin_family == AF_INET ) ? IPVersion::IPV4 : IPVersion::IPV6;
 		_port = ntohs( _addressInfo.sin_port );
-	}
-
-	Address::Address( const std::string& ip, uint32 port )
-	    : _ip( ip )
-	    , _ipVersion( IPVersion::IPV4 )
-	    , _port( port )
-	    , _addressInfo()
-	{
-		InitSockAddr();
-	}
-
-	void Address::GetFull( std::string& buffer ) const
-	{
-		buffer.append( _ip.c_str() );
-		buffer.append( ":" );
-		buffer.append( std::to_string( _port ) );
-	}
-
-	bool Address::operator==( const Address& other ) const
-	{
-		return _ip == other._ip && _port == other._port && _ipVersion == other._ipVersion;
 	}
 } // namespace NetLib

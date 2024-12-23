@@ -6,6 +6,13 @@
 
 namespace NetLib
 {
+	Buffer::Buffer( uint8* data, int32 size )
+	    : _data( data )
+	    , _size( size )
+	{
+		_index = 0;
+	}
+
 	void Buffer::Clear()
 	{
 		_index = 0;

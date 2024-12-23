@@ -6,12 +6,8 @@ namespace NetLib
 	class Buffer
 	{
 		public:
-			Buffer( uint8* data, int32 size )
-			    : _data( data )
-			    , _size( size )
-			{
-				_index = 0;
-			}
+			Buffer( uint8* data, int32 size );
+			Buffer( const Buffer& ) = delete;
 
 			~Buffer() {}
 

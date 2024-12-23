@@ -21,7 +21,7 @@
 namespace NetLib
 {
 	Server::Server( int32 maxConnections )
-	    : Peer( PeerType::ServerMode, maxConnections, 1024, 1024 )
+	    : Peer( PeerType::SERVER, maxConnections, 1024, 1024 )
 	    , _remotePeerInputsHandler()
 	    , _replicationManager( &_networkEntityFactoryRegistry )
 	{
@@ -152,8 +152,10 @@ namespace NetLib
 
 	void Server::ProcessConnectionRequest( const ConnectionRequestMessage& message, const Address& address )
 	{
-		LOG_INFO( "Processing connection request from [IP: %s, Port: %hu] with salt number %d", address.GetIP().c_str(),
-		          ( int ) address.GetPort(), message.clientSalt );
+		std::string ip_and_port;
+		address.GetFull( ip_and_port );
+		LOG_INFO( "Processing connection request from [%s] with salt number %d", ip_and_port.c_str(),
+		          message.clientSalt );
 
 		RemotePeersHandlerResult isAbleToConnectResult = _remotePeersHandler.IsRemotePeerAbleToConnect( address );
 
@@ -278,8 +280,9 @@ namespace NetLib
 	void Server::ProcessConnectionChallengeResponse( const ConnectionChallengeResponseMessage& message,
 	                                                 RemotePeer& remotePeer )
 	{
-		LOG_INFO( "Processing connection challenge response from [IP: %s , Port: %hu]", remotePeer.GetAddress().GetIP(),
-		          remotePeer.GetAddress().GetPort() );
+		std::string ip_and_port;
+		remotePeer.GetAddress().GetFull( ip_and_port );
+		LOG_INFO( "Processing connection challenge response from [%s]", ip_and_port.c_str() );
 
 		if ( remotePeer.GeturrentState() == RemotePeerState::Connected )
 		{

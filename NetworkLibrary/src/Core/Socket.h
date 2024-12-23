@@ -8,6 +8,8 @@ namespace NetLib
 {
 	class Address;
 
+	constexpr uint32 MTU_SIZE_BYTES = 1500;
+
 	enum SocketResult : uint8
 	{
 		SOKT_ERR = 0,
@@ -20,6 +22,8 @@ namespace NetLib
 	{
 		public:
 			Socket();
+			Socket( const Socket& other ) = default;
+			Socket( Socket&& other ) = default;
 
 			SocketResult Start();
 			SocketResult Bind( const Address& address ) const;
@@ -37,7 +41,6 @@ namespace NetLib
 			SocketResult SetBlockingMode( bool status );
 			SocketResult Create();
 
-			uint32 _defaultMTUSize;
 			SOCKET _listenSocket;
 	};
 } // namespace NetLib

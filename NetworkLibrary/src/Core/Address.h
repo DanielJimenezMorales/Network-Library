@@ -17,6 +17,20 @@ namespace NetLib
 
 	class Address
 	{
+		public:
+			static Address GetInvalid() { return Address( "0.0.0.0", 0 ); }
+
+			Address( const std::string& ip, uint32 port );
+
+			Address( const Address& other ) = default;
+
+			bool operator==( const Address& other ) const;
+			bool operator!=( const Address& other ) const;
+
+			uint32 GetPort() const { return _port; }
+			const std::string& GetIP() const { return _ip; }
+			void GetFull( std::string& buffer ) const;
+
 		private:
 			void InitSockAddr();
 			// This function is only called from socket class
@@ -28,21 +42,9 @@ namespace NetLib
 			IPVersion _ipVersion;
 			uint32 _port;
 
+			// Cache adress info into winsocks struct for better performance
 			struct sockaddr_in _addressInfo;
 
 			friend class Socket;
-
-		public:
-			static Address GetInvalid() { return Address( "0.0.0.0", 0 ); }
-
-			Address( const std::string& ip, uint32 port );
-
-			Address( const Address& other ) = default;
-
-			uint32 GetPort() const { return _port; }
-			std::string GetIP() const { return _ip; }
-			void GetFull( std::string& buffer ) const;
-
-			bool operator==( const Address& other ) const;
 	};
 } // namespace NetLib

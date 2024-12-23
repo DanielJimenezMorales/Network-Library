@@ -12,7 +12,7 @@ class NetworkVariableChangesHandler;
 class NetworkEntityFactory : public NetLib::INetworkEntityFactory
 {
 public:
-	NetworkEntityFactory() : NetLib::INetworkEntityFactory(), _scene(nullptr), _peerType(NetLib::PeerType::None) {}
+	NetworkEntityFactory() : NetLib::INetworkEntityFactory(), _scene(nullptr), _peerType(NetLib::PeerType::NONE) {}
 	~NetworkEntityFactory() {}
 
 	void SetScene(Scene* scene);

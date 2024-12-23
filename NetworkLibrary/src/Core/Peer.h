@@ -39,11 +39,11 @@ namespace NetLib
 			ConnectionFailedReasonType reason;
 	};
 
-	enum PeerType : uint8
+	enum class PeerType : uint8
 	{
-		None = 0,
-		ClientMode = 1,
-		ServerMode = 2
+		NONE = 0,
+		CLIENT = 1,
+		SERVER = 2
 	};
 
 	enum PeerConnectionState : uint8
@@ -151,9 +151,9 @@ namespace NetLib
 			Address _address;
 			Socket _socket;
 
-			uint32 _receiveBufferSize;
+			const uint32 _receiveBufferSize;
 			uint8* _receiveBuffer;
-			uint32 _sendBufferSize;
+			const uint32 _sendBufferSize;
 			uint8* _sendBuffer;
 
 			// Stop request
