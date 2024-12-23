@@ -69,11 +69,6 @@ namespace NetLib
 
 	bool Server::StartConcrete()
 	{
-		// sockaddr_in serverHint;
-		// serverHint.sin_addr.S_un.S_addr = ADDR_ANY;
-		// serverHint.sin_family = AF_INET;
-		// serverHint.sin_port = htons( SERVER_PORT ); // Convert from little to big endian
-		// Address address = Address( serverHint );
 		BindSocket( Address( IPV4_ANY, SERVER_PORT ) );
 		LOG_INFO( "Server started succesfully!" );
 

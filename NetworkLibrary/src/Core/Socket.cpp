@@ -45,7 +45,7 @@ namespace NetLib
 		}
 
 		unsigned long listenSocketBlockingMode = status ? 0 : 1;
-		int32 iResult = ioctlsocket( _listenSocket, FIONBIO, &listenSocketBlockingMode );
+		const int32 iResult = ioctlsocket( _listenSocket, FIONBIO, &listenSocketBlockingMode );
 		if ( iResult == SOCKET_ERROR )
 		{
 			LOG_ERROR( "Socket error. Error while setting blocking mode, to %lu. Error code %d",
@@ -75,10 +75,10 @@ namespace NetLib
 			return SocketResult::SOKT_ERR;
 		}
 
-		const sockaddr_in& s = address.GetSockAddr();
 		// If address port is 0 this function will pick up a random port number
-		if ( bind( _listenSocket, ( sockaddr* ) &address.GetSockAddr(), sizeof( address.GetSockAddr() ) ) ==
-		     SOCKET_ERROR )
+		const int32 iResult =
+		    bind( _listenSocket, ( sockaddr* ) &address.GetSockAddr(), sizeof( address.GetSockAddr() ) );
+		if ( iResult == SOCKET_ERROR )
 		{
 			LOG_ERROR( "Socket error. Error while binding the listen socket. Error code %d", GetLastError() );
 			return SocketResult::SOKT_ERR;
@@ -152,12 +152,12 @@ namespace NetLib
 		int32 incomingAddressSize = sizeof( incomingAddress );
 		ZeroMemory( &incomingAddress, incomingAddressSize );
 
-		int32 bytesIn = recvfrom( _listenSocket, ( char* ) incomingDataBuffer, incomingDataBufferSize, 0,
-		                          ( sockaddr* ) &incomingAddress, &incomingAddressSize );
+		const int32 bytesIn = recvfrom( _listenSocket, ( char* ) incomingDataBuffer, incomingDataBufferSize, 0,
+		                                ( sockaddr* ) &incomingAddress, &incomingAddressSize );
 
 		if ( bytesIn == SOCKET_ERROR )
 		{
-			int32 error = GetLastError();
+			const int32 error = GetLastError();
 
 			if ( error == WSAEMSGSIZE )
 			{
@@ -180,7 +180,7 @@ namespace NetLib
 			}
 		}
 
-		remoteAddress.SetFromSockAddr(incomingAddress);
+		remoteAddress.SetFromSockAddr( incomingAddress );
 
 		numberOfBytesRead = bytesIn;
 
@@ -204,8 +204,9 @@ namespace NetLib
 			             dataBufferSize, _defaultMTUSize );
 		}
 
-		int32 bytesSent = sendto( _listenSocket, ( char* ) dataBuffer, dataBufferSize, 0,
-		                          ( sockaddr* ) &remoteAddress.GetSockAddr(), sizeof( remoteAddress.GetSockAddr() ) );
+		const int32 bytesSent =
+		    sendto( _listenSocket, ( char* ) dataBuffer, dataBufferSize, 0, ( sockaddr* ) &remoteAddress.GetSockAddr(),
+		            sizeof( remoteAddress.GetSockAddr() ) );
 		if ( bytesSent == SOCKET_ERROR )
 		{
 			LOG_ERROR( "Socket error. Error while sending data. Error code %d", GetLastError() );
