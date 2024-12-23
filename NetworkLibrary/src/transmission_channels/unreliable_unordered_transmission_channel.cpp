@@ -4,50 +4,54 @@
 
 namespace NetLib
 {
-	UnreliableUnorderedTransmissionChannel::UnreliableUnorderedTransmissionChannel() : TransmissionChannel(TransmissionChannelType::UnreliableUnordered)
+	UnreliableUnorderedTransmissionChannel::UnreliableUnorderedTransmissionChannel()
+	    : TransmissionChannel( TransmissionChannelType::UnreliableUnordered )
 	{
 	}
 
-	UnreliableUnorderedTransmissionChannel::UnreliableUnorderedTransmissionChannel(UnreliableUnorderedTransmissionChannel&& other) noexcept :
-		TransmissionChannel(std::move(other))
+	UnreliableUnorderedTransmissionChannel::UnreliableUnorderedTransmissionChannel(
+	    UnreliableUnorderedTransmissionChannel&& other ) noexcept
+	    : TransmissionChannel( std::move( other ) )
 	{
 	}
 
-	UnreliableUnorderedTransmissionChannel& UnreliableUnorderedTransmissionChannel::operator=(UnreliableUnorderedTransmissionChannel&& other) noexcept
+	UnreliableUnorderedTransmissionChannel& UnreliableUnorderedTransmissionChannel::operator=(
+	    UnreliableUnorderedTransmissionChannel&& other ) noexcept
 	{
-		TransmissionChannel::operator=(std::move(other));
+		TransmissionChannel::operator=( std::move( other ) );
 		return *this;
 	}
 
-	void UnreliableUnorderedTransmissionChannel::AddMessageToSend(std::unique_ptr<Message> message)
+	void UnreliableUnorderedTransmissionChannel::AddMessageToSend( std::unique_ptr< Message > message )
 	{
-		_unsentMessages.push_back(std::move(message));
+		_unsentMessages.push_back( std::move( message ) );
 	}
 
 	bool UnreliableUnorderedTransmissionChannel::ArePendingMessagesToSend() const
 	{
-		return (!_unsentMessages.empty());
+		return ( !_unsentMessages.empty() );
 	}
 
-	std::unique_ptr<Message> UnreliableUnorderedTransmissionChannel::GetMessageToSend()
+	std::unique_ptr< Message > UnreliableUnorderedTransmissionChannel::GetMessageToSend()
 	{
-		if (!ArePendingMessagesToSend())
+		if ( !ArePendingMessagesToSend() )
 		{
 			return nullptr;
 		}
 
-		//TODO Check this. This is not a linked list so if you always get and delete the first element you could not have access to the rest in cse there are more
-		std::unique_ptr<Message> message(std::move(_unsentMessages[0]));
-		_unsentMessages.erase(_unsentMessages.begin());
+		// TODO Check this. This is not a linked list so if you always get and delete the first element you could not
+		// have access to the rest in cse there are more
+		std::unique_ptr< Message > message( std::move( _unsentMessages[ 0 ] ) );
+		_unsentMessages.erase( _unsentMessages.begin() );
 
-		message->SetHeaderPacketSequenceNumber(0);
+		message->SetHeaderPacketSequenceNumber( 0 );
 
-		return std::move(message);
+		return std::move( message );
 	}
 
 	uint32 UnreliableUnorderedTransmissionChannel::GetSizeOfNextUnsentMessage() const
 	{
-		if (!ArePendingMessagesToSend())
+		if ( !ArePendingMessagesToSend() )
 		{
 			return 0;
 		}
@@ -55,28 +59,28 @@ namespace NetLib
 		return _unsentMessages.front()->Size();
 	}
 
-	void UnreliableUnorderedTransmissionChannel::AddReceivedMessage(std::unique_ptr<Message> message)
+	void UnreliableUnorderedTransmissionChannel::AddReceivedMessage( std::unique_ptr< Message > message )
 	{
-		_readyToProcessMessages.push(std::move(message));
+		_readyToProcessMessages.push( std::move( message ) );
 	}
 
 	bool UnreliableUnorderedTransmissionChannel::ArePendingReadyToProcessMessages() const
 	{
-		return (!_readyToProcessMessages.empty());
+		return ( !_readyToProcessMessages.empty() );
 	}
 
 	const Message* UnreliableUnorderedTransmissionChannel::GetReadyToProcessMessage()
 	{
-		if (!ArePendingReadyToProcessMessages())
+		if ( !ArePendingReadyToProcessMessages() )
 		{
 			return nullptr;
 		}
 
-		std::unique_ptr<Message> message(std::move(_readyToProcessMessages.front()));
+		std::unique_ptr< Message > message( std::move( _readyToProcessMessages.front() ) );
 		_readyToProcessMessages.pop();
 
 		Message* messageToReturn = message.get();
-		_processedMessages.push(std::move(message));
+		_processedMessages.push( std::move( message ) );
 
 		return messageToReturn;
 	}
@@ -95,16 +99,16 @@ namespace NetLib
 		return 0;
 	}
 
-	void UnreliableUnorderedTransmissionChannel::ProcessACKs(uint32 acks, uint16 lastAckedMessageSequenceNumber)
+	void UnreliableUnorderedTransmissionChannel::ProcessACKs( uint32 acks, uint16 lastAckedMessageSequenceNumber )
 	{
 	}
 
-	bool UnreliableUnorderedTransmissionChannel::IsMessageDuplicated(uint16 messageSequenceNumber) const
+	bool UnreliableUnorderedTransmissionChannel::IsMessageDuplicated( uint16 messageSequenceNumber ) const
 	{
 		return false;
 	}
 
-	void UnreliableUnorderedTransmissionChannel::Update(float32 deltaTime)
+	void UnreliableUnorderedTransmissionChannel::Update( float32 deltaTime )
 	{
 	}
 
@@ -122,8 +126,9 @@ namespace NetLib
 	{
 	}
 
-	void UnreliableUnorderedTransmissionChannel::FreeSentMessage(MessageFactory& messageFactory, std::unique_ptr<Message> message)
+	void UnreliableUnorderedTransmissionChannel::FreeSentMessage( MessageFactory& messageFactory,
+	                                                              std::unique_ptr< Message > message )
 	{
-		messageFactory.ReleaseMessage(std::move(message));
+		messageFactory.ReleaseMessage( std::move( message ) );
 	}
-}
+} // namespace NetLib

@@ -6,15 +6,15 @@
 
 namespace NetLib
 {
-	void RemotePeerInputsBuffer::AddInputState(IInputState* input)
+	void RemotePeerInputsBuffer::AddInputState( IInputState* input )
 	{
-		assert(input != nullptr);
-		_inputsBuffered.push(input);
+		assert( input != nullptr );
+		_inputsBuffered.push( input );
 	}
 
 	IInputState* RemotePeerInputsBuffer::GetNextInputState()
 	{
-		assert(GetNumberOfInputsBuffered() > 0);
+		assert( GetNumberOfInputsBuffered() > 0 );
 
 		IInputState* inputToReturn = _inputsBuffered.front();
 		_inputsBuffered.pop();
@@ -26,29 +26,29 @@ namespace NetLib
 		return _inputsBuffered.size();
 	}
 
-	void RemotePeerInputsHandler::AddInputState(IInputState* input, uint32 remotePeerId)
+	void RemotePeerInputsHandler::AddInputState( IInputState* input, uint32 remotePeerId )
 	{
-		auto remotePeerFoundIt = _remotePeerIdToInputsBufferMap.find(remotePeerId);
-		if (remotePeerFoundIt != _remotePeerIdToInputsBufferMap.end())
+		auto remotePeerFoundIt = _remotePeerIdToInputsBufferMap.find( remotePeerId );
+		if ( remotePeerFoundIt != _remotePeerIdToInputsBufferMap.end() )
 		{
-			remotePeerFoundIt->second.AddInputState(input);
+			remotePeerFoundIt->second.AddInputState( input );
 		}
 		else
 		{
-			_remotePeerIdToInputsBufferMap[remotePeerId] = RemotePeerInputsBuffer();
-			_remotePeerIdToInputsBufferMap[remotePeerId].AddInputState(input);
+			_remotePeerIdToInputsBufferMap[ remotePeerId ] = RemotePeerInputsBuffer();
+			_remotePeerIdToInputsBufferMap[ remotePeerId ].AddInputState( input );
 		}
 	}
 
-	const IInputState* RemotePeerInputsHandler::GetNextInputFromRemotePeer(uint32 remotePeerId)
+	const IInputState* RemotePeerInputsHandler::GetNextInputFromRemotePeer( uint32 remotePeerId )
 	{
-		auto remotePeerFoundIt = _remotePeerIdToInputsBufferMap.find(remotePeerId);
-		if (remotePeerFoundIt == _remotePeerIdToInputsBufferMap.end())
+		auto remotePeerFoundIt = _remotePeerIdToInputsBufferMap.find( remotePeerId );
+		if ( remotePeerFoundIt == _remotePeerIdToInputsBufferMap.end() )
 		{
 			return nullptr;
 		}
 
-		if (remotePeerFoundIt->second.GetNumberOfInputsBuffered() == 0)
+		if ( remotePeerFoundIt->second.GetNumberOfInputsBuffered() == 0 )
 		{
 			return nullptr;
 		}
@@ -56,12 +56,12 @@ namespace NetLib
 		return remotePeerFoundIt->second.GetNextInputState();
 	}
 
-	void RemotePeerInputsHandler::RemoveRemotePeer(uint32 remotePeerId)
+	void RemotePeerInputsHandler::RemoveRemotePeer( uint32 remotePeerId )
 	{
-		auto remotePeerFoundIt = _remotePeerIdToInputsBufferMap.find(remotePeerId);
-		if (remotePeerFoundIt != _remotePeerIdToInputsBufferMap.end())
+		auto remotePeerFoundIt = _remotePeerIdToInputsBufferMap.find( remotePeerId );
+		if ( remotePeerFoundIt != _remotePeerIdToInputsBufferMap.end() )
 		{
-			_remotePeerIdToInputsBufferMap.erase(remotePeerId);
+			_remotePeerIdToInputsBufferMap.erase( remotePeerId );
 		}
 	}
-}
+} // namespace NetLib

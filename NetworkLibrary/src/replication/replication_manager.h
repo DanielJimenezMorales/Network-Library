@@ -21,39 +21,49 @@ namespace NetLib
 
 	class ReplicationManager
 	{
-	public:
-		ReplicationManager(NetworkEntityFactoryRegistry* networkEntityFactoryRegistry) : _nextNetworkEntityId(1), _networkEntityFactoryRegistry(networkEntityFactoryRegistry) {}
+		public:
+			ReplicationManager( NetworkEntityFactoryRegistry* networkEntityFactoryRegistry )
+			    : _nextNetworkEntityId( 1 )
+			    , _networkEntityFactoryRegistry( networkEntityFactoryRegistry )
+			{
+			}
 
-		uint32 CreateNetworkEntity(uint32 entityType, uint32 controlledByPeerId, float32 posX, float32 posY);
-		void RemoveNetworkEntity(uint32 networkEntityId);
+			uint32 CreateNetworkEntity( uint32 entityType, uint32 controlledByPeerId, float32 posX, float32 posY );
+			void RemoveNetworkEntity( uint32 networkEntityId );
 
-		void Server_ReplicateWorldState();
-		void Client_ProcessReceivedReplicationMessage(const ReplicationMessage& replicationMessage);
+			void Server_ReplicateWorldState();
+			void Client_ProcessReceivedReplicationMessage( const ReplicationMessage& replicationMessage );
 
-		bool ArePendingReplicationMessages() const;
-		const ReplicationMessage* GetPendingReplicationMessage();
+			bool ArePendingReplicationMessages() const;
+			const ReplicationMessage* GetPendingReplicationMessage();
 
-		void ClearSentReplicationMessages();
+			void ClearSentReplicationMessages();
 
-	private:
-		std::unique_ptr<ReplicationMessage> CreateCreateReplicationMessage(uint32 entityType, uint32 controlledByPeerId, uint32 networkEntityId, const Buffer& dataBuffer);
-		std::unique_ptr<ReplicationMessage> CreateUpdateReplicationMessage(uint32 entityType, uint32 networkEntityId, uint32 controlledByPeerId, const Buffer& buffer);
-		std::unique_ptr<ReplicationMessage> CreateDestroyReplicationMessage(uint32 networkEntityId);
+		private:
+			std::unique_ptr< ReplicationMessage > CreateCreateReplicationMessage( uint32 entityType,
+			                                                                      uint32 controlledByPeerId,
+			                                                                      uint32 networkEntityId,
+			                                                                      const Buffer& dataBuffer );
+			std::unique_ptr< ReplicationMessage > CreateUpdateReplicationMessage( uint32 entityType,
+			                                                                      uint32 networkEntityId,
+			                                                                      uint32 controlledByPeerId,
+			                                                                      const Buffer& buffer );
+			std::unique_ptr< ReplicationMessage > CreateDestroyReplicationMessage( uint32 networkEntityId );
 
-		void ProcessReceivedCreateReplicationMessage(const ReplicationMessage& replicationMessage);
-		void ProcessReceivedUpdateReplicationMessage(const ReplicationMessage& replicationMessage);
-		void ProcessReceivedDestroyReplicationMessage(const ReplicationMessage& replicationMessage);
+			void ProcessReceivedCreateReplicationMessage( const ReplicationMessage& replicationMessage );
+			void ProcessReceivedUpdateReplicationMessage( const ReplicationMessage& replicationMessage );
+			void ProcessReceivedDestroyReplicationMessage( const ReplicationMessage& replicationMessage );
 
-		void CalculateNextNetworkEntityId();
+			void CalculateNextNetworkEntityId();
 
-		NetworkEntityStorage _networkEntitiesStorage;
+			NetworkEntityStorage _networkEntitiesStorage;
 
-		std::queue<std::unique_ptr<ReplicationMessage>> _pendingReplicationActionMessages;
-		std::queue<std::unique_ptr<ReplicationMessage>> _sentReplicationMessages;
+			std::queue< std::unique_ptr< ReplicationMessage > > _pendingReplicationActionMessages;
+			std::queue< std::unique_ptr< ReplicationMessage > > _sentReplicationMessages;
 
-		uint32 _nextNetworkEntityId;
+			uint32 _nextNetworkEntityId;
 
-		NetworkEntityFactoryRegistry* _networkEntityFactoryRegistry;
-		NetworkVariableChangesHandler _networkVariableChangesHandler;
+			NetworkEntityFactoryRegistry* _networkEntityFactoryRegistry;
+			NetworkVariableChangesHandler _networkVariableChangesHandler;
 	};
-}
+} // namespace NetLib

@@ -20,44 +20,47 @@
 
 namespace NetLib
 {
-	Server::Server(int32 maxConnections) : Peer(PeerType::ServerMode, maxConnections, 1024, 1024), _remotePeerInputsHandler(),
-		_replicationManager(&_networkEntityFactoryRegistry)
+	Server::Server( int32 maxConnections )
+	    : Peer( PeerType::ServerMode, maxConnections, 1024, 1024 )
+	    , _remotePeerInputsHandler()
+	    , _replicationManager( &_networkEntityFactoryRegistry )
 	{
-
 	}
 
-	uint32 Server::CreateNetworkEntity(uint32 entityType, uint32 controlledByPeerId, float32 posX, float32 posY)
+	uint32 Server::CreateNetworkEntity( uint32 entityType, uint32 controlledByPeerId, float32 posX, float32 posY )
 	{
-		if (GetConnectionState() != PeerConnectionState::PCS_Connected)
+		if ( GetConnectionState() != PeerConnectionState::PCS_Connected )
 		{
-			LOG_WARNING("Can't create Network entity of type %d because the server is not connected.", static_cast<int>(entityType));
+			LOG_WARNING( "Can't create Network entity of type %d because the server is not connected.",
+			             static_cast< int >( entityType ) );
 			return 0;
 		}
 
-		return _replicationManager.CreateNetworkEntity(entityType, controlledByPeerId, posX, posY);
+		return _replicationManager.CreateNetworkEntity( entityType, controlledByPeerId, posX, posY );
 	}
 
-	void Server::DestroyNetworkEntity(uint32 entityId)
+	void Server::DestroyNetworkEntity( uint32 entityId )
 	{
-		if (GetConnectionState() != PeerConnectionState::PCS_Connected)
+		if ( GetConnectionState() != PeerConnectionState::PCS_Connected )
 		{
-			LOG_WARNING("Can't destroy Network entity with ID: %d because the server is not connected.", static_cast<int>(entityId));
+			LOG_WARNING( "Can't destroy Network entity with ID: %d because the server is not connected.",
+			             static_cast< int >( entityId ) );
 			return;
 		}
 
-		_replicationManager.RemoveNetworkEntity(entityId);
+		_replicationManager.RemoveNetworkEntity( entityId );
 	}
 
-	void Server::RegisterInputStateFactory(IInputStateFactory* factory)
+	void Server::RegisterInputStateFactory( IInputStateFactory* factory )
 	{
-		//TODO Create a method for releasing all the inputs consumed during the current tick
-		assert(factory != nullptr);
+		// TODO Create a method for releasing all the inputs consumed during the current tick
+		assert( factory != nullptr );
 		_inputsFactory = factory;
 	}
 
-	const IInputState* Server::GetInputFromRemotePeer(uint32 remotePeerId)
+	const IInputState* Server::GetInputFromRemotePeer( uint32 remotePeerId )
 	{
-		return _remotePeerInputsHandler.GetNextInputFromRemotePeer(remotePeerId);
+		return _remotePeerInputsHandler.GetNextInputFromRemotePeer( remotePeerId );
 	}
 
 	Server::~Server()
@@ -69,278 +72,300 @@ namespace NetLib
 		sockaddr_in serverHint;
 		serverHint.sin_addr.S_un.S_addr = ADDR_ANY;
 		serverHint.sin_family = AF_INET;
-		serverHint.sin_port = htons(SERVER_PORT); // Convert from little to big endian
-		Address address = Address(serverHint);
-		BindSocket(address);
-		LOG_INFO("Server started succesfully!");
+		serverHint.sin_port = htons( SERVER_PORT ); // Convert from little to big endian
+		Address address = Address( serverHint );
+		BindSocket( address );
+		LOG_INFO( "Server started succesfully!" );
 
 		ExecuteOnLocalPeerConnect();
 		return true;
 	}
 
-	void Server::TickConcrete(float32 elapsedTime)
+	void Server::TickConcrete( float32 elapsedTime )
 	{
 		TickReplication();
 	}
 
 	uint64 Server::GenerateServerSalt() const
 	{
-		//TODO Change this in order to get another random generator that generates 64bit numbers
-		srand(time(NULL) + 3589);
+		// TODO Change this in order to get another random generator that generates 64bit numbers
+		srand( time( NULL ) + 3589 );
 		uint64 serverSalt = rand();
 		return serverSalt;
 	}
 
-	void Server::ProcessMessageFromPeer(const Message& message, RemotePeer& remotePeer)
+	void Server::ProcessMessageFromPeer( const Message& message, RemotePeer& remotePeer )
 	{
 		MessageType messageType = message.GetHeader().type;
-		LOG_INFO("Me proceso type %d", static_cast<int>(messageType));
+		LOG_INFO( "Me proceso type %d", static_cast< int >( messageType ) );
 
-		switch (messageType)
+		switch ( messageType )
 		{
-		case MessageType::ConnectionRequest:
-		{
-			const ConnectionRequestMessage& connectionRequestMessage = static_cast<const ConnectionRequestMessage&>(message);
-			ProcessConnectionRequest(connectionRequestMessage, remotePeer.GetAddress());
-			break;
-		}
-		case MessageType::ConnectionChallengeResponse:
-		{
-			const ConnectionChallengeResponseMessage& connectionChallengeResponseMessage = static_cast<const ConnectionChallengeResponseMessage&>(message);
-			ProcessConnectionChallengeResponse(connectionChallengeResponseMessage, remotePeer);
-			break;
-		}
-		case MessageType::TimeRequest:
-		{
-			const TimeRequestMessage& timeRequestMessage = static_cast<const TimeRequestMessage&>(message);
-			ProcessTimeRequest(timeRequestMessage, remotePeer);
-			break;
-		}
-		case MessageType::Disconnection:
-		{
-			const DisconnectionMessage& disconnectionMessage = static_cast<const DisconnectionMessage&>(message);
-			ProcessDisconnection(disconnectionMessage, remotePeer);
-			break;
-		}
-		case MessageType::Inputs:
-		{
-			const InputStateMessage& inputsMessage = static_cast<const InputStateMessage&>(message);
-			ProcessInputs(inputsMessage, remotePeer);
-			break;
-		}
-		default:
-			LOG_WARNING("Invalid Message type, ignoring it...");
-			break;
+			case MessageType::ConnectionRequest:
+				{
+					const ConnectionRequestMessage& connectionRequestMessage =
+					    static_cast< const ConnectionRequestMessage& >( message );
+					ProcessConnectionRequest( connectionRequestMessage, remotePeer.GetAddress() );
+					break;
+				}
+			case MessageType::ConnectionChallengeResponse:
+				{
+					const ConnectionChallengeResponseMessage& connectionChallengeResponseMessage =
+					    static_cast< const ConnectionChallengeResponseMessage& >( message );
+					ProcessConnectionChallengeResponse( connectionChallengeResponseMessage, remotePeer );
+					break;
+				}
+			case MessageType::TimeRequest:
+				{
+					const TimeRequestMessage& timeRequestMessage = static_cast< const TimeRequestMessage& >( message );
+					ProcessTimeRequest( timeRequestMessage, remotePeer );
+					break;
+				}
+			case MessageType::Disconnection:
+				{
+					const DisconnectionMessage& disconnectionMessage =
+					    static_cast< const DisconnectionMessage& >( message );
+					ProcessDisconnection( disconnectionMessage, remotePeer );
+					break;
+				}
+			case MessageType::Inputs:
+				{
+					const InputStateMessage& inputsMessage = static_cast< const InputStateMessage& >( message );
+					ProcessInputs( inputsMessage, remotePeer );
+					break;
+				}
+			default:
+				LOG_WARNING( "Invalid Message type, ignoring it..." );
+				break;
 		}
 	}
 
-	void Server::ProcessMessageFromUnknownPeer(const Message& message, const Address& address)
+	void Server::ProcessMessageFromUnknownPeer( const Message& message, const Address& address )
 	{
-		if (message.GetHeader().type == MessageType::ConnectionRequest)
+		if ( message.GetHeader().type == MessageType::ConnectionRequest )
 		{
-			const ConnectionRequestMessage& connectionRequestMessage = static_cast<const ConnectionRequestMessage&>(message);
-			ProcessConnectionRequest(connectionRequestMessage, address);
+			const ConnectionRequestMessage& connectionRequestMessage =
+			    static_cast< const ConnectionRequestMessage& >( message );
+			ProcessConnectionRequest( connectionRequestMessage, address );
 		}
 		else
 		{
-			LOG_WARNING("Server only process Connection request messages from unknown peers. Any other type of message will be discarded.");
+			LOG_WARNING( "Server only process Connection request messages from unknown peers. Any other type of "
+			             "message will be discarded." );
 		}
 	}
 
-	void Server::ProcessConnectionRequest(const ConnectionRequestMessage& message, const Address& address)
+	void Server::ProcessConnectionRequest( const ConnectionRequestMessage& message, const Address& address )
 	{
-		LOG_INFO("Processing connection request from [IP: %s, Port: %hu] with salt number %d", address.GetIP().c_str(), (int)address.GetPort(), message.clientSalt);
+		LOG_INFO( "Processing connection request from [IP: %s, Port: %hu] with salt number %d", address.GetIP().c_str(),
+		          ( int ) address.GetPort(), message.clientSalt );
 
-		RemotePeersHandlerResult isAbleToConnectResult = _remotePeersHandler.IsRemotePeerAbleToConnect(address);
+		RemotePeersHandlerResult isAbleToConnectResult = _remotePeersHandler.IsRemotePeerAbleToConnect( address );
 
-		if (isAbleToConnectResult == RemotePeersHandlerResult::RPH_SUCCESS)//If there is green light keep with the connection pipeline.
+		if ( isAbleToConnectResult ==
+		     RemotePeersHandlerResult::RPH_SUCCESS ) // If there is green light keep with the connection pipeline.
 		{
 			uint64 clientSalt = message.clientSalt;
 			uint64 serverSalt = GenerateServerSalt();
-			AddRemotePeer(address, _nextAssignedRemotePeerID, clientSalt, serverSalt);
+			AddRemotePeer( address, _nextAssignedRemotePeerID, clientSalt, serverSalt );
 			++_nextAssignedRemotePeerID;
 
-			RemotePeer* remotePeer = _remotePeersHandler.GetRemotePeerFromAddress(address);
-			CreateConnectionChallengeMessage(*remotePeer);
+			RemotePeer* remotePeer = _remotePeersHandler.GetRemotePeerFromAddress( address );
+			CreateConnectionChallengeMessage( *remotePeer );
 		}
-		else if (isAbleToConnectResult == RemotePeersHandlerResult::RPH_ALREADYEXIST)//If the client is already connected just send a connection approved message
+		else if ( isAbleToConnectResult ==
+		          RemotePeersHandlerResult::RPH_ALREADYEXIST ) // If the client is already connected just send a
+		                                                       // connection approved message
 		{
-			RemotePeer* remotePeer = _remotePeersHandler.GetRemotePeerFromAddress(address);
+			RemotePeer* remotePeer = _remotePeersHandler.GetRemotePeerFromAddress( address );
 
 			RemotePeerState remotePeerState = remotePeer->GeturrentState();
-			if (remotePeerState == RemotePeerState::Connected)
+			if ( remotePeerState == RemotePeerState::Connected )
 			{
-				CreateConnectionApprovedMessage(*remotePeer);
-				LOG_INFO("The client is already connected, sending connection approved...");
+				CreateConnectionApprovedMessage( *remotePeer );
+				LOG_INFO( "The client is already connected, sending connection approved..." );
 			}
-			else if (remotePeerState == RemotePeerState::Connecting)
+			else if ( remotePeerState == RemotePeerState::Connecting )
 			{
-				CreateConnectionChallengeMessage(*remotePeer);
-				LOG_INFO("The client is already trying to connect, sending connection challenge...");
+				CreateConnectionChallengeMessage( *remotePeer );
+				LOG_INFO( "The client is already trying to connect, sending connection challenge..." );
 			}
 		}
-		else if (isAbleToConnectResult == RemotePeersHandlerResult::RPH_FULL)//If all the client slots are full deny the connection
+		else if ( isAbleToConnectResult ==
+		          RemotePeersHandlerResult::RPH_FULL ) // If all the client slots are full deny the connection
 		{
-			SendConnectionDeniedPacket(address, ConnectionFailedReasonType::CFR_SERVER_FULL);
-			LOG_WARNING("All available connection slots are full. Denying incoming connection...");
+			SendConnectionDeniedPacket( address, ConnectionFailedReasonType::CFR_SERVER_FULL );
+			LOG_WARNING( "All available connection slots are full. Denying incoming connection..." );
 		}
 	}
 
-	void Server::CreateDisconnectionMessage(RemotePeer& remotePeer)
+	void Server::CreateDisconnectionMessage( RemotePeer& remotePeer )
 	{
 		MessageFactory& messageFactory = MessageFactory::GetInstance();
 
-		std::unique_ptr<Message>message = messageFactory.LendMessage(MessageType::Disconnection);
-		if (message == nullptr)
+		std::unique_ptr< Message > message = messageFactory.LendMessage( MessageType::Disconnection );
+		if ( message == nullptr )
 		{
-			LOG_ERROR("Can't create new Disconnection Message because the MessageFactory has returned a null message");
+			LOG_ERROR(
+			    "Can't create new Disconnection Message because the MessageFactory has returned a null message" );
 			return;
 		}
 
-		std::unique_ptr<DisconnectionMessage> disconnectionMessage(static_cast<DisconnectionMessage*>(message.release()));
+		std::unique_ptr< DisconnectionMessage > disconnectionMessage(
+		    static_cast< DisconnectionMessage* >( message.release() ) );
 
 		disconnectionMessage->prefix = remotePeer.GetDataPrefix();
-		remotePeer.AddMessage(std::move(disconnectionMessage));
+		remotePeer.AddMessage( std::move( disconnectionMessage ) );
 
-		LOG_INFO("Disconnection message created.");
+		LOG_INFO( "Disconnection message created." );
 	}
 
-	void Server::CreateTimeResponseMessage(RemotePeer& remotePeer, const TimeRequestMessage& timeRequest)
+	void Server::CreateTimeResponseMessage( RemotePeer& remotePeer, const TimeRequestMessage& timeRequest )
 	{
 		MessageFactory& messageFactory = MessageFactory::GetInstance();
-		std::unique_ptr<Message> message(messageFactory.LendMessage(MessageType::TimeResponse));
+		std::unique_ptr< Message > message( messageFactory.LendMessage( MessageType::TimeResponse ) );
 
-		std::unique_ptr<TimeResponseMessage> timeResponseMessage(static_cast<TimeResponseMessage*>(message.release()));
-		timeResponseMessage->SetOrdered(true);
+		std::unique_ptr< TimeResponseMessage > timeResponseMessage(
+		    static_cast< TimeResponseMessage* >( message.release() ) );
+		timeResponseMessage->SetOrdered( true );
 		timeResponseMessage->remoteTime = timeRequest.remoteTime;
 
 		TimeClock& timeClock = TimeClock::GetInstance();
 		timeResponseMessage->serverTime = timeClock.GetLocalTimeMilliseconds();
 
-		//Find remote client
-		remotePeer.AddMessage(std::move(timeResponseMessage));
+		// Find remote client
+		remotePeer.AddMessage( std::move( timeResponseMessage ) );
 	}
 
-	void Server::CreateConnectionChallengeMessage(RemotePeer& remotePeer)
+	void Server::CreateConnectionChallengeMessage( RemotePeer& remotePeer )
 	{
 		MessageFactory& messageFactory = MessageFactory::GetInstance();
 
-		std::unique_ptr<Message> message = messageFactory.LendMessage(MessageType::ConnectionChallenge);
-		if (message == nullptr)
+		std::unique_ptr< Message > message = messageFactory.LendMessage( MessageType::ConnectionChallenge );
+		if ( message == nullptr )
 		{
-			LOG_ERROR("Can't create new Connection Challenge Message because the MessageFactory has returned a null message");
+			LOG_ERROR( "Can't create new Connection Challenge Message because the MessageFactory has returned a null "
+			           "message" );
 			return;
 		}
 
-		std::unique_ptr<ConnectionChallengeMessage> connectionChallengePacket(static_cast<ConnectionChallengeMessage*>(message.release()));
+		std::unique_ptr< ConnectionChallengeMessage > connectionChallengePacket(
+		    static_cast< ConnectionChallengeMessage* >( message.release() ) );
 		connectionChallengePacket->clientSalt = remotePeer.GetClientSalt();
 		connectionChallengePacket->serverSalt = remotePeer.GetServerSalt();
-		remotePeer.AddMessage(std::move(connectionChallengePacket));
+		remotePeer.AddMessage( std::move( connectionChallengePacket ) );
 
-		LOG_INFO("Connection challenge message created.");
+		LOG_INFO( "Connection challenge message created." );
 	}
 
-	void Server::SendConnectionDeniedPacket(const Address& address, ConnectionFailedReasonType reason) const
+	void Server::SendConnectionDeniedPacket( const Address& address, ConnectionFailedReasonType reason ) const
 	{
 		MessageFactory& messageFactory = MessageFactory::GetInstance();
 
-		std::unique_ptr<Message> message = messageFactory.LendMessage(MessageType::ConnectionDenied);
-		std::unique_ptr<ConnectionDeniedMessage> connectionDeniedMessage(static_cast<ConnectionDeniedMessage*>(message.release()));
+		std::unique_ptr< Message > message = messageFactory.LendMessage( MessageType::ConnectionDenied );
+		std::unique_ptr< ConnectionDeniedMessage > connectionDeniedMessage(
+		    static_cast< ConnectionDeniedMessage* >( message.release() ) );
 		connectionDeniedMessage->reason = reason;
 
 		NetworkPacket packet = NetworkPacket();
-		packet.AddMessage(std::move(connectionDeniedMessage));
+		packet.AddMessage( std::move( connectionDeniedMessage ) );
 
-		LOG_INFO("Sending connection denied...");
-		SendPacketToAddress(packet, address);
+		LOG_INFO( "Sending connection denied..." );
+		SendPacketToAddress( packet, address );
 
-		while (packet.GetNumberOfMessages() > 0)
+		while ( packet.GetNumberOfMessages() > 0 )
 		{
-			std::unique_ptr<Message> messageToReturn = packet.GetMessages();
-			messageFactory.ReleaseMessage(std::move(messageToReturn));
+			std::unique_ptr< Message > messageToReturn = packet.GetMessages();
+			messageFactory.ReleaseMessage( std::move( messageToReturn ) );
 		}
 	}
 
-	void Server::ProcessConnectionChallengeResponse(const ConnectionChallengeResponseMessage& message, RemotePeer& remotePeer)
+	void Server::ProcessConnectionChallengeResponse( const ConnectionChallengeResponseMessage& message,
+	                                                 RemotePeer& remotePeer )
 	{
-		LOG_INFO("Processing connection challenge response from [IP: %s , Port: %hu]", remotePeer.GetAddress().GetIP(), remotePeer.GetAddress().GetPort());
+		LOG_INFO( "Processing connection challenge response from [IP: %s , Port: %hu]", remotePeer.GetAddress().GetIP(),
+		          remotePeer.GetAddress().GetPort() );
 
-		if (remotePeer.GeturrentState() == RemotePeerState::Connected)
+		if ( remotePeer.GeturrentState() == RemotePeerState::Connected )
 		{
-			LOG_INFO("The remote peer is already connected. Sending connection approved...");
-			CreateConnectionApprovedMessage(remotePeer);
+			LOG_INFO( "The remote peer is already connected. Sending connection approved..." );
+			CreateConnectionApprovedMessage( remotePeer );
 			return;
 		}
 
 		uint64 dataPrefix = message.prefix;
 
-		if (remotePeer.GetDataPrefix() == dataPrefix)
+		if ( remotePeer.GetDataPrefix() == dataPrefix )
 		{
-			ConnectRemotePeer(remotePeer);
+			ConnectRemotePeer( remotePeer );
 
-			//Send connection approved packet
-			CreateConnectionApprovedMessage(remotePeer);
-			LOG_INFO("Connection approved");
+			// Send connection approved packet
+			CreateConnectionApprovedMessage( remotePeer );
+			LOG_INFO( "Connection approved" );
 		}
 		else
 		{
-			LOG_INFO("Connection denied due to not wrong data prefix");
-			SendConnectionDeniedPacket(remotePeer.GetAddress(), ConnectionFailedReasonType::CFR_UNKNOWN);
+			LOG_INFO( "Connection denied due to not wrong data prefix" );
+			SendConnectionDeniedPacket( remotePeer.GetAddress(), ConnectionFailedReasonType::CFR_UNKNOWN );
 
-			StartDisconnectingRemotePeer(remotePeer.GetClientIndex(), false, ConnectionFailedReasonType::CFR_UNKNOWN);
+			StartDisconnectingRemotePeer( remotePeer.GetClientIndex(), false, ConnectionFailedReasonType::CFR_UNKNOWN );
 		}
 	}
 
-	//TODO REFACTOR THIS METHOD
-	void Server::ProcessTimeRequest(const TimeRequestMessage& message, RemotePeer& remotePeer)
+	// TODO REFACTOR THIS METHOD
+	void Server::ProcessTimeRequest( const TimeRequestMessage& message, RemotePeer& remotePeer )
 	{
-		LOG_INFO("PROCESSING TIME REQUEST");
-		CreateTimeResponseMessage(remotePeer, message);
+		LOG_INFO( "PROCESSING TIME REQUEST" );
+		CreateTimeResponseMessage( remotePeer, message );
 	}
 
-	void Server::ProcessInputs(const InputStateMessage& message, RemotePeer& remotePeer)
+	void Server::ProcessInputs( const InputStateMessage& message, RemotePeer& remotePeer )
 	{
 		IInputState* inputState = _inputsFactory->Create();
-		assert(inputState != nullptr);
+		assert( inputState != nullptr );
 
-		Buffer buffer(message.data, message.dataSize);
-		inputState->Deserialize(buffer);
-		_remotePeerInputsHandler.AddInputState(inputState, remotePeer.GetClientIndex());
+		Buffer buffer( message.data, message.dataSize );
+		inputState->Deserialize( buffer );
+		_remotePeerInputsHandler.AddInputState( inputState, remotePeer.GetClientIndex() );
 	}
 
-	void Server::ProcessDisconnection(const DisconnectionMessage& message, RemotePeer& remotePeer)
+	void Server::ProcessDisconnection( const DisconnectionMessage& message, RemotePeer& remotePeer )
 	{
 		uint64 dataPrefix = message.prefix;
-		if (dataPrefix != remotePeer.GetDataPrefix())
+		if ( dataPrefix != remotePeer.GetDataPrefix() )
 		{
-			LOG_WARNING("Packet prefix does not match. Skipping message...");
+			LOG_WARNING( "Packet prefix does not match. Skipping message..." );
 			return;
 		}
 
-		LOG_INFO("Disconnection message received from remote peer with reason code equal to %hhu. Disconnecting remove peer...", message.reason);
+		LOG_INFO( "Disconnection message received from remote peer with reason code equal to %hhu. Disconnecting "
+		          "remove peer...",
+		          message.reason );
 
-		StartDisconnectingRemotePeer(remotePeer.GetClientIndex(), false, ConnectionFailedReasonType::CFR_UNKNOWN);
+		StartDisconnectingRemotePeer( remotePeer.GetClientIndex(), false, ConnectionFailedReasonType::CFR_UNKNOWN );
 	}
 
-	void Server::CreateConnectionApprovedMessage(RemotePeer& remotePeer)
+	void Server::CreateConnectionApprovedMessage( RemotePeer& remotePeer )
 	{
 		MessageFactory& messageFactory = MessageFactory::GetInstance();
-		std::unique_ptr<Message> message = messageFactory.LendMessage(MessageType::ConnectionAccepted);
-		if (message == nullptr)
+		std::unique_ptr< Message > message = messageFactory.LendMessage( MessageType::ConnectionAccepted );
+		if ( message == nullptr )
 		{
-			LOG_ERROR("Can't create new Connection Accepted Message because the MessageFactory has returned a null message");
+			LOG_ERROR(
+			    "Can't create new Connection Accepted Message because the MessageFactory has returned a null message" );
 			return;
 		}
 
-		std::unique_ptr<ConnectionAcceptedMessage> connectionAcceptedPacket(static_cast<ConnectionAcceptedMessage*>(message.release()));
+		std::unique_ptr< ConnectionAcceptedMessage > connectionAcceptedPacket(
+		    static_cast< ConnectionAcceptedMessage* >( message.release() ) );
 		connectionAcceptedPacket->prefix = remotePeer.GetDataPrefix();
 		connectionAcceptedPacket->clientIndexAssigned = remotePeer.GetClientIndex();
-		remotePeer.AddMessage(std::move(connectionAcceptedPacket));
+		remotePeer.AddMessage( std::move( connectionAcceptedPacket ) );
 	}
 
-	void Server::SendPacketToRemotePeer(const RemotePeer& remotePeer, const NetworkPacket& packet) const
+	void Server::SendPacketToRemotePeer( const RemotePeer& remotePeer, const NetworkPacket& packet ) const
 	{
-		SendPacketToAddress(packet, remotePeer.GetAddress());
+		SendPacketToAddress( packet, remotePeer.GetAddress() );
 	}
 
 	void Server::TickReplication()
@@ -349,35 +374,37 @@ namespace NetLib
 
 		MessageFactory& messageFactory = MessageFactory::GetInstance();
 
-		while (_replicationManager.ArePendingReplicationMessages())
+		while ( _replicationManager.ArePendingReplicationMessages() )
 		{
 			const ReplicationMessage* pendingReplicationMessage = _replicationManager.GetPendingReplicationMessage();
 
 			auto validRemotePeersIt = _remotePeersHandler.GetValidRemotePeersIterator();
 			auto pastTheEndIt = _remotePeersHandler.GetValidRemotePeersPastTheEndIterator();
 
-			for (; validRemotePeersIt != pastTheEndIt; ++validRemotePeersIt)
+			for ( ; validRemotePeersIt != pastTheEndIt; ++validRemotePeersIt )
 			{
-				std::unique_ptr<Message> message = messageFactory.LendMessage(MessageType::Replication);
-				std::unique_ptr<ReplicationMessage> replicationMessage(static_cast<ReplicationMessage*>(message.release()));
+				std::unique_ptr< Message > message = messageFactory.LendMessage( MessageType::Replication );
+				std::unique_ptr< ReplicationMessage > replicationMessage(
+				    static_cast< ReplicationMessage* >( message.release() ) );
 
-				//TODO Create an operator= or something like that to avoid this spaguetti code
-				replicationMessage->SetOrdered(pendingReplicationMessage->GetHeader().isOrdered);
-				replicationMessage->SetReliability(pendingReplicationMessage->GetHeader().isReliable);
+				// TODO Create an operator= or something like that to avoid this spaguetti code
+				replicationMessage->SetOrdered( pendingReplicationMessage->GetHeader().isOrdered );
+				replicationMessage->SetReliability( pendingReplicationMessage->GetHeader().isReliable );
 				replicationMessage->replicationAction = pendingReplicationMessage->replicationAction;
 				replicationMessage->networkEntityId = pendingReplicationMessage->networkEntityId;
 				replicationMessage->controlledByPeerId = pendingReplicationMessage->controlledByPeerId;
 				replicationMessage->replicatedClassId = pendingReplicationMessage->replicatedClassId;
 				replicationMessage->dataSize = pendingReplicationMessage->dataSize;
-				if (replicationMessage->dataSize > 0)
+				if ( replicationMessage->dataSize > 0 )
 				{
-					//TODO Figure out if I can improve this. So far, for large snapshot updates data this can become heavy and slow. Can I avoid the copy somehow?
-					uint8* data = new uint8[replicationMessage->dataSize];
-					std::memcpy(data, pendingReplicationMessage->data, replicationMessage->dataSize);
+					// TODO Figure out if I can improve this. So far, for large snapshot updates data this can become
+					// heavy and slow. Can I avoid the copy somehow?
+					uint8* data = new uint8[ replicationMessage->dataSize ];
+					std::memcpy( data, pendingReplicationMessage->data, replicationMessage->dataSize );
 					replicationMessage->data = data;
 				}
 
-				(*validRemotePeersIt)->AddMessage(std::move(replicationMessage));
+				( *validRemotePeersIt )->AddMessage( std::move( replicationMessage ) );
 			}
 		}
 
@@ -388,4 +415,4 @@ namespace NetLib
 	{
 		return true;
 	}
-}
+} // namespace NetLib

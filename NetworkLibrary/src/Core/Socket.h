@@ -18,25 +18,26 @@ namespace NetLib
 
 	class Socket
 	{
-	public:
-		Socket();
+		public:
+			Socket();
 
-		SocketResult Start();
-		SocketResult Bind(const Address& address) const;
-		SocketResult ReceiveFrom(uint8* incomingDataBuffer, uint32 incomingDataBufferSize, Address* remoteAddress, uint32& numberOfBytesRead) const;
-		SocketResult SendTo(const uint8* dataBuffer, uint32 dataBufferSize, const Address& remoteAddress) const;
-		SocketResult Close();
+			SocketResult Start();
+			SocketResult Bind( const Address& address ) const;
+			SocketResult ReceiveFrom( uint8* incomingDataBuffer, uint32 incomingDataBufferSize, Address* remoteAddress,
+			                          uint32& numberOfBytesRead ) const;
+			SocketResult SendTo( const uint8* dataBuffer, uint32 dataBufferSize, const Address& remoteAddress ) const;
+			SocketResult Close();
 
-		~Socket();
+			~Socket();
 
-	private:
-		SocketResult InitializeSocketsLibrary();
-		int32 GetLastError() const;
-		bool IsValid() const;
-		SocketResult SetBlockingMode(bool status);
-		SocketResult Create();
+		private:
+			SocketResult InitializeSocketsLibrary();
+			int32 GetLastError() const;
+			bool IsValid() const;
+			SocketResult SetBlockingMode( bool status );
+			SocketResult Create();
 
-		uint32 _defaultMTUSize;
-		SOCKET _listenSocket;
+			uint32 _defaultMTUSize;
+			SOCKET _listenSocket;
 	};
-}
+} // namespace NetLib

@@ -6,11 +6,11 @@ namespace NetLib
 
 	class IInputStateFactory
 	{
-	public:
-		IInputStateFactory() {}
-		virtual ~IInputStateFactory() {}
+		public:
+			IInputStateFactory() {}
+			virtual ~IInputStateFactory() {}
 
-		virtual IInputState* Create() = 0;
-		virtual void Destroy(IInputState* inputToDestroy) = 0;
+			virtual IInputState* Create() = 0;
+			virtual void Destroy( IInputState* inputToDestroy ) = 0;
 	};
 }

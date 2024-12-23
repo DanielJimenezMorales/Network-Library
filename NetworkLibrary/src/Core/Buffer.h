@@ -5,37 +5,37 @@ namespace NetLib
 {
 	class Buffer
 	{
-	public:
-		Buffer(uint8* data, int32 size) : _data(data), _size(size)
-		{
-			_index = 0;
-		}
+		public:
+			Buffer( uint8* data, int32 size )
+			    : _data( data )
+			    , _size( size )
+			{
+				_index = 0;
+			}
 
-		~Buffer()
-		{
-		}
+			~Buffer() {}
 
-		int32 GetSize() const { return _size; }
-		uint8* GetData() const { return _data; }
-		void Clear();
+			int32 GetSize() const { return _size; }
+			uint8* GetData() const { return _data; }
+			void Clear();
 
-		void WriteLong(uint64 value);
-		void WriteInteger(uint32 value);
-		void WriteShort(uint16 value);
-		void WriteByte(uint8 value);
-		void WriteFloat(float32 value);
+			void WriteLong( uint64 value );
+			void WriteInteger( uint32 value );
+			void WriteShort( uint16 value );
+			void WriteByte( uint8 value );
+			void WriteFloat( float32 value );
 
-		uint64 ReadLong();
-		uint32 ReadInteger();
-		uint16 ReadShort();
-		uint8 ReadByte();
-		float32 ReadFloat();
+			uint64 ReadLong();
+			uint32 ReadInteger();
+			uint16 ReadShort();
+			uint8 ReadByte();
+			float32 ReadFloat();
 
-		void ResetAccessIndex();
+			void ResetAccessIndex();
 
-	private:
-		uint8* _data;
-		int32 _size;
-		int32 _index;
+		private:
+			uint8* _data;
+			int32 _size;
+			int32 _index;
 	};
-}
+} // namespace NetLib
