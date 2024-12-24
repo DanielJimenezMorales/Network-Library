@@ -1,5 +1,6 @@
 #pragma once
-#include "NumericTypes.h"
+#include "numeric_types.h"
+
 #include <type_traits>
 
 namespace NetLib

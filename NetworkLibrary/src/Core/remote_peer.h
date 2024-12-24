@@ -2,10 +2,10 @@
 #include <map>
 #include <memory>
 
-#include "core/address.h"
+#include "numeric_types.h"
+#include "logger.h"
 
-#include "NumericTypes.h"
-#include "Logger.h"
+#include "core/address.h"
 
 #include "transmission_channels/transmission_channel.h"
 

@@ -1,4 +1,5 @@
-#include "Logger.h"
+#include "logger.h"
+
 #include <cstdarg>
 
 #ifdef LOG_ENABLED

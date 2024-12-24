@@ -1,7 +1,7 @@
 #pragma once
 #include <chrono>
 
-#include "NumericTypes.h"
+#include "numeric_types.h"
 
 namespace NetLib
 {

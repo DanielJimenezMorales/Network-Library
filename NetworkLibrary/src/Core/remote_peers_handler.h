@@ -3,7 +3,7 @@
 #include <queue>
 #include <unordered_set>
 
-#include "NumericTypes.h"
+#include "numeric_types.h"
 
 #include "core/remote_peer.h"
 

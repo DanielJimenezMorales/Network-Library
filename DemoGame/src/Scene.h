@@ -1,5 +1,5 @@
 #pragma once
-#include "NumericTypes.h"
+#include "numeric_types.h"
 
 #include <SDL_image.h>
 #include <vector>

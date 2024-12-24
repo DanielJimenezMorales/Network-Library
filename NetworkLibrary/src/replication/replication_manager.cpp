@@ -2,7 +2,7 @@
 
 #include <cassert>
 
-#include "Logger.h"
+#include "logger.h"
 
 #include "communication/message_factory.h"
 

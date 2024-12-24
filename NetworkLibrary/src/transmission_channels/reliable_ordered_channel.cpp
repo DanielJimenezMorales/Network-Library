@@ -9,7 +9,7 @@
 
 #include "core/time_clock.h"
 
-#include "Logger.h"
+#include "logger.h"
 #include "AlgorithmUtils.h"
 
 namespace NetLib

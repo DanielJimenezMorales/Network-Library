@@ -1,5 +1,6 @@
 #pragma once
-#include "NumericTypes.h"
+#include "numeric_types.h"
+
 #include <winsock2.h>
 #include <ws2tcpip.h>
 #include <string>

@@ -1,9 +1,9 @@
 #include "replication_messages_processor.h"
 
-#include "core/buffer.h"
+#include "numeric_types.h"
+#include "logger.h"
 
-#include "Logger.h"
-#include "NumericTypes.h"
+#include "core/buffer.h"
 
 #include "communication/message.h"
 

@@ -1,8 +1,9 @@
 #pragma once
 #include <cassert>
 
+#include "safe_pointer.hpp"
+
 #include "entt.hpp"
-#include "SafePointer.hpp"
 #include "EntityContainer.h"
 
 class GameEntity

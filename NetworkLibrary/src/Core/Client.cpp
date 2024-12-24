@@ -2,7 +2,7 @@
 
 #include <memory>
 
-#include "Logger.h"
+#include "logger.h"
 
 #include "core/remote_peer.h"
 #include "core/time_clock.h"

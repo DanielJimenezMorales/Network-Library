@@ -7,7 +7,7 @@
 #include "communication/message.h"
 #include "communication/message_factory.h"
 
-#include "Logger.h"
+#include "logger.h"
 
 #include "core/buffer.h"
 #include "core/remote_peer.h"

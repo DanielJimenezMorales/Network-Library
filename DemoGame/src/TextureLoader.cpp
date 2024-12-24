@@ -1,7 +1,10 @@
 #include "TextureLoader.h"
-#include "Logger.h"
+
+#include "numeric_types.h"
+#include "logger.h"
+
 #include "Texture.h"
-#include "NumericTypes.h"
+
 #include <SDL_image.h>
 #include <cassert>
 
