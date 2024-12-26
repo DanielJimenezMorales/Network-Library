@@ -23,6 +23,19 @@ namespace NetLib
 		return true;
 	}
 
+	NetworkEntityData* NetworkEntityStorage::TryGetNetworkEntityFromId( uint32 entityId )
+	{
+		NetworkEntityData* result = nullptr;
+		auto it = _networkEntityIdToDataMap.find( entityId );
+
+		if ( it != _networkEntityIdToDataMap.cend() )
+		{
+			result = &it->second;
+		}
+
+		return result;
+	}
+
 	void NetworkEntityStorage::AddNetworkEntity( uint32 entityType, uint32 networkEntityId, uint32 controlledByPeerId,
 	                                             uint32 gameEntityId )
 	{

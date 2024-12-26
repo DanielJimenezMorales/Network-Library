@@ -13,6 +13,10 @@
 #include "NetworkEntityComponent.h"
 #include "CircleBounds2D.h"
 
+#include "Vec2f.h"
+
+#include "replication/network_entity_communication_callbacks.h"
+
 void NetworkEntityFactory::SetScene( Scene* scene )
 {
 	_scene = scene;
@@ -22,6 +26,37 @@ void NetworkEntityFactory::SetScene( Scene* scene )
 void NetworkEntityFactory::SetPeerType( NetLib::PeerType peerType )
 {
 	_peerType = peerType;
+}
+
+static void SerializeForOwner( const GameEntity& entity, NetLib::Buffer& buffer )
+{
+	const TransformComponent& transform = entity.GetComponent< TransformComponent >();
+	const Vec2f position = transform.GetPosition();
+	buffer.WriteFloat( position.X() );
+	buffer.WriteFloat( position.Y() );
+	buffer.WriteFloat( transform.GetRotationAngle() );
+}
+
+static void SerializeForNonOwner( const GameEntity& entity, NetLib::Buffer& buffer )
+{
+	const TransformComponent& transform = entity.GetComponent< TransformComponent >();
+	const Vec2f position = transform.GetPosition();
+	buffer.WriteFloat( position.X() );
+	buffer.WriteFloat( position.Y() );
+	buffer.WriteFloat( transform.GetRotationAngle() );
+}
+
+static void UnserializeForOwner( GameEntity& entity, NetLib::Buffer& buffer )
+{
+	TransformComponent& transform = entity.GetComponent< TransformComponent >();
+	Vec2f position;
+	position.X( buffer.ReadFloat() );
+	position.Y( buffer.ReadFloat() );
+
+	transform.SetPosition( position );
+
+	const float32 rotation_angle = buffer.ReadFloat();
+	transform.SetRotationAngle( rotation_angle );
 }
 
 int32 NetworkEntityFactory::CreateNetworkEntityObject(
@@ -58,6 +93,20 @@ int32 NetworkEntityFactory::CreateNetworkEntityObject(
 	{
 		entity.AddComponent< PlayerControllerComponent >( networkVariableChangeHandler, networkEntityId,
 		                                                  playerConfiguration );
+
+		// Subscribe to Serialize for owner
+		auto serialize_owner_callback = [ entity ]( NetLib::Buffer& buffer )
+		{
+			SerializeForOwner( entity, buffer );
+		};
+		communication_callbacks.OnSerializeEntityStateForOwner.AddSubscriber( serialize_owner_callback );
+
+		// Subscribe to Serialize for non owner
+		auto serialize_non_owner_callback = [ entity ]( NetLib::Buffer& buffer )
+		{
+			SerializeForNonOwner( entity, buffer );
+		};
+		communication_callbacks.OnSerializeEntityStateForNonOwner.AddSubscriber( serialize_non_owner_callback );
 	}
 	else
 	{
@@ -72,6 +121,13 @@ int32 NetworkEntityFactory::CreateNetworkEntityObject(
 			LOG_WARNING( "ME CREO EL LOCAL" );
 			entity.AddComponent< RemotePlayerControllerComponent >( networkVariableChangeHandler, networkEntityId );
 		}
+
+		// Subscribe to Serialize for owner
+		auto callback = [ entity ]( NetLib::Buffer& buffer ) mutable
+		{
+			UnserializeForOwner( entity, buffer );
+		};
+		communication_callbacks.OnUnserializeEntityStateForOwner.AddSubscriber( callback );
 	}
 
 	// entity.AddComponent<PlayerNetworkComponent>(networkVariableChangeHandler, networkEntityId);

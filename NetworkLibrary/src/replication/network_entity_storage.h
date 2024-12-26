@@ -42,6 +42,7 @@ namespace NetLib
 
 			bool HasNetworkEntityId( uint32 networkEntityId ) const;
 			bool TryGetNetworkEntityFromId( uint32 entityId, NetworkEntityData& gameEntityId );
+			NetworkEntityData* TryGetNetworkEntityFromId( uint32 entityId );
 			void AddNetworkEntity( uint32 entityType, uint32 networkEntityId, uint32 controlledByPeerId,
 			                       uint32 gameEntityId );
 			NetworkEntityData& AddNetworkEntity( uint32 entityType, uint32 networkEntityId, uint32 controlledByPeerId );

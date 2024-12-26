@@ -40,6 +40,9 @@ namespace NetLib
 			void ClearSentReplicationMessages();
 
 		private:
+			NetworkEntityData& SpawnNewNetworkEntity( uint32 replicated_class_id, uint32 network_entity_id,
+			                                         uint32 controlled_by_peer_id, float32 pos_x, float32 pos_y );
+
 			std::unique_ptr< ReplicationMessage > CreateCreateReplicationMessage( uint32 entityType,
 			                                                                      uint32 controlledByPeerId,
 			                                                                      uint32 networkEntityId,
