@@ -26,7 +26,8 @@ void NetworkEntityFactory::SetPeerType( NetLib::PeerType peerType )
 
 int32 NetworkEntityFactory::CreateNetworkEntityObject(
     uint32 networkEntityType, uint32 networkEntityId, uint32 controlledByPeerId, float32 posX, float32 posY,
-    NetLib::NetworkVariableChangesHandler* networkVariableChangeHandler )
+    NetLib::NetworkVariableChangesHandler* networkVariableChangeHandler,
+    NetLib::NetworkEntityCommunicationCallbacks& communication_callbacks )
 {
 	LOG_INFO( "CONTROLLER BY PEER ID %u", controlledByPeerId );
 	ServiceLocator& serviceLocator = ServiceLocator::GetInstance();

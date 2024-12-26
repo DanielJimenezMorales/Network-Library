@@ -13,10 +13,12 @@ namespace NetLib
 
 	uint32 NetworkEntityFactoryRegistry::CreateNetworkEntity(
 	    uint32 entityType, uint32 networkEntityId, uint32 controlledByPeerId, float32 posX, float32 posY,
-	    NetworkVariableChangesHandler* networkVariableChangesHandler )
+	    NetworkVariableChangesHandler* networkVariableChangesHandler,
+	    NetworkEntityCommunicationCallbacks& communication_callbacks )
 	{
-		int32 gameEntityId = _networkEntityFactory->CreateNetworkEntityObject(
-		    entityType, networkEntityId, controlledByPeerId, posX, posY, networkVariableChangesHandler );
+		const int32 gameEntityId = _networkEntityFactory->CreateNetworkEntityObject(
+		    entityType, networkEntityId, controlledByPeerId, posX, posY, networkVariableChangesHandler,
+		    communication_callbacks );
 		assert( gameEntityId != -1 );
 
 		return static_cast< uint32 >( gameEntityId );

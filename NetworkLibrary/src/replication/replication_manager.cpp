@@ -94,19 +94,20 @@ namespace NetLib
 			return;
 		}
 
+		NetworkEntityData& new_entity_data = _networkEntitiesStorage.AddNetworkEntity(
+		    replicationMessage.replicatedClassId, networkEntityId, replicationMessage.controlledByPeerId );
+
 		// Create network entity through its custom factory
 		Buffer buffer( replicationMessage.data, replicationMessage.dataSize );
 		LOG_INFO( "DATA SIZE: %hu", replicationMessage.dataSize );
-		float32 posX = buffer.ReadFloat();
-		float32 posY = buffer.ReadFloat();
-		int32 gameEntity = _networkEntityFactoryRegistry->CreateNetworkEntity(
+		const float32 posX = buffer.ReadFloat();
+		const float32 posY = buffer.ReadFloat();
+		const int32 gameEntity = _networkEntityFactoryRegistry->CreateNetworkEntity(
 		    replicationMessage.replicatedClassId, networkEntityId, replicationMessage.controlledByPeerId, posX, posY,
-		    &_networkVariableChangesHandler );
+		    &_networkVariableChangesHandler, new_entity_data.communicationCallbacks );
 		assert( gameEntity != -1 );
 
-		// Add it to the network entities storage in order to avoid loosing it
-		_networkEntitiesStorage.AddNetworkEntity( replicationMessage.replicatedClassId, networkEntityId,
-		                                          replicationMessage.controlledByPeerId, gameEntity );
+		new_entity_data.inGameId = static_cast< uint32 >( gameEntity );
 	}
 
 	void ReplicationManager::ProcessReceivedUpdateReplicationMessage( const ReplicationMessage& replicationMessage )
@@ -118,15 +119,16 @@ namespace NetLib
 			          "new entity...",
 			          networkEntityId );
 
+			NetworkEntityData& new_entity_data = _networkEntitiesStorage.AddNetworkEntity(
+			    replicationMessage.replicatedClassId, networkEntityId, replicationMessage.controlledByPeerId );
+
 			// If not found create a new one and update it
-			int32 gameEntity = _networkEntityFactoryRegistry->CreateNetworkEntity(
+			const int32 gameEntity = _networkEntityFactoryRegistry->CreateNetworkEntity(
 			    replicationMessage.replicatedClassId, networkEntityId, replicationMessage.controlledByPeerId, 0.f, 0.f,
-			    &_networkVariableChangesHandler );
+			    &_networkVariableChangesHandler, new_entity_data.communicationCallbacks );
 			assert( gameEntity != -1 );
 
-			// Add it to the network entities storage in order to avoid loosing it
-			_networkEntitiesStorage.AddNetworkEntity( replicationMessage.replicatedClassId, networkEntityId,
-			                                          replicationMessage.controlledByPeerId, gameEntity );
+			new_entity_data.inGameId = static_cast< uint32 >( gameEntity );
 			return;
 		}
 
@@ -144,13 +146,16 @@ namespace NetLib
 	uint32 ReplicationManager::CreateNetworkEntity( uint32 entityType, uint32 controlledByPeerId, float32 posX,
 	                                                float32 posY )
 	{
+		NetworkEntityData& new_entity_data =
+		    _networkEntitiesStorage.AddNetworkEntity( entityType, _nextNetworkEntityId, controlledByPeerId );
+
 		// Create object through its custom factory
-		int32 gameEntityId = _networkEntityFactoryRegistry->CreateNetworkEntity(
-		    entityType, _nextNetworkEntityId, controlledByPeerId, posX, posY, &_networkVariableChangesHandler );
+		const int32 gameEntityId = _networkEntityFactoryRegistry->CreateNetworkEntity(
+		    entityType, _nextNetworkEntityId, controlledByPeerId, posX, posY, &_networkVariableChangesHandler,
+		    new_entity_data.communicationCallbacks );
 		assert( gameEntityId != -1 );
 
-		// Add it to the network entities storage in order to avoid loosing it
-		_networkEntitiesStorage.AddNetworkEntity( entityType, _nextNetworkEntityId, controlledByPeerId, gameEntityId );
+		new_entity_data.inGameId = static_cast< uint32 >( gameEntityId );
 
 		// Prepare a Create replication message for interested clients
 		uint8* data = new uint8[ 8 ];

@@ -9,6 +9,7 @@
 
 #include "replication/replication_action_type.h"
 #include "replication/network_entity_factory_registry.h"
+#include "replication/network_entity_communication_callbacks.h"
 
 #include <cassert>
 
@@ -46,6 +47,9 @@ namespace NetLib
 			return;
 		}
 
+		NetworkEntityData& new_entity_data = _networkEntitiesStorage.AddNetworkEntity(
+		    replicationMessage.replicatedClassId, networkEntityId, replicationMessage.controlledByPeerId );
+
 		// Create network entity through its custom factory
 		Buffer buffer( replicationMessage.data, replicationMessage.dataSize );
 		LOG_INFO( "DATA SIZE: %hu", replicationMessage.dataSize );
@@ -53,12 +57,10 @@ namespace NetLib
 		float32 posY = buffer.ReadFloat();
 		int32 gameEntity = _networkEntityFactoryRegistry->CreateNetworkEntity(
 		    replicationMessage.replicatedClassId, networkEntityId, replicationMessage.controlledByPeerId, posX, posY,
-		    &_networkVariableChangesHandler );
+		    &_networkVariableChangesHandler, new_entity_data.communicationCallbacks );
 		assert( gameEntity != -1 );
 
-		// Add it to the network entities storage in order to avoid loosing it
-		_networkEntitiesStorage.AddNetworkEntity( replicationMessage.replicatedClassId, networkEntityId,
-		                                          replicationMessage.controlledByPeerId, gameEntity );
+		new_entity_data.inGameId = static_cast< uint32 >( gameEntity );
 	}
 
 	void ReplicationMessagesProcessor::ProcessReceivedUpdateReplicationMessage(
@@ -71,15 +73,16 @@ namespace NetLib
 			          "new entity...",
 			          networkEntityId );
 
+			NetworkEntityData& new_entity_data = _networkEntitiesStorage.AddNetworkEntity(
+			    replicationMessage.replicatedClassId, networkEntityId, replicationMessage.controlledByPeerId );
+
 			// If not found create a new one and update it
 			int32 gameEntity = _networkEntityFactoryRegistry->CreateNetworkEntity(
 			    replicationMessage.replicatedClassId, networkEntityId, replicationMessage.controlledByPeerId, 0.f, 0.f,
-			    &_networkVariableChangesHandler );
+			    &_networkVariableChangesHandler, new_entity_data.communicationCallbacks );
 			assert( gameEntity != -1 );
 
-			// Add it to the network entities storage in order to avoid loosing it
-			_networkEntitiesStorage.AddNetworkEntity( replicationMessage.replicatedClassId, networkEntityId,
-			                                          replicationMessage.controlledByPeerId, gameEntity );
+			new_entity_data.inGameId = static_cast< uint32 >( gameEntity );
 			return;
 		}
 
