@@ -1,5 +1,6 @@
 #include "InputState.h"
-#include "Buffer.h"
+
+#include "core/buffer.h"
 
 int32 InputState::GetSize() const
 {

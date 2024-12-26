@@ -1,6 +1,7 @@
 #pragma once
-#include "Peer.h"
-#include "INetworkEntityFactory.h"
+#include "core/peer.h"
+
+#include "replication/i_network_entity_factory.h"
 
 class Scene;
 class NetworkVariableChangesHandler;
@@ -11,7 +12,7 @@ class NetworkVariableChangesHandler;
 class NetworkEntityFactory : public NetLib::INetworkEntityFactory
 {
 public:
-	NetworkEntityFactory() : NetLib::INetworkEntityFactory(), _scene(nullptr), _peerType(NetLib::PeerType::None) {}
+	NetworkEntityFactory() : NetLib::INetworkEntityFactory(), _scene(nullptr), _peerType(NetLib::PeerType::NONE) {}
 	~NetworkEntityFactory() {}
 
 	void SetScene(Scene* scene);

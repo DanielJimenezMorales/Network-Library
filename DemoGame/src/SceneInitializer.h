@@ -1,11 +1,11 @@
 #pragma once
-#include "Peer.h"
+#include "core/peer.h"
 
 class Scene;
 class InputHandler;
 
 class SceneInitializer
 {
-public:
-	void InitializeScene(Scene& scene, NetLib::PeerType networkPeerType, InputHandler& inputHandler) const;
+	public:
+		void InitializeScene( Scene& scene, NetLib::PeerType networkPeerType, InputHandler& inputHandler ) const;
 };

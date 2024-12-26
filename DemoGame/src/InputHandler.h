@@ -1,9 +1,9 @@
 #pragma once
 #include <SDL.h>
 #include <vector>
-#include "NumericTypes.h"
 
-#include "Logger.h"
+#include "numeric_types.h"
+#include "logger.h"
 
 class IInputController;
 class ICursor;

@@ -1,5 +1,6 @@
 #pragma once
-#include "IInputState.h"
+#include "inputs/i_input_state.h"
+
 #include "Vec2f.h"
 #include <cstdint>
 

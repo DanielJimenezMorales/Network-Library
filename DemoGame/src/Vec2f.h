@@ -1,5 +1,6 @@
 #pragma once
-#include "NumericTypes.h"
+#include "numeric_types.h"
+
 #include <math.h>
 
 struct Vec2f

@@ -1,9 +1,11 @@
 #pragma once
 #include <cassert>
 #include <vector>
-#include "Peer.h"
-#include "Client.h"
-#include "Server.h"
+
+#include "core/peer.h"
+#include "core/client.h"
+#include "core/server.h"
+
 #include <queue>
 
 class INetworkEntityFactory;
@@ -35,6 +37,6 @@ struct NetworkPeerComponent
 
 	void AddUnprocessedConnectedRemotePeer(uint32 remotePeerId) { unprocessedConnectedRemotePeers.push(remotePeerId); };
 
-	NetLib::Client* GetPeerAsClient() const { assert(peer != nullptr); assert(peer->GetPeerType() == NetLib::PeerType::ClientMode); return static_cast<NetLib::Client*>(peer); }
-	NetLib::Server* GetPeerAsServer() const { assert(peer != nullptr); assert(peer->GetPeerType() == NetLib::PeerType::ServerMode); return static_cast<NetLib::Server*>(peer); }
+	NetLib::Client* GetPeerAsClient() const { assert(peer != nullptr); assert(peer->GetPeerType() == NetLib::PeerType::CLIENT); return static_cast<NetLib::Client*>(peer); }
+	NetLib::Server* GetPeerAsServer() const { assert(peer != nullptr); assert(peer->GetPeerType() == NetLib::PeerType::SERVER); return static_cast<NetLib::Server*>(peer); }
 };

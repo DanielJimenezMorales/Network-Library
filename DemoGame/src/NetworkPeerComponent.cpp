@@ -1,6 +1,8 @@
 #include "NetworkPeerComponent.h"
-#include "IInputStateFactory.h"
-#include "INetworkEntityFactory.h"
+
+#include "inputs/i_input_state_factory.h"
+
+#include "replication/i_network_entity_factory.h"
 
 NetworkPeerComponent::~NetworkPeerComponent()
 {

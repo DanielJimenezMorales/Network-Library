@@ -1,7 +1,8 @@
 #pragma once
-#include "NetworkVariable.h"
-#include "NetworkVariableChangesHandler.h"
 #include "PlayerControllerConfiguration.h"
+
+#include "replication/network_variable.hpp"
+#include "replication/network_variable_changes_handler.h"
 
 struct PlayerControllerComponent
 {

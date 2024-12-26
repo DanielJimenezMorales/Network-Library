@@ -10,9 +10,11 @@
 #include "InputActionIdsConfiguration.h"
 #include "InputState.h"
 #include "NetworkPeerComponent.h"
-#include "Client.h"
 #include "VirtualMouseComponent.h"
+
 #include <vector>
+
+#include "core/client.h"
 
 void PlayerControllerSystem::Tick(EntityContainer& entityContainer, float32 elapsedTime) const
 {

@@ -63,17 +63,15 @@ project "NetworkLibrary"
 
 	files
 	{
-		"%{prj.name}/src/Core/**.h",
-		"%{prj.name}/src/Core/**.cpp",
-		"%{prj.name}/src/Utils/**.h",
-		"%{prj.name}/src/Utils/**.cpp"
+		"%{prj.name}/src/**.h",
+		"%{prj.name}/src/**.cpp",
+		"%{prj.name}/src/**.hpp"
 	}
 
 	includedirs
 	{
 		"Common/src/",
-		"%{prj.name}/src/Core/",
-		"%{prj.name}/src/Utils/"
+		"%{prj.name}/src/"
 	}
 
 	dependson
@@ -123,8 +121,7 @@ project "DemoGame"
 	includedirs
 	{
 		"Common/src/",
-		"NetworkLibrary/src/Core/",
-		"NetworkLibrary/src/Utils/",
+		"NetworkLibrary/src/",
 		"%{prj.name}/src/",
 
 		"vendor/sdl2/SDL2-2.30.1/include/",
@@ -191,6 +188,7 @@ project "Tests"
 		"Common/src/",
 		"NetworkLibrary/src/Core/",
 		"NetworkLibrary/src/Utils/",
+		"NetworkLibrary/src/replication/",
 		"%{prj.name}/src/"
 	}
 

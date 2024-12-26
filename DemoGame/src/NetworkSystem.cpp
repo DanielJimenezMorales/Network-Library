@@ -1,10 +1,14 @@
 #include "NetworkSystem.h"
-#include "Client.h"
-#include "Server.h"
-#include "Logger.h"
+
+#include "logger.h"
+
+#include "core/client.h"
+#include "core/server.h"
+
 #include "EntityContainer.h"
 #include "GameEntity.hpp"
 #include "NetworkPeerComponent.h"
+
 #include <vector>
 
 void NetworkSystem::PreTick(EntityContainer& entityContainer, float32 elapsedTime) const

@@ -3,9 +3,9 @@
 #include "NetworkSystem.h"
 #include "GameEntity.hpp"
 #include "NetworkPeerComponent.h"
-#include "Client.h"
-#include "Server.h"
-#include "Initializer.h"
+#include "core/client.h"
+#include "core/server.h"
+#include "core/initializer.h"
 #include "NetworkEntityFactory.h"
 #include "KeyboardController.h"
 #include "MouseController.h"
@@ -57,11 +57,11 @@ void SceneInitializer::InitializeScene(Scene& scene, NetLib::PeerType networkPee
 	GameEntity networkPeerEntity = scene.CreateGameEntity();
 	NetworkPeerComponent& networkPeerComponent = networkPeerEntity.AddComponent<NetworkPeerComponent>();
 	NetLib::Peer* networkPeer;
-	if (networkPeerType == NetLib::PeerType::ServerMode)
+	if (networkPeerType == NetLib::PeerType::SERVER)
 	{
 		networkPeer = new NetLib::Server(2);
 	}
-	else if (networkPeerType == NetLib::PeerType::ClientMode)
+	else if (networkPeerType == NetLib::PeerType::CLIENT)
 	{
 		networkPeer = new NetLib::Client(5);
 	}
@@ -74,7 +74,7 @@ void SceneInitializer::InitializeScene(Scene& scene, NetLib::PeerType networkPee
 	networkPeer->RegisterNetworkEntityFactory(networkEntityFactory);
 	networkPeerComponent.peer = networkPeer;
 
-	if (networkPeer->GetPeerType() == NetLib::PeerType::ServerMode)
+	if (networkPeer->GetPeerType() == NetLib::PeerType::SERVER)
 	{
 		InputStateFactory* inputStateFactory = new InputStateFactory();
 		networkPeerComponent.GetPeerAsServer()->RegisterInputStateFactory(inputStateFactory);
@@ -97,7 +97,7 @@ void SceneInitializer::InitializeScene(Scene& scene, NetLib::PeerType networkPee
 		scene.AddPreTickSystem(collisionDetectionSystem);
 	}
 
-	if (networkPeer->GetPeerType() == NetLib::PeerType::ClientMode)
+	if (networkPeer->GetPeerType() == NetLib::PeerType::CLIENT)
 	{
 		//Add virtual mouse
 		GameEntity virtualMouse = scene.CreateGameEntity();
@@ -122,12 +122,12 @@ void SceneInitializer::InitializeScene(Scene& scene, NetLib::PeerType networkPee
 
 	//Populate systems
 	//TODO Create a system storage in order to be able to free them at the end
-	if (networkPeerType == NetLib::PeerType::ServerMode)
+	if (networkPeerType == NetLib::PeerType::SERVER)
 	{
 		ServerPlayerControllerSystem* serverPlayerControllerSystem = new ServerPlayerControllerSystem();
 		scene.AddTickSystem(serverPlayerControllerSystem);
 	}
-	else if (networkPeerType == NetLib::PeerType::ClientMode)
+	else if (networkPeerType == NetLib::PeerType::CLIENT)
 	{
 		PlayerControllerSystem* playerControllerSystem = new PlayerControllerSystem();
 		scene.AddTickSystem(playerControllerSystem);
