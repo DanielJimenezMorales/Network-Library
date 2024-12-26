@@ -368,6 +368,25 @@ namespace NetLib
 
 	void Server::TickReplication()
 	{
+		auto validRemotePeersIt = _remotePeersHandler.GetValidRemotePeersIterator();
+		auto pastTheEndIt = _remotePeersHandler.GetValidRemotePeersPastTheEndIterator();
+
+		for ( ; validRemotePeersIt != pastTheEndIt; ++validRemotePeersIt )
+		{
+			std::vector< std::unique_ptr< ReplicationMessage > > replication_messages;
+			_replicationManager.Server_ReplicateWorldState( ( *validRemotePeersIt )->GetClientIndex(),
+			                                                replication_messages );
+
+			auto it = replication_messages.begin();
+			for ( ; it != replication_messages.end(); ++it )
+			{
+				( *validRemotePeersIt )->AddMessage( std::move( *it ) );
+			}
+		}
+
+		_replicationManager.ClearSentReplicationMessages();
+		return;
+
 		_replicationManager.Server_ReplicateWorldState();
 
 		MessageFactory& messageFactory = MessageFactory::GetInstance();
@@ -395,8 +414,8 @@ namespace NetLib
 				replicationMessage->dataSize = pendingReplicationMessage->dataSize;
 				if ( replicationMessage->dataSize > 0 )
 				{
-					// TODO Figure out if I can improve this. So far, for large snapshot updates data this can become
-					// heavy and slow. Can I avoid the copy somehow?
+					// TODO Figure out if I can improve this. So far, for large snapshot updates data this can
+					// become heavy and slow. Can I avoid the copy somehow?
 					uint8* data = new uint8[ replicationMessage->dataSize ];
 					std::memcpy( data, pendingReplicationMessage->data, replicationMessage->dataSize );
 					replicationMessage->data = data;

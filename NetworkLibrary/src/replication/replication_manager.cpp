@@ -159,7 +159,8 @@ namespace NetLib
 		    CreateCreateReplicationMessage( entityType, controlledByPeerId, _nextNetworkEntityId, buffer );
 
 		// Store it into queue before broadcasting it
-		_pendingReplicationActionMessages.push( std::move( createMessage ) );
+		//_pendingReplicationActionMessages.push( std::move( createMessage ) );
+		_pendingReplicationActionMessagesVector.push_back( std::move( createMessage ) );
 
 		CalculateNextNetworkEntityId();
 
@@ -185,7 +186,67 @@ namespace NetLib
 		std::unique_ptr< ReplicationMessage > destroyMessage = CreateDestroyReplicationMessage( networkEntityId );
 
 		// Store it into queue before broadcasting it
-		_pendingReplicationActionMessages.push( std::move( destroyMessage ) );
+		//_pendingReplicationActionMessages.push( std::move( destroyMessage ) );
+		_pendingReplicationActionMessagesVector.push_back( std::move( destroyMessage ) );
+	}
+
+	void ReplicationManager::Server_ReplicateWorldState(
+	    uint32 remote_peer_id, std::vector< std::unique_ptr< ReplicationMessage > >& replication_messages )
+	{
+		MessageFactory& messageFactory = MessageFactory::GetInstance();
+		auto cit = _pendingReplicationActionMessagesVector.cbegin();
+		for ( ; cit != _pendingReplicationActionMessagesVector.cend(); ++cit )
+		{
+			const ReplicationMessage* source_replication_message = cit->get();
+
+			std::unique_ptr< Message > message = messageFactory.LendMessage( MessageType::Replication );
+			std::unique_ptr< ReplicationMessage > replicationMessage(
+			    static_cast< ReplicationMessage* >( message.release() ) );
+
+			const MessageHeader h = source_replication_message->GetHeader();
+			// TODO Create an operator= or something like that to avoid this spaguetti code
+			replicationMessage->SetOrdered( source_replication_message->GetHeader().isOrdered );
+			replicationMessage->SetReliability( source_replication_message->GetHeader().isReliable );
+			replicationMessage->replicationAction = source_replication_message->replicationAction;
+			replicationMessage->networkEntityId = source_replication_message->networkEntityId;
+			replicationMessage->controlledByPeerId = source_replication_message->controlledByPeerId;
+			replicationMessage->replicatedClassId = source_replication_message->replicatedClassId;
+			replicationMessage->dataSize = source_replication_message->dataSize;
+			if ( replicationMessage->dataSize > 0 )
+			{
+				// TODO Figure out if I can improve this. So far, for large snapshot updates data this can
+				// become heavy and slow. Can I avoid the copy somehow?
+				uint8* data = new uint8[ replicationMessage->dataSize ];
+				std::memcpy( data, source_replication_message->data, replicationMessage->dataSize );
+				replicationMessage->data = data;
+			}
+
+			replication_messages.push_back( std::move( replicationMessage ) );
+		}
+
+		auto entity_it = _networkEntitiesStorage.GetNetworkEntities();
+		auto itPastToEnd = _networkEntitiesStorage.GetPastToEndNetworkEntities();
+
+		for ( ; entity_it != itPastToEnd; ++entity_it )
+		{
+			NetworkEntityData& networkEntityData = entity_it->second;
+
+			// TODO Remove this hardcoded size
+			uint8* data = new uint8[ 64 ];
+			Buffer buffer( data, 64 );
+			if ( networkEntityData.controlledByPeerId == remote_peer_id )
+			{
+				networkEntityData.communicationCallbacks.OnSerializeEntityStateForOwner.Execute( buffer );
+			}
+			else
+			{
+				networkEntityData.communicationCallbacks.OnSerializeEntityStateForNonOwner.Execute( buffer );
+			}
+
+			std::unique_ptr< ReplicationMessage > message = CreateUpdateReplicationMessage(
+			    networkEntityData.entityType, networkEntityData.id, networkEntityData.controlledByPeerId, buffer );
+			replication_messages.push_back( std::move( message ) );
+		}
 	}
 
 	void ReplicationManager::Server_ReplicateWorldState()
@@ -234,6 +295,7 @@ namespace NetLib
 		_networkVariableChangesHandler.Clear();
 	}
 
+	// TODO Deprecated
 	void ReplicationManager::Client_ProcessReceivedReplicationMessage( const ReplicationMessage& replicationMessage )
 	{
 		ReplicationActionType type = static_cast< ReplicationActionType >( replicationMessage.replicationAction );
@@ -287,6 +349,13 @@ namespace NetLib
 
 			messageFactory.ReleaseMessage( std::move( sentReplicationMessage ) );
 		}
+
+		auto it = _pendingReplicationActionMessagesVector.begin();
+		for ( ; it != _pendingReplicationActionMessagesVector.end(); ++it )
+		{
+			messageFactory.ReleaseMessage( std::move( *it ) );
+		}
+		_pendingReplicationActionMessagesVector.clear();
 	}
 
 	void ReplicationManager::CalculateNextNetworkEntityId()

@@ -31,6 +31,8 @@ namespace NetLib
 			uint32 CreateNetworkEntity( uint32 entityType, uint32 controlledByPeerId, float32 posX, float32 posY );
 			void RemoveNetworkEntity( uint32 networkEntityId );
 
+			void Server_ReplicateWorldState(
+			    uint32 remote_peer_id, std::vector< std::unique_ptr< ReplicationMessage > >& replication_messages );
 			void Server_ReplicateWorldState();
 			void Client_ProcessReceivedReplicationMessage( const ReplicationMessage& replicationMessage );
 
@@ -41,7 +43,7 @@ namespace NetLib
 
 		private:
 			NetworkEntityData& SpawnNewNetworkEntity( uint32 replicated_class_id, uint32 network_entity_id,
-			                                         uint32 controlled_by_peer_id, float32 pos_x, float32 pos_y );
+			                                          uint32 controlled_by_peer_id, float32 pos_x, float32 pos_y );
 
 			std::unique_ptr< ReplicationMessage > CreateCreateReplicationMessage( uint32 entityType,
 			                                                                      uint32 controlledByPeerId,
@@ -62,6 +64,7 @@ namespace NetLib
 			NetworkEntityStorage _networkEntitiesStorage;
 
 			std::queue< std::unique_ptr< ReplicationMessage > > _pendingReplicationActionMessages;
+			std::vector< std::unique_ptr< ReplicationMessage > > _pendingReplicationActionMessagesVector;
 			std::queue< std::unique_ptr< ReplicationMessage > > _sentReplicationMessages;
 
 			uint32 _nextNetworkEntityId;

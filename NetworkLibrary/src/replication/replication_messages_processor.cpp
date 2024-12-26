@@ -86,9 +86,13 @@ namespace NetLib
 			return;
 		}
 
+		NetworkEntityData* entity_data = _networkEntitiesStorage.TryGetNetworkEntityFromId( networkEntityId );
+		assert( entity_data != nullptr );
+
 		// TODO Pass entity state to target entity
 		Buffer buffer( replicationMessage.data, replicationMessage.dataSize );
-		_networkVariableChangesHandler.ProcessVariableChanges( buffer );
+		entity_data->communicationCallbacks.OnUnserializeEntityStateForOwner.Execute( buffer );
+		//_networkVariableChangesHandler.ProcessVariableChanges( buffer );
 	}
 
 	void ReplicationMessagesProcessor::ProcessReceivedDestroyReplicationMessage(
