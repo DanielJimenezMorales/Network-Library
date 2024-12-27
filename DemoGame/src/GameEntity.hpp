@@ -6,6 +6,7 @@
 #include "entt.hpp"
 #include "EntityContainer.h"
 
+//TODO improve GameEntity
 class GameEntity
 {
 public:

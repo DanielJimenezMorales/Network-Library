@@ -51,19 +51,27 @@ namespace NetLib
 
 	void Address::SetFromSockAddr( const sockaddr_in& addressInfo )
 	{
-		// TODO For some reason addressInfo.sin_family is 0, aka unespecified
-		_addressInfo.sin_family = AF_INET; // addressInfo.sin_family;
+		_addressInfo.sin_family = addressInfo.sin_family;
 		_addressInfo.sin_port = addressInfo.sin_port;
 		_addressInfo.sin_addr = addressInfo.sin_addr;
 
-		const uint32 IP_MAX_SIZE = 256;
-		char clientIp[ IP_MAX_SIZE ];
-		ZeroMemory( clientIp, IP_MAX_SIZE );
-		inet_ntop( _addressInfo.sin_family, &_addressInfo.sin_addr, clientIp, IP_MAX_SIZE );
-		std::string ipString( clientIp );
-		_ip.assign( clientIp );
+		// Check if input is an invalid address
+		if ( _addressInfo.sin_family == AF_UNSPEC )
+		{
+			_ip.assign( "0.0.0.0" );
+			_port = 0;
+		}
+		else
+		{
+			const uint32 IP_MAX_SIZE = 256;
+			char clientIp[ IP_MAX_SIZE ];
+			ZeroMemory( clientIp, IP_MAX_SIZE );
+			inet_ntop( _addressInfo.sin_family, &_addressInfo.sin_addr, clientIp, IP_MAX_SIZE );
+			std::string ipString( clientIp );
+			_ip.assign( clientIp );
 
-		_ipVersion = ( _addressInfo.sin_family == AF_INET ) ? IPVersion::IPV4 : IPVersion::IPV6;
-		_port = ntohs( _addressInfo.sin_port );
+			_ipVersion = ( _addressInfo.sin_family == AF_INET ) ? IPVersion::IPV4 : IPVersion::IPV6;
+			_port = ntohs( _addressInfo.sin_port );
+		}
 	}
 } // namespace NetLib
