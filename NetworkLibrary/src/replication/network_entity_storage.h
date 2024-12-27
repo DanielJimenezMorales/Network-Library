@@ -35,15 +35,23 @@ namespace NetLib
 			NetworkEntityCommunicationCallbacks communicationCallbacks;
 	};
 
+	/// <summary>
+	/// This class stores all network entities active within the world.
+	/// </summary>
 	class NetworkEntityStorage
 	{
 		public:
 			NetworkEntityStorage() = default;
-
+			/// <summary>
+			/// Is there a network entity spawned with the same ID?
+			/// </summary>
 			bool HasNetworkEntityId( uint32 networkEntityId ) const;
-			bool TryGetNetworkEntityFromId( uint32 entityId, NetworkEntityData& gameEntityId );
+
+			/// <summary>
+			/// If found, returns the data associated with a network entity based on its ID.
+			/// </summary>
 			NetworkEntityData* TryGetNetworkEntityFromId( uint32 entityId );
-			void AddNetworkEntity( uint32 entityType, uint32 networkEntityId, uint32 controlledByPeerId,
+			bool AddNetworkEntity( uint32 entityType, uint32 networkEntityId, uint32 controlledByPeerId,
 			                       uint32 gameEntityId );
 			NetworkEntityData& AddNetworkEntity( uint32 entityType, uint32 networkEntityId, uint32 controlledByPeerId );
 			bool RemoveNetworkEntity( uint32 networkEntityId );

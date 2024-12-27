@@ -13,7 +13,10 @@ namespace NetLib
 
 			int32 GetSize() const { return _size; }
 			uint8* GetData() const { return _data; }
+			uint32 GetAccessIndex() const { return _index; }
 			void Clear();
+
+			void CopyUsedData( uint8* dst, uint32 dst_size ) const;
 
 			void WriteLong( uint64 value );
 			void WriteInteger( uint32 value );

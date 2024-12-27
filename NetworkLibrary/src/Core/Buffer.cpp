@@ -18,6 +18,13 @@ namespace NetLib
 		_index = 0;
 	}
 
+	void Buffer::CopyUsedData( uint8* dst, uint32 dst_size ) const
+	{
+		assert( dst_size >= _index );
+
+		std::memcpy( dst, _data, _index );
+	}
+
 	void Buffer::WriteLong( uint64 value )
 	{
 		assert( _index + 8 <= _size );

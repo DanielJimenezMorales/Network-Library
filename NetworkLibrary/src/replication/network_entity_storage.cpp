@@ -10,19 +10,6 @@ namespace NetLib
 		return it != _networkEntityIdToDataMap.cend();
 	}
 
-	bool NetworkEntityStorage::TryGetNetworkEntityFromId( uint32 entityId, NetworkEntityData& gameEntityId )
-	{
-		auto it = _networkEntityIdToDataMap.find( entityId );
-
-		if ( it == _networkEntityIdToDataMap.cend() )
-		{
-			return false;
-		}
-
-		gameEntityId = it->second;
-		return true;
-	}
-
 	NetworkEntityData* NetworkEntityStorage::TryGetNetworkEntityFromId( uint32 entityId )
 	{
 		NetworkEntityData* result = nullptr;
@@ -36,13 +23,17 @@ namespace NetLib
 		return result;
 	}
 
-	void NetworkEntityStorage::AddNetworkEntity( uint32 entityType, uint32 networkEntityId, uint32 controlledByPeerId,
+	bool NetworkEntityStorage::AddNetworkEntity( uint32 entityType, uint32 networkEntityId, uint32 controlledByPeerId,
 	                                             uint32 gameEntityId )
 	{
-		assert( _networkEntityIdToDataMap.find( networkEntityId ) == _networkEntityIdToDataMap.cend() );
+		if ( _networkEntityIdToDataMap.find( networkEntityId ) != _networkEntityIdToDataMap.cend() )
+		{
+			return false;
+		}
 
 		_networkEntityIdToDataMap[ networkEntityId ] =
 		    NetworkEntityData( entityType, networkEntityId, gameEntityId, controlledByPeerId );
+		return true;
 	}
 
 	NetworkEntityData& NetworkEntityStorage::AddNetworkEntity( uint32 entityType, uint32 networkEntityId,

@@ -15,6 +15,13 @@
 
 namespace NetLib
 {
+	ReplicationMessagesProcessor::ReplicationMessagesProcessor(
+	    NetworkEntityFactoryRegistry* networkEntityFactoryRegistry )
+	    : _networkEntitiesStorage()
+	    , _networkEntityFactoryRegistry( networkEntityFactoryRegistry )
+	{
+	}
+
 	void ReplicationMessagesProcessor::Client_ProcessReceivedReplicationMessage(
 	    const ReplicationMessage& replicationMessage )
 	{
@@ -105,9 +112,8 @@ namespace NetLib
 	void ReplicationMessagesProcessor::RemoveNetworkEntity( uint32 networkEntityId )
 	{
 		// Get game entity Id from network entity Id
-		NetworkEntityData gameEntity;
-		bool foundSuccesfully = _networkEntitiesStorage.TryGetNetworkEntityFromId( networkEntityId, gameEntity );
-		if ( !foundSuccesfully )
+		const NetworkEntityData* gameEntity = _networkEntitiesStorage.TryGetNetworkEntityFromId( networkEntityId );
+		if ( gameEntity == nullptr )
 		{
 			LOG_INFO( "Replication: Trying to remove a network entity that doesn't exist. Network entity ID: %u. "
 			          "Ignoring it...",
@@ -116,6 +122,6 @@ namespace NetLib
 		}
 
 		// Destroy object through its custom factory
-		_networkEntityFactoryRegistry->RemoveNetworkEntity( gameEntity.inGameId );
+		_networkEntityFactoryRegistry->RemoveNetworkEntity( gameEntity->inGameId );
 	}
 } // namespace NetLib

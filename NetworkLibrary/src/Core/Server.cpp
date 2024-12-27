@@ -384,7 +384,7 @@ namespace NetLib
 			}
 		}
 
-		_replicationManager.ClearSentReplicationMessages();
+		_replicationManager.ClearReplicationMessages();
 	}
 
 	bool Server::StopConcrete()
