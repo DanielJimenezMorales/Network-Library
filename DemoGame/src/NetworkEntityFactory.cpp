@@ -12,6 +12,7 @@
 #include "core/client.h"
 #include "NetworkEntityComponent.h"
 #include "CircleBounds2D.h"
+#include "player_network_entity_serialization_callbacks.h"
 
 #include "Vec2f.h"
 
@@ -26,37 +27,6 @@ void NetworkEntityFactory::SetScene( Scene* scene )
 void NetworkEntityFactory::SetPeerType( NetLib::PeerType peerType )
 {
 	_peerType = peerType;
-}
-
-static void SerializeForOwner( const GameEntity& entity, NetLib::Buffer& buffer )
-{
-	const TransformComponent& transform = entity.GetComponent< TransformComponent >();
-	const Vec2f position = transform.GetPosition();
-	buffer.WriteFloat( position.X() );
-	buffer.WriteFloat( position.Y() );
-	buffer.WriteFloat( transform.GetRotationAngle() );
-}
-
-static void SerializeForNonOwner( const GameEntity& entity, NetLib::Buffer& buffer )
-{
-	const TransformComponent& transform = entity.GetComponent< TransformComponent >();
-	const Vec2f position = transform.GetPosition();
-	buffer.WriteFloat( position.X() );
-	buffer.WriteFloat( position.Y() );
-	buffer.WriteFloat( transform.GetRotationAngle() );
-}
-
-static void UnserializeForOwner( GameEntity& entity, NetLib::Buffer& buffer )
-{
-	TransformComponent& transform = entity.GetComponent< TransformComponent >();
-	Vec2f position;
-	position.X( buffer.ReadFloat() );
-	position.Y( buffer.ReadFloat() );
-
-	transform.SetPosition( position );
-
-	const float32 rotation_angle = buffer.ReadFloat();
-	transform.SetRotationAngle( rotation_angle );
 }
 
 int32 NetworkEntityFactory::CreateNetworkEntityObject(
@@ -119,7 +89,7 @@ int32 NetworkEntityFactory::CreateNetworkEntityObject(
 		// Subscribe to Serialize for owner
 		auto callback = [ entity ]( NetLib::Buffer& buffer ) mutable
 		{
-			UnserializeForOwner( entity, buffer );
+			DeserializeForOwner( entity, buffer );
 		};
 		communication_callbacks.OnUnserializeEntityStateForOwner.AddSubscriber( callback );
 	}
