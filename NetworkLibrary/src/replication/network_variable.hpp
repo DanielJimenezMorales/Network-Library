@@ -112,12 +112,12 @@ namespace NetLib
 	template<typename T>
 	inline void NetworkVariable<T>::RegisterVariable()
 	{
-		_networkVariableChangesHandler->RegisterNetworkVariable(this);
+		//_networkVariableChangesHandler->RegisterNetworkVariable(this);
 	}
 
 	template<typename T>
 	inline void NetworkVariable<T>::UnregisterVariable() const
 	{
-		_networkVariableChangesHandler->UnregisterNetworkVariable(*this);
+		//_networkVariableChangesHandler->UnregisterNetworkVariable(*this);
 	}
 }

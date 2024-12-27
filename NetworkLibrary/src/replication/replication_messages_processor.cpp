@@ -57,7 +57,7 @@ namespace NetLib
 		float32 posY = buffer.ReadFloat();
 		int32 gameEntity = _networkEntityFactoryRegistry->CreateNetworkEntity(
 		    replicationMessage.replicatedClassId, networkEntityId, replicationMessage.controlledByPeerId, posX, posY,
-		    &_networkVariableChangesHandler, new_entity_data.communicationCallbacks );
+		    new_entity_data.communicationCallbacks );
 		assert( gameEntity != -1 );
 
 		new_entity_data.inGameId = static_cast< uint32 >( gameEntity );
@@ -79,7 +79,7 @@ namespace NetLib
 			// If not found create a new one and update it
 			int32 gameEntity = _networkEntityFactoryRegistry->CreateNetworkEntity(
 			    replicationMessage.replicatedClassId, networkEntityId, replicationMessage.controlledByPeerId, 0.f, 0.f,
-			    &_networkVariableChangesHandler, new_entity_data.communicationCallbacks );
+			    new_entity_data.communicationCallbacks );
 			assert( gameEntity != -1 );
 
 			new_entity_data.inGameId = static_cast< uint32 >( gameEntity );

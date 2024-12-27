@@ -4,7 +4,6 @@
 namespace NetLib
 {
 	class INetworkEntityFactory;
-	class NetworkVariableChangesHandler;
 	struct NetworkEntityCommunicationCallbacks;
 
 	class NetworkEntityFactoryRegistry
@@ -18,7 +17,6 @@ namespace NetLib
 			void RegisterNetworkEntityFactory( INetworkEntityFactory* entityFactory );
 			uint32 CreateNetworkEntity( uint32 entityType, uint32 networkEntityId, uint32 controlledByPeerId,
 			                            float32 posX, float32 posY,
-			                            NetworkVariableChangesHandler* networkVariableChangesHandler,
 			                            NetworkEntityCommunicationCallbacks& communication_callbacks );
 			void RemoveNetworkEntity( uint32 inGameId );
 

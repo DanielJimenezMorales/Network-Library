@@ -61,7 +61,6 @@ static void UnserializeForOwner( GameEntity& entity, NetLib::Buffer& buffer )
 
 int32 NetworkEntityFactory::CreateNetworkEntityObject(
     uint32 networkEntityType, uint32 networkEntityId, uint32 controlledByPeerId, float32 posX, float32 posY,
-    NetLib::NetworkVariableChangesHandler* networkVariableChangeHandler,
     NetLib::NetworkEntityCommunicationCallbacks& communication_callbacks )
 {
 	LOG_INFO( "CONTROLLER BY PEER ID %u", controlledByPeerId );
@@ -86,13 +85,9 @@ int32 NetworkEntityFactory::CreateNetworkEntityObject(
 
 	entity.AddComponent< NetworkEntityComponent >( networkEntityId, controlledByPeerId );
 
-	// For player entities, its network variables IDs will go from 1 to 100 both included.
-	networkVariableChangeHandler->SetNextNetworkVariableId( 1 );
-
 	if ( networkPeerComponent.peer->GetPeerType() == NetLib::PeerType::SERVER )
 	{
-		entity.AddComponent< PlayerControllerComponent >( networkVariableChangeHandler, networkEntityId,
-		                                                  playerConfiguration );
+		entity.AddComponent< PlayerControllerComponent >( nullptr, networkEntityId, playerConfiguration );
 
 		// Subscribe to Serialize for owner
 		auto serialize_owner_callback = [ entity ]( NetLib::Buffer& buffer )
@@ -113,13 +108,12 @@ int32 NetworkEntityFactory::CreateNetworkEntityObject(
 		const NetLib::Client* clientPeer = static_cast< NetLib::Client* >( networkPeerComponent.peer );
 		if ( clientPeer->GetLocalClientId() == controlledByPeerId )
 		{
-			entity.AddComponent< PlayerControllerComponent >( networkVariableChangeHandler, networkEntityId,
-			                                                  playerConfiguration );
+			entity.AddComponent< PlayerControllerComponent >( nullptr, networkEntityId, playerConfiguration );
 		}
 		else
 		{
 			LOG_WARNING( "ME CREO EL LOCAL" );
-			entity.AddComponent< RemotePlayerControllerComponent >( networkVariableChangeHandler, networkEntityId );
+			entity.AddComponent< RemotePlayerControllerComponent >( nullptr, networkEntityId );
 		}
 
 		// Subscribe to Serialize for owner

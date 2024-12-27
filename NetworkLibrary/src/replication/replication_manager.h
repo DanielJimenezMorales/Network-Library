@@ -1,8 +1,6 @@
 #pragma once
 #include "numeric_types.h"
 
-#include <unordered_map>
-#include <queue>
 #include <memory>
 #include <functional>
 
@@ -10,7 +8,6 @@
 
 #include "communication/message.h"
 
-#include "replication/network_variable_changes_handler.h"
 #include "replication/network_entity_storage.h"
 
 namespace NetLib
@@ -33,11 +30,6 @@ namespace NetLib
 
 			void Server_ReplicateWorldState(
 			    uint32 remote_peer_id, std::vector< std::unique_ptr< ReplicationMessage > >& replication_messages );
-			void Server_ReplicateWorldState();
-			void Client_ProcessReceivedReplicationMessage( const ReplicationMessage& replicationMessage );
-
-			bool ArePendingReplicationMessages() const;
-			const ReplicationMessage* GetPendingReplicationMessage();
 
 			void ClearSentReplicationMessages();
 
@@ -55,21 +47,14 @@ namespace NetLib
 			                                                                      const Buffer& buffer );
 			std::unique_ptr< ReplicationMessage > CreateDestroyReplicationMessage( uint32 networkEntityId );
 
-			void ProcessReceivedCreateReplicationMessage( const ReplicationMessage& replicationMessage );
-			void ProcessReceivedUpdateReplicationMessage( const ReplicationMessage& replicationMessage );
-			void ProcessReceivedDestroyReplicationMessage( const ReplicationMessage& replicationMessage );
-
 			void CalculateNextNetworkEntityId();
 
 			NetworkEntityStorage _networkEntitiesStorage;
 
-			std::queue< std::unique_ptr< ReplicationMessage > > _pendingReplicationActionMessages;
-			std::vector< std::unique_ptr< ReplicationMessage > > _pendingReplicationActionMessagesVector;
-			std::queue< std::unique_ptr< ReplicationMessage > > _sentReplicationMessages;
+			std::vector< std::unique_ptr< ReplicationMessage > > _pendingReplicationActionMessages;
 
 			uint32 _nextNetworkEntityId;
 
 			NetworkEntityFactoryRegistry* _networkEntityFactoryRegistry;
-			NetworkVariableChangesHandler _networkVariableChangesHandler;
 	};
 } // namespace NetLib
