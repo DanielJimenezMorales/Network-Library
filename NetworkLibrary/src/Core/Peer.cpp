@@ -182,9 +182,10 @@ namespace NetLib
 			CreateDisconnectionPacket( remotePeer, reason );
 		}
 
-		bool removedSuccesfully = _remotePeersHandler.RemoveRemotePeer( remotePeer.GetClientIndex() );
+		const uint32 id = remotePeer.GetClientIndex();
+		bool removedSuccesfully = _remotePeersHandler.RemoveRemotePeer( id );
 		assert( removedSuccesfully );
-		ExecuteOnRemotePeerDisconnect();
+		ExecuteOnRemotePeerDisconnect( id );
 	}
 
 	void Peer::CreateDisconnectionPacket( const RemotePeer& remotePeer, ConnectionFailedReasonType reason )
@@ -495,9 +496,9 @@ namespace NetLib
 		_connectionState = state;
 	}
 
-	void Peer::ExecuteOnRemotePeerDisconnect()
+	void Peer::ExecuteOnRemotePeerDisconnect( uint32 id )
 	{
-		_onRemotePeerDisconnect.Execute();
+		_onRemotePeerDisconnect.Execute( id );
 	}
 
 	void Peer::ExecuteOnRemotePeerConnect( uint32 remotePeerId )

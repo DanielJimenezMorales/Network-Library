@@ -221,6 +221,29 @@ namespace NetLib
 		_createDestroyReplicationMessages.clear();
 	}
 
+	void ReplicationManager::RemoveNetworkEntitiesControllerByPeer( uint32 id )
+	{
+		std::vector< uint32 > network_entity_ids_to_remove;
+		const std::unordered_map< uint32, NetworkEntityData >& network_entities =
+		    _networkEntitiesStorage.GetNetworkEntitiess();
+
+		auto cit = network_entities.cbegin();
+		for ( ; cit != network_entities.cend(); ++cit )
+		{
+			const NetworkEntityData& network_entity_data = cit->second;
+			if ( network_entity_data.controlledByPeerId == id )
+			{
+				network_entity_ids_to_remove.push_back( network_entity_data.id );
+			}
+		}
+
+		auto ids_to_remove_cit = network_entity_ids_to_remove.cbegin();
+		for ( ; ids_to_remove_cit != network_entity_ids_to_remove.cend(); ++ids_to_remove_cit )
+		{
+			RemoveNetworkEntity( *ids_to_remove_cit );
+		}
+	}
+
 	void ReplicationManager::CalculateNextNetworkEntityId()
 	{
 		++_nextNetworkEntityId;

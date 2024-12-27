@@ -52,6 +52,11 @@ namespace NetLib
 		return _networkEntityIdToDataMap.begin();
 	}
 
+	const std::unordered_map< uint32, NetworkEntityData >& NetworkEntityStorage::GetNetworkEntitiess() const
+	{
+		return _networkEntityIdToDataMap;
+	}
+
 	std::unordered_map< uint32, NetworkEntityData >::iterator NetworkEntityStorage::GetPastToEndNetworkEntities()
 	{
 		return _networkEntityIdToDataMap.end();

@@ -33,6 +33,8 @@ namespace NetLib
 
 			void ClearReplicationMessages();
 
+			void RemoveNetworkEntitiesControllerByPeer( uint32 id );
+
 		private:
 			NetworkEntityData& SpawnNewNetworkEntity( uint32 replicated_class_id, uint32 network_entity_id,
 			                                          uint32 controlled_by_peer_id, float32 pos_x, float32 pos_y );

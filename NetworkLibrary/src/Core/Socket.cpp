@@ -154,6 +154,8 @@ namespace NetLib
 		const int32 bytesIn = recvfrom( _listenSocket, ( char* ) incomingDataBuffer, incomingDataBufferSize, 0,
 		                                ( sockaddr* ) &incomingAddress, &incomingAddressSize );
 
+		remoteAddress.SetFromSockAddr( incomingAddress );
+
 		if ( bytesIn == SOCKET_ERROR )
 		{
 			const int32 error = GetLastError();
@@ -178,8 +180,6 @@ namespace NetLib
 				return SocketResult::SOKT_ERR;
 			}
 		}
-
-		remoteAddress.SetFromSockAddr( incomingAddress );
 
 		numberOfBytesRead = bytesIn;
 

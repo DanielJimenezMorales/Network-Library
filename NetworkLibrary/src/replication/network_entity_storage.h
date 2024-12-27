@@ -56,6 +56,7 @@ namespace NetLib
 			NetworkEntityData& AddNetworkEntity( uint32 entityType, uint32 networkEntityId, uint32 controlledByPeerId );
 			bool RemoveNetworkEntity( uint32 networkEntityId );
 			std::unordered_map< uint32, NetworkEntityData >::iterator GetNetworkEntities();
+			const std::unordered_map< uint32, NetworkEntityData >& GetNetworkEntitiess() const;
 			std::unordered_map< uint32, NetworkEntityData >::iterator GetPastToEndNetworkEntities();
 
 		private:

@@ -73,6 +73,9 @@ namespace NetLib
 		LOG_INFO( "Server started succesfully!" );
 
 		ExecuteOnLocalPeerConnect();
+
+		SubscribeToOnRemotePeerDisconnect(
+		    std::bind( &Server::RemoveReplicationEntitiesControlledByPeer, this, std::placeholders::_1 ) );
 		return true;
 	}
 
@@ -385,6 +388,11 @@ namespace NetLib
 		}
 
 		_replicationManager.ClearReplicationMessages();
+	}
+
+	void Server::RemoveReplicationEntitiesControlledByPeer( uint32 id )
+	{
+		_replicationManager.RemoveNetworkEntitiesControllerByPeer( id );
 	}
 
 	bool Server::StopConcrete()

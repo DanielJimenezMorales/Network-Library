@@ -78,7 +78,11 @@ namespace NetLib
 		uint64 clientSalt = GenerateClientSaltNumber();
 		AddRemotePeer( _serverAddress, 0, clientSalt, 0 );
 
-		SubscribeToOnRemotePeerDisconnect( std::bind( &NetLib::Client::OnServerDisconnect, this ) );
+		SubscribeToOnRemotePeerDisconnect(
+		    [ this ]( uint32 )
+		    {
+			    OnServerDisconnect();
+		    } );
 
 		LOG_INFO( "Client started succesfully!" );
 

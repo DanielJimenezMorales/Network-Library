@@ -51,7 +51,8 @@ namespace NetLib
 
 	void Address::SetFromSockAddr( const sockaddr_in& addressInfo )
 	{
-		_addressInfo.sin_family = addressInfo.sin_family;
+		// TODO For some reason addressInfo.sin_family is 0, aka unespecified
+		_addressInfo.sin_family = AF_INET; // addressInfo.sin_family;
 		_addressInfo.sin_port = addressInfo.sin_port;
 		_addressInfo.sin_addr = addressInfo.sin_addr;
 
