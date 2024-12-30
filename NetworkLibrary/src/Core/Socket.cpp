@@ -147,12 +147,16 @@ namespace NetLib
 			return SocketResult::SOKT_ERR;
 		}
 
-		sockaddr_in incomingAddress;
+		struct sockaddr_in incomingAddress;
 		int32 incomingAddressSize = sizeof( incomingAddress );
 		ZeroMemory( &incomingAddress, incomingAddressSize );
 
+		// If recvfrom doesn't find any data, incomingAddress will be invalid. This means that
+		// incomingAddress.sin_family will be AF_UNSPEC, IP will be 0.0.0.0 and port will be 0
 		const int32 bytesIn = recvfrom( _listenSocket, ( char* ) incomingDataBuffer, incomingDataBufferSize, 0,
 		                                ( sockaddr* ) &incomingAddress, &incomingAddressSize );
+
+		remoteAddress.SetFromSockAddr( incomingAddress );
 
 		if ( bytesIn == SOCKET_ERROR )
 		{
@@ -178,8 +182,6 @@ namespace NetLib
 				return SocketResult::SOKT_ERR;
 			}
 		}
-
-		remoteAddress.SetFromSockAddr( incomingAddress );
 
 		numberOfBytesRead = bytesIn;
 

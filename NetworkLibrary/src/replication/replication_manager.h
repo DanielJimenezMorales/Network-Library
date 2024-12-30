@@ -1,8 +1,6 @@
 #pragma once
 #include "numeric_types.h"
 
-#include <unordered_map>
-#include <queue>
 #include <memory>
 #include <functional>
 
@@ -10,7 +8,6 @@
 
 #include "communication/message.h"
 
-#include "replication/network_variable_changes_handler.h"
 #include "replication/network_entity_storage.h"
 
 namespace NetLib
@@ -31,15 +28,17 @@ namespace NetLib
 			uint32 CreateNetworkEntity( uint32 entityType, uint32 controlledByPeerId, float32 posX, float32 posY );
 			void RemoveNetworkEntity( uint32 networkEntityId );
 
-			void Server_ReplicateWorldState();
-			void Client_ProcessReceivedReplicationMessage( const ReplicationMessage& replicationMessage );
+			void Server_ReplicateWorldState(
+			    uint32 remote_peer_id, std::vector< std::unique_ptr< ReplicationMessage > >& replication_messages );
 
-			bool ArePendingReplicationMessages() const;
-			const ReplicationMessage* GetPendingReplicationMessage();
+			void ClearReplicationMessages();
 
-			void ClearSentReplicationMessages();
+			void RemoveNetworkEntitiesControllerByPeer( uint32 id );
 
 		private:
+			NetworkEntityData& SpawnNewNetworkEntity( uint32 replicated_class_id, uint32 network_entity_id,
+			                                          uint32 controlled_by_peer_id, float32 pos_x, float32 pos_y );
+
 			std::unique_ptr< ReplicationMessage > CreateCreateReplicationMessage( uint32 entityType,
 			                                                                      uint32 controlledByPeerId,
 			                                                                      uint32 networkEntityId,
@@ -50,20 +49,14 @@ namespace NetLib
 			                                                                      const Buffer& buffer );
 			std::unique_ptr< ReplicationMessage > CreateDestroyReplicationMessage( uint32 networkEntityId );
 
-			void ProcessReceivedCreateReplicationMessage( const ReplicationMessage& replicationMessage );
-			void ProcessReceivedUpdateReplicationMessage( const ReplicationMessage& replicationMessage );
-			void ProcessReceivedDestroyReplicationMessage( const ReplicationMessage& replicationMessage );
-
 			void CalculateNextNetworkEntityId();
 
 			NetworkEntityStorage _networkEntitiesStorage;
 
-			std::queue< std::unique_ptr< ReplicationMessage > > _pendingReplicationActionMessages;
-			std::queue< std::unique_ptr< ReplicationMessage > > _sentReplicationMessages;
+			std::vector< std::unique_ptr< ReplicationMessage > > _createDestroyReplicationMessages;
 
 			uint32 _nextNetworkEntityId;
 
 			NetworkEntityFactoryRegistry* _networkEntityFactoryRegistry;
-			NetworkVariableChangesHandler _networkVariableChangesHandler;
 	};
 } // namespace NetLib

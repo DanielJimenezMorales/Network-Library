@@ -9,11 +9,19 @@
 
 #include "replication/replication_action_type.h"
 #include "replication/network_entity_factory_registry.h"
+#include "replication/network_entity_communication_callbacks.h"
 
 #include <cassert>
 
 namespace NetLib
 {
+	ReplicationMessagesProcessor::ReplicationMessagesProcessor(
+	    NetworkEntityFactoryRegistry* networkEntityFactoryRegistry )
+	    : _networkEntitiesStorage()
+	    , _networkEntityFactoryRegistry( networkEntityFactoryRegistry )
+	{
+	}
+
 	void ReplicationMessagesProcessor::Client_ProcessReceivedReplicationMessage(
 	    const ReplicationMessage& replicationMessage )
 	{
@@ -46,6 +54,9 @@ namespace NetLib
 			return;
 		}
 
+		NetworkEntityData& new_entity_data = _networkEntitiesStorage.AddNetworkEntity(
+		    replicationMessage.replicatedClassId, networkEntityId, replicationMessage.controlledByPeerId );
+
 		// Create network entity through its custom factory
 		Buffer buffer( replicationMessage.data, replicationMessage.dataSize );
 		LOG_INFO( "DATA SIZE: %hu", replicationMessage.dataSize );
@@ -53,12 +64,10 @@ namespace NetLib
 		float32 posY = buffer.ReadFloat();
 		int32 gameEntity = _networkEntityFactoryRegistry->CreateNetworkEntity(
 		    replicationMessage.replicatedClassId, networkEntityId, replicationMessage.controlledByPeerId, posX, posY,
-		    &_networkVariableChangesHandler );
+		    new_entity_data.communicationCallbacks );
 		assert( gameEntity != -1 );
 
-		// Add it to the network entities storage in order to avoid loosing it
-		_networkEntitiesStorage.AddNetworkEntity( replicationMessage.replicatedClassId, networkEntityId,
-		                                          replicationMessage.controlledByPeerId, gameEntity );
+		new_entity_data.inGameId = static_cast< uint32 >( gameEntity );
 	}
 
 	void ReplicationMessagesProcessor::ProcessReceivedUpdateReplicationMessage(
@@ -71,21 +80,26 @@ namespace NetLib
 			          "new entity...",
 			          networkEntityId );
 
+			NetworkEntityData& new_entity_data = _networkEntitiesStorage.AddNetworkEntity(
+			    replicationMessage.replicatedClassId, networkEntityId, replicationMessage.controlledByPeerId );
+
 			// If not found create a new one and update it
 			int32 gameEntity = _networkEntityFactoryRegistry->CreateNetworkEntity(
 			    replicationMessage.replicatedClassId, networkEntityId, replicationMessage.controlledByPeerId, 0.f, 0.f,
-			    &_networkVariableChangesHandler );
+			    new_entity_data.communicationCallbacks );
 			assert( gameEntity != -1 );
 
-			// Add it to the network entities storage in order to avoid loosing it
-			_networkEntitiesStorage.AddNetworkEntity( replicationMessage.replicatedClassId, networkEntityId,
-			                                          replicationMessage.controlledByPeerId, gameEntity );
+			new_entity_data.inGameId = static_cast< uint32 >( gameEntity );
 			return;
 		}
 
+		NetworkEntityData* entity_data = _networkEntitiesStorage.TryGetNetworkEntityFromId( networkEntityId );
+		assert( entity_data != nullptr );
+
 		// TODO Pass entity state to target entity
 		Buffer buffer( replicationMessage.data, replicationMessage.dataSize );
-		_networkVariableChangesHandler.ProcessVariableChanges( buffer );
+		entity_data->communicationCallbacks.OnUnserializeEntityStateForOwner.Execute( buffer );
+		//_networkVariableChangesHandler.ProcessVariableChanges( buffer );
 	}
 
 	void ReplicationMessagesProcessor::ProcessReceivedDestroyReplicationMessage(
@@ -98,9 +112,8 @@ namespace NetLib
 	void ReplicationMessagesProcessor::RemoveNetworkEntity( uint32 networkEntityId )
 	{
 		// Get game entity Id from network entity Id
-		NetworkEntityData gameEntity;
-		bool foundSuccesfully = _networkEntitiesStorage.TryGetNetworkEntityFromId( networkEntityId, gameEntity );
-		if ( !foundSuccesfully )
+		const NetworkEntityData* gameEntity = _networkEntitiesStorage.TryGetNetworkEntityFromId( networkEntityId );
+		if ( gameEntity == nullptr )
 		{
 			LOG_INFO( "Replication: Trying to remove a network entity that doesn't exist. Network entity ID: %u. "
 			          "Ignoring it...",
@@ -109,6 +122,6 @@ namespace NetLib
 		}
 
 		// Destroy object through its custom factory
-		_networkEntityFactoryRegistry->RemoveNetworkEntity( gameEntity.inGameId );
+		_networkEntityFactoryRegistry->RemoveNetworkEntity( gameEntity->inGameId );
 	}
 } // namespace NetLib

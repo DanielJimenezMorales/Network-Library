@@ -145,7 +145,7 @@ namespace NetLib
 
 			// Delegates related
 			void ExecuteOnRemotePeerConnect( uint32 remotePeerId );
-			void ExecuteOnRemotePeerDisconnect();
+			void ExecuteOnRemotePeerDisconnect( uint32 id );
 
 			PeerType _type;
 			PeerConnectionState _connectionState;
@@ -167,7 +167,7 @@ namespace NetLib
 			Common::Delegate<> _onLocalPeerConnect;
 			Common::Delegate< ConnectionFailedReasonType > _onLocalPeerDisconnect;
 			Common::Delegate< uint32 > _onRemotePeerConnect;
-			Common::Delegate<> _onRemotePeerDisconnect;
+			Common::Delegate< uint32 > _onRemotePeerDisconnect;
 	};
 
 	template < typename Functor >

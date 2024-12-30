@@ -10,12 +10,7 @@ namespace NetLib
 	class ReplicationMessagesProcessor
 	{
 		public:
-			ReplicationMessagesProcessor( NetworkEntityFactoryRegistry* networkEntityFactoryRegistry )
-			    : _networkEntitiesStorage()
-			    , _networkVariableChangesHandler()
-			    , _networkEntityFactoryRegistry( networkEntityFactoryRegistry )
-			{
-			}
+			ReplicationMessagesProcessor( NetworkEntityFactoryRegistry* networkEntityFactoryRegistry );
 
 			void Client_ProcessReceivedReplicationMessage( const ReplicationMessage& replicationMessage );
 
@@ -28,6 +23,5 @@ namespace NetLib
 
 			NetworkEntityStorage _networkEntitiesStorage;
 			NetworkEntityFactoryRegistry* _networkEntityFactoryRegistry;
-			NetworkVariableChangesHandler _networkVariableChangesHandler;
 	};
 }

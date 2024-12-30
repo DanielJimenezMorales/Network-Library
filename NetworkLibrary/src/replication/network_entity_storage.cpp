@@ -10,37 +10,56 @@ namespace NetLib
 		return it != _networkEntityIdToDataMap.cend();
 	}
 
-	bool NetworkEntityStorage::TryGetNetworkEntityFromId( uint32 entityId, NetworkEntityData& gameEntityId )
+	NetworkEntityData* NetworkEntityStorage::TryGetNetworkEntityFromId( uint32 entityId )
 	{
+		NetworkEntityData* result = nullptr;
 		auto it = _networkEntityIdToDataMap.find( entityId );
 
-		if ( it == _networkEntityIdToDataMap.cend() )
+		if ( it != _networkEntityIdToDataMap.cend() )
+		{
+			result = &it->second;
+		}
+
+		return result;
+	}
+
+	bool NetworkEntityStorage::AddNetworkEntity( uint32 entityType, uint32 networkEntityId, uint32 controlledByPeerId,
+	                                             uint32 gameEntityId )
+	{
+		if ( _networkEntityIdToDataMap.find( networkEntityId ) != _networkEntityIdToDataMap.cend() )
 		{
 			return false;
 		}
 
-		gameEntityId = it->second;
+		_networkEntityIdToDataMap[ networkEntityId ] =
+		    NetworkEntityData( entityType, networkEntityId, gameEntityId, controlledByPeerId );
 		return true;
 	}
 
-	void NetworkEntityStorage::AddNetworkEntity( uint32 entityType, uint32 networkEntityId, uint32 controlledByPeerId,
-	                                             uint32 gameEntityId )
+	NetworkEntityData& NetworkEntityStorage::AddNetworkEntity( uint32 entityType, uint32 networkEntityId,
+	                                                           uint32 controlledByPeerId )
 	{
 		assert( _networkEntityIdToDataMap.find( networkEntityId ) == _networkEntityIdToDataMap.cend() );
 
 		_networkEntityIdToDataMap[ networkEntityId ] =
-		    NetworkEntityData( entityType, networkEntityId, gameEntityId, controlledByPeerId );
+		    NetworkEntityData( entityType, networkEntityId, controlledByPeerId );
+
+		return _networkEntityIdToDataMap[ networkEntityId ];
 	}
 
-	std::unordered_map< uint32, NetworkEntityData >::const_iterator NetworkEntityStorage::GetNetworkEntities() const
+	std::unordered_map< uint32, NetworkEntityData >::iterator NetworkEntityStorage::GetNetworkEntities()
 	{
-		return _networkEntityIdToDataMap.cbegin();
+		return _networkEntityIdToDataMap.begin();
 	}
 
-	std::unordered_map< uint32, NetworkEntityData >::const_iterator NetworkEntityStorage::GetPastToEndNetworkEntities()
-	    const
+	const std::unordered_map< uint32, NetworkEntityData >& NetworkEntityStorage::GetNetworkEntitiess() const
 	{
-		return _networkEntityIdToDataMap.cend();
+		return _networkEntityIdToDataMap;
+	}
+
+	std::unordered_map< uint32, NetworkEntityData >::iterator NetworkEntityStorage::GetPastToEndNetworkEntities()
+	{
+		return _networkEntityIdToDataMap.end();
 	}
 
 	bool NetworkEntityStorage::RemoveNetworkEntity( uint32 networkEntityId )

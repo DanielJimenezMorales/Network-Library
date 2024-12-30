@@ -13,7 +13,7 @@ void RemotePlayerControllerSystem::Tick(EntityContainer& entityContainer, float3
 		TransformComponent& transform = it->GetComponent<TransformComponent>();
 		const RemotePlayerControllerComponent& networkComponent = it->GetComponent<RemotePlayerControllerComponent>();
 
-		transform.SetPosition(Vec2f(networkComponent.posX.Get(), networkComponent.posY.Get()));
-		transform.SetRotationAngle(networkComponent.rotationAngle.Get());
+		//transform.SetPosition(Vec2f(networkComponent.posX.Get(), networkComponent.posY.Get()));
+		//transform.SetRotationAngle(networkComponent.rotationAngle.Get());
 	}
 }

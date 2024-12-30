@@ -72,6 +72,8 @@ namespace NetLib
 
 			void TickReplication();
 
+			void RemoveReplicationEntitiesControlledByPeer( uint32 id );
+
 			uint32 _nextAssignedRemotePeerID = 1;
 
 			RemotePeerInputsHandler _remotePeerInputsHandler;

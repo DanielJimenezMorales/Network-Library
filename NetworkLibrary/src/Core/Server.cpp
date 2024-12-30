@@ -73,6 +73,9 @@ namespace NetLib
 		LOG_INFO( "Server started succesfully!" );
 
 		ExecuteOnLocalPeerConnect();
+
+		SubscribeToOnRemotePeerDisconnect(
+		    std::bind( &Server::RemoveReplicationEntitiesControlledByPeer, this, std::placeholders::_1 ) );
 		return true;
 	}
 
@@ -368,45 +371,28 @@ namespace NetLib
 
 	void Server::TickReplication()
 	{
-		_replicationManager.Server_ReplicateWorldState();
+		auto validRemotePeersIt = _remotePeersHandler.GetValidRemotePeersIterator();
+		auto pastTheEndIt = _remotePeersHandler.GetValidRemotePeersPastTheEndIterator();
 
-		MessageFactory& messageFactory = MessageFactory::GetInstance();
-
-		while ( _replicationManager.ArePendingReplicationMessages() )
+		for ( ; validRemotePeersIt != pastTheEndIt; ++validRemotePeersIt )
 		{
-			const ReplicationMessage* pendingReplicationMessage = _replicationManager.GetPendingReplicationMessage();
+			std::vector< std::unique_ptr< ReplicationMessage > > replication_messages;
+			_replicationManager.Server_ReplicateWorldState( ( *validRemotePeersIt )->GetClientIndex(),
+			                                                replication_messages );
 
-			auto validRemotePeersIt = _remotePeersHandler.GetValidRemotePeersIterator();
-			auto pastTheEndIt = _remotePeersHandler.GetValidRemotePeersPastTheEndIterator();
-
-			for ( ; validRemotePeersIt != pastTheEndIt; ++validRemotePeersIt )
+			auto it = replication_messages.begin();
+			for ( ; it != replication_messages.end(); ++it )
 			{
-				std::unique_ptr< Message > message = messageFactory.LendMessage( MessageType::Replication );
-				std::unique_ptr< ReplicationMessage > replicationMessage(
-				    static_cast< ReplicationMessage* >( message.release() ) );
-
-				// TODO Create an operator= or something like that to avoid this spaguetti code
-				replicationMessage->SetOrdered( pendingReplicationMessage->GetHeader().isOrdered );
-				replicationMessage->SetReliability( pendingReplicationMessage->GetHeader().isReliable );
-				replicationMessage->replicationAction = pendingReplicationMessage->replicationAction;
-				replicationMessage->networkEntityId = pendingReplicationMessage->networkEntityId;
-				replicationMessage->controlledByPeerId = pendingReplicationMessage->controlledByPeerId;
-				replicationMessage->replicatedClassId = pendingReplicationMessage->replicatedClassId;
-				replicationMessage->dataSize = pendingReplicationMessage->dataSize;
-				if ( replicationMessage->dataSize > 0 )
-				{
-					// TODO Figure out if I can improve this. So far, for large snapshot updates data this can become
-					// heavy and slow. Can I avoid the copy somehow?
-					uint8* data = new uint8[ replicationMessage->dataSize ];
-					std::memcpy( data, pendingReplicationMessage->data, replicationMessage->dataSize );
-					replicationMessage->data = data;
-				}
-
-				( *validRemotePeersIt )->AddMessage( std::move( replicationMessage ) );
+				( *validRemotePeersIt )->AddMessage( std::move( *it ) );
 			}
 		}
 
-		_replicationManager.ClearSentReplicationMessages();
+		_replicationManager.ClearReplicationMessages();
+	}
+
+	void Server::RemoveReplicationEntitiesControlledByPeer( uint32 id )
+	{
+		_replicationManager.RemoveNetworkEntitiesControllerByPeer( id );
 	}
 
 	bool Server::StopConcrete()

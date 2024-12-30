@@ -1,31 +1,71 @@
 #include "Collider2DComponent.h"
 
-void Collider2DComponent::GetAxes(const TransformComponent& transform, std::vector<Vec2f>& outAxes) const
+Collider2DComponent::Collider2DComponent( Bounds2D* bounds, bool isTrigger, CollisionResponseType responseType )
+    : _bounds( bounds )
+    , _isTrigger( isTrigger )
+    , _collisionResponseType( responseType )
 {
-	_bounds->GetAxes(transform, outAxes);
 }
 
-void Collider2DComponent::ProjectAxis(const TransformComponent& transform, const Vec2f& axis, float& outMin, float& outMax) const
+Collider2DComponent::Collider2DComponent( Collider2DComponent&& other ) noexcept
+    : _bounds( std::exchange( other._bounds, nullptr ) )
+    , _isTrigger( other._isTrigger )
+    , _collisionResponseType( other._collisionResponseType )
 {
-	_bounds->ProjectAxis(transform, axis, outMin, outMax);
 }
 
-Vec2f Collider2DComponent::GetClosestVertex(const TransformComponent& transform, const Vec2f& inputPoint) const
+Collider2DComponent::~Collider2DComponent()
 {
-	return _bounds->GetClosestVertex(transform, inputPoint);
+	if ( _bounds != nullptr )
+	{
+		delete ( _bounds );
+	}
 }
 
-float32 Collider2DComponent::GetMinX(const TransformComponent& transform) const
+Collider2DComponent& Collider2DComponent::operator=( Collider2DComponent&& other ) noexcept
 {
-	return _bounds->GetMinX(transform);
+	if ( this == &other )
+	{
+		return *this;
+	}
+
+	if ( _bounds != nullptr )
+	{
+		delete ( _bounds );
+	}
+
+	_bounds = std::exchange( other._bounds, nullptr );
+	_isTrigger = other._isTrigger;
+	_collisionResponseType = other._collisionResponseType;
 }
 
-float32 Collider2DComponent::GetMaxX(const TransformComponent& transform) const
+void Collider2DComponent::GetAxes( const TransformComponent& transform, std::vector< Vec2f >& outAxes ) const
 {
-	return _bounds->GetMaxX(transform);
+	_bounds->GetAxes( transform, outAxes );
 }
 
-Gizmo* Collider2DComponent::GetGizmo(const TransformComponent& transform) const
+void Collider2DComponent::ProjectAxis( const TransformComponent& transform, const Vec2f& axis, float& outMin,
+                                       float& outMax ) const
 {
-	return _bounds->GetGizmo(transform);
+	_bounds->ProjectAxis( transform, axis, outMin, outMax );
+}
+
+Vec2f Collider2DComponent::GetClosestVertex( const TransformComponent& transform, const Vec2f& inputPoint ) const
+{
+	return _bounds->GetClosestVertex( transform, inputPoint );
+}
+
+float32 Collider2DComponent::GetMinX( const TransformComponent& transform ) const
+{
+	return _bounds->GetMinX( transform );
+}
+
+float32 Collider2DComponent::GetMaxX( const TransformComponent& transform ) const
+{
+	return _bounds->GetMaxX( transform );
+}
+
+Gizmo* Collider2DComponent::GetGizmo( const TransformComponent& transform ) const
+{
+	return _bounds->GetGizmo( transform );
 }

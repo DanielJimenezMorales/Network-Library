@@ -41,8 +41,8 @@ void PlayerControllerSystem::Tick(EntityContainer& entityContainer, float32 elap
 		TransformComponent& transform = it->GetComponent<TransformComponent>();
 		const PlayerControllerComponent& networkComponent = it->GetComponent<PlayerControllerComponent>();
 
-		transform.SetPosition(Vec2f(networkComponent.posX.Get(), networkComponent.posY.Get()));
-		transform.SetRotationAngle(networkComponent.rotationAngle.Get());
+		//transform.SetPosition(Vec2f(networkComponent.posX.Get(), networkComponent.posY.Get()));
+		//transform.SetRotationAngle(networkComponent.rotationAngle.Get());
 
 		//TODO Enable this when client-side prediction and reconciliation is ready
 		//TickPlayerController(*it, inputState, elapsedTime);

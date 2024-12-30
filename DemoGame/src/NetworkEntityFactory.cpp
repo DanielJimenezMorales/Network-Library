@@ -12,6 +12,11 @@
 #include "core/client.h"
 #include "NetworkEntityComponent.h"
 #include "CircleBounds2D.h"
+#include "player_network_entity_serialization_callbacks.h"
+
+#include "Vec2f.h"
+
+#include "replication/network_entity_communication_callbacks.h"
 
 void NetworkEntityFactory::SetScene( Scene* scene )
 {
@@ -26,7 +31,7 @@ void NetworkEntityFactory::SetPeerType( NetLib::PeerType peerType )
 
 int32 NetworkEntityFactory::CreateNetworkEntityObject(
     uint32 networkEntityType, uint32 networkEntityId, uint32 controlledByPeerId, float32 posX, float32 posY,
-    NetLib::NetworkVariableChangesHandler* networkVariableChangeHandler )
+    NetLib::NetworkEntityCommunicationCallbacks& communication_callbacks )
 {
 	LOG_INFO( "CONTROLLER BY PEER ID %u", controlledByPeerId );
 	ServiceLocator& serviceLocator = ServiceLocator::GetInstance();
@@ -50,27 +55,43 @@ int32 NetworkEntityFactory::CreateNetworkEntityObject(
 
 	entity.AddComponent< NetworkEntityComponent >( networkEntityId, controlledByPeerId );
 
-	// For player entities, its network variables IDs will go from 1 to 100 both included.
-	networkVariableChangeHandler->SetNextNetworkVariableId( 1 );
-
 	if ( networkPeerComponent.peer->GetPeerType() == NetLib::PeerType::SERVER )
 	{
-		entity.AddComponent< PlayerControllerComponent >( networkVariableChangeHandler, networkEntityId,
-		                                                  playerConfiguration );
+		entity.AddComponent< PlayerControllerComponent >( nullptr, networkEntityId, playerConfiguration );
+
+		// Subscribe to Serialize for owner
+		auto serialize_owner_callback = [ entity ]( NetLib::Buffer& buffer )
+		{
+			SerializeForOwner( entity, buffer );
+		};
+		communication_callbacks.OnSerializeEntityStateForOwner.AddSubscriber( serialize_owner_callback );
+
+		// Subscribe to Serialize for non owner
+		auto serialize_non_owner_callback = [ entity ]( NetLib::Buffer& buffer )
+		{
+			SerializeForNonOwner( entity, buffer );
+		};
+		communication_callbacks.OnSerializeEntityStateForNonOwner.AddSubscriber( serialize_non_owner_callback );
 	}
 	else
 	{
 		const NetLib::Client* clientPeer = static_cast< NetLib::Client* >( networkPeerComponent.peer );
 		if ( clientPeer->GetLocalClientId() == controlledByPeerId )
 		{
-			entity.AddComponent< PlayerControllerComponent >( networkVariableChangeHandler, networkEntityId,
-			                                                  playerConfiguration );
+			entity.AddComponent< PlayerControllerComponent >( nullptr, networkEntityId, playerConfiguration );
 		}
 		else
 		{
 			LOG_WARNING( "ME CREO EL LOCAL" );
-			entity.AddComponent< RemotePlayerControllerComponent >( networkVariableChangeHandler, networkEntityId );
+			entity.AddComponent< RemotePlayerControllerComponent >( nullptr, networkEntityId );
 		}
+
+		// Subscribe to Serialize for owner
+		auto callback = [ entity ]( NetLib::Buffer& buffer ) mutable
+		{
+			DeserializeForOwner( entity, buffer );
+		};
+		communication_callbacks.OnUnserializeEntityStateForOwner.AddSubscriber( callback );
 	}
 
 	// entity.AddComponent<PlayerNetworkComponent>(networkVariableChangeHandler, networkEntityId);
@@ -80,4 +101,6 @@ int32 NetworkEntityFactory::CreateNetworkEntityObject(
 
 void NetworkEntityFactory::DestroyNetworkEntityObject( uint32 gameEntity )
 {
+	const GameEntity entity = _scene->GetEntityFromId( gameEntity );
+	_scene->DestroyGameEntity( entity );
 }
