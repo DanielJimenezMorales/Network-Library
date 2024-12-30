@@ -37,6 +37,7 @@ class Scene
 		void AddPosTickSystem( IPosTickSystem* system );
 
 		GameEntity CreateGameEntity();
+		void DestroyGameEntity( const GameEntity& entity );
 
 		template < typename T >
 		GameEntity GetFirstEntityOfType();

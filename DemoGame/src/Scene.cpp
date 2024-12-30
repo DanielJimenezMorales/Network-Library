@@ -83,6 +83,11 @@ GameEntity Scene::CreateGameEntity()
 	return newEntity;
 }
 
+void Scene::DestroyGameEntity( const GameEntity& entity )
+{
+	_entityContainer.DestroyGameEntity( entity );
+}
+
 GameEntity Scene::GetEntityFromId( uint32 id )
 {
 	return _entityContainer.GetEntityFromId( id );

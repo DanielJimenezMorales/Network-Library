@@ -98,6 +98,7 @@ namespace NetLib
 		    static_cast< ReplicationMessage* >( message.release() ) );
 		replicationMessage->replicationAction = static_cast< uint8 >( ReplicationActionType::DESTROY );
 		replicationMessage->networkEntityId = networkEntityId;
+		replicationMessage->dataSize = 0;
 
 		return std::move( replicationMessage );
 	}
@@ -139,6 +140,10 @@ namespace NetLib
 		// Destroy object through its custom factory
 		_networkEntityFactoryRegistry->RemoveNetworkEntity( gameEntity->inGameId );
 
+		// Remove network enttiy data
+		_networkEntitiesStorage.RemoveNetworkEntity( networkEntityId );
+
+		// Create destroy entity message for remote peers
 		std::unique_ptr< ReplicationMessage > destroyMessage = CreateDestroyReplicationMessage( networkEntityId );
 
 		// Store it into queue before broadcasting it
@@ -158,7 +163,6 @@ namespace NetLib
 			std::unique_ptr< ReplicationMessage > replicationMessage(
 			    static_cast< ReplicationMessage* >( message.release() ) );
 
-			const MessageHeader h = source_replication_message->GetHeader();
 			// TODO Create an operator= or something like that to avoid this spaguetti code
 			replicationMessage->SetOrdered( source_replication_message->GetHeader().isOrdered );
 			replicationMessage->SetReliability( source_replication_message->GetHeader().isReliable );
@@ -196,6 +200,7 @@ namespace NetLib
 			}
 			else
 			{
+				// TODO Here is an error
 				networkEntityData.communicationCallbacks.OnSerializeEntityStateForNonOwner.Execute( buffer );
 			}
 

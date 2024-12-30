@@ -101,6 +101,6 @@ int32 NetworkEntityFactory::CreateNetworkEntityObject(
 
 void NetworkEntityFactory::DestroyNetworkEntityObject( uint32 gameEntity )
 {
-	GameEntity entity = _scene->GetEntityFromId(gameEntity);
-	//_scene.
+	const GameEntity entity = _scene->GetEntityFromId( gameEntity );
+	_scene->DestroyGameEntity( entity );
 }
