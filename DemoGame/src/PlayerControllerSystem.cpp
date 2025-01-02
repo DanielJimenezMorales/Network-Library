@@ -17,40 +17,12 @@
 
 #include "core/client.h"
 
-void PlayerControllerSystem::Tick( ECS::EntityContainer& entityContainer, float32 elapsedTime ) const
+PlayerControllerSystem::PlayerControllerSystem()
+    : ECS::ISimpleSystem()
 {
-	std::vector< GameEntity > playerEntities = entityContainer.GetEntitiesOfType< PlayerControllerComponent >();
-	if ( playerEntities.empty() )
-	{
-		return;
-	}
-
-	const GameEntity networkPeerEntity = entityContainer.GetFirstEntityOfType< NetworkPeerComponent >();
-	const NetworkPeerComponent& networkPeerComponent = networkPeerEntity.GetComponent< NetworkPeerComponent >();
-	if ( networkPeerComponent.peer->GetConnectionState() != NetLib::PCS_Connected )
-	{
-		return;
-	}
-
-	InputState inputState;
-	ProcessInputs( entityContainer, inputState );
-	SendInputsToServer( entityContainer, inputState );
-
-	auto it = playerEntities.begin();
-	for ( ; it != playerEntities.end(); ++it )
-	{
-		TransformComponent& transform = it->GetComponent< TransformComponent >();
-		const PlayerControllerComponent& networkComponent = it->GetComponent< PlayerControllerComponent >();
-
-		// transform.SetPosition(Vec2f(networkComponent.posX.Get(), networkComponent.posY.Get()));
-		// transform.SetRotationAngle(networkComponent.rotationAngle.Get());
-
-		// TODO Enable this when client-side prediction and reconciliation is ready
-		// TickPlayerController(*it, inputState, elapsedTime);
-	}
 }
 
-void PlayerControllerSystem::ProcessInputs( ECS::EntityContainer& entityContainer, InputState& outInputState ) const
+static void ProcessInputs( ECS::EntityContainer& entityContainer, InputState& outInputState )
 {
 	const InputComponent& inputComponent = entityContainer.GetFirstComponentOfType< InputComponent >();
 
@@ -63,12 +35,36 @@ void PlayerControllerSystem::ProcessInputs( ECS::EntityContainer& entityContaine
 	outInputState.virtualMousePosition = virtualMouseComponent.position;
 }
 
-void PlayerControllerSystem::SendInputsToServer( ECS::EntityContainer& entityContainer,
-                                                 const InputState& inputState ) const
+static void SendInputsToServer( ECS::EntityContainer& entityContainer, const InputState& inputState )
 {
 	GameEntity networkPeerEntity = entityContainer.GetFirstEntityOfType< NetworkPeerComponent >();
 	NetworkPeerComponent& networkPeerComponent = networkPeerEntity.GetComponent< NetworkPeerComponent >();
 
 	NetLib::Client& networkClient = *static_cast< NetLib::Client* >( networkPeerComponent.peer );
 	networkClient.SendInputs( inputState );
+}
+
+void PlayerControllerSystem::Execute( GameEntity& entity, float32 elapsed_time )
+{
+	ECS::EntityContainer* entity_container = entity.GetEntityContainer();
+
+	const GameEntity networkPeerEntity = entity_container->GetFirstEntityOfType< NetworkPeerComponent >();
+	const NetworkPeerComponent& networkPeerComponent = networkPeerEntity.GetComponent< NetworkPeerComponent >();
+	if ( networkPeerComponent.peer->GetConnectionState() != NetLib::PCS_Connected )
+	{
+		return;
+	}
+
+	InputState inputState;
+	ProcessInputs( *entity_container, inputState );
+	SendInputsToServer( *entity_container, inputState );
+
+	TransformComponent& transform = entity.GetComponent< TransformComponent >();
+	const PlayerControllerComponent& networkComponent = entity.GetComponent< PlayerControllerComponent >();
+
+	// transform.SetPosition(Vec2f(networkComponent.posX.Get(), networkComponent.posY.Get()));
+	// transform.SetRotationAngle(networkComponent.rotationAngle.Get());
+
+	// TODO Enable this when client-side prediction and reconciliation is ready
+	// TickPlayerController(*it, inputState, elapsedTime);
 }

@@ -130,6 +130,7 @@ void SceneInitializer::InitializeScene( Scene& scene, NetLib::PeerType networkPe
 	// TODO Create a system storage in order to be able to free them at the end
 	if ( networkPeerType == NetLib::PeerType::SERVER )
 	{
+		// Add Server-side player controller system
 		ECS::SystemCoordinator* server_player_controller_system_coordinator =
 		    new ECS::SystemCoordinator( ECS::ExecutionStage::TICK );
 		server_player_controller_system_coordinator->AddSystemToTail( ServerGetAllPlayersFilter::GetInstance(),
@@ -138,8 +139,12 @@ void SceneInitializer::InitializeScene( Scene& scene, NetLib::PeerType networkPe
 	}
 	else if ( networkPeerType == NetLib::PeerType::CLIENT )
 	{
-		PlayerControllerSystem* playerControllerSystem = new PlayerControllerSystem();
-		scene.AddTickSystem( playerControllerSystem );
+		// Add Client-side player controller system
+		ECS::SystemCoordinator* client_player_controller_system_coordinator =
+		    new ECS::SystemCoordinator( ECS::ExecutionStage::TICK );
+		client_player_controller_system_coordinator->AddSystemToTail( ServerGetAllPlayersFilter::GetInstance(),
+		                                                              new PlayerControllerSystem() );
+		scene.AddSystem( client_player_controller_system_coordinator );
 	}
 
 	RemotePlayerControllerSystem* remotePlayerControllerSystem = new RemotePlayerControllerSystem();
