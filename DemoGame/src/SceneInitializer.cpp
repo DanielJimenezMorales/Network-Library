@@ -12,8 +12,6 @@
 #include "InputActionIdsConfiguration.h"
 #include "InputHandler.h"
 #include "ITextureLoader.h"
-#include "PlayerControllerSystem.h"
-#include "RemotePlayerControllerSystem.h"
 #include "InputComponent.h"
 #include "InputStateFactory.h"
 #include "CameraComponent.h"
@@ -31,8 +29,11 @@
 #include "ecs/system_coordinator.h"
 
 #include "ecs_filters/server_get_all_players_filter.h"
+#include "ecs_filters/client_get_all_remote_players_filter.h"
 
 #include "ecs_systems/server_player_controller_system.h"
+#include "ecs_systems/client_player_controller_system.h"
+#include "ecs_systems/remote_player_controller_system.h"
 
 void SceneInitializer::InitializeScene( Scene& scene, NetLib::PeerType networkPeerType,
                                         InputHandler& inputHandler ) const
@@ -143,12 +144,16 @@ void SceneInitializer::InitializeScene( Scene& scene, NetLib::PeerType networkPe
 		ECS::SystemCoordinator* client_player_controller_system_coordinator =
 		    new ECS::SystemCoordinator( ECS::ExecutionStage::TICK );
 		client_player_controller_system_coordinator->AddSystemToTail( ServerGetAllPlayersFilter::GetInstance(),
-		                                                              new PlayerControllerSystem() );
+		                                                              new ClientPlayerControllerSystem() );
 		scene.AddSystem( client_player_controller_system_coordinator );
-	}
 
-	RemotePlayerControllerSystem* remotePlayerControllerSystem = new RemotePlayerControllerSystem();
-	scene.AddTickSystem( remotePlayerControllerSystem );
+		// Add Client-side remote player controller system
+		ECS::SystemCoordinator* client_remote_player_controller_system_coordinator =
+		    new ECS::SystemCoordinator( ECS::ExecutionStage::TICK );
+		client_player_controller_system_coordinator->AddSystemToTail( ClientGetAllRemotePlayersFilter::GetInstance(),
+		                                                              new RemotePlayerControllerSystem() );
+		scene.AddSystem( client_remote_player_controller_system_coordinator );
+	}
 
 	NetworkSystem* networkSystem = new NetworkSystem();
 	scene.AddPreTickSystem( networkSystem );

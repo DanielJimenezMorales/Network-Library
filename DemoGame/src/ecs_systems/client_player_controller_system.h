@@ -1,10 +1,10 @@
 #pragma once
 #include "ecs/i_simple_system.h"
 
-class PlayerControllerSystem : public ECS::ISimpleSystem
+class ClientPlayerControllerSystem : public ECS::ISimpleSystem
 {
 	public:
-		PlayerControllerSystem();
+		ClientPlayerControllerSystem();
 
 		void Execute( GameEntity& entity, float32 elapsed_time ) override;
 };

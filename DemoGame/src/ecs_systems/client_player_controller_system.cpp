@@ -1,4 +1,5 @@
-#include "PlayerControllerSystem.h"
+#include "client_player_controller_system.h"
+
 #include "GameEntity.hpp"
 #include "InputComponent.h"
 #include "IInputController.h"
@@ -17,7 +18,7 @@
 
 #include "core/client.h"
 
-PlayerControllerSystem::PlayerControllerSystem()
+ClientPlayerControllerSystem::ClientPlayerControllerSystem()
     : ECS::ISimpleSystem()
 {
 }
@@ -44,7 +45,7 @@ static void SendInputsToServer( ECS::EntityContainer& entityContainer, const Inp
 	networkClient.SendInputs( inputState );
 }
 
-void PlayerControllerSystem::Execute( GameEntity& entity, float32 elapsed_time )
+void ClientPlayerControllerSystem::Execute( GameEntity& entity, float32 elapsed_time )
 {
 	ECS::EntityContainer* entity_container = entity.GetEntityContainer();
 
