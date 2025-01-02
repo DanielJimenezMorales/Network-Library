@@ -15,7 +15,12 @@ namespace ECS
 	{
 	}
 
-	void SystemCoordinator::AddSystemToTail( IFilter* filter, ISimpleSystem* system )
+	ExecutionStage SystemCoordinator::GetStage() const
+	{
+		return _stage;
+	}
+
+	void SystemCoordinator::AddSystemToTail( const IFilter* filter, ISimpleSystem* system )
 	{
 		assert( filter != nullptr );
 		assert( system != nullptr );
@@ -23,14 +28,14 @@ namespace ECS
 		_systemPairs.emplace_back( filter, system );
 	}
 
-	void SystemCoordinator::Execute( Scene& scene )
+	void SystemCoordinator::Execute( EntityContainer& entity_container, float elapsed_time )
 	{
 		auto system_pairs_it = _systemPairs.begin();
 		for ( ; system_pairs_it != _systemPairs.end(); ++system_pairs_it )
 		{
 			// Get filtered entities
 			const IFilter* filter = system_pairs_it->filter;
-			std::vector< GameEntity > filtered_entities = filter->Apply( scene );
+			std::vector< GameEntity > filtered_entities = filter->Apply( entity_container );
 
 			// Execute system with each filtered entity
 			auto filtered_entities_it = filtered_entities.begin();
@@ -38,7 +43,7 @@ namespace ECS
 			{
 				GameEntity& filtered_entity = *filtered_entities_it;
 				ISimpleSystem* system = system_pairs_it->system;
-				system->Execute( filtered_entity );
+				system->Execute( filtered_entity, elapsed_time );
 			}
 		}
 	}

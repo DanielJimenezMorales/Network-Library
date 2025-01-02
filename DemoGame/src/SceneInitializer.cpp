@@ -13,7 +13,6 @@
 #include "InputHandler.h"
 #include "ITextureLoader.h"
 #include "PlayerControllerSystem.h"
-#include "ServerPlayerControllerSystem.h"
 #include "RemotePlayerControllerSystem.h"
 #include "InputComponent.h"
 #include "InputStateFactory.h"
@@ -29,117 +28,127 @@
 #include "TransformComponent.h"
 #include "ColliderGizmosCreatorSystem.h"
 
-void SceneInitializer::InitializeScene(Scene& scene, NetLib::PeerType networkPeerType, InputHandler& inputHandler) const
+#include "ecs/system_coordinator.h"
+
+#include "ecs_filters/server_get_all_players_filter.h"
+
+#include "ecs_systems/server_player_controller_system.h"
+
+void SceneInitializer::InitializeScene( Scene& scene, NetLib::PeerType networkPeerType,
+                                        InputHandler& inputHandler ) const
 {
-	//Inputs
+	// Inputs
 	KeyboardController* keyboard = new KeyboardController();
-	InputButton button(JUMP_BUTTON, SDLK_q);
-	keyboard->AddButtonMap(button);
-	InputAxis axis(HORIZONTAL_AXIS, SDLK_d, SDLK_a);
-	keyboard->AddAxisMap(axis);
-	InputAxis axis2(VERTICAL_AXIS, SDLK_w, SDLK_s);
-	keyboard->AddAxisMap(axis2);
-	inputHandler.AddController(keyboard);
+	InputButton button( JUMP_BUTTON, SDLK_q );
+	keyboard->AddButtonMap( button );
+	InputAxis axis( HORIZONTAL_AXIS, SDLK_d, SDLK_a );
+	keyboard->AddAxisMap( axis );
+	InputAxis axis2( VERTICAL_AXIS, SDLK_w, SDLK_s );
+	keyboard->AddAxisMap( axis2 );
+	inputHandler.AddController( keyboard );
 
 	MouseController* mouse = new MouseController();
-	InputButton mouseButton(MOUSE_LEFT_CLICK_BUTTON, SDL_BUTTON_LEFT);
-	mouse->AddButtonMap(mouseButton);
-	inputHandler.AddCursor(mouse);
+	InputButton mouseButton( MOUSE_LEFT_CLICK_BUTTON, SDL_BUTTON_LEFT );
+	mouse->AddButtonMap( mouseButton );
+	inputHandler.AddCursor( mouse );
 
-	//Populate entities
+	// Populate entities
 	GameEntity mainCameraEntity = scene.CreateGameEntity();
-	//TODO Do not hardcode width and height values
-	mainCameraEntity.AddComponent<CameraComponent>(Vec2f(0.f, 0.f), 512, 512);
+	// TODO Do not hardcode width and height values
+	mainCameraEntity.AddComponent< CameraComponent >( Vec2f( 0.f, 0.f ), 512, 512 );
 
 	GameEntity inputsEntity = scene.CreateGameEntity();
-	inputsEntity.AddComponent<InputComponent>(keyboard, mouse);
+	inputsEntity.AddComponent< InputComponent >( keyboard, mouse );
 
 	GameEntity networkPeerEntity = scene.CreateGameEntity();
-	NetworkPeerComponent& networkPeerComponent = networkPeerEntity.AddComponent<NetworkPeerComponent>();
+	NetworkPeerComponent& networkPeerComponent = networkPeerEntity.AddComponent< NetworkPeerComponent >();
 	NetLib::Peer* networkPeer;
-	if (networkPeerType == NetLib::PeerType::SERVER)
+	if ( networkPeerType == NetLib::PeerType::SERVER )
 	{
-		networkPeer = new NetLib::Server(2);
+		networkPeer = new NetLib::Server( 2 );
 	}
-	else if (networkPeerType == NetLib::PeerType::CLIENT)
+	else if ( networkPeerType == NetLib::PeerType::CLIENT )
 	{
-		networkPeer = new NetLib::Client(5);
+		networkPeer = new NetLib::Client( 5 );
 	}
 
-	//TODO Make this initializer internal when calling to start
+	// TODO Make this initializer internal when calling to start
 	NetLib::Initializer::Initialize();
 	NetworkEntityFactory* networkEntityFactory = new NetworkEntityFactory();
-	networkEntityFactory->SetScene(&scene);
-	networkEntityFactory->SetPeerType(networkPeerType);
-	networkPeer->RegisterNetworkEntityFactory(networkEntityFactory);
+	networkEntityFactory->SetScene( &scene );
+	networkEntityFactory->SetPeerType( networkPeerType );
+	networkPeer->RegisterNetworkEntityFactory( networkEntityFactory );
 	networkPeerComponent.peer = networkPeer;
 
-	if (networkPeer->GetPeerType() == NetLib::PeerType::SERVER)
+	if ( networkPeer->GetPeerType() == NetLib::PeerType::SERVER )
 	{
 		InputStateFactory* inputStateFactory = new InputStateFactory();
-		networkPeerComponent.GetPeerAsServer()->RegisterInputStateFactory(inputStateFactory);
+		networkPeerComponent.GetPeerAsServer()->RegisterInputStateFactory( inputStateFactory );
 		networkPeerComponent.inputStateFactory = inputStateFactory;
 		networkPeerComponent.TrackOnRemotePeerConnect();
 
-		//Add dummy collider entity
+		// Add dummy collider entity
 		GameEntity colliderEntity = scene.CreateGameEntity();
-		TransformComponent& colliderEntityTransform = colliderEntity.GetComponent<TransformComponent>();
-		colliderEntityTransform.SetPosition(Vec2f(10.f, 10.f));
+		TransformComponent& colliderEntityTransform = colliderEntity.GetComponent< TransformComponent >();
+		colliderEntityTransform.SetPosition( Vec2f( 10.f, 10.f ) );
 		ServiceLocator& serviceLocator = ServiceLocator::GetInstance();
 		ITextureLoader& textureLoader = serviceLocator.GetTextureLoader();
-		Texture* texture2 = textureLoader.LoadTexture("sprites/PlayerSprites/PlayerHead.png");
-		colliderEntity.AddComponent<SpriteRendererComponent>(texture2);
+		Texture* texture2 = textureLoader.LoadTexture( "sprites/PlayerSprites/PlayerHead.png" );
+		colliderEntity.AddComponent< SpriteRendererComponent >( texture2 );
 
-		CircleBounds2D* circleBounds2D = new CircleBounds2D(5.f);
-		colliderEntity.AddComponent<Collider2DComponent>(circleBounds2D, false, CollisionResponseType::Static);
+		CircleBounds2D* circleBounds2D = new CircleBounds2D( 5.f );
+		colliderEntity.AddComponent< Collider2DComponent >( circleBounds2D, false, CollisionResponseType::Static );
 
 		CollisionDetectionSystem* collisionDetectionSystem = new CollisionDetectionSystem();
-		scene.AddPreTickSystem(collisionDetectionSystem);
+		scene.AddPreTickSystem( collisionDetectionSystem );
 	}
 
-	if (networkPeer->GetPeerType() == NetLib::PeerType::CLIENT)
+	if ( networkPeer->GetPeerType() == NetLib::PeerType::CLIENT )
 	{
-		//Add virtual mouse
+		// Add virtual mouse
 		GameEntity virtualMouse = scene.CreateGameEntity();
-		virtualMouse.AddComponent<VirtualMouseComponent>();
+		virtualMouse.AddComponent< VirtualMouseComponent >();
 
 		VirtualMouseSystem* virtualMouseSystem = new VirtualMouseSystem();
-		scene.AddUpdateSystem(virtualMouseSystem);
+		scene.AddUpdateSystem( virtualMouseSystem );
 
-		//Add crosshair if being a client
+		// Add crosshair if being a client
 		GameEntity crosshairEntity = scene.CreateGameEntity();
 
 		ServiceLocator& serviceLocator = ServiceLocator::GetInstance();
 		ITextureLoader& textureLoader = serviceLocator.GetTextureLoader();
-		Texture* texture = textureLoader.LoadTexture("sprites/Crosshair/crosshair.png");
+		Texture* texture = textureLoader.LoadTexture( "sprites/Crosshair/crosshair.png" );
 
-		crosshairEntity.AddComponent<SpriteRendererComponent>(texture);
-		crosshairEntity.AddComponent<CrosshairComponent>();
+		crosshairEntity.AddComponent< SpriteRendererComponent >( texture );
+		crosshairEntity.AddComponent< CrosshairComponent >();
 
 		CrosshairFollowMouseSystem* crosshairFollowMouseSystem = new CrosshairFollowMouseSystem();
-		scene.AddUpdateSystem(crosshairFollowMouseSystem);
+		scene.AddUpdateSystem( crosshairFollowMouseSystem );
 	}
 
-	//Populate systems
-	//TODO Create a system storage in order to be able to free them at the end
-	if (networkPeerType == NetLib::PeerType::SERVER)
+	// Populate systems
+	// TODO Create a system storage in order to be able to free them at the end
+	if ( networkPeerType == NetLib::PeerType::SERVER )
 	{
-		ServerPlayerControllerSystem* serverPlayerControllerSystem = new ServerPlayerControllerSystem();
-		scene.AddTickSystem(serverPlayerControllerSystem);
+		ECS::SystemCoordinator* server_player_controller_system_coordinator =
+		    new ECS::SystemCoordinator( ECS::ExecutionStage::TICK );
+		server_player_controller_system_coordinator->AddSystemToTail( ServerGetAllPlayersFilter::GetInstance(),
+		                                                              new ServerPlayerControllerSystem() );
+		scene.AddSystem( server_player_controller_system_coordinator );
 	}
-	else if (networkPeerType == NetLib::PeerType::CLIENT)
+	else if ( networkPeerType == NetLib::PeerType::CLIENT )
 	{
 		PlayerControllerSystem* playerControllerSystem = new PlayerControllerSystem();
-		scene.AddTickSystem(playerControllerSystem);
+		scene.AddTickSystem( playerControllerSystem );
 	}
 
 	RemotePlayerControllerSystem* remotePlayerControllerSystem = new RemotePlayerControllerSystem();
-	scene.AddTickSystem(remotePlayerControllerSystem);
+	scene.AddTickSystem( remotePlayerControllerSystem );
 
 	NetworkSystem* networkSystem = new NetworkSystem();
-	scene.AddPreTickSystem(networkSystem);
-	scene.AddPosTickSystem(networkSystem);
+	scene.AddPreTickSystem( networkSystem );
+	scene.AddPosTickSystem( networkSystem );
 
 	ColliderGizmosCreatorSystem* colliderGizmosCreatorSystem = new ColliderGizmosCreatorSystem();
-	scene.AddUpdateSystem(colliderGizmosCreatorSystem);
+	scene.AddUpdateSystem( colliderGizmosCreatorSystem );
 }

@@ -3,12 +3,11 @@
 
 #include <vector>
 
-class Scene;
-
 namespace ECS
 {
 	class IFilter;
 	class ISimpleSystem;
+	class EntityContainer;
 
 	enum class ExecutionStage : uint8
 	{
@@ -26,13 +25,13 @@ namespace ECS
 			{
 			}
 
-			FilterAndSystemPair( IFilter* filter, ISimpleSystem* system )
+			FilterAndSystemPair( const IFilter* filter, ISimpleSystem* system )
 			    : filter( filter )
 			    , system( system )
 			{
 			}
 
-			IFilter* filter;
+			const IFilter* filter;
 			ISimpleSystem* system;
 	};
 
@@ -40,10 +39,13 @@ namespace ECS
 	{
 		public:
 			SystemCoordinator( ExecutionStage stage );
+
+			ExecutionStage GetStage() const;
+
 			// Adds a system to the tail of the vector. The tail is the lowest priority section
-			void AddSystemToTail( IFilter* filter, ISimpleSystem* system );
+			void AddSystemToTail( const IFilter* filter, ISimpleSystem* system );
 			// Executes all systems in order, from highest to lowest priority
-			void Execute( Scene& scene );
+			void Execute( EntityContainer& entity_container, float elapsed_time );
 
 		private:
 			ExecutionStage _stage;

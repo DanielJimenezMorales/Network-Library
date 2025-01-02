@@ -9,39 +9,52 @@
 #include "ITickSystem.h"
 #include "IPosTickSystem.h"
 
-void Scene::Update( float32 elapsedTime )
+void Scene::AddSystem( ECS::SystemCoordinator* system )
 {
+	_systemsHandler.AddSystem( system );
+}
+
+void Scene::Update( float32 elapsed_time )
+{
+	_systemsHandler.TickStage( _entityContainer, elapsed_time, ECS::ExecutionStage::UPDATE );
+
 	auto it = _updateSystems.begin();
 	for ( ; it != _updateSystems.end(); ++it )
 	{
-		( *it )->Update( _entityContainer, elapsedTime );
+		( *it )->Update( _entityContainer, elapsed_time );
 	}
 }
 
-void Scene::PreTick( float32 tickElapsedTime )
+void Scene::PreTick( float32 elapsed_time )
 {
+	_systemsHandler.TickStage( _entityContainer, elapsed_time, ECS::ExecutionStage::PRETICK );
+
 	auto it = _preTickSystems.begin();
 	for ( ; it != _preTickSystems.end(); ++it )
 	{
-		( *it )->PreTick( _entityContainer, tickElapsedTime );
+		( *it )->PreTick( _entityContainer, elapsed_time );
 	}
 }
 
-void Scene::Tick( float32 tickElapsedTime )
+void Scene::Tick( float32 elapsed_time )
 {
+	_systemsHandler.TickStage( _entityContainer, elapsed_time, ECS::ExecutionStage::TICK );
+
 	auto it = _tickSystems.begin();
 	for ( ; it != _tickSystems.end(); ++it )
 	{
-		( *it )->Tick( _entityContainer, tickElapsedTime );
+		( *it )->Tick( _entityContainer, elapsed_time );
 	}
 }
 
-void Scene::PosTick( float32 tickElapsedTime )
+void Scene::PosTick( float32 elapsed_time )
 {
+	_systemsHandler.TickStage( _entityContainer, elapsed_time, ECS::ExecutionStage::POSTICK );
+
 	auto it = _posTickSystems.begin();
 	for ( ; it != _posTickSystems.end(); ++it )
 	{
-		( *it )->PosTick( _entityContainer, tickElapsedTime );
+		( *it )->PosTick( _entityContainer, elapsed_time );
 	}
 }
 

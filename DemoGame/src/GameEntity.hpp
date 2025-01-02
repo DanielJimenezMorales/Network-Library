@@ -41,6 +41,9 @@ class GameEntity
 		// TODO Change this for uint32 from numeric types
 		uint32_t GetId() const { return static_cast< uint32_t >( _ecsEntityId ); }
 
+		ECS::EntityContainer* GetEntityContainer() { return _entityContainer.GetRawPointer(); }
+		const ECS::EntityContainer* GetEntityContainer() const { return _entityContainer.GetRawPointer(); }
+
 		bool IsValid() const { return _entityContainer != nullptr; };
 
 		template < typename T, typename... Params >

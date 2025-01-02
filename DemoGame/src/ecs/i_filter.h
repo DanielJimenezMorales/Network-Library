@@ -3,16 +3,17 @@
 #include <vector>
 
 class GameEntity;
-class Scene;
 
 namespace ECS
 {
+	class EntityContainer;
+
 	class IFilter
 	{
 		public:
 			IFilter() {}
 			virtual ~IFilter() {}
 
-			virtual std::vector< GameEntity > Apply( Scene& world ) const = 0;
+			virtual std::vector< GameEntity > Apply( EntityContainer& entity_container ) const = 0;
 	};
 }

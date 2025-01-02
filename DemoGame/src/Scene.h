@@ -8,6 +8,7 @@
 #include "GizmoRendererSystem.h"
 
 #include "ecs/entity_container.h"
+#include "ecs/systems_handler.h"
 
 class GameEntity;
 class IUpdateSystem;
@@ -20,16 +21,19 @@ class Scene
 	public:
 		Scene()
 		    : _entityContainer()
+		    , _systemsHandler()
 		    , _updateSystems()
 		    , _tickSystems()
 		{
 		}
 		~Scene(){};
 
-		void Update( float32 elapsedTime );
-		void PreTick( float32 tickElapsedTime );
-		void Tick( float32 tickElapsedTime );
-		void PosTick( float32 tickElapsedTime );
+		void AddSystem( ECS::SystemCoordinator* system );
+
+		void Update( float32 elapsed_time );
+		void PreTick( float32 elapsed_time );
+		void Tick( float32 elapsed_time );
+		void PosTick( float32 elapsed_time );
 		void Render( SDL_Renderer* renderer );
 
 		void AddUpdateSystem( IUpdateSystem* system );
@@ -46,6 +50,8 @@ class Scene
 
 	private:
 		ECS::EntityContainer _entityContainer;
+		ECS::SystemsHandler _systemsHandler;
+
 		SpriteRendererSystem _spriteRendererSystem;
 		GizmoRendererSystem _gizmoRendererSystem;
 
