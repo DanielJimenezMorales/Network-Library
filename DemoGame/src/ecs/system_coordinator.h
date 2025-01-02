@@ -14,7 +14,8 @@ namespace ECS
 		UPDATE,
 		PRETICK,
 		TICK,
-		POSTICK
+		POSTICK,
+		RENDER
 	};
 
 	struct FilterAndSystemPair

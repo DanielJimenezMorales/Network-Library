@@ -4,7 +4,6 @@
 #include <SDL_image.h>
 #include <vector>
 
-#include "SpriteRendererSystem.h"
 #include "GizmoRendererSystem.h"
 
 #include "ecs/entity_container.h"
@@ -52,7 +51,6 @@ class Scene
 		ECS::EntityContainer _entityContainer;
 		ECS::SystemsHandler _systemsHandler;
 
-		SpriteRendererSystem _spriteRendererSystem;
 		GizmoRendererSystem _gizmoRendererSystem;
 
 		std::vector< IUpdateSystem* > _updateSystems;

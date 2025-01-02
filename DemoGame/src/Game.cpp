@@ -60,7 +60,7 @@ bool Game::Init()
 	SceneInitializer sceneInitializer;
 
 	NetLib::PeerType peerType = clientOrServer == 0 ? NetLib::PeerType::SERVER : NetLib::PeerType::CLIENT;
-	sceneInitializer.InitializeScene( _activeScene, peerType, _inputHandler );
+	sceneInitializer.InitializeScene( _activeScene, peerType, _inputHandler, _renderer );
 
 	return true;
 }
