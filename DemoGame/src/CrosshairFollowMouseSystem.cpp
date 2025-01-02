@@ -6,12 +6,12 @@
 #include "Vec2f.h"
 #include "VirtualMouseComponent.h"
 
-void CrosshairFollowMouseSystem::Update(EntityContainer& entityContainer, float32 elapsedTime) const
+void CrosshairFollowMouseSystem::Update( ECS::EntityContainer& entityContainer, float32 elapsedTime ) const
 {
-	VirtualMouseComponent& virtualMouseComponent = entityContainer.GetFirstComponentOfType<VirtualMouseComponent>();
+	VirtualMouseComponent& virtualMouseComponent = entityContainer.GetFirstComponentOfType< VirtualMouseComponent >();
 
-	//Update crosshair world position
-	GameEntity crosshairEntity = entityContainer.GetFirstEntityOfType<CrosshairComponent>();
-	TransformComponent& crosshairTransformComponent = crosshairEntity.GetComponent<TransformComponent>();
-	crosshairTransformComponent.SetPosition(virtualMouseComponent.position);
+	// Update crosshair world position
+	GameEntity crosshairEntity = entityContainer.GetFirstEntityOfType< CrosshairComponent >();
+	TransformComponent& crosshairTransformComponent = crosshairEntity.GetComponent< TransformComponent >();
+	crosshairTransformComponent.SetPosition( virtualMouseComponent.position );
 }

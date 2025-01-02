@@ -11,14 +11,15 @@ class InputState;
 
 class PlayerControllerSystem : public ITickSystem
 {
-public:
-	PlayerControllerSystem() : ITickSystem()
-	{
-	}
-	
-	void Tick(EntityContainer& entityContainer, float32 elapsedTime) const;
+	public:
+		PlayerControllerSystem()
+		    : ITickSystem()
+		{
+		}
 
-private:
-	void ProcessInputs(EntityContainer& entityContainer, InputState& outInputState) const;
-	void SendInputsToServer(EntityContainer& entityContainer, const InputState& inputState) const;
+		void Tick( ECS::EntityContainer& entityContainer, float32 elapsedTime ) const;
+
+	private:
+		void ProcessInputs( ECS::EntityContainer& entityContainer, InputState& outInputState ) const;
+		void SendInputsToServer( ECS::EntityContainer& entityContainer, const InputState& inputState ) const;
 };

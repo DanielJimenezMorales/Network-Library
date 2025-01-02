@@ -1,5 +1,4 @@
 #include "ColliderGizmosCreatorSystem.h"
-#include "EntityContainer.h"
 #include "GameEntity.hpp"
 #include "ServiceLocator.h"
 #include "TransformComponent.h"
@@ -8,20 +7,23 @@
 #include "IGizmoQueryStorage.h"
 #include <cassert>
 
-void ColliderGizmosCreatorSystem::Update(EntityContainer& entityContainer, float32 elapsedTime) const
+#include "ecs/entity_container.h"
+
+void ColliderGizmosCreatorSystem::Update( ECS::EntityContainer& entityContainer, float32 elapsedTime ) const
 {
-	std::vector<GameEntity> collision_entities = entityContainer.GetEntitiesOfBothTypes < Collider2DComponent, TransformComponent>();
+	std::vector< GameEntity > collision_entities =
+	    entityContainer.GetEntitiesOfBothTypes< Collider2DComponent, TransformComponent >();
 
 	ServiceLocator& serviceLocator = ServiceLocator::GetInstance();
 	IGizmoQueryStorage& gizmoQueryStorage = serviceLocator.GetGizmoQueryStorage();
 
-	for (uint32 i = 0; i < collision_entities.size(); ++i)
+	for ( uint32 i = 0; i < collision_entities.size(); ++i )
 	{
-		const Collider2DComponent& collider = collision_entities[i].GetComponent<Collider2DComponent>();
-		TransformComponent& transform = collision_entities[i].GetComponent<TransformComponent>();
-		Gizmo* gizmo = collider.GetGizmo(transform);
-		assert(gizmo != nullptr);
+		const Collider2DComponent& collider = collision_entities[ i ].GetComponent< Collider2DComponent >();
+		TransformComponent& transform = collision_entities[ i ].GetComponent< TransformComponent >();
+		Gizmo* gizmo = collider.GetGizmo( transform );
+		assert( gizmo != nullptr );
 
-		gizmoQueryStorage.AddGizmo(gizmo);
+		gizmoQueryStorage.AddGizmo( gizmo );
 	}
 }

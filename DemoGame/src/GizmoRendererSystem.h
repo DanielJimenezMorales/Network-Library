@@ -1,10 +1,13 @@
 #pragma once
 #include "SDL.h"
 
-class EntityContainer;
+namespace ECS
+{
+	class EntityContainer;
+}
 
 class GizmoRendererSystem
 {
-public:
-	void Render(EntityContainer& entityContainer, SDL_Renderer* renderer) const;
+	public:
+		void Render( ECS::EntityContainer& entityContainer, SDL_Renderer* renderer ) const;
 };

@@ -6,7 +6,8 @@
 
 #include "SpriteRendererSystem.h"
 #include "GizmoRendererSystem.h"
-#include "EntityContainer.h"
+
+#include "ecs/entity_container.h"
 
 class GameEntity;
 class IUpdateSystem;
@@ -44,7 +45,7 @@ class Scene
 		GameEntity GetEntityFromId( uint32 id );
 
 	private:
-		EntityContainer _entityContainer;
+		ECS::EntityContainer _entityContainer;
 		SpriteRendererSystem _spriteRendererSystem;
 		GizmoRendererSystem _gizmoRendererSystem;
 

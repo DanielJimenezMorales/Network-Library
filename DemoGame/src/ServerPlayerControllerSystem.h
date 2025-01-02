@@ -7,6 +7,6 @@ class InputState;
 
 class ServerPlayerControllerSystem : public ITickSystem
 {
-public:
-	void Tick(EntityContainer& entityContainer, float32 elapsedTime) const;
+	public:
+		void Tick( ECS::EntityContainer& entityContainer, float32 elapsedTime ) const;
 };

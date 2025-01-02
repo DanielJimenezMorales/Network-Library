@@ -3,6 +3,6 @@
 
 class CrosshairFollowMouseSystem : public IUpdateSystem
 {
-public:
-	void Update(EntityContainer& entityContainer, float32 elapsedTime) const override;
+	public:
+		void Update( ECS::EntityContainer& entityContainer, float32 elapsedTime ) const override;
 };
