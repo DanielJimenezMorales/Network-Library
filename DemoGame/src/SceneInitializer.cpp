@@ -18,7 +18,6 @@
 #include "ServiceLocator.h"
 #include "SpriteRendererComponent.h"
 #include "CrosshairComponent.h"
-#include "CrosshairFollowMouseSystem.h"
 #include "VirtualMouseComponent.h"
 #include "VirtualMouseSystem.h"
 #include "CollisionDetectionSystem.h"
@@ -30,10 +29,12 @@
 
 #include "ecs_filters/server_get_all_players_filter.h"
 #include "ecs_filters/client_get_all_remote_players_filter.h"
+#include "ecs_filters/get_crosshair_filter.h"
 
 #include "ecs_systems/server_player_controller_system.h"
 #include "ecs_systems/client_player_controller_system.h"
 #include "ecs_systems/remote_player_controller_system.h"
+#include "ecs_systems/crosshair_follow_mouse_system.h"
 
 void SceneInitializer::InitializeScene( Scene& scene, NetLib::PeerType networkPeerType,
                                         InputHandler& inputHandler ) const
@@ -123,8 +124,12 @@ void SceneInitializer::InitializeScene( Scene& scene, NetLib::PeerType networkPe
 		crosshairEntity.AddComponent< SpriteRendererComponent >( texture );
 		crosshairEntity.AddComponent< CrosshairComponent >();
 
-		CrosshairFollowMouseSystem* crosshairFollowMouseSystem = new CrosshairFollowMouseSystem();
-		scene.AddUpdateSystem( crosshairFollowMouseSystem );
+		// Add crosshair follow mouse system
+		ECS::SystemCoordinator* crosshair_follow_mouse_system_coordinator =
+		    new ECS::SystemCoordinator( ECS::ExecutionStage::UPDATE );
+		crosshair_follow_mouse_system_coordinator->AddSystemToTail( GetCrosshairFilter::GetInstance(),
+		                                                            new CrosshairFollowMouseSystem() );
+		scene.AddSystem( crosshair_follow_mouse_system_coordinator );
 	}
 
 	// Populate systems
