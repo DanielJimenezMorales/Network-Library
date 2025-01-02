@@ -23,18 +23,19 @@
 #include "CollisionDetectionSystem.h"
 #include "CircleBounds2D.h"
 #include "TransformComponent.h"
-#include "ColliderGizmosCreatorSystem.h"
 
 #include "ecs/system_coordinator.h"
 
 #include "ecs_filters/server_get_all_players_filter.h"
 #include "ecs_filters/client_get_all_remote_players_filter.h"
 #include "ecs_filters/get_crosshair_filter.h"
+#include "ecs_filters/get_all_colliders_filter.h"
 
 #include "ecs_systems/server_player_controller_system.h"
 #include "ecs_systems/client_player_controller_system.h"
 #include "ecs_systems/remote_player_controller_system.h"
 #include "ecs_systems/crosshair_follow_mouse_system.h"
+#include "ecs_systems/collider_gizmos_creator_system.h"
 
 void SceneInitializer::InitializeScene( Scene& scene, NetLib::PeerType networkPeerType,
                                         InputHandler& inputHandler ) const
@@ -164,6 +165,10 @@ void SceneInitializer::InitializeScene( Scene& scene, NetLib::PeerType networkPe
 	scene.AddPreTickSystem( networkSystem );
 	scene.AddPosTickSystem( networkSystem );
 
-	ColliderGizmosCreatorSystem* colliderGizmosCreatorSystem = new ColliderGizmosCreatorSystem();
-	scene.AddUpdateSystem( colliderGizmosCreatorSystem );
+	// Add collider gizmos creator system
+	ECS::SystemCoordinator* collider_gizmos_creator_system_coordinator =
+	    new ECS::SystemCoordinator( ECS::ExecutionStage::UPDATE );
+	collider_gizmos_creator_system_coordinator->AddSystemToTail( GetAllCollidersFilter::GetInstance(),
+	                                                             new ColliderGizmosCreatorSystem() );
+	scene.AddSystem( collider_gizmos_creator_system_coordinator );
 }

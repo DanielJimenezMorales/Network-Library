@@ -6,7 +6,6 @@
 #include "NetworkPeerComponent.h"
 #include "NetworkEntityComponent.h"
 #include "PlayerSimulator.h"
-#include <vector>
 
 #include "ecs/entity_container.h"
 
