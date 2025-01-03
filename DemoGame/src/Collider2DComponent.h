@@ -33,7 +33,7 @@ struct Collider2DComponent
 		float32 GetMinX( const TransformComponent& transform ) const;
 		float32 GetMaxX( const TransformComponent& transform ) const;
 
-		Gizmo* GetGizmo( const TransformComponent& transform ) const;
+		Gizmo* GetGizmo() const;
 
 		CollisionResponseType GetCollisionResponse() const { return _collisionResponseType; }
 		bool IsTrigger() const { return _isTrigger; }

@@ -14,6 +14,8 @@
 #include "CircleBounds2D.h"
 #include "player_network_entity_serialization_callbacks.h"
 
+#include "gizmo_renderer_component.h"
+
 #include "Vec2f.h"
 
 #include "replication/network_entity_communication_callbacks.h"
@@ -49,6 +51,9 @@ int32 NetworkEntityFactory::CreateNetworkEntityObject(
 
 	CircleBounds2D* circleBounds2D = new CircleBounds2D( 5.f );
 	entity.AddComponent< Collider2DComponent >( circleBounds2D, false, CollisionResponseType::Dynamic );
+
+	Gizmo* gizmo = circleBounds2D->GetGizmo();
+	entity.AddComponent< GizmoRendererComponent >( gizmo );
 
 	PlayerControllerConfiguration playerConfiguration;
 	playerConfiguration.movementSpeed = 25;

@@ -4,8 +4,6 @@
 #include <SDL_image.h>
 #include <vector>
 
-#include "GizmoRendererSystem.h"
-
 #include "ecs/entity_container.h"
 #include "ecs/systems_handler.h"
 
@@ -25,6 +23,7 @@ class Scene
 		    , _tickSystems()
 		{
 		}
+
 		~Scene(){};
 
 		void AddSystem( ECS::SystemCoordinator* system );
@@ -50,8 +49,6 @@ class Scene
 	private:
 		ECS::EntityContainer _entityContainer;
 		ECS::SystemsHandler _systemsHandler;
-
-		GizmoRendererSystem _gizmoRendererSystem;
 
 		std::vector< IUpdateSystem* > _updateSystems;
 		std::vector< IPreTickSystem* > _preTickSystems;

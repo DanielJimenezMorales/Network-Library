@@ -31,13 +31,14 @@
 #include "ecs_filters/get_crosshair_filter.h"
 #include "ecs_filters/get_all_colliders_filter.h"
 #include "ecs_filters/get_all_sprite_renderer_and_transform_filter.h"
+#include "ecs_filters/get_all_gizmo_renderer_and_transform_filter.h"
 
 #include "ecs_systems/server_player_controller_system.h"
 #include "ecs_systems/client_player_controller_system.h"
 #include "ecs_systems/remote_player_controller_system.h"
 #include "ecs_systems/crosshair_follow_mouse_system.h"
-#include "ecs_systems/collider_gizmos_creator_system.h"
 #include "ecs_systems/sprite_renderer_system.h"
+#include "ecs_systems/gizmo_renderer_system.h"
 
 void SceneInitializer::InitializeScene( Scene& scene, NetLib::PeerType networkPeerType, InputHandler& inputHandler,
                                         SDL_Renderer* renderer ) const
@@ -175,12 +176,12 @@ void SceneInitializer::InitializeScene( Scene& scene, NetLib::PeerType networkPe
 	scene.AddPreTickSystem( networkSystem );
 	scene.AddPosTickSystem( networkSystem );
 
-	// Add collider gizmos creator system
+	/* Add collider gizmos creator system
 	ECS::SystemCoordinator* collider_gizmos_creator_system_coordinator =
 	    new ECS::SystemCoordinator( ECS::ExecutionStage::UPDATE );
 	collider_gizmos_creator_system_coordinator->AddSystemToTail( GetAllCollidersFilter::GetInstance(),
 	                                                             new ColliderGizmosCreatorSystem() );
-	scene.AddSystem( collider_gizmos_creator_system_coordinator );
+	scene.AddSystem( collider_gizmos_creator_system_coordinator );*/
 
 	//////////////////
 	// RENDER SYSTEMS
@@ -189,5 +190,7 @@ void SceneInitializer::InitializeScene( Scene& scene, NetLib::PeerType networkPe
 	ECS::SystemCoordinator* render_system_coordinator = new ECS::SystemCoordinator( ECS::ExecutionStage::RENDER );
 	render_system_coordinator->AddSystemToTail( GetAllSpriteRendererAndTransformFilter::GetInstance(),
 	                                            new SpriteRendererSystem( renderer ) );
+	render_system_coordinator->AddSystemToTail( GetAllGizmoRendererAndTransformFilter::GetInstance(),
+	                                            new GizmoRendererSystem( renderer ) );
 	scene.AddSystem( render_system_coordinator );
 }

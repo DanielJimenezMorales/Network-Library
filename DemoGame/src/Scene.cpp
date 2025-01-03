@@ -61,7 +61,6 @@ void Scene::PosTick( float32 elapsed_time )
 void Scene::Render( SDL_Renderer* renderer )
 {
 	_systemsHandler.TickStage( _entityContainer, 1.0f, ECS::ExecutionStage::RENDER );
-	_gizmoRendererSystem.Render( _entityContainer, renderer );
 }
 
 void Scene::AddUpdateSystem( IUpdateSystem* system )

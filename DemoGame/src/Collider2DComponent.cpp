@@ -65,7 +65,7 @@ float32 Collider2DComponent::GetMaxX( const TransformComponent& transform ) cons
 	return _bounds->GetMaxX( transform );
 }
 
-Gizmo* Collider2DComponent::GetGizmo( const TransformComponent& transform ) const
+Gizmo* Collider2DComponent::GetGizmo() const
 {
-	return _bounds->GetGizmo( transform );
+	return _bounds->GetGizmo();
 }
