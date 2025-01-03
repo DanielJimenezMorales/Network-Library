@@ -1,40 +1,29 @@
 #pragma once
 #include "numeric_types.h"
 
-#include <SDL_image.h>
 #include <vector>
 
-#include "SpriteRendererSystem.h"
-#include "GizmoRendererSystem.h"
-#include "EntityContainer.h"
+#include "ecs/entity_container.h"
+#include "ecs/systems_handler.h"
 
 class GameEntity;
-class IUpdateSystem;
 class IPreTickSystem;
-class ITickSystem;
 class IPosTickSystem;
 
 class Scene
 {
 	public:
-		Scene()
-		    : _entityContainer()
-		    , _updateSystems()
-		    , _tickSystems()
-		{
-		}
-		~Scene(){};
+		Scene();
 
-		void Update( float32 elapsedTime );
-		void PreTick( float32 tickElapsedTime );
-		void Tick( float32 tickElapsedTime );
-		void PosTick( float32 tickElapsedTime );
-		void Render( SDL_Renderer* renderer );
+		void AddSystem( ECS::SystemCoordinator* system );
 
-		void AddUpdateSystem( IUpdateSystem* system );
+		void Update( float32 elapsed_time );
+		void PreTick( float32 elapsed_time );
+		void Tick( float32 elapsed_time );
+		void PosTick( float32 elapsed_time );
+		void Render( float32 elapsed_time );
+
 		void AddPreTickSystem( IPreTickSystem* system );
-		void AddTickSystem( ITickSystem* system );
-		void AddPosTickSystem( IPosTickSystem* system );
 
 		GameEntity CreateGameEntity();
 		void DestroyGameEntity( const GameEntity& entity );
@@ -44,14 +33,10 @@ class Scene
 		GameEntity GetEntityFromId( uint32 id );
 
 	private:
-		EntityContainer _entityContainer;
-		SpriteRendererSystem _spriteRendererSystem;
-		GizmoRendererSystem _gizmoRendererSystem;
+		ECS::EntityContainer _entityContainer;
+		ECS::SystemsHandler _systemsHandler;
 
-		std::vector< IUpdateSystem* > _updateSystems;
 		std::vector< IPreTickSystem* > _preTickSystems;
-		std::vector< ITickSystem* > _tickSystems;
-		std::vector< IPosTickSystem* > _posTickSystems;
 };
 
 template < typename T >
