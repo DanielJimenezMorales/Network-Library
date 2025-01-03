@@ -19,7 +19,6 @@
 #include "SpriteRendererComponent.h"
 #include "CrosshairComponent.h"
 #include "VirtualMouseComponent.h"
-#include "VirtualMouseSystem.h"
 #include "CollisionDetectionSystem.h"
 #include "CircleBounds2D.h"
 #include "TransformComponent.h"
@@ -32,6 +31,7 @@
 #include "ecs_filters/get_all_colliders_filter.h"
 #include "ecs_filters/get_all_sprite_renderer_and_transform_filter.h"
 #include "ecs_filters/get_all_gizmo_renderer_and_transform_filter.h"
+#include "ecs_filters/get_all_virtual_mouse_filter.h"
 
 #include "ecs_systems/server_player_controller_system.h"
 #include "ecs_systems/client_player_controller_system.h"
@@ -39,6 +39,7 @@
 #include "ecs_systems/crosshair_follow_mouse_system.h"
 #include "ecs_systems/sprite_renderer_system.h"
 #include "ecs_systems/gizmo_renderer_system.h"
+#include "ecs_systems/virtual_mouse_system.h"
 
 void SceneInitializer::InitializeScene( Scene& scene, NetLib::PeerType networkPeerType, InputHandler& inputHandler,
                                         SDL_Renderer* renderer ) const
@@ -115,8 +116,12 @@ void SceneInitializer::InitializeScene( Scene& scene, NetLib::PeerType networkPe
 		GameEntity virtualMouse = scene.CreateGameEntity();
 		virtualMouse.AddComponent< VirtualMouseComponent >();
 
-		VirtualMouseSystem* virtualMouseSystem = new VirtualMouseSystem();
-		scene.AddUpdateSystem( virtualMouseSystem );
+		// Add virtual mouse system
+		ECS::SystemCoordinator* virtual_mouse_system_coordinator =
+		    new ECS::SystemCoordinator( ECS::ExecutionStage::UPDATE );
+		virtual_mouse_system_coordinator->AddSystemToTail( GetAllVirtualMouseFilter::GetInstance(),
+		                                                   new VirtualMouseSystem() );
+		scene.AddSystem( virtual_mouse_system_coordinator );
 
 		// Add crosshair if being a client
 		GameEntity crosshairEntity = scene.CreateGameEntity();

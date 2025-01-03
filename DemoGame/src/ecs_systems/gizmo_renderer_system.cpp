@@ -18,8 +18,7 @@ GizmoRendererSystem::GizmoRendererSystem( SDL_Renderer* renderer )
 void GizmoRendererSystem::Execute( GameEntity& entity, float32 elapsed_time )
 {
 	const ECS::EntityContainer* entity_container = entity.GetEntityContainer();
-	const GameEntity& camera_entity = entity_container->GetFirstEntityOfType< CameraComponent >();
-	const CameraComponent& camera = camera_entity.GetComponent< CameraComponent >();
+	const CameraComponent& camera = entity_container->GetFirstComponentOfType< CameraComponent >();
 
 	const TransformComponent& transform = entity.GetComponent< TransformComponent >();
 	const GizmoRendererComponent& gizmo_renderer = entity.GetComponent< GizmoRendererComponent >();
