@@ -83,7 +83,7 @@ void Game::GameLoop()
 
 		Update( timeClock.GetElapsedTimeSeconds() );
 
-		Render();
+		Render( timeClock.GetElapsedTimeSeconds() );
 	}
 }
 
@@ -127,11 +127,11 @@ void Game::Update( float32 elapsedTime )
 	_activeScene.Update( elapsedTime );
 }
 
-void Game::Render()
+void Game::Render( float32 elapsed_time )
 {
 	SDL_RenderClear( _renderer );
 
-	_activeScene.Render( _renderer );
+	_activeScene.Render( elapsed_time );
 
 	SDL_RenderPresent( _renderer );
 }

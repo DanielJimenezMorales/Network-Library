@@ -1,6 +1,5 @@
 #include "SceneInitializer.h"
 #include "Scene.h"
-#include "NetworkSystem.h"
 #include "GameEntity.hpp"
 #include "core/client.h"
 #include "core/server.h"
@@ -35,6 +34,7 @@
 #include "ecs_filters/get_all_sprite_renderer_and_transform_filter.h"
 #include "ecs_filters/get_all_gizmo_renderer_and_transform_filter.h"
 #include "ecs_filters/get_all_virtual_mouse_filter.h"
+#include "ecs_filters/get_network_peer_filter.h"
 
 #include "ecs_systems/server_player_controller_system.h"
 #include "ecs_systems/client_player_controller_system.h"
@@ -43,6 +43,8 @@
 #include "ecs_systems/sprite_renderer_system.h"
 #include "ecs_systems/gizmo_renderer_system.h"
 #include "ecs_systems/virtual_mouse_system.h"
+#include "ecs_systems/pre_tick_network_system.h"
+#include "ecs_systems/pos_tick_network_system.h"
 
 void SceneInitializer::InitializeScene( Scene& scene, NetLib::PeerType networkPeerType, InputHandler& inputHandler,
                                         SDL_Renderer* renderer ) const
@@ -183,16 +185,27 @@ void SceneInitializer::InitializeScene( Scene& scene, NetLib::PeerType networkPe
 		scene.AddSystem( client_remote_player_controller_system_coordinator );
 	}
 
-	NetworkSystem* networkSystem = new NetworkSystem();
-	scene.AddPreTickSystem( networkSystem );
-	scene.AddPosTickSystem( networkSystem );
+	/////////////////////
+	// PRE TICK SYSTEMS
+	/////////////////////
 
-	/* Add collider gizmos creator system
-	ECS::SystemCoordinator* collider_gizmos_creator_system_coordinator =
-	    new ECS::SystemCoordinator( ECS::ExecutionStage::UPDATE );
-	collider_gizmos_creator_system_coordinator->AddSystemToTail( GetAllCollidersFilter::GetInstance(),
-	                                                             new ColliderGizmosCreatorSystem() );
-	scene.AddSystem( collider_gizmos_creator_system_coordinator );*/
+	// Add pre-tick network system
+	ECS::SystemCoordinator* pre_tick_network_system_coordinator =
+	    new ECS::SystemCoordinator( ECS::ExecutionStage::PRETICK );
+	pre_tick_network_system_coordinator->AddSystemToTail( GetNetworkPeerFilter::GetInstance(),
+	                                                      new PreTickNetworkSystem() );
+	scene.AddSystem( pre_tick_network_system_coordinator );
+
+	/////////////////////
+	// POS TICK SYSTEMS
+	/////////////////////
+
+	// Add pos-tick network system
+	ECS::SystemCoordinator* pos_tick_network_system_coordinator =
+	    new ECS::SystemCoordinator( ECS::ExecutionStage::POSTICK );
+	pos_tick_network_system_coordinator->AddSystemToTail( GetNetworkPeerFilter::GetInstance(),
+	                                                      new PosTickNetworkSystem() );
+	scene.AddSystem( pos_tick_network_system_coordinator );
 
 	//////////////////
 	// RENDER SYSTEMS
