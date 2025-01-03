@@ -6,9 +6,10 @@
 #include "core/server.h"
 
 #include "GameEntity.hpp"
-#include "NetworkPeerComponent.h"
 
 #include "ecs/entity_container.h"
+
+#include "components/network_peer_component.h"
 
 #include <vector>
 

@@ -5,9 +5,9 @@
 #include "GameEntity.hpp"
 #include "Gizmo.h"
 
-#include "CameraComponent.h"
-#include "TransformComponent.h"
-#include "gizmo_renderer_component.h"
+#include "components/gizmo_renderer_component.h"
+#include "components/transform_component.h"
+#include "components/camera_component.h"
 
 GizmoRendererSystem::GizmoRendererSystem( SDL_Renderer* renderer )
     : ECS::ISimpleSystem()

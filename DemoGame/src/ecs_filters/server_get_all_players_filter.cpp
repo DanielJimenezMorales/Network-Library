@@ -1,9 +1,10 @@
 #include "server_get_all_players_filter.h"
 
+#include "GameEntity.hpp"
+
 #include "ecs/entity_container.h"
 
-#include "PlayerControllerComponent.h"
-#include "GameEntity.hpp"
+#include "components/player_controller_component.h"
 
 ServerGetAllPlayersFilter ServerGetAllPlayersFilter::_instance;
 

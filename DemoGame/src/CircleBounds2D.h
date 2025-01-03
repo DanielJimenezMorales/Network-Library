@@ -1,5 +1,5 @@
 #pragma once
-#include "Collider2DComponent.h"
+#include "Bounds2D.h"
 
 struct CircleBounds2D : public Bounds2D
 {

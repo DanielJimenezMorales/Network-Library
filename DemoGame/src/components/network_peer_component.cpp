@@ -1,4 +1,4 @@
-#include "NetworkPeerComponent.h"
+#include "network_peer_component.h"
 
 #include "inputs/i_input_state_factory.h"
 
@@ -6,21 +6,21 @@
 
 NetworkPeerComponent::~NetworkPeerComponent()
 {
-	if (isTrackingRemotePeerConnect)
+	if ( isTrackingRemotePeerConnect )
 	{
-		peer->UnsubscribeToOnPeerConnected(remotePeerConnectSubscriptionId);
+		peer->UnsubscribeToOnPeerConnected( remotePeerConnectSubscriptionId );
 	}
 
 	delete peer;
 	peer = nullptr;
 	auto it = networkEntityFactories.begin();
-	for (; it != networkEntityFactories.end(); ++it)
+	for ( ; it != networkEntityFactories.end(); ++it )
 	{
-		delete* it;
+		delete *it;
 		*it = nullptr;
 	}
 
-	if (inputStateFactory != nullptr)
+	if ( inputStateFactory != nullptr )
 	{
 		delete inputStateFactory;
 		inputStateFactory = nullptr;

@@ -2,12 +2,13 @@
 
 #include <cassert>
 
-#include "TransformComponent.h"
 #include "GameEntity.hpp"
 #include "IUpdateSystem.h"
 #include "IPreTickSystem.h"
 #include "ITickSystem.h"
 #include "IPosTickSystem.h"
+
+#include "components/transform_component.h"
 
 void Scene::AddSystem( ECS::SystemCoordinator* system )
 {

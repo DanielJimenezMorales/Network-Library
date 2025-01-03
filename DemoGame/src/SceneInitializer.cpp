@@ -2,7 +2,6 @@
 #include "Scene.h"
 #include "NetworkSystem.h"
 #include "GameEntity.hpp"
-#include "NetworkPeerComponent.h"
 #include "core/client.h"
 #include "core/server.h"
 #include "core/initializer.h"
@@ -12,18 +11,22 @@
 #include "InputActionIdsConfiguration.h"
 #include "InputHandler.h"
 #include "ITextureLoader.h"
-#include "InputComponent.h"
 #include "InputStateFactory.h"
-#include "CameraComponent.h"
 #include "ServiceLocator.h"
-#include "SpriteRendererComponent.h"
-#include "CrosshairComponent.h"
-#include "VirtualMouseComponent.h"
 #include "CollisionDetectionSystem.h"
 #include "CircleBounds2D.h"
-#include "TransformComponent.h"
 
 #include "ecs/system_coordinator.h"
+
+#include "components/transform_component.h"
+#include "components/virtual_mouse_component.h"
+#include "components/sprite_renderer_component.h"
+#include "components/crosshair_component.h"
+#include "components/camera_component.h"
+#include "components/input_component.h"
+#include "components/network_peer_component.h"
+#include "components/collider_2d_component.h"
+#include "components/gizmo_renderer_component.h"
 
 #include "ecs_filters/server_get_all_players_filter.h"
 #include "ecs_filters/client_get_all_remote_players_filter.h"
@@ -105,6 +108,9 @@ void SceneInitializer::InitializeScene( Scene& scene, NetLib::PeerType networkPe
 
 		CircleBounds2D* circleBounds2D = new CircleBounds2D( 5.f );
 		colliderEntity.AddComponent< Collider2DComponent >( circleBounds2D, false, CollisionResponseType::Static );
+
+		Gizmo* gizmo = circleBounds2D->GetGizmo();
+		colliderEntity.AddComponent< GizmoRendererComponent >( gizmo );
 
 		CollisionDetectionSystem* collisionDetectionSystem = new CollisionDetectionSystem();
 		scene.AddPreTickSystem( collisionDetectionSystem );

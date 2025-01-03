@@ -1,4 +1,4 @@
-#include "Collider2DComponent.h"
+#include "collider_2d_component.h"
 
 Collider2DComponent::Collider2DComponent( Bounds2D* bounds, bool isTrigger, CollisionResponseType responseType )
     : _bounds( bounds )

@@ -1,13 +1,14 @@
 #include "server_player_controller_system.h"
 
 #include "GameEntity.hpp"
-#include "PlayerControllerComponent.h"
 #include "InputState.h"
-#include "NetworkPeerComponent.h"
-#include "NetworkEntityComponent.h"
 #include "PlayerSimulator.h"
 
 #include "ecs/entity_container.h"
+
+#include "components/player_controller_component.h"
+#include "components/network_peer_component.h"
+#include "components/network_entity_component.h"
 
 ServerPlayerControllerSystem::ServerPlayerControllerSystem()
     : ECS::ISimpleSystem()

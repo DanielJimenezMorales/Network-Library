@@ -1,20 +1,21 @@
 #include "client_player_controller_system.h"
 
 #include "GameEntity.hpp"
-#include "InputComponent.h"
 #include "IInputController.h"
 #include "ICursor.h"
 #include "Vec2f.h"
-#include "TransformComponent.h"
-#include "PlayerControllerComponent.h"
 #include "InputActionIdsConfiguration.h"
 #include "InputState.h"
-#include "NetworkPeerComponent.h"
-#include "VirtualMouseComponent.h"
 
 #include <vector>
 
 #include "ecs/entity_container.h"
+
+#include "components/virtual_mouse_component.h"
+#include "components/network_peer_component.h"
+#include "components/transform_component.h"
+#include "components/input_component.h"
+#include "components/player_controller_component.h"
 
 #include "core/client.h"
 

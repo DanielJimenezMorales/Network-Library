@@ -1,12 +1,13 @@
 #include "virtual_mouse_system.h"
 
-#include "VirtualMouseComponent.h"
 #include "GameEntity.hpp"
-#include "CameraComponent.h"
-#include "InputComponent.h"
 #include "ICursor.h"
 
 #include "ecs/entity_container.h"
+
+#include "components/virtual_mouse_component.h"
+#include "components/camera_component.h"
+#include "components/input_component.h"
 
 void VirtualMouseSystem::Execute( GameEntity& entity, float32 elapsed_time )
 {

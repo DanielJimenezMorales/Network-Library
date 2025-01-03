@@ -1,9 +1,10 @@
 #include "get_crosshair_filter.h"
 
 #include "GameEntity.hpp"
-#include "CrosshairComponent.h"
 
 #include "ecs/entity_container.h"
+
+#include "components/crosshair_component.h"
 
 GetCrosshairFilter GetCrosshairFilter::_instance;
 

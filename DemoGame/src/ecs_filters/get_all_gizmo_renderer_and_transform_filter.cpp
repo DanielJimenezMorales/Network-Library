@@ -1,11 +1,11 @@
 #include "get_all_gizmo_renderer_and_transform_filter.h"
 
-#include "ecs/entity_container.h"
-
 #include "GameEntity.hpp"
 
-#include "gizmo_renderer_component.h"
-#include "TransformComponent.h"
+#include "ecs/entity_container.h"
+
+#include "components/gizmo_renderer_component.h"
+#include "components/transform_component.h"
 
 GetAllGizmoRendererAndTransformFilter GetAllGizmoRendererAndTransformFilter::_instance;
 

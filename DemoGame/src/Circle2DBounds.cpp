@@ -1,7 +1,8 @@
 #include "CircleBounds2D.h"
 
-#include "TransformComponent.h"
 #include "Circle2DGizmo.h"
+
+#include "components/transform_component.h"
 
 // TODO Change name to this file
 void CircleBounds2D::GetAxes( const TransformComponent& transform, std::vector< Vec2f >& outAxes ) const

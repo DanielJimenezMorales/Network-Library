@@ -1,10 +1,11 @@
 #include "get_all_colliders_filter.h"
 
+#include "GameEntity.hpp"
+
 #include "ecs/entity_container.h"
 
-#include "TransformComponent.h"
-#include "Collider2DComponent.h"
-#include "GameEntity.hpp"
+#include "components/transform_component.h"
+#include "components/collider_2d_component.h"
 
 GetAllCollidersFilter GetAllCollidersFilter::_instance;
 

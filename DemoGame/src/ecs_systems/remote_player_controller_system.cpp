@@ -1,8 +1,9 @@
 #include "remote_player_controller_system.h"
 
 #include "GameEntity.hpp"
-#include "TransformComponent.h"
-#include "RemotePlayerControllerComponent.h"
+
+#include "components/transform_component.h"
+#include "components/remote_player_controller_component.h"
 
 RemotePlayerControllerSystem::RemotePlayerControllerSystem()
     : ECS::ISimpleSystem()

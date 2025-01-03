@@ -1,7 +1,7 @@
 #include "Circle2DGizmo.h"
 
-#include "CameraComponent.h"
-#include "TransformComponent.h"
+#include "components/camera_component.h"
+#include "components/transform_component.h"
 
 void CircleGizmo::RenderConcrete( const CameraComponent& camera, const TransformComponent& transform,
                                   SDL_Renderer* renderer ) const

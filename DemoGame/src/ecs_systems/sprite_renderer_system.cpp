@@ -1,14 +1,15 @@
 #include "sprite_renderer_system.h"
 
-#include "TransformComponent.h"
-#include "SpriteRendererComponent.h"
 #include "GameEntity.hpp"
 #include "Texture.h"
-#include "CameraComponent.h"
 #include "Vec2f.h"
 #include "Logger.h"
 
 #include "ecs/entity_container.h"
+
+#include "components/transform_component.h"
+#include "components/sprite_renderer_component.h"
+#include "components/camera_component.h"
 
 #include <cassert>
 

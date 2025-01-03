@@ -1,10 +1,10 @@
 #include "CollisionDetectionSystem.h"
-#include "TransformComponent.h"
 #include "GameEntity.hpp"
 #include "CollisionUtils.h"
 #include "Logger.h"
 
-#include "Collider2DComponent.h"
+#include "components/collider_2d_component.h"
+#include "components/transform_component.h"
 
 #include "ecs/entity_container.h"
 

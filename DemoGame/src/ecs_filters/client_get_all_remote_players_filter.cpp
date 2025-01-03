@@ -1,9 +1,10 @@
 #include "client_get_all_remote_players_filter.h"
 
+#include "GameEntity.hpp"
+
 #include "ecs/entity_container.h"
 
-#include "RemotePlayerControllerComponent.h"
-#include "GameEntity.hpp"
+#include "components/remote_player_controller_component.h"
 
 ClientGetAllRemotePlayersFilter ClientGetAllRemotePlayersFilter::_instance;
 

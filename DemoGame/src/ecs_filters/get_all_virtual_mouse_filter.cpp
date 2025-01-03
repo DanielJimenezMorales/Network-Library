@@ -1,10 +1,10 @@
 #include "get_all_virtual_mouse_filter.h"
 
-#include "ecs/entity_container.h"
-
 #include "GameEntity.hpp"
 
-#include "VirtualMouseComponent.h"
+#include "ecs/entity_container.h"
+
+#include "components/virtual_mouse_component.h"
 
 GetAllVirtualMouseFilter GetAllVirtualMouseFilter::_instance;
 
