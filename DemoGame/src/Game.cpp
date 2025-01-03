@@ -8,7 +8,6 @@
 #include "SceneInitializer.h"
 #include "ServiceLocator.h"
 #include "TextureLoader.h"
-#include "GizmoQueryStorage.h"
 
 bool Game::Init()
 {
@@ -53,9 +52,6 @@ bool Game::Init()
 	TextureLoader* textureLoader = new TextureLoader();
 	textureLoader->Init( _renderer );
 	serviceLocator.RegisterTextureLoader( textureLoader );
-
-	GizmoQueryStorage* gizmoQueryStorage = new GizmoQueryStorage();
-	serviceLocator.RegisterGizmoQueryStorage( gizmoQueryStorage );
 
 	SceneInitializer sceneInitializer;
 
