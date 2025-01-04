@@ -6,7 +6,7 @@ struct CircleBounds2D : public Bounds2D
 	public:
 		CircleBounds2D( float32 radius )
 		    : Bounds2D( CollisionShapeType::Circle )
-		    , radius( radius )
+		    , _radius( radius )
 		{
 		}
 
@@ -21,5 +21,5 @@ struct CircleBounds2D : public Bounds2D
 		Gizmo* GetGizmo() const override;
 
 	private:
-		float32 radius;
+		float32 _radius;
 };

@@ -25,6 +25,8 @@ class Bounds2D
 		virtual float32 GetMinX( const TransformComponent& transform ) const = 0;
 		virtual float32 GetMaxX( const TransformComponent& transform ) const = 0;
 
+		// Separate this one in a callback where it adds a GizmoComponent everytime an entity with a collider is spawned
+		// and the global variable ENABLE_GIZMOS is enabled
 		virtual Gizmo* GetGizmo() const = 0;
 
 	protected:
