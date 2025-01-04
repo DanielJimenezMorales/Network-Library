@@ -71,35 +71,36 @@ namespace ECS
 	template < typename T >
 	inline bool EntityContainer::HasEntityComponent( const GameEntity& gameEntity ) const
 	{
-		return _entities.all_of< T >( gameEntity._ecsEntityId );
+		return _entities.all_of< T >( static_cast< entt::entity >( gameEntity._ecsEntityId ) );
 	}
 
 	template < typename T, typename... Params >
 	inline T& EntityContainer::AddComponentToEntity( const GameEntity& gameEntity, Params&&... params )
 	{
 		assert( !HasEntityComponent< T >( gameEntity ) );
-		return _entities.emplace< T >( gameEntity._ecsEntityId, std::forward< Params >( params )... );
+		return _entities.emplace< T >( static_cast< entt::entity >( gameEntity._ecsEntityId ),
+		                               std::forward< Params >( params )... );
 	}
 
 	template < typename T >
 	inline T& EntityContainer::GetComponentFromEntity( const GameEntity& gameEntity )
 	{
 		assert( HasEntityComponent< T >( gameEntity ) );
-		return _entities.get< T >( gameEntity._ecsEntityId );
+		return _entities.get< T >( static_cast< entt::entity >( gameEntity._ecsEntityId ) );
 	}
 
 	template < typename T >
 	inline const T& EntityContainer::GetComponentFromEntity( const GameEntity& gameEntity ) const
 	{
 		assert( HasEntityComponent< T >( gameEntity ) );
-		return _entities.get< T >( gameEntity._ecsEntityId );
+		return _entities.get< T >( static_cast< entt::entity >( gameEntity._ecsEntityId ) );
 	}
 
 	template < typename T >
 	inline void EntityContainer::RemoveComponentFromEntity( const GameEntity& gameEntity )
 	{
 		assert( HasEntityComponent< T >( gameEntity ) );
-		_entities.remove< T >( _ecsEntityId );
+		_entities.remove< T >( static_cast< entt::entity >( gameEntity._ecsEntityId ) );
 	}
 
 	template < typename T >
@@ -112,7 +113,7 @@ namespace ECS
 
 		for ( auto& entity : view )
 		{
-			entitiesFound.emplace_back( entity, this );
+			entitiesFound.emplace_back( static_cast< EntityId >( entity ), this );
 		}
 
 		return entitiesFound;
@@ -129,7 +130,7 @@ namespace ECS
 
 		for ( auto& entity : view )
 		{
-			entitiesFound.emplace_back( entity, this );
+			entitiesFound.emplace_back( static_cast< EntityId >( entity ), this );
 		}
 
 		return entitiesFound;
@@ -149,7 +150,7 @@ namespace ECS
 	{
 		auto& view = _entities.view< T >();
 		assert( !view.empty() );
-		return GameEntity( *view.begin(), const_cast< EntityContainer* >( this ) );
+		return GameEntity( static_cast< EntityId >( *view.begin() ), const_cast< EntityContainer* >( this ) );
 	}
 
 	template < typename T1, typename T2 >
@@ -161,7 +162,7 @@ namespace ECS
 
 		for ( auto& entity : view )
 		{
-			entitiesFound.emplace_back( entity, this );
+			entitiesFound.emplace_back( static_cast< EntityId >( entity ), this );
 		}
 
 		return entitiesFound;
@@ -179,7 +180,7 @@ namespace ECS
 
 		for ( auto& entity : view )
 		{
-			entitiesFound.emplace_back( entity, const_cast< EntityContainer* >( this ) );
+			entitiesFound.emplace_back( static_cast< EntityId >( entity ), const_cast< EntityContainer* >( this ) );
 		}
 
 		return entitiesFound;

@@ -7,6 +7,8 @@
 
 #include "ecs/entity_container.h"
 
+typedef uint32 EntityId;
+
 // TODO improve GameEntity
 class GameEntity
 {
@@ -14,7 +16,7 @@ class GameEntity
 		GameEntity()
 		    : _ecsEntityId()
 		    , _entityContainer( nullptr ){};
-		GameEntity( entt::entity enttId, ECS::EntityContainer* entityContainer )
+		GameEntity( EntityId enttId, ECS::EntityContainer* entityContainer )
 		    : _ecsEntityId( enttId )
 		    , _entityContainer( entityContainer ){};
 		GameEntity( const GameEntity& other ) = default;
@@ -62,7 +64,7 @@ class GameEntity
 		void RemoveComponent();
 
 	private:
-		entt::entity _ecsEntityId;
+		EntityId _ecsEntityId;
 
 		// TODO Add SafePointer wrapper
 		SafePointer< ECS::EntityContainer > _entityContainer;
