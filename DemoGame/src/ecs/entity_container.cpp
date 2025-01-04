@@ -10,9 +10,9 @@ namespace ECS
 		return GameEntity( static_cast< EntityId >( entityId ), this );
 	}
 
-	void EntityContainer::DestroyGameEntity( const GameEntity& gameEntity )
+	void EntityContainer::DestroyGameEntity( EntityId id )
 	{
-		_entities.destroy( static_cast< entt::entity >( gameEntity._ecsEntityId ) );
+		_entities.destroy( static_cast< entt::entity >( id ) );
 	}
 
 	GameEntity EntityContainer::GetEntityFromId( uint32 id )

@@ -10,12 +10,14 @@ class GameEntity;
 
 namespace ECS
 {
+	typedef uint32 EntityId;
+
 	class EntityContainer
 	{
 		public:
 			GameEntity CreateGameEntity();
 
-			void DestroyGameEntity( const GameEntity& gameEntity );
+			void DestroyGameEntity( EntityId id );
 
 			template < typename T >
 			bool HasEntityComponent( const GameEntity& gameEntity ) const;

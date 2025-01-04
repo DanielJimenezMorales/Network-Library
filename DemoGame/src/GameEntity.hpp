@@ -7,8 +7,6 @@
 
 #include "ecs/entity_container.h"
 
-typedef uint32 EntityId;
-
 // TODO improve GameEntity
 class GameEntity
 {
@@ -16,7 +14,7 @@ class GameEntity
 		GameEntity()
 		    : _ecsEntityId()
 		    , _entityContainer( nullptr ){};
-		GameEntity( EntityId enttId, ECS::EntityContainer* entityContainer )
+		GameEntity( ECS::EntityId enttId, ECS::EntityContainer* entityContainer )
 		    : _ecsEntityId( enttId )
 		    , _entityContainer( entityContainer ){};
 		GameEntity( const GameEntity& other ) = default;
@@ -40,8 +38,7 @@ class GameEntity
 		}
 		bool operator!=( const GameEntity& other ) { return !( *this == other ); }
 
-		// TODO Change this for uint32 from numeric types
-		uint32_t GetId() const { return static_cast< uint32_t >( _ecsEntityId ); }
+		ECS::EntityId GetId() const { return _ecsEntityId; }
 
 		ECS::EntityContainer* GetEntityContainer() { return _entityContainer.GetRawPointer(); }
 		const ECS::EntityContainer* GetEntityContainer() const { return _entityContainer.GetRawPointer(); }
@@ -64,7 +61,7 @@ class GameEntity
 		void RemoveComponent();
 
 	private:
-		EntityId _ecsEntityId;
+		ECS::EntityId _ecsEntityId;
 
 		// TODO Add SafePointer wrapper
 		SafePointer< ECS::EntityContainer > _entityContainer;

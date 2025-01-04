@@ -26,6 +26,7 @@ class Game
 		void PosTick( float32 tickElapsedTime );
 		void Update( float32 elapsedTime );
 		void Render( float32 elapsed_time );
+		void EndOfFrame();
 
 		SDL_Window* _window;
 		SDL_Renderer* _renderer;

@@ -2,6 +2,7 @@
 #include "numeric_types.h"
 
 #include <vector>
+#include <queue>
 
 #include "ecs/entity_container.h"
 #include "ecs/systems_handler.h"
@@ -22,6 +23,7 @@ class Scene
 		void Tick( float32 elapsed_time );
 		void PosTick( float32 elapsed_time );
 		void Render( float32 elapsed_time );
+		void EndOfFrame();
 
 		void AddPreTickSystem( IPreTickSystem* system );
 
@@ -33,10 +35,14 @@ class Scene
 		GameEntity GetEntityFromId( uint32 id );
 
 	private:
+		void DestroyPendingEntities();
+
 		ECS::EntityContainer _entityContainer;
 		ECS::SystemsHandler _systemsHandler;
 
 		std::vector< IPreTickSystem* > _preTickSystems;
+
+		std::queue< ECS::EntityId > _entitiesToRemoveRequests;
 };
 
 template < typename T >

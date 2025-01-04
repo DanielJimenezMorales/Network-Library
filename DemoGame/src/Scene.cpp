@@ -49,6 +49,11 @@ void Scene::Render( float32 elapsed_time )
 	_systemsHandler.TickStage( _entityContainer, elapsed_time, ECS::ExecutionStage::RENDER );
 }
 
+void Scene::EndOfFrame()
+{
+	DestroyPendingEntities();
+}
+
 void Scene::AddPreTickSystem( IPreTickSystem* system )
 {
 	assert( system != nullptr );
@@ -65,10 +70,21 @@ GameEntity Scene::CreateGameEntity()
 
 void Scene::DestroyGameEntity( const GameEntity& entity )
 {
-	_entityContainer.DestroyGameEntity( entity );
+	_entitiesToRemoveRequests.push( entity.GetId() );
 }
 
 GameEntity Scene::GetEntityFromId( uint32 id )
 {
 	return _entityContainer.GetEntityFromId( id );
+}
+
+void Scene::DestroyPendingEntities()
+{
+	while ( !_entitiesToRemoveRequests.empty() )
+	{
+		const ECS::EntityId entity_id = _entitiesToRemoveRequests.front();
+		_entitiesToRemoveRequests.pop();
+
+		_entityContainer.DestroyGameEntity( entity_id );
+	}
 }

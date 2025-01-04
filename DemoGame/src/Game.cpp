@@ -82,8 +82,8 @@ void Game::GameLoop()
 		}
 
 		Update( timeClock.GetElapsedTimeSeconds() );
-
 		Render( timeClock.GetElapsedTimeSeconds() );
+		EndOfFrame();
 	}
 }
 
@@ -134,6 +134,11 @@ void Game::Render( float32 elapsed_time )
 	_activeScene.Render( elapsed_time );
 
 	SDL_RenderPresent( _renderer );
+}
+
+void Game::EndOfFrame()
+{
+	_activeScene.EndOfFrame();
 }
 
 bool Game::Release()
