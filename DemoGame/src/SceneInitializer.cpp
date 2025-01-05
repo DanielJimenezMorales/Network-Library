@@ -46,6 +46,10 @@
 #include "ecs_systems/pre_tick_network_system.h"
 #include "ecs_systems/pos_tick_network_system.h"
 
+#include "entity_factories/client_local_player_entity_factory.h"
+#include "entity_factories/client_remote_player_entity_factory.h"
+#include "entity_factories/server_player_entity_factory.h"
+
 void SceneInitializer::InitializeScene( Scene& scene, NetLib::PeerType networkPeerType, InputHandler& inputHandler,
                                         SDL_Renderer* renderer ) const
 {
@@ -94,6 +98,10 @@ void SceneInitializer::InitializeScene( Scene& scene, NetLib::PeerType networkPe
 
 	if ( networkPeer->GetPeerType() == NetLib::PeerType::SERVER )
 	{
+		// Entity factories registration
+		ServerPlayerEntityFactory* player_entity_factory = new ServerPlayerEntityFactory();
+		scene.RegisterEntityFactory( "PLAYER", player_entity_factory );
+
 		InputStateFactory* inputStateFactory = new InputStateFactory();
 		networkPeerComponent.GetPeerAsServer()->RegisterInputStateFactory( inputStateFactory );
 		networkPeerComponent.inputStateFactory = inputStateFactory;
@@ -120,6 +128,13 @@ void SceneInitializer::InitializeScene( Scene& scene, NetLib::PeerType networkPe
 
 	if ( networkPeer->GetPeerType() == NetLib::PeerType::CLIENT )
 	{
+		// Entity factories registration
+		ClientLocalPlayerEntityFactory* local_player_entity_factory = new ClientLocalPlayerEntityFactory();
+		scene.RegisterEntityFactory( "LOCAL_PLAYER", local_player_entity_factory );
+
+		ClientRemotePlayerEntityFactory* remote_player_entity_factory = new ClientRemotePlayerEntityFactory();
+		scene.RegisterEntityFactory( "REMOTE_PLAYER", remote_player_entity_factory );
+
 		// Add virtual mouse
 		GameEntity virtualMouse = scene.CreateGameEntity();
 		virtualMouse.AddComponent< VirtualMouseComponent >();

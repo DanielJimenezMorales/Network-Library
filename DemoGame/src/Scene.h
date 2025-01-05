@@ -3,18 +3,23 @@
 
 #include <vector>
 #include <queue>
+#include <unordered_map>
 
 #include "ecs/entity_container.h"
 #include "ecs/systems_handler.h"
 
 class GameEntity;
 class IPreTickSystem;
-class IPosTickSystem;
+
+struct BaseEntityConfiguration;
+class IEntityFactory;
 
 class Scene
 {
 	public:
 		Scene();
+
+		bool RegisterEntityFactory( const std::string& id, IEntityFactory* factory );
 
 		void AddSystem( ECS::SystemCoordinator* system );
 
@@ -28,6 +33,7 @@ class Scene
 		void AddPreTickSystem( IPreTickSystem* system );
 
 		GameEntity CreateGameEntity();
+		GameEntity CreateGameEntity( const std::string& type, const BaseEntityConfiguration* config );
 		void DestroyGameEntity( const GameEntity& entity );
 
 		template < typename T >
@@ -43,6 +49,8 @@ class Scene
 		std::vector< IPreTickSystem* > _preTickSystems;
 
 		std::queue< ECS::EntityId > _entitiesToRemoveRequests;
+
+		std::unordered_map< std::string, IEntityFactory* > _entityFactories;
 };
 
 template < typename T >

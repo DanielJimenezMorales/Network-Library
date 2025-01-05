@@ -18,6 +18,13 @@ TransformComponent::TransformComponent( float32 x, float32 y )
 {
 }
 
+TransformComponent::TransformComponent( const Vec2f& position, float32 rotation )
+    : _position( position )
+    , _rotationAngle( rotation )
+    , _scale( 1.f, 1.f )
+{
+}
+
 void TransformComponent::LookAt( const Vec2f& position )
 {
 	Vec2f direction = position - _position;

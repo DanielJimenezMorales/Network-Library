@@ -7,10 +7,26 @@
 
 #include "components/transform_component.h"
 
+#include "entity_factories/i_entity_factory.h"
+
 Scene::Scene()
     : _entityContainer()
     , _systemsHandler()
 {
+}
+
+bool Scene::RegisterEntityFactory( const std::string& id, IEntityFactory* factory )
+{
+	assert( factory != nullptr );
+
+	auto id_found = _entityFactories.find( id );
+	if ( id_found != _entityFactories.cend() )
+	{
+		return false;
+	}
+
+	_entityFactories.insert( { id, factory } );
+	return true;
 }
 
 void Scene::AddSystem( ECS::SystemCoordinator* system )
@@ -66,6 +82,20 @@ GameEntity Scene::CreateGameEntity()
 	newEntity.AddComponent< TransformComponent >();
 
 	return newEntity;
+}
+
+GameEntity Scene::CreateGameEntity( const std::string& type, const BaseEntityConfiguration* config )
+{
+	auto factory_found = _entityFactories.find( type );
+	if ( factory_found == _entityFactories.cend() )
+	{
+		return GameEntity();
+	}
+
+	GameEntity new_entity = _entityContainer.CreateGameEntity();
+	IEntityFactory* factory = factory_found->second;
+	factory->Create( new_entity, config );
+	return new_entity;
 }
 
 void Scene::DestroyGameEntity( const GameEntity& entity )
