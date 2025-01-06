@@ -31,7 +31,7 @@ void GizmoRendererSystem::Execute( GameEntity& entity, float32 elapsed_time )
 	SDL_SetRenderDrawColor( _renderer, 255, 0, 0, 255 );
 }
 
-void GizmoRendererSystem::AddGizmoRendererComponent( GameEntity& entity )
+void GizmoRendererSystem::AllocateGizmoRendererComponentIfHasCollider( GameEntity& entity )
 {
 	if ( !entity.HasComponent< Collider2DComponent >() )
 	{
@@ -41,4 +41,16 @@ void GizmoRendererSystem::AddGizmoRendererComponent( GameEntity& entity )
 	const Collider2DComponent& collider = entity.GetComponent< Collider2DComponent >();
 	Gizmo* gizmo = collider.GetGizmo();
 	entity.AddComponent< GizmoRendererComponent >( gizmo );
+}
+
+void GizmoRendererSystem::DeallocateGizmoRendererComponentIfHasCollider( GameEntity& entity )
+{
+	if ( !entity.HasComponent< Collider2DComponent >() )
+	{
+		return;
+	}
+
+	GizmoRendererComponent& gizmo_renderer = entity.GetComponent< GizmoRendererComponent >();
+	Gizmo* gizmo = std::exchange( gizmo_renderer.gizmo, nullptr );
+	delete gizmo;
 }

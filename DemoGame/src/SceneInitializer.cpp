@@ -234,6 +234,8 @@ void SceneInitializer::InitializeScene( Scene& scene, NetLib::PeerType networkPe
 	render_system_coordinator->AddSystemToTail( GetAllGizmoRendererAndTransformFilter::GetInstance(),
 	                                            gizmo_renderer_system );
 	scene.AddSystem( render_system_coordinator );
-	scene.SubscribeToOnEntityCreate(
-	    std::bind( &GizmoRendererSystem::AddGizmoRendererComponent, gizmo_renderer_system, std::placeholders::_1 ) );
+	scene.SubscribeToOnEntityCreate( std::bind( &GizmoRendererSystem::AllocateGizmoRendererComponentIfHasCollider,
+	                                            gizmo_renderer_system, std::placeholders::_1 ) );
+	scene.SubscribeToOnEntityDestroy( std::bind( &GizmoRendererSystem::DeallocateGizmoRendererComponentIfHasCollider,
+	                                             gizmo_renderer_system, std::placeholders::_1 ) );
 }

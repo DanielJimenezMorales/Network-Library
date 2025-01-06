@@ -10,7 +10,8 @@ class GizmoRendererSystem : public ECS::ISimpleSystem
 
 		void Execute( GameEntity& entity, float32 elapsed_time ) override;
 
-		void AddGizmoRendererComponent( GameEntity& entity );
+		void AllocateGizmoRendererComponentIfHasCollider( GameEntity& entity );
+		void DeallocateGizmoRendererComponentIfHasCollider( GameEntity& entity );
 
 	private:
 		SDL_Renderer* _renderer;
