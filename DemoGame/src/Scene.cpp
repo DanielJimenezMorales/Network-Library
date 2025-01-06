@@ -95,6 +95,7 @@ GameEntity Scene::CreateGameEntity( const std::string& type, const BaseEntityCon
 	GameEntity new_entity = _entityContainer.CreateGameEntity();
 	IEntityFactory* factory = factory_found->second;
 	factory->Create( new_entity, config );
+	_onEntityCreate.Execute( new_entity );
 	return new_entity;
 }
 
@@ -108,6 +109,16 @@ GameEntity Scene::GetEntityFromId( uint32 id )
 	return _entityContainer.GetEntityFromId( id );
 }
 
+void Scene::UnsubscribeFromOnEntityCreate( uint32 id )
+{
+	_onEntityCreate.DeleteSubscriber( id );
+}
+
+void Scene::UnsubscribeFromOnEntityDestroy( uint32 id )
+{
+	_onEntityDestroy.DeleteSubscriber( id );
+}
+
 void Scene::DestroyPendingEntities()
 {
 	while ( !_entitiesToRemoveRequests.empty() )
@@ -115,6 +126,8 @@ void Scene::DestroyPendingEntities()
 		const ECS::EntityId entity_id = _entitiesToRemoveRequests.front();
 		_entitiesToRemoveRequests.pop();
 
+		GameEntity entity = _entityContainer.GetEntityFromId( entity_id );
+		_onEntityDestroy.Execute( entity );
 		_entityContainer.DestroyGameEntity( entity_id );
 	}
 }

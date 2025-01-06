@@ -229,7 +229,11 @@ void SceneInitializer::InitializeScene( Scene& scene, NetLib::PeerType networkPe
 	ECS::SystemCoordinator* render_system_coordinator = new ECS::SystemCoordinator( ECS::ExecutionStage::RENDER );
 	render_system_coordinator->AddSystemToTail( GetAllSpriteRendererAndTransformFilter::GetInstance(),
 	                                            new SpriteRendererSystem( renderer ) );
+
+	GizmoRendererSystem* gizmo_renderer_system = new GizmoRendererSystem( renderer );
 	render_system_coordinator->AddSystemToTail( GetAllGizmoRendererAndTransformFilter::GetInstance(),
-	                                            new GizmoRendererSystem( renderer ) );
+	                                            gizmo_renderer_system );
 	scene.AddSystem( render_system_coordinator );
+	scene.SubscribeToOnEntityCreate(
+	    std::bind( &GizmoRendererSystem::AddGizmoRendererComponent, gizmo_renderer_system, std::placeholders::_1 ) );
 }

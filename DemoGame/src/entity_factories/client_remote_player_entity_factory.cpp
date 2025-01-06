@@ -5,7 +5,6 @@
 #include "components/transform_component.h"
 #include "components/sprite_renderer_component.h"
 #include "components/collider_2d_component.h"
-#include "components/gizmo_renderer_component.h"
 #include "components/network_entity_component.h"
 #include "components/remote_player_controller_component.h"
 
@@ -38,9 +37,6 @@ void ClientRemotePlayerEntityFactory::Create( GameEntity& entity, const BaseEnti
 
 	CircleBounds2D* circleBounds2D = new CircleBounds2D( 5.f );
 	entity.AddComponent< Collider2DComponent >( circleBounds2D, false, CollisionResponseType::Dynamic );
-
-	Gizmo* gizmo = circleBounds2D->GetGizmo();
-	entity.AddComponent< GizmoRendererComponent >( gizmo );
 
 	entity.AddComponent< NetworkEntityComponent >( casted_config.networkEntityId, casted_config.controlledByPeerId );
 

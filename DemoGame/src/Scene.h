@@ -1,5 +1,6 @@
 #pragma once
 #include "numeric_types.h"
+#include "delegate.h"
 
 #include <vector>
 #include <queue>
@@ -40,6 +41,14 @@ class Scene
 		GameEntity GetFirstEntityOfType();
 		GameEntity GetEntityFromId( uint32 id );
 
+		template < typename Functor >
+		uint32 SubscribeToOnEntityCreate( Functor&& functor );
+		void UnsubscribeFromOnEntityCreate( uint32 id );
+
+		template < typename Functor >
+		uint32 SubscribeToOnEntityDestroy( Functor&& functor );
+		void UnsubscribeFromOnEntityDestroy( uint32 id );
+
 	private:
 		void DestroyPendingEntities();
 
@@ -51,10 +60,25 @@ class Scene
 		std::queue< ECS::EntityId > _entitiesToRemoveRequests;
 
 		std::unordered_map< std::string, IEntityFactory* > _entityFactories;
+
+		Common::Delegate< GameEntity& > _onEntityCreate;
+		Common::Delegate< GameEntity& > _onEntityDestroy;
 };
 
 template < typename T >
 inline GameEntity Scene::GetFirstEntityOfType()
 {
 	return _entityContainer.GetFirstEntityOfType< T >();
+}
+
+template < typename Functor >
+inline uint32 Scene::SubscribeToOnEntityCreate( Functor&& functor )
+{
+	return _onEntityCreate.AddSubscriber( std::forward< Functor >( functor ) );
+}
+
+template < typename Functor >
+inline uint32 Scene::SubscribeToOnEntityDestroy( Functor&& functor )
+{
+	return _onEntityDestroy.AddSubscriber( std::forward< Functor >( functor ) );
 }
