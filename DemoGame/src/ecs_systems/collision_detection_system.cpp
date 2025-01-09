@@ -1,4 +1,4 @@
-#include "CollisionDetectionSystem.h"
+#include "collision_detection_system.h"
 #include "GameEntity.hpp"
 #include "CollisionUtils.h"
 #include "Logger.h"
@@ -7,6 +7,11 @@
 #include "components/transform_component.h"
 
 #include "ecs/entity_container.h"
+
+CollisionDetectionSystem::CollisionDetectionSystem()
+    : ECS::ISimpleSystem()
+{
+}
 
 bool ReturnMinLeft( const GameEntity& colliderEntityA, const GameEntity& colliderEntityB )
 {
@@ -19,16 +24,14 @@ bool ReturnMinLeft( const GameEntity& colliderEntityA, const GameEntity& collide
 	return colliderA.GetMinX( transformA ) < colliderB.GetMinX( transformB );
 }
 
-void CollisionDetectionSystem::PreTick( ECS::EntityContainer& entityContainer, float32 elapsedTime ) const
+void CollisionDetectionSystem::Execute( std::vector< GameEntity >& entities, ECS::EntityContainer& entity_container,
+                                        float32 elapsed_time )
 {
-	TickSweepAndPrune( entityContainer );
+	TickSweepAndPrune( entities );
 }
 
-void CollisionDetectionSystem::TickSweepAndPrune( ECS::EntityContainer& entityContainer ) const
+void CollisionDetectionSystem::TickSweepAndPrune( std::vector< GameEntity >& collision_entities ) const
 {
-	std::vector< GameEntity > collision_entities =
-	    entityContainer.GetEntitiesOfBothTypes< Collider2DComponent, TransformComponent >();
-
 	// Sort by left in order to optimize the number of collision queries later.
 	SortCollidersByLeft( collision_entities );
 

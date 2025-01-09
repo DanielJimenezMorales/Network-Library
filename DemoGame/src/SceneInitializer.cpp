@@ -12,7 +12,6 @@
 #include "ITextureLoader.h"
 #include "InputStateFactory.h"
 #include "ServiceLocator.h"
-#include "CollisionDetectionSystem.h"
 #include "CircleBounds2D.h"
 
 #include "ecs/system_coordinator.h"
@@ -45,6 +44,7 @@
 #include "ecs_systems/virtual_mouse_system.h"
 #include "ecs_systems/pre_tick_network_system.h"
 #include "ecs_systems/pos_tick_network_system.h"
+#include "ecs_systems/collision_detection_system.h"
 
 #include "entity_factories/client_local_player_entity_factory.h"
 #include "entity_factories/client_remote_player_entity_factory.h"
@@ -121,9 +121,6 @@ void SceneInitializer::InitializeScene( Scene& scene, NetLib::PeerType networkPe
 
 		Gizmo* gizmo = circleBounds2D->GetGizmo();
 		colliderEntity.AddComponent< GizmoRendererComponent >( gizmo );
-
-		CollisionDetectionSystem* collisionDetectionSystem = new CollisionDetectionSystem();
-		scene.AddPreTickSystem( collisionDetectionSystem );
 	}
 
 	if ( networkPeer->GetPeerType() == NetLib::PeerType::CLIENT )
@@ -168,6 +165,17 @@ void SceneInitializer::InitializeScene( Scene& scene, NetLib::PeerType networkPe
 	// TODO Create a system storage in order to be able to free them at the end
 	if ( networkPeerType == NetLib::PeerType::SERVER )
 	{
+		/////////////////////
+		// PRE TICK SYSTEMS
+		/////////////////////
+
+		// Add Server-side collision detection system
+		ECS::SystemCoordinator* collision_detection_system_coordinator =
+		    new ECS::SystemCoordinator( ECS::ExecutionStage::PRETICK );
+		collision_detection_system_coordinator->AddSystemToTail( GetAllCollidersFilter::GetInstance(),
+		                                                         new CollisionDetectionSystem() );
+		scene.AddSystem( collision_detection_system_coordinator );
+
 		//////////////////
 		// TICK SYSTEMS
 		//////////////////

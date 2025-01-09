@@ -1,4 +1,6 @@
 #pragma once
+#include "ecs/i_simple_system.h"
+
 #include "IPreTickSystem.h"
 #include "Vec2f.h"
 #include <vector>
@@ -28,10 +30,13 @@ struct MinimumTranslationVector
 
 bool ReturnMinLeft( const GameEntity& colliderEntityA, const GameEntity& colliderEntityB );
 
-class CollisionDetectionSystem : public IPreTickSystem
+class CollisionDetectionSystem : public ECS::ISimpleSystem
 {
 	public:
-		void PreTick( ECS::EntityContainer& entityContainer, float32 elapsedTime ) const override;
+		CollisionDetectionSystem();
+
+		void Execute( std::vector< GameEntity >& entities, ECS::EntityContainer& entity_container,
+		              float32 elapsed_time ) override;
 
 	private:
 		///////////////////////////////////
@@ -42,7 +47,7 @@ class CollisionDetectionSystem : public IPreTickSystem
 		/// <para>This method is a close approximation to the 1D Sweep & Prune collision detection algorithm.
 		/// For more info see <see href="https://leanrada.com/notes/sweep-and-prune/">this link</see></para>
 		/// </summary>
-		void TickSweepAndPrune( ECS::EntityContainer& entityContainer ) const;
+		void TickSweepAndPrune( std::vector< GameEntity >& collision_entities ) const;
 
 		/// <summary>
 		/// <para>Sort all potential colliders using X coordinate from left to right in order to be able to apply future
