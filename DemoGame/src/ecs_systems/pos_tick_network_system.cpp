@@ -9,8 +9,12 @@ PosTickNetworkSystem::PosTickNetworkSystem()
 {
 }
 
-void PosTickNetworkSystem::Execute( GameEntity& entity, float32 elapsed_time )
+void PosTickNetworkSystem::Execute( std::vector< GameEntity >& entities, ECS::EntityContainer& entity_container,
+                                    float32 elapsed_time )
 {
-	NetworkPeerComponent& networkPeerComponent = entity.GetComponent< NetworkPeerComponent >();
-	networkPeerComponent.peer->Tick( elapsed_time );
+	for ( auto it = entities.begin(); it != entities.end(); ++it )
+	{
+		NetworkPeerComponent& networkPeerComponent = it->GetComponent< NetworkPeerComponent >();
+		networkPeerComponent.peer->Tick( elapsed_time );
+	}
 }

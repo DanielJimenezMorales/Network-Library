@@ -19,27 +19,29 @@ SpriteRendererSystem::SpriteRendererSystem( SDL_Renderer* renderer )
 	assert( _renderer != nullptr );
 }
 
-void SpriteRendererSystem::Execute( GameEntity& entity, float32 elapsed_time )
+void SpriteRendererSystem::Execute( std::vector< GameEntity >& entities, ECS::EntityContainer& entity_container,
+                                    float32 elapsed_time )
 {
-	const ECS::EntityContainer* entity_container = entity.GetEntityContainer();
-
-	const GameEntity cameraEntity = entity_container->GetFirstEntityOfType< CameraComponent >();
+	const GameEntity cameraEntity = entity_container.GetFirstEntityOfType< CameraComponent >();
 	const CameraComponent& cameraComponent = cameraEntity.GetComponent< CameraComponent >();
 
-	// auto [spriteRenderer, transform] = view.get<SpriteRendererComponent, TransformComponent>(entity);
-	const SpriteRendererComponent& spriteRenderer = entity.GetComponent< SpriteRendererComponent >();
-	const TransformComponent& transform = entity.GetComponent< TransformComponent >();
+	for ( auto it = entities.begin(); it != entities.end(); ++it )
+	{
+		// auto [spriteRenderer, transform] = view.get<SpriteRendererComponent, TransformComponent>(entity);
+		const SpriteRendererComponent& spriteRenderer = it->GetComponent< SpriteRendererComponent >();
+		const TransformComponent& transform = it->GetComponent< TransformComponent >();
 
-	Texture* texture = spriteRenderer.texture;
-	Vec2f screenPosition = cameraComponent.ConvertFromWorldPositionToScreenPosition( transform.GetPosition() );
+		Texture* texture = spriteRenderer.texture;
+		Vec2f screenPosition = cameraComponent.ConvertFromWorldPositionToScreenPosition( transform.GetPosition() );
 
-	SDL_Rect destRect;
-	destRect.x = static_cast< int >( screenPosition.X() - ( texture->GetDimensions().w / 2.f ) );
-	destRect.y = static_cast< int >( screenPosition.Y() - ( texture->GetDimensions().h / 2.f ) );
-	destRect.w = static_cast< int >( texture->GetDimensions().w * transform.GetScale().X() );
-	destRect.h = static_cast< int >( texture->GetDimensions().h * transform.GetScale().Y() );
+		SDL_Rect destRect;
+		destRect.x = static_cast< int >( screenPosition.X() - ( texture->GetDimensions().w / 2.f ) );
+		destRect.y = static_cast< int >( screenPosition.Y() - ( texture->GetDimensions().h / 2.f ) );
+		destRect.w = static_cast< int >( texture->GetDimensions().w * transform.GetScale().X() );
+		destRect.h = static_cast< int >( texture->GetDimensions().h * transform.GetScale().Y() );
 
-	// SDL_RenderCopy(renderer, texture->GetRaw(), &texture->GetDimensions(), &destRect);
-	SDL_RenderCopyEx( _renderer, texture->GetRaw(), &texture->GetDimensions(), &destRect, transform.GetRotationAngle(),
-	                  nullptr, SDL_RendererFlip::SDL_FLIP_NONE );
+		// SDL_RenderCopy(renderer, texture->GetRaw(), &texture->GetDimensions(), &destRect);
+		SDL_RenderCopyEx( _renderer, texture->GetRaw(), &texture->GetDimensions(), &destRect,
+		                  transform.GetRotationAngle(), nullptr, SDL_RendererFlip::SDL_FLIP_NONE );
+	}
 }

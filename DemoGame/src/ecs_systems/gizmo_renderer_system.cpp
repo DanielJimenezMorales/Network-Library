@@ -17,18 +17,21 @@ GizmoRendererSystem::GizmoRendererSystem( SDL_Renderer* renderer )
 {
 }
 
-void GizmoRendererSystem::Execute( GameEntity& entity, float32 elapsed_time )
+void GizmoRendererSystem::Execute( std::vector< GameEntity >& entities, ECS::EntityContainer& entity_container,
+                                   float32 elapsed_time )
 {
-	const ECS::EntityContainer* entity_container = entity.GetEntityContainer();
-	const CameraComponent& camera = entity_container->GetFirstComponentOfType< CameraComponent >();
+	const CameraComponent& camera = entity_container.GetFirstComponentOfType< CameraComponent >();
 
-	const TransformComponent& transform = entity.GetComponent< TransformComponent >();
-	const GizmoRendererComponent& gizmo_renderer = entity.GetComponent< GizmoRendererComponent >();
+	for ( auto it = entities.begin(); it != entities.end(); ++it )
+	{
+		const TransformComponent& transform = it->GetComponent< TransformComponent >();
+		const GizmoRendererComponent& gizmo_renderer = it->GetComponent< GizmoRendererComponent >();
 
-	gizmo_renderer.gizmo->Render( camera, transform, _renderer );
+		gizmo_renderer.gizmo->Render( camera, transform, _renderer );
 
-	// TODO cache the color in a variable so I dont need to hardcode it in different places of the code
-	SDL_SetRenderDrawColor( _renderer, 255, 0, 0, 255 );
+		// TODO cache the color in a variable so I dont need to hardcode it in different places of the code
+		SDL_SetRenderDrawColor( _renderer, 255, 0, 0, 255 );
+	}
 }
 
 void GizmoRendererSystem::AllocateGizmoRendererComponentIfHasCollider( GameEntity& entity )

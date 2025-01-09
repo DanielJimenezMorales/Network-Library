@@ -46,11 +46,10 @@ static void SendInputsToServer( ECS::EntityContainer& entityContainer, const Inp
 	networkClient.SendInputs( inputState );
 }
 
-void ClientPlayerControllerSystem::Execute( GameEntity& entity, float32 elapsed_time )
+void ClientPlayerControllerSystem::Execute( std::vector< GameEntity >& entities, ECS::EntityContainer& entity_container,
+                                            float32 elapsed_time )
 {
-	ECS::EntityContainer* entity_container = entity.GetEntityContainer();
-
-	const GameEntity networkPeerEntity = entity_container->GetFirstEntityOfType< NetworkPeerComponent >();
+	const GameEntity networkPeerEntity = entity_container.GetFirstEntityOfType< NetworkPeerComponent >();
 	const NetworkPeerComponent& networkPeerComponent = networkPeerEntity.GetComponent< NetworkPeerComponent >();
 	if ( networkPeerComponent.peer->GetConnectionState() != NetLib::PCS_Connected )
 	{
@@ -58,11 +57,15 @@ void ClientPlayerControllerSystem::Execute( GameEntity& entity, float32 elapsed_
 	}
 
 	InputState inputState;
-	ProcessInputs( *entity_container, inputState );
-	SendInputsToServer( *entity_container, inputState );
+	ProcessInputs( entity_container, inputState );
+	SendInputsToServer( entity_container, inputState );
 
-	TransformComponent& transform = entity.GetComponent< TransformComponent >();
-	const PlayerControllerComponent& networkComponent = entity.GetComponent< PlayerControllerComponent >();
+	// TODO Is this valid?
+	for ( auto it = entities.begin(); it != entities.end(); ++it )
+	{
+		TransformComponent& transform = it->GetComponent< TransformComponent >();
+		const PlayerControllerComponent& networkComponent = it->GetComponent< PlayerControllerComponent >();
+	}
 
 	// transform.SetPosition(Vec2f(networkComponent.posX.Get(), networkComponent.posY.Get()));
 	// transform.SetRotationAngle(networkComponent.rotationAngle.Get());

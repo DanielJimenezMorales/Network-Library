@@ -18,24 +18,28 @@ static void Server_SpawnRemotePeerConnect( ECS::EntityContainer& entityContainer
 	serverPeer->CreateNetworkEntity( 10, remotePeerId, 0.f, 0.f );
 }
 
-void PreTickNetworkSystem::Execute( GameEntity& entity, float32 elapsed_time )
+void PreTickNetworkSystem::Execute( std::vector< GameEntity >& entities, ECS::EntityContainer& entity_container,
+                                    float32 elapsed_time )
 {
-	NetworkPeerComponent& networkPeerComponent = entity.GetComponent< NetworkPeerComponent >();
+	for ( auto it = entities.begin(); it != entities.end(); ++it )
+	{
+		NetworkPeerComponent& networkPeerComponent = it->GetComponent< NetworkPeerComponent >();
 
-	if ( networkPeerComponent.peer->GetConnectionState() == NetLib::PCS_Disconnected )
-	{
-		networkPeerComponent.peer->Start();
-	}
-	else
-	{
-		networkPeerComponent.peer->PreTick();
-	}
+		if ( networkPeerComponent.peer->GetConnectionState() == NetLib::PCS_Disconnected )
+		{
+			networkPeerComponent.peer->Start();
+		}
+		else
+		{
+			networkPeerComponent.peer->PreTick();
+		}
 
-	// Process new remote peer connections
-	while ( !networkPeerComponent.unprocessedConnectedRemotePeers.empty() )
-	{
-		uint32 unprocessedConnectedRemotePeerId = networkPeerComponent.unprocessedConnectedRemotePeers.front();
-		networkPeerComponent.unprocessedConnectedRemotePeers.pop();
-		Server_SpawnRemotePeerConnect( *entity.GetEntityContainer(), unprocessedConnectedRemotePeerId );
+		// Process new remote peer connections
+		while ( !networkPeerComponent.unprocessedConnectedRemotePeers.empty() )
+		{
+			uint32 unprocessedConnectedRemotePeerId = networkPeerComponent.unprocessedConnectedRemotePeers.front();
+			networkPeerComponent.unprocessedConnectedRemotePeers.pop();
+			Server_SpawnRemotePeerConnect( entity_container, unprocessedConnectedRemotePeerId );
+		}
 	}
 }

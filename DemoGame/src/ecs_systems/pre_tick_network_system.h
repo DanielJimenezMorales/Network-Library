@@ -6,5 +6,6 @@ class PreTickNetworkSystem : public ECS::ISimpleSystem
 	public:
 		PreTickNetworkSystem();
 
-		void Execute( GameEntity& entity, float32 elapsed_time ) override;
+		void Execute( std::vector< GameEntity >& entities, ECS::EntityContainer& entity_container,
+		              float32 elapsed_time ) override;
 };

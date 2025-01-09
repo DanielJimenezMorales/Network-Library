@@ -9,13 +9,16 @@
 #include "components/crosshair_component.h"
 #include "components/transform_component.h"
 
-void CrosshairFollowMouseSystem::Execute( GameEntity& entity, float32 elapsed_time )
+void CrosshairFollowMouseSystem::Execute( std::vector< GameEntity >& entities, ECS::EntityContainer& entity_container,
+                                          float32 elapsed_time )
 {
-	const ECS::EntityContainer* entity_container = entity.GetEntityContainer();
 	const VirtualMouseComponent& virtual_mouse_component =
-	    entity_container->GetFirstComponentOfType< VirtualMouseComponent >();
+	    entity_container.GetFirstComponentOfType< VirtualMouseComponent >();
 
-	// Update crosshair world position
-	TransformComponent& crosshairTransformComponent = entity.GetComponent< TransformComponent >();
-	crosshairTransformComponent.SetPosition( virtual_mouse_component.position );
+	for ( auto it = entities.begin(); it != entities.end(); ++it )
+	{
+		// Update crosshair world position
+		TransformComponent& crosshairTransformComponent = it->GetComponent< TransformComponent >();
+		crosshairTransformComponent.SetPosition( virtual_mouse_component.position );
+	}
 }

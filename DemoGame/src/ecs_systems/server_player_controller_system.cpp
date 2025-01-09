@@ -15,22 +15,24 @@ ServerPlayerControllerSystem::ServerPlayerControllerSystem()
 {
 }
 
-void ServerPlayerControllerSystem::Execute( GameEntity& entity, float32 elapsed_time )
+void ServerPlayerControllerSystem::Execute( std::vector< GameEntity >& entities, ECS::EntityContainer& entity_container,
+                                            float32 elapsed_time )
 {
-	ECS::EntityContainer* entity_container = entity.GetEntityContainer();
-
-	GameEntity& networkPeerEntity = entity_container->GetFirstEntityOfType< NetworkPeerComponent >();
+	GameEntity& networkPeerEntity = entity_container.GetFirstEntityOfType< NetworkPeerComponent >();
 	NetworkPeerComponent& networkPeerComponent = networkPeerEntity.GetComponent< NetworkPeerComponent >();
 	NetLib::Server* serverPeer = networkPeerComponent.GetPeerAsServer();
 
-	const NetworkEntityComponent& networkEntityComponent = entity.GetComponent< NetworkEntityComponent >();
-	const NetLib::IInputState* baseInputState =
-	    serverPeer->GetInputFromRemotePeer( networkEntityComponent.controlledByPeerId );
-	if ( baseInputState == nullptr )
+	for ( auto it = entities.begin(); it != entities.end(); ++it )
 	{
-		return;
-	}
+		const NetworkEntityComponent& networkEntityComponent = it->GetComponent< NetworkEntityComponent >();
+		const NetLib::IInputState* baseInputState =
+		    serverPeer->GetInputFromRemotePeer( networkEntityComponent.controlledByPeerId );
+		if ( baseInputState == nullptr )
+		{
+			return;
+		}
 
-	const InputState* inputState = static_cast< const InputState* >( baseInputState );
-	PlayerSimulator::Simulate( *inputState, entity, elapsed_time );
+		const InputState* inputState = static_cast< const InputState* >( baseInputState );
+		PlayerSimulator::Simulate( *inputState, *it, elapsed_time );
+	}
 }

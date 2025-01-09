@@ -37,13 +37,11 @@ namespace ECS
 			const IFilter* filter = system_pairs_it->filter;
 			std::vector< GameEntity > filtered_entities = filter->Apply( entity_container );
 
-			// Execute system with each filtered entity
-			auto filtered_entities_it = filtered_entities.begin();
-			for ( ; filtered_entities_it != filtered_entities.end(); ++filtered_entities_it )
+			if ( !filtered_entities.empty() )
 			{
-				GameEntity& filtered_entity = *filtered_entities_it;
+				// Execute system
 				ISimpleSystem* system = system_pairs_it->system;
-				system->Execute( filtered_entity, elapsed_time );
+				system->Execute( filtered_entities, entity_container, elapsed_time );
 			}
 		}
 	}
