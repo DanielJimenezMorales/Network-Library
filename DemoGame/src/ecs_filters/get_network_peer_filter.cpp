@@ -2,7 +2,7 @@
 
 #include "GameEntity.hpp"
 
-#include "components/network_peer_component.h"
+#include "global_components/network_peer_global_component.h"
 
 #include "ecs/entity_container.h"
 
@@ -20,5 +20,5 @@ const GetNetworkPeerFilter* GetNetworkPeerFilter::GetInstance()
 
 std::vector< GameEntity > GetNetworkPeerFilter::Apply( ECS::EntityContainer& entity_container ) const
 {
-	return std::vector< GameEntity >( { entity_container.GetFirstEntityOfType< NetworkPeerComponent >() } );
+	return std::vector< GameEntity >( { entity_container.GetFirstEntityOfType< NetworkPeerGlobalComponent >() } );
 }

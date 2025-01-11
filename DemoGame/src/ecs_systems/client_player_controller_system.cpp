@@ -12,10 +12,11 @@
 #include "ecs/entity_container.h"
 
 #include "components/virtual_mouse_component.h"
-#include "components/network_peer_component.h"
 #include "components/transform_component.h"
 #include "components/input_component.h"
 #include "components/player_controller_component.h"
+
+#include "global_components/network_peer_global_component.h"
 
 #include "core/client.h"
 
@@ -39,8 +40,7 @@ static void ProcessInputs( ECS::EntityContainer& entityContainer, InputState& ou
 
 static void SendInputsToServer( ECS::EntityContainer& entityContainer, const InputState& inputState )
 {
-	GameEntity networkPeerEntity = entityContainer.GetFirstEntityOfType< NetworkPeerComponent >();
-	NetworkPeerComponent& networkPeerComponent = networkPeerEntity.GetComponent< NetworkPeerComponent >();
+	NetworkPeerGlobalComponent& networkPeerComponent = entityContainer.GetGlobalComponent< NetworkPeerGlobalComponent >();
 
 	NetLib::Client& networkClient = *static_cast< NetLib::Client* >( networkPeerComponent.peer );
 	networkClient.SendInputs( inputState );
@@ -49,8 +49,7 @@ static void SendInputsToServer( ECS::EntityContainer& entityContainer, const Inp
 void ClientPlayerControllerSystem::Execute( std::vector< GameEntity >& entities, ECS::EntityContainer& entity_container,
                                             float32 elapsed_time )
 {
-	const GameEntity networkPeerEntity = entity_container.GetFirstEntityOfType< NetworkPeerComponent >();
-	const NetworkPeerComponent& networkPeerComponent = networkPeerEntity.GetComponent< NetworkPeerComponent >();
+	const NetworkPeerGlobalComponent& networkPeerComponent = entity_container.GetGlobalComponent< NetworkPeerGlobalComponent >();
 	if ( networkPeerComponent.peer->GetConnectionState() != NetLib::PCS_Connected )
 	{
 		return;

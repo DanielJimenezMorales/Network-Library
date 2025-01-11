@@ -24,6 +24,9 @@ class Scene
 
 		void AddSystem( ECS::SystemCoordinator* system );
 
+		template < typename T, typename... Params >
+		T& AddGlobalComponent( Params&&... params );
+
 		void Update( float32 elapsed_time );
 		void PreTick( float32 elapsed_time );
 		void Tick( float32 elapsed_time );
@@ -64,6 +67,12 @@ class Scene
 		Common::Delegate< GameEntity& > _onEntityCreate;
 		Common::Delegate< GameEntity& > _onEntityDestroy;
 };
+
+template < typename T, typename... Params >
+inline T& Scene::AddGlobalComponent( Params&&... params )
+{
+	return _entityContainer.AddGlobalComponent< T >( std::forward< Params >( params )... );
+}
 
 template < typename T >
 inline GameEntity Scene::GetFirstEntityOfType()

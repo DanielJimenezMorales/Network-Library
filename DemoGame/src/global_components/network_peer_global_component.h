@@ -11,13 +11,13 @@
 class INetworkEntityFactory;
 class IInputStateFactory;
 
-struct NetworkPeerComponent
+struct NetworkPeerGlobalComponent
 {
-	NetworkPeerComponent() : peer(nullptr), networkEntityFactories(), inputStateFactory(nullptr), unprocessedConnectedRemotePeers(), isTrackingRemotePeerConnect(false), remotePeerConnectSubscriptionId(0)
+	NetworkPeerGlobalComponent() : peer(nullptr), networkEntityFactories(), inputStateFactory(nullptr), unprocessedConnectedRemotePeers(), isTrackingRemotePeerConnect(false), remotePeerConnectSubscriptionId(0)
 	{
 	}
 
-	~NetworkPeerComponent();
+	~NetworkPeerGlobalComponent();
 
 	//TODO free this memory correctly
 	NetLib::Peer* peer;

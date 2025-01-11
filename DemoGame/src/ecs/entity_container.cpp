@@ -4,9 +4,17 @@
 
 namespace ECS
 {
+	EntityContainer::EntityContainer()
+	    : _entities()
+	    , _globalEntityId( 0 )
+	{
+		const entt::entity id = _entities.create();
+		_globalEntityId = static_cast< EntityId >( id );
+	}
+
 	GameEntity EntityContainer::CreateGameEntity()
 	{
-		entt::entity entityId = _entities.create();
+		const entt::entity entityId = _entities.create();
 		return GameEntity( static_cast< EntityId >( entityId ), this );
 	}
 
@@ -27,4 +35,4 @@ namespace ECS
 		}
 		return result;
 	}
-}
+} // namespace ECS

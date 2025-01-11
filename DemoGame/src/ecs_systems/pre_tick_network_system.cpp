@@ -2,7 +2,7 @@
 
 #include "GameEntity.hpp"
 
-#include "components/network_peer_component.h"
+#include "global_components/network_peer_global_component.h"
 
 PreTickNetworkSystem::PreTickNetworkSystem()
     : ECS::ISimpleSystem()
@@ -12,8 +12,8 @@ PreTickNetworkSystem::PreTickNetworkSystem()
 static void Server_SpawnRemotePeerConnect( ECS::EntityContainer& entityContainer, uint32 remotePeerId )
 {
 	// Spawn its local player entity:
-	GameEntity networkPeerEntity = entityContainer.GetFirstEntityOfType< NetworkPeerComponent >();
-	NetworkPeerComponent& networkPeerComponent = networkPeerEntity.GetComponent< NetworkPeerComponent >();
+	GameEntity networkPeerEntity = entityContainer.GetFirstEntityOfType< NetworkPeerGlobalComponent >();
+	NetworkPeerGlobalComponent& networkPeerComponent = networkPeerEntity.GetComponent< NetworkPeerGlobalComponent >();
 	NetLib::Server* serverPeer = networkPeerComponent.GetPeerAsServer();
 	serverPeer->CreateNetworkEntity( 10, remotePeerId, 0.f, 0.f );
 }
@@ -23,7 +23,7 @@ void PreTickNetworkSystem::Execute( std::vector< GameEntity >& entities, ECS::En
 {
 	for ( auto it = entities.begin(); it != entities.end(); ++it )
 	{
-		NetworkPeerComponent& networkPeerComponent = it->GetComponent< NetworkPeerComponent >();
+		NetworkPeerGlobalComponent& networkPeerComponent = it->GetComponent< NetworkPeerGlobalComponent >();
 
 		if ( networkPeerComponent.peer->GetConnectionState() == NetLib::PCS_Disconnected )
 		{

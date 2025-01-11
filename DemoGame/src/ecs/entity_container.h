@@ -15,10 +15,29 @@ namespace ECS
 	class EntityContainer
 	{
 		public:
+			EntityContainer();
+
 			GameEntity CreateGameEntity();
 
 			void DestroyGameEntity( EntityId id );
 
+			// Global components
+			template < typename T >
+			bool HasGlobalComponent() const;
+
+			template < typename T, typename... Params >
+			T& AddGlobalComponent( Params&&... params );
+
+			template < typename T >
+			const T& GetGlobalComponent() const;
+
+			template < typename T >
+			T& GetGlobalComponent();
+
+			template < typename T >
+			void RemoveGlobalComponent();
+
+			// Entity components
 			template < typename T >
 			bool HasEntityComponent( const GameEntity& gameEntity ) const;
 
@@ -68,7 +87,43 @@ namespace ECS
 
 		private:
 			entt::registry _entities;
+			EntityId _globalEntityId;
 	};
+
+	template < typename T >
+	inline bool EntityContainer::HasGlobalComponent() const
+	{
+		return _entities.all_of< T >( static_cast< entt::entity >( _globalEntityId ) );
+	}
+
+	template < typename T, typename... Params >
+	inline T& EntityContainer::AddGlobalComponent( Params&&... params )
+	{
+		assert( !HasGlobalComponent< T >() );
+		return _entities.emplace< T >( static_cast< entt::entity >( _globalEntityId ),
+		                               std::forward< Params >( params )... );
+	}
+
+	template < typename T >
+	inline const T& EntityContainer::GetGlobalComponent() const
+	{
+		assert( HasGlobalComponent< T >() );
+		return _entities.get< T >( static_cast< entt::entity >( _globalEntityId ) );
+	}
+
+	template < typename T >
+	inline T& EntityContainer::GetGlobalComponent()
+	{
+		assert( HasGlobalComponent< T >() );
+		return _entities.get< T >( static_cast< entt::entity >( _globalEntityId ) );
+	}
+
+	template < typename T >
+	inline void EntityContainer::RemoveGlobalComponent()
+	{
+		assert( HasGlobalComponent< T >() );
+		_entities.remove< T >( static_cast< entt::entity >( _globalEntityId ) );
+	}
 
 	template < typename T >
 	inline bool EntityContainer::HasEntityComponent( const GameEntity& gameEntity ) const

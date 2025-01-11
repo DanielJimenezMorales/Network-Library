@@ -1,10 +1,10 @@
-#include "network_peer_component.h"
+#include "network_peer_global_component.h"
 
 #include "inputs/i_input_state_factory.h"
 
 #include "replication/i_network_entity_factory.h"
 
-NetworkPeerComponent::~NetworkPeerComponent()
+NetworkPeerGlobalComponent::~NetworkPeerGlobalComponent()
 {
 	if ( isTrackingRemotePeerConnect )
 	{

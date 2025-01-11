@@ -7,8 +7,9 @@
 #include "ecs/entity_container.h"
 
 #include "components/player_controller_component.h"
-#include "components/network_peer_component.h"
 #include "components/network_entity_component.h"
+
+#include "global_components/network_peer_global_component.h"
 
 ServerPlayerControllerSystem::ServerPlayerControllerSystem()
     : ECS::ISimpleSystem()
@@ -18,8 +19,7 @@ ServerPlayerControllerSystem::ServerPlayerControllerSystem()
 void ServerPlayerControllerSystem::Execute( std::vector< GameEntity >& entities, ECS::EntityContainer& entity_container,
                                             float32 elapsed_time )
 {
-	GameEntity& networkPeerEntity = entity_container.GetFirstEntityOfType< NetworkPeerComponent >();
-	NetworkPeerComponent& networkPeerComponent = networkPeerEntity.GetComponent< NetworkPeerComponent >();
+	NetworkPeerGlobalComponent& networkPeerComponent = entity_container.GetGlobalComponent< NetworkPeerGlobalComponent >();
 	NetLib::Server* serverPeer = networkPeerComponent.GetPeerAsServer();
 
 	for ( auto it = entities.begin(); it != entities.end(); ++it )

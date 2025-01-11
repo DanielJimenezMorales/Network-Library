@@ -22,9 +22,10 @@
 #include "components/crosshair_component.h"
 #include "components/camera_component.h"
 #include "components/input_component.h"
-#include "components/network_peer_component.h"
 #include "components/collider_2d_component.h"
 #include "components/gizmo_renderer_component.h"
+
+#include "global_components/network_peer_global_component.h"
 
 #include "ecs_filters/server_get_all_players_filter.h"
 #include "ecs_filters/client_get_all_remote_players_filter.h"
@@ -76,8 +77,7 @@ void SceneInitializer::InitializeScene( Scene& scene, NetLib::PeerType networkPe
 	GameEntity inputsEntity = scene.CreateGameEntity();
 	inputsEntity.AddComponent< InputComponent >( keyboard, mouse );
 
-	GameEntity networkPeerEntity = scene.CreateGameEntity();
-	NetworkPeerComponent& networkPeerComponent = networkPeerEntity.AddComponent< NetworkPeerComponent >();
+	NetworkPeerGlobalComponent& networkPeerComponent = scene.AddGlobalComponent< NetworkPeerGlobalComponent >();
 	NetLib::Peer* networkPeer;
 	if ( networkPeerType == NetLib::PeerType::SERVER )
 	{

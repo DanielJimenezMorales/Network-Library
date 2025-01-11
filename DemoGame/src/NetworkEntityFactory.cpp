@@ -13,7 +13,7 @@
 #include "entity_configurations/client_local_player_entity_configuration.h"
 #include "entity_configurations/client_remote_entity_configuration.h"
 
-#include "components/network_peer_component.h"
+#include "global_components/network_peer_global_component.h"
 
 void NetworkEntityFactory::SetScene( Scene* scene )
 {
@@ -46,8 +46,8 @@ int32 NetworkEntityFactory::CreateNetworkEntityObject(
 	}
 	else if ( _peerType == NetLib::PeerType::CLIENT )
 	{
-		const GameEntity network_peer_entity = _scene->GetFirstEntityOfType< NetworkPeerComponent >();
-		const NetworkPeerComponent& network_peer_component = network_peer_entity.GetComponent< NetworkPeerComponent >();
+		const GameEntity network_peer_entity = _scene->GetFirstEntityOfType< NetworkPeerGlobalComponent >();
+		const NetworkPeerGlobalComponent& network_peer_component = network_peer_entity.GetComponent< NetworkPeerGlobalComponent >();
 		const NetLib::Client* clientPeer = static_cast< NetLib::Client* >( network_peer_component.peer );
 		if ( clientPeer->GetLocalClientId() == controlledByPeerId )
 		{
