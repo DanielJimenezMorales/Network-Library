@@ -10,7 +10,7 @@ namespace ECS
 {
 	SystemCoordinator::SystemCoordinator( ExecutionStage stage )
 	    : _stage( stage )
-	    , _systemPairs()
+	    , _systems()
 	{
 	}
 
@@ -23,13 +23,13 @@ namespace ECS
 	{
 		assert( system != nullptr );
 
-		_systemPairs.push_back( system );
+		_systems.push_back( system );
 	}
 
 	void SystemCoordinator::Execute( EntityContainer& entity_container, float elapsed_time )
 	{
-		auto system_pairs_it = _systemPairs.begin();
-		for ( ; system_pairs_it != _systemPairs.end(); ++system_pairs_it )
+		auto system_pairs_it = _systems.begin();
+		for ( ; system_pairs_it != _systems.end(); ++system_pairs_it )
 		{
 			// Execute system
 			( *system_pairs_it )->Execute( entity_container, elapsed_time );

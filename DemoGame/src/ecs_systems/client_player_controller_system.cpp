@@ -12,9 +12,7 @@
 #include "ecs/entity_container.h"
 
 #include "components/virtual_mouse_component.h"
-#include "components/transform_component.h"
 #include "components/input_component.h"
-#include "components/player_controller_component.h"
 
 #include "global_components/network_peer_global_component.h"
 
@@ -59,18 +57,4 @@ void ClientPlayerControllerSystem::Execute( ECS::EntityContainer& entity_contain
 	InputState inputState;
 	ProcessInputs( entity_container, inputState );
 	SendInputsToServer( entity_container, inputState );
-
-	std::vector< GameEntity > entities = entity_container.GetEntitiesOfType< PlayerControllerComponent >();
-	// TODO Is this valid?
-	for ( auto it = entities.begin(); it != entities.end(); ++it )
-	{
-		TransformComponent& transform = it->GetComponent< TransformComponent >();
-		const PlayerControllerComponent& networkComponent = it->GetComponent< PlayerControllerComponent >();
-	}
-
-	// transform.SetPosition(Vec2f(networkComponent.posX.Get(), networkComponent.posY.Get()));
-	// transform.SetRotationAngle(networkComponent.rotationAngle.Get());
-
-	// TODO Enable this when client-side prediction and reconciliation is ready
-	// TickPlayerController(*it, inputState, elapsedTime);
 }

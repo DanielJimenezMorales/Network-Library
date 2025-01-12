@@ -31,6 +31,6 @@ namespace ECS
 
 		private:
 			ExecutionStage _stage;
-			std::vector< ISimpleSystem* > _systemPairs;
+			std::vector< ISimpleSystem* > _systems;
 	};
 } // namespace ECS
