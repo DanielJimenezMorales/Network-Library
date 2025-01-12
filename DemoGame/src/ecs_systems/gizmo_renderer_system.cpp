@@ -17,11 +17,12 @@ GizmoRendererSystem::GizmoRendererSystem( SDL_Renderer* renderer )
 {
 }
 
-void GizmoRendererSystem::Execute( std::vector< GameEntity >& entities, ECS::EntityContainer& entity_container,
-                                   float32 elapsed_time )
+void GizmoRendererSystem::Execute( ECS::EntityContainer& entity_container, float32 elapsed_time )
 {
 	const CameraComponent& camera = entity_container.GetFirstComponentOfType< CameraComponent >();
 
+	std::vector< GameEntity > entities =
+	    entity_container.GetEntitiesOfBothTypes< GizmoRendererComponent, TransformComponent >();
 	for ( auto it = entities.begin(); it != entities.end(); ++it )
 	{
 		const TransformComponent& transform = it->GetComponent< TransformComponent >();

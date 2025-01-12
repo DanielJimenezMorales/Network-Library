@@ -27,15 +27,6 @@
 
 #include "global_components/network_peer_global_component.h"
 
-#include "ecs_filters/server_get_all_players_filter.h"
-#include "ecs_filters/client_get_all_remote_players_filter.h"
-#include "ecs_filters/get_crosshair_filter.h"
-#include "ecs_filters/get_all_colliders_filter.h"
-#include "ecs_filters/get_all_sprite_renderer_and_transform_filter.h"
-#include "ecs_filters/get_all_gizmo_renderer_and_transform_filter.h"
-#include "ecs_filters/get_all_virtual_mouse_filter.h"
-#include "ecs_filters/get_network_peer_filter.h"
-
 #include "ecs_systems/server_player_controller_system.h"
 #include "ecs_systems/client_player_controller_system.h"
 #include "ecs_systems/remote_player_controller_system.h"
@@ -139,8 +130,7 @@ void SceneInitializer::InitializeScene( Scene& scene, NetLib::PeerType networkPe
 		// Add virtual mouse system
 		ECS::SystemCoordinator* virtual_mouse_system_coordinator =
 		    new ECS::SystemCoordinator( ECS::ExecutionStage::UPDATE );
-		virtual_mouse_system_coordinator->AddSystemToTail( GetAllVirtualMouseFilter::GetInstance(),
-		                                                   new VirtualMouseSystem() );
+		virtual_mouse_system_coordinator->AddSystemToTail( new VirtualMouseSystem() );
 		scene.AddSystem( virtual_mouse_system_coordinator );
 
 		// Add crosshair if being a client
@@ -156,8 +146,7 @@ void SceneInitializer::InitializeScene( Scene& scene, NetLib::PeerType networkPe
 		// Add crosshair follow mouse system
 		ECS::SystemCoordinator* crosshair_follow_mouse_system_coordinator =
 		    new ECS::SystemCoordinator( ECS::ExecutionStage::UPDATE );
-		crosshair_follow_mouse_system_coordinator->AddSystemToTail( GetCrosshairFilter::GetInstance(),
-		                                                            new CrosshairFollowMouseSystem() );
+		crosshair_follow_mouse_system_coordinator->AddSystemToTail( new CrosshairFollowMouseSystem() );
 		scene.AddSystem( crosshair_follow_mouse_system_coordinator );
 	}
 
@@ -172,8 +161,7 @@ void SceneInitializer::InitializeScene( Scene& scene, NetLib::PeerType networkPe
 		// Add Server-side collision detection system
 		ECS::SystemCoordinator* collision_detection_system_coordinator =
 		    new ECS::SystemCoordinator( ECS::ExecutionStage::PRETICK );
-		collision_detection_system_coordinator->AddSystemToTail( GetAllCollidersFilter::GetInstance(),
-		                                                         new CollisionDetectionSystem() );
+		collision_detection_system_coordinator->AddSystemToTail( new CollisionDetectionSystem() );
 		scene.AddSystem( collision_detection_system_coordinator );
 
 		//////////////////
@@ -183,8 +171,7 @@ void SceneInitializer::InitializeScene( Scene& scene, NetLib::PeerType networkPe
 		// Add Server-side player controller system
 		ECS::SystemCoordinator* server_player_controller_system_coordinator =
 		    new ECS::SystemCoordinator( ECS::ExecutionStage::TICK );
-		server_player_controller_system_coordinator->AddSystemToTail( ServerGetAllPlayersFilter::GetInstance(),
-		                                                              new ServerPlayerControllerSystem() );
+		server_player_controller_system_coordinator->AddSystemToTail( new ServerPlayerControllerSystem() );
 		scene.AddSystem( server_player_controller_system_coordinator );
 	}
 	else if ( networkPeerType == NetLib::PeerType::CLIENT )
@@ -196,15 +183,13 @@ void SceneInitializer::InitializeScene( Scene& scene, NetLib::PeerType networkPe
 		// Add Client-side player controller system
 		ECS::SystemCoordinator* client_player_controller_system_coordinator =
 		    new ECS::SystemCoordinator( ECS::ExecutionStage::TICK );
-		client_player_controller_system_coordinator->AddSystemToTail( ServerGetAllPlayersFilter::GetInstance(),
-		                                                              new ClientPlayerControllerSystem() );
+		client_player_controller_system_coordinator->AddSystemToTail( new ClientPlayerControllerSystem() );
 		scene.AddSystem( client_player_controller_system_coordinator );
 
 		// Add Client-side remote player controller system
 		ECS::SystemCoordinator* client_remote_player_controller_system_coordinator =
 		    new ECS::SystemCoordinator( ECS::ExecutionStage::TICK );
-		client_player_controller_system_coordinator->AddSystemToTail( ClientGetAllRemotePlayersFilter::GetInstance(),
-		                                                              new RemotePlayerControllerSystem() );
+		client_player_controller_system_coordinator->AddSystemToTail( new RemotePlayerControllerSystem() );
 		scene.AddSystem( client_remote_player_controller_system_coordinator );
 	}
 
@@ -215,8 +200,7 @@ void SceneInitializer::InitializeScene( Scene& scene, NetLib::PeerType networkPe
 	// Add pre-tick network system
 	ECS::SystemCoordinator* pre_tick_network_system_coordinator =
 	    new ECS::SystemCoordinator( ECS::ExecutionStage::PRETICK );
-	pre_tick_network_system_coordinator->AddSystemToTail( GetNetworkPeerFilter::GetInstance(),
-	                                                      new PreTickNetworkSystem() );
+	pre_tick_network_system_coordinator->AddSystemToTail( new PreTickNetworkSystem() );
 	scene.AddSystem( pre_tick_network_system_coordinator );
 
 	/////////////////////
@@ -226,8 +210,7 @@ void SceneInitializer::InitializeScene( Scene& scene, NetLib::PeerType networkPe
 	// Add pos-tick network system
 	ECS::SystemCoordinator* pos_tick_network_system_coordinator =
 	    new ECS::SystemCoordinator( ECS::ExecutionStage::POSTICK );
-	pos_tick_network_system_coordinator->AddSystemToTail( GetNetworkPeerFilter::GetInstance(),
-	                                                      new PosTickNetworkSystem() );
+	pos_tick_network_system_coordinator->AddSystemToTail( new PosTickNetworkSystem() );
 	scene.AddSystem( pos_tick_network_system_coordinator );
 
 	//////////////////
@@ -235,12 +218,10 @@ void SceneInitializer::InitializeScene( Scene& scene, NetLib::PeerType networkPe
 	//////////////////
 
 	ECS::SystemCoordinator* render_system_coordinator = new ECS::SystemCoordinator( ECS::ExecutionStage::RENDER );
-	render_system_coordinator->AddSystemToTail( GetAllSpriteRendererAndTransformFilter::GetInstance(),
-	                                            new SpriteRendererSystem( renderer ) );
+	render_system_coordinator->AddSystemToTail( new SpriteRendererSystem( renderer ) );
 
 	GizmoRendererSystem* gizmo_renderer_system = new GizmoRendererSystem( renderer );
-	render_system_coordinator->AddSystemToTail( GetAllGizmoRendererAndTransformFilter::GetInstance(),
-	                                            gizmo_renderer_system );
+	render_system_coordinator->AddSystemToTail( gizmo_renderer_system );
 	scene.AddSystem( render_system_coordinator );
 	scene.SubscribeToOnEntityCreate( std::bind( &GizmoRendererSystem::AllocateGizmoRendererComponentIfHasCollider,
 	                                            gizmo_renderer_system, std::placeholders::_1 ) );

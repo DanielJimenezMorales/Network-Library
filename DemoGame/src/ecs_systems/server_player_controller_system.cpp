@@ -16,12 +16,13 @@ ServerPlayerControllerSystem::ServerPlayerControllerSystem()
 {
 }
 
-void ServerPlayerControllerSystem::Execute( std::vector< GameEntity >& entities, ECS::EntityContainer& entity_container,
-                                            float32 elapsed_time )
+void ServerPlayerControllerSystem::Execute( ECS::EntityContainer& entity_container, float32 elapsed_time )
 {
-	NetworkPeerGlobalComponent& networkPeerComponent = entity_container.GetGlobalComponent< NetworkPeerGlobalComponent >();
+	NetworkPeerGlobalComponent& networkPeerComponent =
+	    entity_container.GetGlobalComponent< NetworkPeerGlobalComponent >();
 	NetLib::Server* serverPeer = networkPeerComponent.GetPeerAsServer();
 
+	std::vector< GameEntity > entities = entity_container.GetEntitiesOfType< PlayerControllerComponent >();
 	for ( auto it = entities.begin(); it != entities.end(); ++it )
 	{
 		const NetworkEntityComponent& networkEntityComponent = it->GetComponent< NetworkEntityComponent >();

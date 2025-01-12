@@ -35,8 +35,7 @@ class CollisionDetectionSystem : public ECS::ISimpleSystem
 	public:
 		CollisionDetectionSystem();
 
-		void Execute( std::vector< GameEntity >& entities, ECS::EntityContainer& entity_container,
-		              float32 elapsed_time ) override;
+		void Execute( ECS::EntityContainer& entity_container, float32 elapsed_time ) override;
 
 	private:
 		///////////////////////////////////

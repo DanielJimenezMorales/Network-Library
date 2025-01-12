@@ -40,16 +40,17 @@ static void ProcessInputs( ECS::EntityContainer& entityContainer, InputState& ou
 
 static void SendInputsToServer( ECS::EntityContainer& entityContainer, const InputState& inputState )
 {
-	NetworkPeerGlobalComponent& networkPeerComponent = entityContainer.GetGlobalComponent< NetworkPeerGlobalComponent >();
+	NetworkPeerGlobalComponent& networkPeerComponent =
+	    entityContainer.GetGlobalComponent< NetworkPeerGlobalComponent >();
 
 	NetLib::Client& networkClient = *static_cast< NetLib::Client* >( networkPeerComponent.peer );
 	networkClient.SendInputs( inputState );
 }
 
-void ClientPlayerControllerSystem::Execute( std::vector< GameEntity >& entities, ECS::EntityContainer& entity_container,
-                                            float32 elapsed_time )
+void ClientPlayerControllerSystem::Execute( ECS::EntityContainer& entity_container, float32 elapsed_time )
 {
-	const NetworkPeerGlobalComponent& networkPeerComponent = entity_container.GetGlobalComponent< NetworkPeerGlobalComponent >();
+	const NetworkPeerGlobalComponent& networkPeerComponent =
+	    entity_container.GetGlobalComponent< NetworkPeerGlobalComponent >();
 	if ( networkPeerComponent.peer->GetConnectionState() != NetLib::PCS_Connected )
 	{
 		return;
@@ -59,6 +60,7 @@ void ClientPlayerControllerSystem::Execute( std::vector< GameEntity >& entities,
 	ProcessInputs( entity_container, inputState );
 	SendInputsToServer( entity_container, inputState );
 
+	std::vector< GameEntity > entities = entity_container.GetEntitiesOfType< PlayerControllerComponent >();
 	// TODO Is this valid?
 	for ( auto it = entities.begin(); it != entities.end(); ++it )
 	{

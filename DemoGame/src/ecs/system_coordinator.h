@@ -5,7 +5,6 @@
 
 namespace ECS
 {
-	class IFilter;
 	class ISimpleSystem;
 	class EntityContainer;
 
@@ -18,24 +17,6 @@ namespace ECS
 		RENDER
 	};
 
-	struct FilterAndSystemPair
-	{
-			FilterAndSystemPair()
-			    : filter( nullptr )
-			    , system( nullptr )
-			{
-			}
-
-			FilterAndSystemPair( const IFilter* filter, ISimpleSystem* system )
-			    : filter( filter )
-			    , system( system )
-			{
-			}
-
-			const IFilter* filter;
-			ISimpleSystem* system;
-	};
-
 	class SystemCoordinator
 	{
 		public:
@@ -44,12 +25,12 @@ namespace ECS
 			ExecutionStage GetStage() const;
 
 			// Adds a system to the tail of the vector. The tail is the lowest priority section
-			void AddSystemToTail( const IFilter* filter, ISimpleSystem* system );
+			void AddSystemToTail( ISimpleSystem* system );
 			// Executes all systems in order, from highest to lowest priority
 			void Execute( EntityContainer& entity_container, float elapsed_time );
 
 		private:
 			ExecutionStage _stage;
-			std::vector< FilterAndSystemPair > _systemPairs;
+			std::vector< ISimpleSystem* > _systemPairs;
 	};
 } // namespace ECS

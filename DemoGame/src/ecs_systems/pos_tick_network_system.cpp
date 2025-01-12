@@ -9,9 +9,9 @@ PosTickNetworkSystem::PosTickNetworkSystem()
 {
 }
 
-void PosTickNetworkSystem::Execute( std::vector< GameEntity >& entities, ECS::EntityContainer& entity_container,
-                                    float32 elapsed_time )
+void PosTickNetworkSystem::Execute( ECS::EntityContainer& entity_container, float32 elapsed_time )
 {
-	NetworkPeerGlobalComponent& networkPeerComponent = entity_container.GetGlobalComponent< NetworkPeerGlobalComponent >();
+	NetworkPeerGlobalComponent& networkPeerComponent =
+	    entity_container.GetGlobalComponent< NetworkPeerGlobalComponent >();
 	networkPeerComponent.peer->Tick( elapsed_time );
 }

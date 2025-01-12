@@ -19,12 +19,13 @@ SpriteRendererSystem::SpriteRendererSystem( SDL_Renderer* renderer )
 	assert( _renderer != nullptr );
 }
 
-void SpriteRendererSystem::Execute( std::vector< GameEntity >& entities, ECS::EntityContainer& entity_container,
-                                    float32 elapsed_time )
+void SpriteRendererSystem::Execute( ECS::EntityContainer& entity_container, float32 elapsed_time )
 {
 	const GameEntity cameraEntity = entity_container.GetFirstEntityOfType< CameraComponent >();
 	const CameraComponent& cameraComponent = cameraEntity.GetComponent< CameraComponent >();
 
+	std::vector< GameEntity > entities =
+	    entity_container.GetEntitiesOfBothTypes< SpriteRendererComponent, TransformComponent >();
 	for ( auto it = entities.begin(); it != entities.end(); ++it )
 	{
 		// auto [spriteRenderer, transform] = view.get<SpriteRendererComponent, TransformComponent>(entity);

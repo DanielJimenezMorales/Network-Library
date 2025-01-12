@@ -10,9 +10,9 @@ RemotePlayerControllerSystem::RemotePlayerControllerSystem()
 {
 }
 
-void RemotePlayerControllerSystem::Execute( std::vector< GameEntity >& entities, ECS::EntityContainer& entity_container,
-                                            float32 elapsed_time )
+void RemotePlayerControllerSystem::Execute( ECS::EntityContainer& entity_container, float32 elapsed_time )
 {
+	std::vector< GameEntity > entities = entity_container.GetEntitiesOfType< RemotePlayerControllerComponent >();
 	// TODO Is this still valid?
 	for ( auto it = entities.begin(); it != entities.end(); ++it )
 	{

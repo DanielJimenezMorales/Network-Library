@@ -9,12 +9,12 @@
 #include "components/camera_component.h"
 #include "components/input_component.h"
 
-void VirtualMouseSystem::Execute( std::vector< GameEntity >& entities, ECS::EntityContainer& entity_container,
-                                  float32 elapsed_time )
+void VirtualMouseSystem::Execute( ECS::EntityContainer& entity_container, float32 elapsed_time )
 {
 	const CameraComponent& cameraComponent = entity_container.GetFirstComponentOfType< CameraComponent >();
 	const InputComponent& inputComponent = entity_container.GetFirstComponentOfType< InputComponent >();
 
+	std::vector< GameEntity > entities = entity_container.GetEntitiesOfType< VirtualMouseComponent >();
 	for ( auto it = entities.begin(); it != entities.end(); ++it )
 	{
 		VirtualMouseComponent& virtual_mouse = it->GetComponent< VirtualMouseComponent >();

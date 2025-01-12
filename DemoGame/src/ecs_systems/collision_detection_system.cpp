@@ -24,9 +24,10 @@ bool ReturnMinLeft( const GameEntity& colliderEntityA, const GameEntity& collide
 	return colliderA.GetMinX( transformA ) < colliderB.GetMinX( transformB );
 }
 
-void CollisionDetectionSystem::Execute( std::vector< GameEntity >& entities, ECS::EntityContainer& entity_container,
-                                        float32 elapsed_time )
+void CollisionDetectionSystem::Execute( ECS::EntityContainer& entity_container, float32 elapsed_time )
 {
+	std::vector< GameEntity > entities =
+	    entity_container.GetEntitiesOfBothTypes< Collider2DComponent, TransformComponent >();
 	TickSweepAndPrune( entities );
 }
 
