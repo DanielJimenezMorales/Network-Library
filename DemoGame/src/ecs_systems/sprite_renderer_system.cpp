@@ -15,6 +15,7 @@
 
 SpriteRendererSystem::SpriteRendererSystem( SDL_Renderer* renderer )
     : _renderer( renderer )
+    , _textureResourceHandler( renderer )
 {
 	assert( _renderer != nullptr );
 }
@@ -32,8 +33,12 @@ void SpriteRendererSystem::Execute( ECS::EntityContainer& entity_container, floa
 		const SpriteRendererComponent& spriteRenderer = it->GetComponent< SpriteRendererComponent >();
 		const TransformComponent& transform = it->GetComponent< TransformComponent >();
 
-		Texture* texture = spriteRenderer.texture;
 		Vec2f screenPosition = cameraComponent.ConvertFromWorldPositionToScreenPosition( transform.GetPosition() );
+		const Texture* texture = _textureResourceHandler.TryGetTextureFromHandler( spriteRenderer.textureHandler );
+		if ( texture == nullptr )
+		{
+			continue;
+		}
 
 		SDL_Rect destRect;
 		destRect.x = static_cast< int >( screenPosition.X() - ( texture->GetDimensions().w / 2.f ) );

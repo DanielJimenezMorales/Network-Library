@@ -1,10 +1,13 @@
 #pragma once
-#include "TextureLoader.h"
+#include "resource_handlers/texture_resource_handler.h"
 
 struct SpriteRendererComponent
 {
-public:
-	SpriteRendererComponent(Texture* tex) : texture(tex) {}
+	public:
+		SpriteRendererComponent( const TextureHandler& texture_handler )
+		    : textureHandler( texture_handler )
+		{
+		}
 
-	Texture* texture;
+		TextureHandler textureHandler;
 };

@@ -6,8 +6,6 @@
 #include "core/initializer.h"
 
 #include "SceneInitializer.h"
-#include "ServiceLocator.h"
-#include "TextureLoader.h"
 
 bool Game::Init()
 {
@@ -47,11 +45,6 @@ bool Game::Init()
 	}
 
 	_isRunning = true;
-
-	ServiceLocator& serviceLocator = ServiceLocator::CreateInstance();
-	TextureLoader* textureLoader = new TextureLoader();
-	textureLoader->Init( _renderer );
-	serviceLocator.RegisterTextureLoader( textureLoader );
 
 	SceneInitializer sceneInitializer;
 
@@ -144,10 +137,6 @@ void Game::EndOfFrame()
 bool Game::Release()
 {
 	NetLib::Initializer::Finalize();
-
-	ServiceLocator& serviceLocator = ServiceLocator::GetInstance();
-	serviceLocator.UnregisterAll();
-	ServiceLocator::DestroyInstance();
 
 	SDL_DestroyRenderer( _renderer );
 	SDL_DestroyWindow( _window );

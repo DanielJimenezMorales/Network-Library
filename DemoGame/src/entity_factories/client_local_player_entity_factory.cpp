@@ -8,6 +8,8 @@
 #include "components/network_entity_component.h"
 #include "components/player_controller_component.h"
 
+#include "resource_handlers/texture_resource_handler.h"
+
 #include "player_network_entity_serialization_callbacks.h"
 
 #include "replication/network_entity_communication_callbacks.h"
@@ -15,12 +17,20 @@
 #include "CircleBounds2D.h"
 
 #include "GameEntity.hpp"
-#include "ServiceLocator.h"
-#include "TextureLoader.h"
+
+#include <cassert>
 
 ClientLocalPlayerEntityFactory::ClientLocalPlayerEntityFactory()
     : IEntityFactory()
+    , _textureResourceHandler( nullptr )
 {
+}
+
+void ClientLocalPlayerEntityFactory::Configure( TextureResourceHandler* texture_resource_handler )
+{
+	assert( texture_resource_handler != nullptr );
+
+	_textureResourceHandler = texture_resource_handler;
 }
 
 void ClientLocalPlayerEntityFactory::Create( GameEntity& entity, const BaseEntityConfiguration* configuration )
@@ -28,12 +38,11 @@ void ClientLocalPlayerEntityFactory::Create( GameEntity& entity, const BaseEntit
 	const ClientLocalPlayerEntityConfiguration& casted_config =
 	    static_cast< const ClientLocalPlayerEntityConfiguration& >( *configuration );
 
-	ServiceLocator& serviceLocator = ServiceLocator::GetInstance();
-	ITextureLoader& textureLoader = serviceLocator.GetTextureLoader();
-	Texture* texture = textureLoader.LoadTexture( "sprites/PlayerSprites/playerHead.png" );
+	const TextureHandler texture_handler =
+	    _textureResourceHandler->LoadTexture( "sprites/PlayerSprites/playerHead.png" );
+	entity.AddComponent< SpriteRendererComponent >( texture_handler );
 
 	entity.AddComponent< TransformComponent >( casted_config.position, casted_config.lookAt );
-	entity.AddComponent< SpriteRendererComponent >( texture );
 
 	CircleBounds2D* circleBounds2D = new CircleBounds2D( 5.f );
 	entity.AddComponent< Collider2DComponent >( circleBounds2D, false, CollisionResponseType::Dynamic );
