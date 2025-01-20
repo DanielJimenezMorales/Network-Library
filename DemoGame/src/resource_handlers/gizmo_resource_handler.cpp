@@ -33,9 +33,11 @@ GizmoResourceHandler& GizmoResourceHandler::operator=( GizmoResourceHandler&& ot
 	return *this;
 }
 
-GizmoHandler GizmoResourceHandler::CreateGizmo( const GizmoConfiguration& configuration )
+GizmoHandler GizmoResourceHandler::CreateGizmo( const GizmoConfiguration* configuration )
 {
-	GizmoPool* pool = ForceGetGizmoPool( configuration.type );
+	assert(configuration != nullptr);
+
+	GizmoPool* pool = ForceGetGizmoPool( configuration->type );
 	return ( pool != nullptr ) ? pool->CreateGizmo( configuration ) : GizmoHandler::GetInvalid();
 }
 

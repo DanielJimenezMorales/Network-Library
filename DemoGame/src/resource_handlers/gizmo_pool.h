@@ -51,7 +51,7 @@ class GizmoPool
 
 		bool IsFull() const;
 
-		GizmoHandler CreateGizmo( const GizmoConfiguration& configuration );
+		GizmoHandler CreateGizmo( const GizmoConfiguration* configuration );
 		bool RemoveGizmo( const GizmoHandler& handler );
 
 		const Gizmo* TryGetGizmoFromHandler( const GizmoHandler& handler ) const;

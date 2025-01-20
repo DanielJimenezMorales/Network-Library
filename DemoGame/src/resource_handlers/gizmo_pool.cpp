@@ -35,15 +35,17 @@ bool GizmoPool::IsFull() const
 	return result;
 }
 
-GizmoHandler GizmoPool::CreateGizmo( const GizmoConfiguration& configuration )
+GizmoHandler GizmoPool::CreateGizmo( const GizmoConfiguration* configuration )
 {
+	assert( configuration != nullptr );
+
 	GizmoHandler result = GizmoHandler::GetInvalid();
 
 	assert( !IsFull() );
 	if ( IsFull() )
 	{
 		LOG_WARNING( "Gizmo pool for type %u is full. Reallocating a bigger pool...",
-		             static_cast< uint32 >( configuration.type ) );
+		             static_cast< uint32 >( configuration->type ) );
 		Reallocate();
 	}
 
@@ -60,7 +62,7 @@ GizmoHandler GizmoPool::CreateGizmo( const GizmoConfiguration& configuration )
 	// Create handler
 	result.index = index;
 	result.version = gizmoPool[ index ].version;
-	result.type = configuration.type;
+	result.type = configuration->type;
 
 	return result;
 }

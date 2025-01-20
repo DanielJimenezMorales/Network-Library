@@ -1,12 +1,12 @@
 #include "Gizmo.h"
 
-void Gizmo::Configure( const GizmoConfiguration& configuration )
+void Gizmo::Configure( const GizmoConfiguration* configuration )
 {
-	r = configuration.r;
-	g = configuration.g;
-	b = configuration.b;
-	a = configuration.a;
-	_type = configuration.type;
+	r = configuration->r;
+	g = configuration->g;
+	b = configuration->b;
+	a = configuration->a;
+	_type = configuration->type;
 
 	ConfigureConcrete( configuration );
 }

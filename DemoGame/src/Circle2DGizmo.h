@@ -21,6 +21,12 @@ class CircleGizmo : public Gizmo
 		{
 		}
 
+		CircleGizmo( const CircleGizmoConfiguration* configuration )
+		    : Gizmo( configuration )
+		    , _radius( configuration->radius )
+		{
+		}
+
 		CircleGizmo( const CircleGizmo& other ) = default;
 		CircleGizmo( CircleGizmo&& other ) noexcept = default;
 
@@ -30,7 +36,7 @@ class CircleGizmo : public Gizmo
 		CircleGizmo* Clone() const override;
 
 	protected:
-		void ConfigureConcrete( const GizmoConfiguration& configuration ) override;
+		void ConfigureConcrete( const GizmoConfiguration* configuration ) override;
 		void RenderConcrete( const CameraComponent& camera, const TransformComponent& transform,
 		                     SDL_Renderer* renderer ) const override;
 

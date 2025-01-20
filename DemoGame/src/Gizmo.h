@@ -28,18 +28,18 @@ class Gizmo
 		Gizmo& operator=( const Gizmo& other ) = default;
 		Gizmo& operator=( Gizmo&& other ) noexcept = default;
 
-		void Configure( const GizmoConfiguration& configuration );
+		void Configure( const GizmoConfiguration* configuration );
 		void Render( const CameraComponent& camera, const TransformComponent& transform, SDL_Renderer* renderer ) const;
 
 		virtual Gizmo* Clone() const = 0;
 
 	protected:
-		Gizmo( const GizmoConfiguration& configuration )
-		    : r( configuration.r )
-		    , g( configuration.g )
-		    , b( configuration.b )
-		    , a( configuration.a )
-		    , _type( configuration.type )
+		Gizmo( const GizmoConfiguration* configuration )
+		    : r( configuration->r )
+		    , g( configuration->g )
+		    , b( configuration->b )
+		    , a( configuration->a )
+		    , _type( configuration->type )
 		{
 		}
 
@@ -47,7 +47,7 @@ class Gizmo
 		Gizmo( const Gizmo& other ) = default;
 		Gizmo( Gizmo&& other ) noexcept = default;
 
-		virtual void ConfigureConcrete( const GizmoConfiguration& configuration ) = 0;
+		virtual void ConfigureConcrete( const GizmoConfiguration* configuration ) = 0;
 		virtual void RenderConcrete( const CameraComponent& camera, const TransformComponent& transform,
 		                             SDL_Renderer* renderer ) const = 0;
 

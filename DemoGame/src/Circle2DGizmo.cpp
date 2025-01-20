@@ -10,11 +10,11 @@ CircleGizmo* CircleGizmo::Clone() const
 	return new CircleGizmo( *this );
 }
 
-void CircleGizmo::ConfigureConcrete( const GizmoConfiguration& configuration )
+void CircleGizmo::ConfigureConcrete( const GizmoConfiguration* configuration )
 {
-	assert( configuration.type == GizmoType::CIRCLE2D );
+	assert( configuration->type == GizmoType::CIRCLE2D );
 
-	const CircleGizmoConfiguration& config = static_cast< const CircleGizmoConfiguration& >( configuration );
+	const CircleGizmoConfiguration& config = static_cast< const CircleGizmoConfiguration& >( *configuration );
 	_radius = config.radius;
 }
 

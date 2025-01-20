@@ -7,6 +7,7 @@
 
 #include <unordered_map>
 
+// TODO Document class and add more logs
 class GizmoResourceHandler
 {
 	public:
@@ -19,7 +20,7 @@ class GizmoResourceHandler
 		GizmoResourceHandler& operator=( const GizmoResourceHandler& ) = delete;
 		GizmoResourceHandler& operator=( GizmoResourceHandler&& other ) noexcept;
 
-		GizmoHandler CreateGizmo( const GizmoConfiguration& configuration );
+		GizmoHandler CreateGizmo( const GizmoConfiguration* configuration );
 		bool RemoveGizmo( const GizmoHandler& handler );
 
 		const Gizmo* TryGetGizmoFromHandler( const GizmoHandler& handler ) const;

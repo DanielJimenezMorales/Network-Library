@@ -45,6 +45,7 @@ void SceneInitializer::InitializeScene( Scene& scene, NetLib::PeerType networkPe
                                         SDL_Renderer* renderer ) const
 {
 	SpriteRendererSystem* sprite_renderer_system = new SpriteRendererSystem( renderer );
+	GizmoRendererSystem* gizmo_renderer_system = new GizmoRendererSystem( renderer );
 
 	// Inputs
 	KeyboardController* keyboard = new KeyboardController();
@@ -112,8 +113,9 @@ void SceneInitializer::InitializeScene( Scene& scene, NetLib::PeerType networkPe
 		CircleBounds2D* circleBounds2D = new CircleBounds2D( 5.f );
 		colliderEntity.AddComponent< Collider2DComponent >( circleBounds2D, false, CollisionResponseType::Static );
 
-		Gizmo* gizmo = circleBounds2D->GetGizmo();
-		colliderEntity.AddComponent< GizmoRendererComponent >( gizmo );
+		const GizmoHandler& gizmo_handler =
+		    gizmo_renderer_system->GetGizmoResourceHandler().CreateGizmo( circleBounds2D->GetGizmo().get() );
+		colliderEntity.AddComponent< GizmoRendererComponent >( gizmo_handler );
 	}
 
 	if ( networkPeer->GetPeerType() == NetLib::PeerType::CLIENT )
@@ -223,7 +225,6 @@ void SceneInitializer::InitializeScene( Scene& scene, NetLib::PeerType networkPe
 	ECS::SystemCoordinator* render_system_coordinator = new ECS::SystemCoordinator( ECS::ExecutionStage::RENDER );
 	render_system_coordinator->AddSystemToTail( sprite_renderer_system );
 
-	GizmoRendererSystem* gizmo_renderer_system = new GizmoRendererSystem( renderer );
 	render_system_coordinator->AddSystemToTail( gizmo_renderer_system );
 	scene.AddSystem( render_system_coordinator );
 	scene.SubscribeToOnEntityCreate( std::bind( &GizmoRendererSystem::AllocateGizmoRendererComponentIfHasCollider,

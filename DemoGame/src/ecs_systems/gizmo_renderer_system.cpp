@@ -28,7 +28,13 @@ void GizmoRendererSystem::Execute( ECS::EntityContainer& entity_container, float
 		const TransformComponent& transform = it->GetComponent< TransformComponent >();
 		const GizmoRendererComponent& gizmo_renderer = it->GetComponent< GizmoRendererComponent >();
 
-		gizmo_renderer.gizmo->Render( camera, transform, _renderer );
+		const Gizmo* gizmo = _gizmoResourceHandler.TryGetGizmoFromHandler( gizmo_renderer.gizmoHandler );
+		if ( gizmo == nullptr )
+		{
+			continue;
+		}
+
+		gizmo->Render( camera, transform, _renderer );
 
 		// TODO cache the color in a variable so I dont need to hardcode it in different places of the code
 		SDL_SetRenderDrawColor( _renderer, 255, 0, 0, 255 );
@@ -43,8 +49,8 @@ void GizmoRendererSystem::AllocateGizmoRendererComponentIfHasCollider( GameEntit
 	}
 
 	const Collider2DComponent& collider = entity.GetComponent< Collider2DComponent >();
-	Gizmo* gizmo = collider.GetGizmo();
-	entity.AddComponent< GizmoRendererComponent >( gizmo );
+	const GizmoHandler gizmo_handler = _gizmoResourceHandler.CreateGizmo( collider.GetGizmo().get() );
+	entity.AddComponent< GizmoRendererComponent >( gizmo_handler );
 }
 
 void GizmoRendererSystem::DeallocateGizmoRendererComponentIfHasCollider( GameEntity& entity )
@@ -55,6 +61,6 @@ void GizmoRendererSystem::DeallocateGizmoRendererComponentIfHasCollider( GameEnt
 	}
 
 	GizmoRendererComponent& gizmo_renderer = entity.GetComponent< GizmoRendererComponent >();
-	Gizmo* gizmo = std::exchange( gizmo_renderer.gizmo, nullptr );
-	delete gizmo;
+	const bool remove_successfully = _gizmoResourceHandler.RemoveGizmo( gizmo_renderer.gizmoHandler );
+	assert( remove_successfully );
 }

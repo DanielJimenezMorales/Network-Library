@@ -45,7 +45,14 @@ float32 CircleBounds2D::GetMaxX( const TransformComponent& transform ) const
 	return transform.GetPosition().X() + _radius;
 }
 
-Gizmo* CircleBounds2D::GetGizmo() const
+std::unique_ptr< GizmoConfiguration > CircleBounds2D::GetGizmo() const
 {
-	return new CircleGizmo( _radius );
+	CircleGizmoConfiguration config;
+	config.r = 0;
+	config.g = 255;
+	config.b = 0;
+	config.a = 255;
+	config.type = GizmoType::CIRCLE2D;
+	config.radius = _radius;
+	return std::unique_ptr< GizmoConfiguration >( new CircleGizmoConfiguration( config ) );
 }

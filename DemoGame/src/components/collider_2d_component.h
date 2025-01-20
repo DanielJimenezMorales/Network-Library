@@ -1,11 +1,13 @@
 #pragma once
 #include "Vec2f.h"
+
 #include "Bounds2D.h"
+
 #include <cstdint>
 #include <vector>
+#include <memory>
 
 struct TransformComponent;
-class Gizmo;
 
 enum class CollisionResponseType : uint8
 {
@@ -33,7 +35,7 @@ struct Collider2DComponent
 		float32 GetMinX( const TransformComponent& transform ) const;
 		float32 GetMaxX( const TransformComponent& transform ) const;
 
-		Gizmo* GetGizmo() const;
+		std::unique_ptr< GizmoConfiguration > GetGizmo() const;
 
 		CollisionResponseType GetCollisionResponse() const { return _collisionResponseType; }
 		bool IsTrigger() const { return _isTrigger; }
