@@ -63,7 +63,6 @@ class GameEntity
 	private:
 		ECS::EntityId _ecsEntityId;
 
-		// TODO Add SafePointer wrapper
 		SafePointer< ECS::EntityContainer > _entityContainer;
 
 		friend class ECS::EntityContainer;

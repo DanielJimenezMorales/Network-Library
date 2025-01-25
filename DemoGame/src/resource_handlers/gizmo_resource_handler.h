@@ -7,7 +7,10 @@
 
 #include <unordered_map>
 
-// TODO Document class and add more logs
+/// <summary>
+/// This class acts as a centralized storage for Gizmo resources. This class follows the Handle pattern.
+/// https://floooh.github.io/2018/06/17/handles-vs-pointers.html
+/// </summary>
 class GizmoResourceHandler
 {
 	public:
@@ -20,9 +23,21 @@ class GizmoResourceHandler
 		GizmoResourceHandler& operator=( const GizmoResourceHandler& ) = delete;
 		GizmoResourceHandler& operator=( GizmoResourceHandler&& other ) noexcept;
 
+		/// <summary>
+		/// Creates a Gizmo resource based on a configuration. Returns a handler to the resource.
+		/// </summary>
 		GizmoHandler CreateGizmo( const GizmoConfiguration* configuration );
+		/// <summary>
+		/// Removes a gizmo resource based on its handler.
+		/// </summary>
 		bool RemoveGizmo( const GizmoHandler& handler );
 
+		/// <summary>
+		/// <para>Returns a pointer to the raw gizmo resource based on its pointer. If the gizmo resource is not found,
+		/// nullptr will be returned.</para>
+		/// <para>IMPORTANT: Never store the raw resource pointer returned. Also, never pass the resource pointer to
+		/// another function. If neccessary, make another call to this function.</para>
+		/// </summary>
 		const Gizmo* TryGetGizmoFromHandler( const GizmoHandler& handler ) const;
 		Gizmo* TryGetGizmoFromHandler( const GizmoHandler& handler );
 
