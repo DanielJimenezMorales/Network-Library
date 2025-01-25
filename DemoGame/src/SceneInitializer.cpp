@@ -11,7 +11,6 @@
 #include "InputHandler.h"
 #include "ITextureLoader.h"
 #include "InputStateFactory.h"
-#include "ServiceLocator.h"
 #include "CircleBounds2D.h"
 
 #include "ecs/system_coordinator.h"
@@ -45,6 +44,9 @@
 void SceneInitializer::InitializeScene( Scene& scene, NetLib::PeerType networkPeerType, InputHandler& inputHandler,
                                         SDL_Renderer* renderer ) const
 {
+	SpriteRendererSystem* sprite_renderer_system = new SpriteRendererSystem( renderer );
+	GizmoRendererSystem* gizmo_renderer_system = new GizmoRendererSystem( renderer );
+
 	// Inputs
 	KeyboardController* keyboard = new KeyboardController();
 	InputButton button( JUMP_BUTTON, SDLK_q );
@@ -91,6 +93,7 @@ void SceneInitializer::InitializeScene( Scene& scene, NetLib::PeerType networkPe
 	{
 		// Entity factories registration
 		ServerPlayerEntityFactory* player_entity_factory = new ServerPlayerEntityFactory();
+		player_entity_factory->Configure( sprite_renderer_system->GetTextureResourceHandler() );
 		scene.RegisterEntityFactory( "PLAYER", player_entity_factory );
 
 		InputStateFactory* inputStateFactory = new InputStateFactory();
@@ -102,25 +105,28 @@ void SceneInitializer::InitializeScene( Scene& scene, NetLib::PeerType networkPe
 		GameEntity colliderEntity = scene.CreateGameEntity();
 		TransformComponent& colliderEntityTransform = colliderEntity.GetComponent< TransformComponent >();
 		colliderEntityTransform.SetPosition( Vec2f( 10.f, 10.f ) );
-		ServiceLocator& serviceLocator = ServiceLocator::GetInstance();
-		ITextureLoader& textureLoader = serviceLocator.GetTextureLoader();
-		Texture* texture2 = textureLoader.LoadTexture( "sprites/PlayerSprites/PlayerHead.png" );
-		colliderEntity.AddComponent< SpriteRendererComponent >( texture2 );
+
+		TextureHandler texture_handler =
+		    sprite_renderer_system->GetTextureResourceHandler()->LoadTexture( "sprites/PlayerSprites/PlayerHead.png" );
+		colliderEntity.AddComponent< SpriteRendererComponent >( texture_handler );
 
 		CircleBounds2D* circleBounds2D = new CircleBounds2D( 5.f );
 		colliderEntity.AddComponent< Collider2DComponent >( circleBounds2D, false, CollisionResponseType::Static );
 
-		Gizmo* gizmo = circleBounds2D->GetGizmo();
-		colliderEntity.AddComponent< GizmoRendererComponent >( gizmo );
+		const GizmoHandler& gizmo_handler =
+		    gizmo_renderer_system->GetGizmoResourceHandler().CreateGizmo( circleBounds2D->GetGizmo().get() );
+		colliderEntity.AddComponent< GizmoRendererComponent >( gizmo_handler );
 	}
 
 	if ( networkPeer->GetPeerType() == NetLib::PeerType::CLIENT )
 	{
 		// Entity factories registration
 		ClientLocalPlayerEntityFactory* local_player_entity_factory = new ClientLocalPlayerEntityFactory();
+		local_player_entity_factory->Configure( sprite_renderer_system->GetTextureResourceHandler() );
 		scene.RegisterEntityFactory( "LOCAL_PLAYER", local_player_entity_factory );
 
 		ClientRemotePlayerEntityFactory* remote_player_entity_factory = new ClientRemotePlayerEntityFactory();
+		remote_player_entity_factory->Configure( sprite_renderer_system->GetTextureResourceHandler() );
 		scene.RegisterEntityFactory( "REMOTE_PLAYER", remote_player_entity_factory );
 
 		// Add virtual mouse
@@ -136,11 +142,10 @@ void SceneInitializer::InitializeScene( Scene& scene, NetLib::PeerType networkPe
 		// Add crosshair if being a client
 		GameEntity crosshairEntity = scene.CreateGameEntity();
 
-		ServiceLocator& serviceLocator = ServiceLocator::GetInstance();
-		ITextureLoader& textureLoader = serviceLocator.GetTextureLoader();
-		Texture* texture = textureLoader.LoadTexture( "sprites/Crosshair/crosshair.png" );
+		TextureHandler texture_handler =
+		    sprite_renderer_system->GetTextureResourceHandler()->LoadTexture( "sprites/Crosshair/crosshair.png" );
 
-		crosshairEntity.AddComponent< SpriteRendererComponent >( texture );
+		crosshairEntity.AddComponent< SpriteRendererComponent >( texture_handler );
 		crosshairEntity.AddComponent< CrosshairComponent >();
 
 		// Add crosshair follow mouse system
@@ -218,9 +223,8 @@ void SceneInitializer::InitializeScene( Scene& scene, NetLib::PeerType networkPe
 	//////////////////
 
 	ECS::SystemCoordinator* render_system_coordinator = new ECS::SystemCoordinator( ECS::ExecutionStage::RENDER );
-	render_system_coordinator->AddSystemToTail( new SpriteRendererSystem( renderer ) );
+	render_system_coordinator->AddSystemToTail( sprite_renderer_system );
 
-	GizmoRendererSystem* gizmo_renderer_system = new GizmoRendererSystem( renderer );
 	render_system_coordinator->AddSystemToTail( gizmo_renderer_system );
 	scene.AddSystem( render_system_coordinator );
 	scene.SubscribeToOnEntityCreate( std::bind( &GizmoRendererSystem::AllocateGizmoRendererComponentIfHasCollider,

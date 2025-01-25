@@ -18,7 +18,7 @@ struct CircleBounds2D : public Bounds2D
 		float32 GetMinX( const TransformComponent& transform ) const override;
 		float32 GetMaxX( const TransformComponent& transform ) const override;
 
-		Gizmo* GetGizmo() const override;
+		std::unique_ptr< GizmoConfiguration > GetGizmo() const override;
 
 	private:
 		float32 _radius;

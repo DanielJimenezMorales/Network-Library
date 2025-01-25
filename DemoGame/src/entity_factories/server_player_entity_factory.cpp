@@ -15,12 +15,20 @@
 #include "CircleBounds2D.h"
 
 #include "GameEntity.hpp"
-#include "ServiceLocator.h"
-#include "TextureLoader.h"
+
+#include <cassert>
 
 ServerPlayerEntityFactory::ServerPlayerEntityFactory()
     : IEntityFactory()
+    , _textureResourceHandler( nullptr )
 {
+}
+
+void ServerPlayerEntityFactory::Configure( TextureResourceHandler* texture_resource_handler )
+{
+	assert( texture_resource_handler != nullptr );
+
+	_textureResourceHandler = texture_resource_handler;
 }
 
 void ServerPlayerEntityFactory::Create( GameEntity& entity, const BaseEntityConfiguration* configuration )
@@ -28,12 +36,11 @@ void ServerPlayerEntityFactory::Create( GameEntity& entity, const BaseEntityConf
 	const ServerPlayerEntityConfiguration& casted_config =
 	    static_cast< const ServerPlayerEntityConfiguration& >( *configuration );
 
-	ServiceLocator& serviceLocator = ServiceLocator::GetInstance();
-	ITextureLoader& textureLoader = serviceLocator.GetTextureLoader();
-	Texture* texture = textureLoader.LoadTexture( "sprites/PlayerSprites/playerHead.png" );
+	const TextureHandler texture_handler =
+	    _textureResourceHandler->LoadTexture( "sprites/PlayerSprites/playerHead.png" );
+	entity.AddComponent< SpriteRendererComponent >( texture_handler );
 
 	entity.AddComponent< TransformComponent >( casted_config.position, casted_config.lookAt );
-	entity.AddComponent< SpriteRendererComponent >( texture );
 
 	CircleBounds2D* circleBounds2D = new CircleBounds2D( 5.f );
 	entity.AddComponent< Collider2DComponent >( circleBounds2D, false, CollisionResponseType::Dynamic );

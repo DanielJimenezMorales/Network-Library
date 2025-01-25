@@ -1,13 +1,12 @@
 #pragma once
-
-class Gizmo;
+#include "resource_handlers/gizmo_pool.h"
 
 struct GizmoRendererComponent
 {
-		GizmoRendererComponent( Gizmo* gizmo )
-		    : gizmo( gizmo )
+		GizmoRendererComponent( const GizmoHandler& handler )
+		    : gizmoHandler( handler )
 		{
 		}
 
-		Gizmo* gizmo;
+		GizmoHandler gizmoHandler;
 };

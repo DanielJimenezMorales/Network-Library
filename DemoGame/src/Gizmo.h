@@ -6,29 +6,52 @@
 struct CameraComponent;
 struct TransformComponent;
 
+enum class GizmoType : uint32
+{
+	NONE = 0,
+	CIRCLE2D = 1
+};
+
+struct GizmoConfiguration
+{
+		virtual ~GizmoConfiguration() {}
+
+		uint8 r, g, b, a;
+		GizmoType type;
+};
+
 class Gizmo
 {
 	public:
 		virtual ~Gizmo() {}
 
-		void Render( const CameraComponent& camera, const TransformComponent& transform, SDL_Renderer* renderer ) const
-		{
-			SDL_SetRenderDrawColor( renderer, r, g, b, a );
-			RenderConcrete( camera, transform, renderer );
-		}
+		Gizmo& operator=( const Gizmo& other ) = default;
+		Gizmo& operator=( Gizmo&& other ) noexcept = default;
+
+		void Configure( const GizmoConfiguration* configuration );
+		void Render( const CameraComponent& camera, const TransformComponent& transform, SDL_Renderer* renderer ) const;
+
+		virtual Gizmo* Clone() const = 0;
 
 	protected:
-		Gizmo( uint8 r, uint8 g, uint8 b, uint8 a )
-		    : r( r )
-		    , g( g )
-		    , b( b )
-		    , a( a )
+		Gizmo( const GizmoConfiguration* configuration )
+		    : r( configuration->r )
+		    , g( configuration->g )
+		    , b( configuration->b )
+		    , a( configuration->a )
+		    , _type( configuration->type )
 		{
 		}
 
+		Gizmo( uint8 r, uint8 g, uint8 b, uint8 a, GizmoType type );
+		Gizmo( const Gizmo& other ) = default;
+		Gizmo( Gizmo&& other ) noexcept = default;
+
+		virtual void ConfigureConcrete( const GizmoConfiguration* configuration ) = 0;
 		virtual void RenderConcrete( const CameraComponent& camera, const TransformComponent& transform,
 		                             SDL_Renderer* renderer ) const = 0;
 
 	private:
-		const uint8 r, g, b, a;
+		uint8 r, g, b, a;
+		GizmoType _type;
 };

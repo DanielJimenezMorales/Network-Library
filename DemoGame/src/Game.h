@@ -33,6 +33,6 @@ class Game
 		bool _isRunning;
 
 		Scene _activeScene;
-		// TODO The input handler should also be witin an ECS component
+		// TODO The input handler should also be witin an ECS global component
 		InputHandler _inputHandler;
 };
