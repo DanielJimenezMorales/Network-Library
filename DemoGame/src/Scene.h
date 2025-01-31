@@ -8,6 +8,10 @@
 
 #include "ecs/entity_container.h"
 #include "ecs/systems_handler.h"
+#include "ecs/component_registry.h"
+
+#include "archetype_registry.h"
+#include "prefab_registry.h"
 
 class GameEntity;
 class IPreTickSystem;
@@ -21,6 +25,13 @@ class Scene
 		Scene();
 
 		bool RegisterEntityFactory( const std::string& id, IEntityFactory* factory );
+
+		bool RegisterArchetype( const ECS::Archetype& archetype );
+
+		bool RegisterPrefab( const ECS::Prefab& prefab );
+
+		template < typename T >
+		bool RegisterComponent( const std::string& name );
 
 		void AddSystem( ECS::SystemCoordinator* system );
 
@@ -37,6 +48,7 @@ class Scene
 		void AddPreTickSystem( IPreTickSystem* system );
 
 		GameEntity CreateGameEntity();
+		void CreateGameEntity( const std::string& prefab_name );
 		GameEntity CreateGameEntity( const std::string& type, const BaseEntityConfiguration* config );
 		void DestroyGameEntity( const GameEntity& entity );
 
@@ -53,20 +65,34 @@ class Scene
 		void UnsubscribeFromOnEntityDestroy( uint32 id );
 
 	private:
+		void CreatePendingEntities();
+		void SpawnEntity( const std::string& prefab_name );
+		bool AddComponentsToEntity( const ECS::Archetype& archetype, GameEntity& entity );
 		void DestroyPendingEntities();
 
 		ECS::EntityContainer _entityContainer;
 		ECS::SystemsHandler _systemsHandler;
 
+		ECS::ComponentRegistry _componentRegistry;
+		ArchetypeRegistry _archetype_registry;
+		PrefabRegistry _prefab_registry;
+
 		std::vector< IPreTickSystem* > _preTickSystems;
 
 		std::queue< ECS::EntityId > _entitiesToRemoveRequests;
+		std::queue< std::string > _entitiesToCreateRequests;
 
 		std::unordered_map< std::string, IEntityFactory* > _entityFactories;
 
 		Common::Delegate< GameEntity& > _onEntityCreate;
 		Common::Delegate< GameEntity& > _onEntityDestroy;
 };
+
+template < typename T >
+inline bool Scene::RegisterComponent( const std::string& name )
+{
+	return _componentRegistry.RegisterComponent< T >( name );
+}
 
 template < typename T, typename... Params >
 inline T& Scene::AddGlobalComponent( Params&&... params )

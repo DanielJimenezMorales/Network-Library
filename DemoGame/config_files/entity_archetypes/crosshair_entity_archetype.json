@@ -1,0 +1,9 @@
+{
+	"name": "crosshair",
+	"components":
+	[
+		"Transform",
+		"SpriteRenderer",
+		"Crosshair"
+	]
+}
