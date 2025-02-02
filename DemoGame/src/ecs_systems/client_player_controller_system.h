@@ -1,6 +1,11 @@
 #pragma once
 #include "ecs/i_simple_system.h"
 
+namespace ECS
+{
+	class Prefab;
+}
+
 class ClientPlayerControllerSystem : public ECS::ISimpleSystem
 {
 	public:

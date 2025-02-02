@@ -1,5 +1,6 @@
 #pragma once
 #include "numeric_types.h"
+#include "Delegate.h"
 
 #include <memory>
 #include <functional>
@@ -13,6 +14,7 @@
 namespace NetLib
 {
 	class NetworkEntityFactoryRegistry;
+	struct OnNetworkEntityCreateConfig;
 
 	static constexpr uint32 INVALID_NETWORK_ENTITY_ID = 0;
 
@@ -21,7 +23,7 @@ namespace NetLib
 		public:
 			ReplicationManager( NetworkEntityFactoryRegistry* networkEntityFactoryRegistry )
 			    : _nextNetworkEntityId( 1 )
-			    , _networkEntityFactoryRegistry( networkEntityFactoryRegistry )
+			    //, _networkEntityFactoryRegistry( networkEntityFactoryRegistry )
 			{
 			}
 
@@ -34,6 +36,9 @@ namespace NetLib
 			void ClearReplicationMessages();
 
 			void RemoveNetworkEntitiesControllerByPeer( uint32 id );
+
+			template < typename Functor >
+			uint32 SubscribeToOnNetworkEntityCreate( Functor&& functor );
 
 		private:
 			NetworkEntityData& SpawnNewNetworkEntity( uint32 replicated_class_id, uint32 network_entity_id,
@@ -57,6 +62,14 @@ namespace NetLib
 
 			uint32 _nextNetworkEntityId;
 
-			NetworkEntityFactoryRegistry* _networkEntityFactoryRegistry;
+			//NetworkEntityFactoryRegistry* _networkEntityFactoryRegistry;
+			std::function< uint32_t( const OnNetworkEntityCreateConfig& ) > _onNetworkEntityCreate;
 	};
+
+	template < typename Functor >
+	inline uint32 ReplicationManager::SubscribeToOnNetworkEntityCreate( Functor&& functor )
+	{
+		_onNetworkEntityCreate = std::move( functor );
+		return 0;
+	}
 } // namespace NetLib

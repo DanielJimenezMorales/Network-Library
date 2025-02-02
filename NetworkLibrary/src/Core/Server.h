@@ -33,6 +33,9 @@ namespace NetLib
 			void RegisterInputStateFactory( IInputStateFactory* factory );
 			const IInputState* GetInputFromRemotePeer( uint32 remotePeerId );
 
+			template < typename Functor >
+			uint32 SubscribeToOnNetworkEntityCreate( Functor&& functor );
+
 			~Server() override;
 
 		protected:
@@ -81,4 +84,10 @@ namespace NetLib
 
 			ReplicationManager _replicationManager;
 	};
+
+	template < typename Functor >
+	inline uint32 Server::SubscribeToOnNetworkEntityCreate( Functor&& functor )
+	{
+		return _replicationManager.SubscribeToOnNetworkEntityCreate( std::forward< Functor >( functor ) );
+	}
 } // namespace NetLib

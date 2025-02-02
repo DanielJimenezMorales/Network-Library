@@ -1,12 +1,14 @@
 #pragma once
-#include <cstdint>
+#include "numeric_types.h"
 
-struct PlayerControllerConfiguration
+#include "ecs/component_configuration.h"
+
+struct PlayerControllerConfiguration : public ECS::ComponentConfiguration
 {
-	PlayerControllerConfiguration() :movementSpeed(0) {}
-	PlayerControllerConfiguration(const PlayerControllerConfiguration& other) : movementSpeed(other.movementSpeed)
-	{
-	}
+	PlayerControllerConfiguration();
+		PlayerControllerConfiguration( uint32 movement_speed );
 
-	uint32 movementSpeed;
+		PlayerControllerConfiguration* Clone() const override;
+
+		uint32 movementSpeed;
 };

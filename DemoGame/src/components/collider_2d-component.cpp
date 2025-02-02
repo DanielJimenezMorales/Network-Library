@@ -1,5 +1,16 @@
 #include "collider_2d_component.h"
 
+//TODO remove this
+#include "CircleBounds2D.h"
+
+Collider2DComponent::Collider2DComponent()
+//TODO Do not hardcode this
+    : _bounds( new CircleBounds2D( 5.f ) )
+    , _isTrigger( true )
+    , _collisionResponseType( CollisionResponseType::Static )
+{
+}
+
 Collider2DComponent::Collider2DComponent( Bounds2D* bounds, bool isTrigger, CollisionResponseType responseType )
     : _bounds( bounds )
     , _isTrigger( isTrigger )

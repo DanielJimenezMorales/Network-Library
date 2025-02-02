@@ -4,13 +4,17 @@
 
 struct RemotePlayerControllerComponent
 {
-public:
-	RemotePlayerControllerComponent(NetLib::NetworkVariableChangesHandler* networkVariableChangesHandler, uint32 networkEntityId) :
-		networkEntityId(networkEntityId), posX(networkVariableChangesHandler, networkEntityId), posY(networkVariableChangesHandler, networkEntityId), rotationAngle(networkVariableChangesHandler, networkEntityId) {};
+	public:
+		RemotePlayerControllerComponent()
+		    : networkEntityId( 0 )
+		{
+		}
 
-	uint32 networkEntityId;
-	NetLib::NetworkVariable<float> posX;
-	NetLib::NetworkVariable<float> posY;
+		RemotePlayerControllerComponent( NetLib::NetworkVariableChangesHandler* networkVariableChangesHandler,
+		                                 uint32 networkEntityId )
+		    : networkEntityId( networkEntityId )
+		{
+		}
 
-	NetLib::NetworkVariable<float> rotationAngle;
+		uint32 networkEntityId;
 };

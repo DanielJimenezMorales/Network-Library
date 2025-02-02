@@ -6,10 +6,13 @@
 #include "Logger.h"
 
 #include "ecs/entity_container.h"
+#include "ecs/prefab.h"
 
 #include "components/transform_component.h"
 #include "components/sprite_renderer_component.h"
 #include "components/camera_component.h"
+
+#include "component_configurations/sprite_renderer_component_configuration.h"
 
 #include <cassert>
 
@@ -50,4 +53,23 @@ void SpriteRendererSystem::Execute( ECS::EntityContainer& entity_container, floa
 		SDL_RenderCopyEx( _renderer, texture->GetRaw(), &texture->GetDimensions(), &destRect,
 		                  transform.GetRotationAngle(), nullptr, SDL_RendererFlip::SDL_FLIP_NONE );
 	}
+}
+
+void SpriteRendererSystem::ConfigureSpriteRendererComponent( GameEntity& entity, const ECS::Prefab& prefab )
+{
+	auto component_config_found = prefab.componentConfigurations.find( "SpriteRenderer" );
+	if ( component_config_found == prefab.componentConfigurations.end() )
+	{
+		return;
+	}
+
+	if ( !entity.HasComponent< SpriteRendererComponent >() )
+	{
+		return;
+	}
+
+	const SpriteRendererComponentConfiguration& sprite_renderer_config =
+	    static_cast< const SpriteRendererComponentConfiguration& >( *component_config_found->second );
+	SpriteRendererComponent& sprite_renderer = entity.GetComponent< SpriteRendererComponent >();
+	sprite_renderer.textureHandler = _textureResourceHandler.LoadTexture( sprite_renderer_config.texturePath.c_str() );
 }

@@ -18,6 +18,7 @@ enum class CollisionResponseType : uint8
 struct Collider2DComponent
 {
 	public:
+		Collider2DComponent();
 		Collider2DComponent( Bounds2D* bounds, bool isTrigger, CollisionResponseType responseType );
 		Collider2DComponent( const Collider2DComponent& ) = delete;
 		Collider2DComponent( Collider2DComponent&& other ) noexcept;

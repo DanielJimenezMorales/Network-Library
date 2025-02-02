@@ -62,5 +62,5 @@ bool ArchetypeRegistry::TryGetArchetype( const std::string& name, ECS::Archetype
 
 bool ArchetypeRegistry::IsArchetypeValid( const ECS::Archetype& archetype ) const
 {
-	return archetype.name.empty() || archetype.components.empty();
+	return !archetype.name.empty() && !archetype.components.empty();
 }

@@ -9,6 +9,7 @@
 #include "replication/i_network_entity_factory.h"
 #include "replication/replication_action_type.h"
 #include "replication/network_entity_factory_registry.h"
+#include "replication/on_network_entity_create_config.h"
 
 namespace NetLib
 {
@@ -21,9 +22,20 @@ namespace NetLib
 		    _networkEntitiesStorage.AddNetworkEntity( replicated_class_id, network_entity_id, controlled_by_peer_id );
 
 		// Spawn network entity in world through its custom factory
-		const uint32 gameEntity = _networkEntityFactoryRegistry->CreateNetworkEntity(
+		/*const uint32 gameEntity = _networkEntityFactoryRegistry->CreateNetworkEntity(
 		    replicated_class_id, network_entity_id, controlled_by_peer_id, pos_x, pos_y,
-		    new_entity_data.communicationCallbacks );
+		    new_entity_data.communicationCallbacks );*/
+
+		OnNetworkEntityCreateConfig network_entity_create_config;
+		network_entity_create_config.entityType = replicated_class_id;
+		network_entity_create_config.entityId = network_entity_id;
+		network_entity_create_config.controlledByPeerId = controlled_by_peer_id;
+		network_entity_create_config.positionX = pos_x;
+		network_entity_create_config.positionY = pos_y;
+		network_entity_create_config.communicationCallbacks = &new_entity_data.communicationCallbacks;
+		// TODO Assign return value to gameEntity
+		// TODO Also evaluate if we need inGameId for something
+		const uint32 gameEntity = _onNetworkEntityCreate( network_entity_create_config );
 
 		new_entity_data.inGameId = gameEntity;
 		return new_entity_data;
@@ -138,7 +150,7 @@ namespace NetLib
 		}
 
 		// Destroy object through its custom factory
-		_networkEntityFactoryRegistry->RemoveNetworkEntity( gameEntity->inGameId );
+		//_networkEntityFactoryRegistry->RemoveNetworkEntity( gameEntity->inGameId );
 
 		// Remove network enttiy data
 		_networkEntitiesStorage.RemoveNetworkEntity( networkEntityId );

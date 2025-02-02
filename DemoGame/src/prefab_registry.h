@@ -14,10 +14,10 @@ class PrefabRegistry
 		PrefabRegistry& operator=( const PrefabRegistry& other ) = default;
 		PrefabRegistry& operator=( PrefabRegistry&& other ) noexcept = default;
 
-		bool RegisterPrefab( const ECS::Prefab& prefab );
+		bool RegisterPrefab( ECS::Prefab&& prefab );
 		bool UnregisterPrefab( const std::string& name );
 
-		bool TryGetPrefab( const std::string& name, ECS::Prefab& out_prefab ) const;
+		const ECS::Prefab* TryGetPrefab( const std::string& name ) const;
 
 	private:
 		bool IsPrefabValid( const ECS::Prefab& prefab ) const;

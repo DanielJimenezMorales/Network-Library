@@ -19,6 +19,8 @@ class IPreTickSystem;
 struct BaseEntityConfiguration;
 class IEntityFactory;
 
+struct Vec2f;
+
 class Scene
 {
 	public:
@@ -28,7 +30,7 @@ class Scene
 
 		bool RegisterArchetype( const ECS::Archetype& archetype );
 
-		bool RegisterPrefab( const ECS::Prefab& prefab );
+		bool RegisterPrefab( ECS::Prefab&& prefab );
 
 		template < typename T >
 		bool RegisterComponent( const std::string& name );
@@ -37,6 +39,9 @@ class Scene
 
 		template < typename T, typename... Params >
 		T& AddGlobalComponent( Params&&... params );
+
+		template < typename T >
+		T& GetGlobalComponent();
 
 		void Update( float32 elapsed_time );
 		void PreTick( float32 elapsed_time );
@@ -48,7 +53,7 @@ class Scene
 		void AddPreTickSystem( IPreTickSystem* system );
 
 		GameEntity CreateGameEntity();
-		void CreateGameEntity( const std::string& prefab_name );
+		GameEntity CreateGameEntity( const std::string& prefab_name, const Vec2f& position );
 		GameEntity CreateGameEntity( const std::string& type, const BaseEntityConfiguration* config );
 		void DestroyGameEntity( const GameEntity& entity );
 
@@ -61,12 +66,16 @@ class Scene
 		void UnsubscribeFromOnEntityCreate( uint32 id );
 
 		template < typename Functor >
+		uint32 SubscribeToOnEntityConfigure( Functor&& functor );
+		void UnsubscribeFromOnEntityConfigure( uint32 id );
+
+		template < typename Functor >
 		uint32 SubscribeToOnEntityDestroy( Functor&& functor );
 		void UnsubscribeFromOnEntityDestroy( uint32 id );
 
 	private:
 		void CreatePendingEntities();
-		void SpawnEntity( const std::string& prefab_name );
+		GameEntity SpawnEntity( const std::string& prefab_name, const Vec2f& position );
 		bool AddComponentsToEntity( const ECS::Archetype& archetype, GameEntity& entity );
 		void DestroyPendingEntities();
 
@@ -85,6 +94,7 @@ class Scene
 		std::unordered_map< std::string, IEntityFactory* > _entityFactories;
 
 		Common::Delegate< GameEntity& > _onEntityCreate;
+		Common::Delegate< GameEntity&, const ECS::Prefab& > _onEntityConfigure;
 		Common::Delegate< GameEntity& > _onEntityDestroy;
 };
 
@@ -101,6 +111,12 @@ inline T& Scene::AddGlobalComponent( Params&&... params )
 }
 
 template < typename T >
+inline T& Scene::GetGlobalComponent()
+{
+	return _entityContainer.GetGlobalComponent< T >();
+}
+
+template < typename T >
 inline GameEntity Scene::GetFirstEntityOfType()
 {
 	return _entityContainer.GetFirstEntityOfType< T >();
@@ -110,6 +126,12 @@ template < typename Functor >
 inline uint32 Scene::SubscribeToOnEntityCreate( Functor&& functor )
 {
 	return _onEntityCreate.AddSubscriber( std::forward< Functor >( functor ) );
+}
+
+template < typename Functor >
+inline uint32 Scene::SubscribeToOnEntityConfigure( Functor&& functor )
+{
+	return _onEntityConfigure.AddSubscriber( std::forward< Functor >( functor ) );
 }
 
 template < typename Functor >

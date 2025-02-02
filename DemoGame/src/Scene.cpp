@@ -6,6 +6,7 @@
 
 #include "GameEntity.hpp"
 #include "IPreTickSystem.h"
+#include "Vec2f.h"
 
 #include "components/transform_component.h"
 
@@ -39,9 +40,9 @@ bool Scene::RegisterArchetype( const ECS::Archetype& archetype )
 	return _archetype_registry.RegisterArchetype( archetype );
 }
 
-bool Scene::RegisterPrefab( const ECS::Prefab& prefab )
+bool Scene::RegisterPrefab( ECS::Prefab&& prefab )
 {
-	return _prefab_registry.RegisterPrefab( prefab );
+	return _prefab_registry.RegisterPrefab( std::forward< ECS::Prefab >( prefab ) );
 }
 
 void Scene::AddSystem( ECS::SystemCoordinator* system )
@@ -100,9 +101,10 @@ GameEntity Scene::CreateGameEntity()
 	return newEntity;
 }
 
-void Scene::CreateGameEntity( const std::string& prefab_name )
+GameEntity Scene::CreateGameEntity( const std::string& prefab_name, const Vec2f& position )
 {
-	_entitiesToCreateRequests.push( prefab_name );
+	return SpawnEntity( prefab_name, position );
+	//_entitiesToCreateRequests.push( prefab_name );
 }
 
 GameEntity Scene::CreateGameEntity( const std::string& type, const BaseEntityConfiguration* config )
@@ -135,6 +137,11 @@ void Scene::UnsubscribeFromOnEntityCreate( uint32 id )
 	_onEntityCreate.DeleteSubscriber( id );
 }
 
+void Scene::UnsubscribeFromOnEntityConfigure( uint32 id )
+{
+	_onEntityConfigure.DeleteSubscriber( id );
+}
+
 void Scene::UnsubscribeFromOnEntityDestroy( uint32 id )
 {
 	_onEntityDestroy.DeleteSubscriber( id );
@@ -147,29 +154,29 @@ void Scene::CreatePendingEntities()
 		const std::string prefab_name = _entitiesToCreateRequests.front();
 		_entitiesToCreateRequests.pop();
 
-		SpawnEntity( prefab_name );
+		// SpawnEntity( prefab_name );
 	}
 }
 
-void Scene::SpawnEntity( const std::string& prefab_name )
+GameEntity Scene::SpawnEntity( const std::string& prefab_name, const Vec2f& position )
 {
 	// Get prefab
-	ECS::Prefab prefab;
-	if ( _prefab_registry.TryGetPrefab( prefab_name, prefab ) )
+	const ECS::Prefab* prefab = _prefab_registry.TryGetPrefab( prefab_name );
+	if ( prefab == nullptr )
 	{
 		LOG_ERROR( "[Scene::SpawnEntity] Can't create game entity, prefab with name %s not found.",
 		           prefab_name.c_str() );
-		return;
+		return GameEntity();
 	}
 
 	// Get archetype
 	ECS::Archetype archetype;
-	if ( _archetype_registry.TryGetArchetype( prefab.archetype, archetype ) )
+	if ( !_archetype_registry.TryGetArchetype( prefab->archetype, archetype ) )
 	{
 		LOG_ERROR( "[Scene::SpawnEntity] Can't create game entity, archetype with name "
 		           "%s not found.",
-		           prefab.archetype.c_str() );
-		return;
+		           prefab->archetype.c_str() );
+		return GameEntity();
 	}
 
 	// Create entity
@@ -180,13 +187,20 @@ void Scene::SpawnEntity( const std::string& prefab_name )
 	{
 		// If components creation failed, we destroy the entity
 		_entityContainer.DestroyGameEntity( new_entity.GetId() );
-		return;
+		return GameEntity();
 	}
 
+	assert( new_entity.HasComponent< TransformComponent >() );
+
+	TransformComponent& new_entity_transform = new_entity.GetComponent< TransformComponent >();
+	new_entity_transform.SetPosition( position );
+
 	// Configure components
+	_onEntityConfigure.Execute( new_entity, *prefab );
 
 	// Call OnEntityCreate
 	_onEntityCreate.Execute( new_entity );
+	return new_entity;
 }
 
 bool Scene::AddComponentsToEntity( const ECS::Archetype& archetype, GameEntity& entity )

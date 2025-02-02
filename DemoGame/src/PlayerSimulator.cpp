@@ -19,14 +19,14 @@ void PlayerSimulator::Simulate( const InputState& inputs, GameEntity& playerEnti
 	ApplyPosition( updatedPosition, transform );
 
 	transform.SetPosition( updatedPosition );
-	networkComponent.posX = updatedPosition.X();
-	networkComponent.posY = updatedPosition.Y();
+	/*networkComponent.posX = updatedPosition.X();
+	networkComponent.posY = updatedPosition.Y();*/
 
 	Vec2f updatedLookAt =
 	    UpdateLookAt( inputs.virtualMousePosition, transform, networkComponent.configuration, elapsedTime );
 	transform.LookAt( inputs.virtualMousePosition );
 
-	networkComponent.rotationAngle = transform.GetRotationAngle();
+	// networkComponent.rotationAngle = transform.GetRotationAngle();
 }
 
 Vec2f PlayerSimulator::UpdatePosition( const Vec2f& inputs, const TransformComponent& transform,

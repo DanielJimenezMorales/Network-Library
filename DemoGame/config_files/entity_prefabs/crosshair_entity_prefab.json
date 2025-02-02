@@ -1,8 +1,10 @@
 {
-	"name":"crosshair",
-	"archetype":"crosshair",
-	"component_configs":
-	[
-		
+	"name": "crosshair",
+	"archetype": "crosshair",
+	"component_configs": [
+		{
+			"name": "SpriteRenderer",
+			"texture_path": "sprites/Crosshair/crosshair.png"
+		}
 	]
 }

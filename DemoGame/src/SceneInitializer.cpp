@@ -23,6 +23,11 @@
 #include "components/input_component.h"
 #include "components/collider_2d_component.h"
 #include "components/gizmo_renderer_component.h"
+#include "components/network_entity_component.h"
+#include "components/player_controller_component.h"
+#include "components/remote_player_controller_component.h"
+
+#include "component_configurations/sprite_renderer_component_configuration.h"
 
 #include "global_components/network_peer_global_component.h"
 
@@ -41,10 +46,80 @@
 #include "entity_factories/client_remote_player_entity_factory.h"
 #include "entity_factories/server_player_entity_factory.h"
 
+#include "network_entity_creator.h"
+
 void SceneInitializer::InitializeScene( Scene& scene, NetLib::PeerType networkPeerType, InputHandler& inputHandler,
                                         SDL_Renderer* renderer ) const
 {
+	// Register components
+	scene.RegisterComponent< TransformComponent >( "Transform" );
+	scene.RegisterComponent< SpriteRendererComponent >( "SpriteRenderer" );
+	scene.RegisterComponent< Collider2DComponent >( "Collider2D" );
+	scene.RegisterComponent< CameraComponent >( "Camera" );
+	scene.RegisterComponent< CrosshairComponent >( "Crosshair" );
+	scene.RegisterComponent< NetworkEntityComponent >( "NetworkEntity" );
+	scene.RegisterComponent< PlayerControllerComponent >( "PlayerController" );
+	scene.RegisterComponent< RemotePlayerControllerComponent >( "RemotePlayerController" );
+
+	// Register archetypes
+	ECS::Archetype crosshair_archetype;
+	crosshair_archetype.name.assign( "Crosshair" );
+	crosshair_archetype.components.push_back( "Transform" );
+	crosshair_archetype.components.push_back( "SpriteRenderer" );
+	crosshair_archetype.components.push_back( "Crosshair" );
+	scene.RegisterArchetype( crosshair_archetype );
+
+	ECS::Archetype player_archetype;
+	player_archetype.name.assign( "Player" );
+	player_archetype.components.push_back( "Transform" );
+	player_archetype.components.push_back( "SpriteRenderer" );
+	player_archetype.components.push_back( "Collider2D" );
+	player_archetype.components.push_back( "NetworkEntity" );
+	player_archetype.components.push_back( "PlayerController" );
+	scene.RegisterArchetype( player_archetype );
+
+	ECS::Archetype remote_player_archetype;
+	remote_player_archetype.name.assign( "RemotePlayer" );
+	remote_player_archetype.components.push_back( "Transform" );
+	remote_player_archetype.components.push_back( "SpriteRenderer" );
+	remote_player_archetype.components.push_back( "Collider2D" );
+	remote_player_archetype.components.push_back( "NetworkEntity" );
+	remote_player_archetype.components.push_back( "RemotePlayerController" );
+	scene.RegisterArchetype( remote_player_archetype );
+
+	// Register prefabs
+	ECS::Prefab crosshair_prefab;
+	crosshair_prefab.name.assign( "Crosshair" );
+	crosshair_prefab.archetype.assign( "Crosshair" );
+	SpriteRendererComponentConfiguration* sprite_renderer_config =
+	    new SpriteRendererComponentConfiguration( "sprites/Crosshair/crosshair.png" );
+	crosshair_prefab.componentConfigurations[ sprite_renderer_config->name ] = sprite_renderer_config;
+	scene.RegisterPrefab( std::move( crosshair_prefab ) );
+
+	ECS::Prefab player_prefab;
+	player_prefab.name.assign( "Player" );
+	player_prefab.archetype.assign( "Player" );
+	SpriteRendererComponentConfiguration* player_sprite_renderer_config =
+	    new SpriteRendererComponentConfiguration( "sprites/PlayerSprites/playerHead.png" );
+	player_prefab.componentConfigurations[ player_sprite_renderer_config->name ] = player_sprite_renderer_config;
+	PlayerControllerConfiguration* player_controller_config = new PlayerControllerConfiguration( 25 );
+	player_prefab.componentConfigurations[ player_controller_config->name ] = player_controller_config;
+	scene.RegisterPrefab( std::move( player_prefab ) );
+
+	ECS::Prefab remote_player_prefab;
+	remote_player_prefab.name.assign( "RemotePlayer" );
+	remote_player_prefab.archetype.assign( "RemotePlayer" );
+	SpriteRendererComponentConfiguration* remote_player_sprite_renderer_config =
+	    new SpriteRendererComponentConfiguration( "sprites/PlayerSprites/playerHead.png" );
+	remote_player_prefab.componentConfigurations[ remote_player_sprite_renderer_config->name ] =
+	    remote_player_sprite_renderer_config;
+	scene.RegisterPrefab( std::move( remote_player_prefab ) );
+
 	SpriteRendererSystem* sprite_renderer_system = new SpriteRendererSystem( renderer );
+	auto on_configure_sprite_renderer_callback =
+	    std::bind( &SpriteRendererSystem::ConfigureSpriteRendererComponent, sprite_renderer_system,
+	               std::placeholders::_1, std::placeholders::_2 );
+	scene.SubscribeToOnEntityConfigure( on_configure_sprite_renderer_callback );
 	GizmoRendererSystem* gizmo_renderer_system = new GizmoRendererSystem( renderer );
 
 	// Inputs
@@ -89,8 +164,18 @@ void SceneInitializer::InitializeScene( Scene& scene, NetLib::PeerType networkPe
 	networkPeer->RegisterNetworkEntityFactory( networkEntityFactory );
 	networkPeerComponent.peer = networkPeer;
 
+	NetworkEntityCreatorSystem* network_entity_creator = new NetworkEntityCreatorSystem();
+	network_entity_creator->SetScene( &scene );
+	network_entity_creator->SetPeerType( networkPeerType );
+	scene.SubscribeToOnEntityConfigure( std::bind( &NetworkEntityCreatorSystem::OnNetworkEntityComponentConfigure,
+	                                               network_entity_creator, std::placeholders::_1,
+	                                               std::placeholders::_2 ) );
+
 	if ( networkPeer->GetPeerType() == NetLib::PeerType::SERVER )
 	{
+		networkPeerComponent.GetPeerAsServer()->SubscribeToOnNetworkEntityCreate( std::bind(
+		    &NetworkEntityCreatorSystem::OnNetworkEntityCreate, network_entity_creator, std::placeholders::_1 ) );
+
 		// Entity factories registration
 		ServerPlayerEntityFactory* player_entity_factory = new ServerPlayerEntityFactory();
 		player_entity_factory->Configure( sprite_renderer_system->GetTextureResourceHandler() );
@@ -120,6 +205,9 @@ void SceneInitializer::InitializeScene( Scene& scene, NetLib::PeerType networkPe
 
 	if ( networkPeer->GetPeerType() == NetLib::PeerType::CLIENT )
 	{
+		networkPeerComponent.GetPeerAsClient()->SubscribeToOnNetworkEntityCreate( std::bind(
+		    &NetworkEntityCreatorSystem::OnNetworkEntityCreate, network_entity_creator, std::placeholders::_1 ) );
+
 		// Entity factories registration
 		ClientLocalPlayerEntityFactory* local_player_entity_factory = new ClientLocalPlayerEntityFactory();
 		local_player_entity_factory->Configure( sprite_renderer_system->GetTextureResourceHandler() );
@@ -140,13 +228,7 @@ void SceneInitializer::InitializeScene( Scene& scene, NetLib::PeerType networkPe
 		scene.AddSystem( virtual_mouse_system_coordinator );
 
 		// Add crosshair if being a client
-		GameEntity crosshairEntity = scene.CreateGameEntity();
-
-		TextureHandler texture_handler =
-		    sprite_renderer_system->GetTextureResourceHandler()->LoadTexture( "sprites/Crosshair/crosshair.png" );
-
-		crosshairEntity.AddComponent< SpriteRendererComponent >( texture_handler );
-		crosshairEntity.AddComponent< CrosshairComponent >();
+		scene.CreateGameEntity( "Crosshair", Vec2f( 0, 0 ) );
 
 		// Add crosshair follow mouse system
 		ECS::SystemCoordinator* crosshair_follow_mouse_system_coordinator =
@@ -176,7 +258,12 @@ void SceneInitializer::InitializeScene( Scene& scene, NetLib::PeerType networkPe
 		// Add Server-side player controller system
 		ECS::SystemCoordinator* server_player_controller_system_coordinator =
 		    new ECS::SystemCoordinator( ECS::ExecutionStage::TICK );
-		server_player_controller_system_coordinator->AddSystemToTail( new ServerPlayerControllerSystem() );
+		ServerPlayerControllerSystem* server_player_controller_system = new ServerPlayerControllerSystem();
+		server_player_controller_system_coordinator->AddSystemToTail( server_player_controller_system );
+		auto on_configure_player_controller_callback =
+		    std::bind( &ServerPlayerControllerSystem::ConfigurePlayerControllerComponent,
+		               server_player_controller_system, std::placeholders::_1, std::placeholders::_2 );
+		scene.SubscribeToOnEntityConfigure( on_configure_player_controller_callback );
 		scene.AddSystem( server_player_controller_system_coordinator );
 	}
 	else if ( networkPeerType == NetLib::PeerType::CLIENT )

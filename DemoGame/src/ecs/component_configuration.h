@@ -5,7 +5,6 @@ namespace ECS
 {
 	struct ComponentConfiguration
 	{
-			ComponentConfiguration( const std::string& name );
 			ComponentConfiguration( const ComponentConfiguration& other ) = default;
 			ComponentConfiguration( ComponentConfiguration&& other ) noexcept = default;
 
@@ -14,6 +13,11 @@ namespace ECS
 			ComponentConfiguration& operator=( const ComponentConfiguration& other ) = default;
 			ComponentConfiguration& operator=( ComponentConfiguration&& other ) noexcept = default;
 
+			virtual ComponentConfiguration* Clone() const = 0;
+
 			std::string name;
+
+		protected:
+			ComponentConfiguration( const std::string& name );
 	};
 }

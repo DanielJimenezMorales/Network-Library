@@ -10,6 +10,7 @@
 #include "replication/replication_action_type.h"
 #include "replication/network_entity_factory_registry.h"
 #include "replication/network_entity_communication_callbacks.h"
+#include "replication/on_network_entity_create_config.h"
 
 #include <cassert>
 
@@ -18,7 +19,7 @@ namespace NetLib
 	ReplicationMessagesProcessor::ReplicationMessagesProcessor(
 	    NetworkEntityFactoryRegistry* networkEntityFactoryRegistry )
 	    : _networkEntitiesStorage()
-	    , _networkEntityFactoryRegistry( networkEntityFactoryRegistry )
+	    //, _networkEntityFactoryRegistry( networkEntityFactoryRegistry )
 	{
 	}
 
@@ -62,9 +63,21 @@ namespace NetLib
 		LOG_INFO( "DATA SIZE: %hu", replicationMessage.dataSize );
 		float32 posX = buffer.ReadFloat();
 		float32 posY = buffer.ReadFloat();
-		int32 gameEntity = _networkEntityFactoryRegistry->CreateNetworkEntity(
+		/*const int32 gameEntity = _networkEntityFactoryRegistry->CreateNetworkEntity(
 		    replicationMessage.replicatedClassId, networkEntityId, replicationMessage.controlledByPeerId, posX, posY,
-		    new_entity_data.communicationCallbacks );
+		    new_entity_data.communicationCallbacks );*/
+
+		OnNetworkEntityCreateConfig network_entity_create_config;
+		network_entity_create_config.entityType = replicationMessage.replicatedClassId;
+		network_entity_create_config.entityId = replicationMessage.networkEntityId;
+		network_entity_create_config.controlledByPeerId = replicationMessage.controlledByPeerId;
+		network_entity_create_config.positionX = posX;
+		network_entity_create_config.positionY = posY;
+		network_entity_create_config.communicationCallbacks = &new_entity_data.communicationCallbacks;
+		// TODO Assign return value to gameEntity
+		// TODO Also evaluate if we need inGameId for something
+		const int32 gameEntity=_onNetworkEntityCreate( network_entity_create_config );
+
 		assert( gameEntity != -1 );
 
 		new_entity_data.inGameId = static_cast< uint32 >( gameEntity );
@@ -84,9 +97,21 @@ namespace NetLib
 			    replicationMessage.replicatedClassId, networkEntityId, replicationMessage.controlledByPeerId );
 
 			// If not found create a new one and update it
-			int32 gameEntity = _networkEntityFactoryRegistry->CreateNetworkEntity(
+			/*const int32 gameEntity = _networkEntityFactoryRegistry->CreateNetworkEntity(
 			    replicationMessage.replicatedClassId, networkEntityId, replicationMessage.controlledByPeerId, 0.f, 0.f,
-			    new_entity_data.communicationCallbacks );
+			    new_entity_data.communicationCallbacks );*/
+
+			OnNetworkEntityCreateConfig network_entity_create_config;
+			network_entity_create_config.entityType = replicationMessage.replicatedClassId;
+			network_entity_create_config.entityId = replicationMessage.networkEntityId;
+			network_entity_create_config.controlledByPeerId = replicationMessage.controlledByPeerId;
+			network_entity_create_config.positionX = 0.f;
+			network_entity_create_config.positionY = 0.f;
+			network_entity_create_config.communicationCallbacks = &new_entity_data.communicationCallbacks;
+			// TODO Assign return value to gameEntity
+			// TODO Also evaluate if we need inGameId for something
+			const int32 gameEntity=_onNetworkEntityCreate( network_entity_create_config );
+
 			assert( gameEntity != -1 );
 
 			new_entity_data.inGameId = static_cast< uint32 >( gameEntity );
@@ -122,6 +147,6 @@ namespace NetLib
 		}
 
 		// Destroy object through its custom factory
-		_networkEntityFactoryRegistry->RemoveNetworkEntity( gameEntity->inGameId );
+		//_networkEntityFactoryRegistry->RemoveNetworkEntity( gameEntity->inGameId );
 	}
 } // namespace NetLib

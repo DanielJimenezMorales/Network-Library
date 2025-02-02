@@ -5,6 +5,13 @@
 
 #include <SDL_image.h>
 
+class GameEntity;
+
+namespace ECS
+{
+	class Prefab;
+}
+
 class SpriteRendererSystem : public ECS::ISimpleSystem
 {
 	public:
@@ -13,6 +20,8 @@ class SpriteRendererSystem : public ECS::ISimpleSystem
 		void Execute( ECS::EntityContainer& entity_container, float32 elapsed_time ) override;
 
 		TextureResourceHandler* GetTextureResourceHandler() { return &_textureResourceHandler; }
+
+		void ConfigureSpriteRendererComponent( GameEntity& entity, const ECS::Prefab& prefab );
 
 	private:
 		SDL_Renderer* _renderer;

@@ -10,6 +10,7 @@
 #include <vector>
 
 #include "ecs/entity_container.h"
+#include "ecs/prefab.h"
 
 #include "components/virtual_mouse_component.h"
 #include "components/input_component.h"

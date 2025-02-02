@@ -7,13 +7,13 @@ PrefabRegistry::PrefabRegistry()
 {
 }
 
-bool PrefabRegistry::RegisterPrefab( const ECS::Prefab& prefab )
+bool PrefabRegistry::RegisterPrefab( ECS::Prefab&& prefab )
 {
 	bool result = false;
 	auto prefab_found = _prefabs.find( prefab.name );
 	if ( prefab_found == _prefabs.end() )
 	{
-		_prefabs[ prefab.name ] = prefab;
+		_prefabs[ prefab.name ] = std::move( prefab );
 		result = true;
 	}
 	else
@@ -43,14 +43,13 @@ bool PrefabRegistry::UnregisterPrefab( const std::string& name )
 	return result;
 }
 
-bool PrefabRegistry::TryGetPrefab( const std::string& name, ECS::Prefab& out_prefab ) const
+const ECS::Prefab* PrefabRegistry::TryGetPrefab( const std::string& name ) const
 {
-	bool result = false;
+	const ECS::Prefab* result = nullptr;
 	auto prefab_found = _prefabs.find( name );
 	if ( prefab_found != _prefabs.end() )
 	{
-		out_prefab = prefab_found->second;
-		result = true;
+		result = &prefab_found->second;
 	}
 
 	return result;

@@ -5,6 +5,7 @@
 #include "PlayerSimulator.h"
 
 #include "ecs/entity_container.h"
+#include "ecs/prefab.h"
 
 #include "components/player_controller_component.h"
 #include "components/network_entity_component.h"
@@ -36,4 +37,23 @@ void ServerPlayerControllerSystem::Execute( ECS::EntityContainer& entity_contain
 		const InputState* inputState = static_cast< const InputState* >( baseInputState );
 		PlayerSimulator::Simulate( *inputState, *it, elapsed_time );
 	}
+}
+
+void ServerPlayerControllerSystem::ConfigurePlayerControllerComponent( GameEntity& entity, const ECS::Prefab& prefab )
+{
+	auto component_config_found = prefab.componentConfigurations.find( "PlayerController" );
+	if ( component_config_found == prefab.componentConfigurations.end() )
+	{
+		return;
+	}
+
+	if ( !entity.HasComponent< PlayerControllerComponent >() )
+	{
+		return;
+	}
+
+	const PlayerControllerConfiguration& player_controller_config =
+	    static_cast< const PlayerControllerConfiguration& >( *component_config_found->second );
+	PlayerControllerComponent& player_controller = entity.GetComponent< PlayerControllerComponent >();
+	player_controller.configuration.movementSpeed = player_controller_config.movementSpeed;
 }
