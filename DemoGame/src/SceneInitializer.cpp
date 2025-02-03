@@ -4,7 +4,6 @@
 #include "core/client.h"
 #include "core/server.h"
 #include "core/initializer.h"
-#include "NetworkEntityFactory.h"
 #include "KeyboardController.h"
 #include "MouseController.h"
 #include "InputActionIdsConfiguration.h"
@@ -41,10 +40,6 @@
 #include "ecs_systems/pre_tick_network_system.h"
 #include "ecs_systems/pos_tick_network_system.h"
 #include "ecs_systems/collision_detection_system.h"
-
-#include "entity_factories/client_local_player_entity_factory.h"
-#include "entity_factories/client_remote_player_entity_factory.h"
-#include "entity_factories/server_player_entity_factory.h"
 
 #include "network_entity_creator.h"
 
@@ -158,10 +153,6 @@ void SceneInitializer::InitializeScene( Scene& scene, NetLib::PeerType networkPe
 
 	// TODO Make this initializer internal when calling to start
 	NetLib::Initializer::Initialize();
-	NetworkEntityFactory* networkEntityFactory = new NetworkEntityFactory();
-	networkEntityFactory->SetScene( &scene );
-	networkEntityFactory->SetPeerType( networkPeerType );
-	networkPeer->RegisterNetworkEntityFactory( networkEntityFactory );
 	networkPeerComponent.peer = networkPeer;
 
 	NetworkEntityCreatorSystem* network_entity_creator = new NetworkEntityCreatorSystem();
@@ -178,11 +169,6 @@ void SceneInitializer::InitializeScene( Scene& scene, NetLib::PeerType networkPe
 		                                                          network_entity_creator, std::placeholders::_1 ) );
 		server_peer->SubscribeToOnNetworkEntityDestroy( std::bind( &NetworkEntityCreatorSystem::OnNetworkEntityDestroy,
 		                                                           network_entity_creator, std::placeholders::_1 ) );
-
-		// Entity factories registration
-		ServerPlayerEntityFactory* player_entity_factory = new ServerPlayerEntityFactory();
-		player_entity_factory->Configure( sprite_renderer_system->GetTextureResourceHandler() );
-		scene.RegisterEntityFactory( "PLAYER", player_entity_factory );
 
 		InputStateFactory* inputStateFactory = new InputStateFactory();
 		networkPeerComponent.GetPeerAsServer()->RegisterInputStateFactory( inputStateFactory );
@@ -213,15 +199,6 @@ void SceneInitializer::InitializeScene( Scene& scene, NetLib::PeerType networkPe
 		                                                          network_entity_creator, std::placeholders::_1 ) );
 		client_peer->SubscribeToOnNetworkEntityDestroy( std::bind( &NetworkEntityCreatorSystem::OnNetworkEntityDestroy,
 		                                                           network_entity_creator, std::placeholders::_1 ) );
-
-		// Entity factories registration
-		ClientLocalPlayerEntityFactory* local_player_entity_factory = new ClientLocalPlayerEntityFactory();
-		local_player_entity_factory->Configure( sprite_renderer_system->GetTextureResourceHandler() );
-		scene.RegisterEntityFactory( "LOCAL_PLAYER", local_player_entity_factory );
-
-		ClientRemotePlayerEntityFactory* remote_player_entity_factory = new ClientRemotePlayerEntityFactory();
-		remote_player_entity_factory->Configure( sprite_renderer_system->GetTextureResourceHandler() );
-		scene.RegisterEntityFactory( "REMOTE_PLAYER", remote_player_entity_factory );
 
 		// Add virtual mouse
 		GameEntity virtualMouse = scene.CreateGameEntity();

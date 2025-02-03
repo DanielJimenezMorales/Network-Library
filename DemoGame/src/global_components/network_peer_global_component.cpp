@@ -2,8 +2,6 @@
 
 #include "inputs/i_input_state_factory.h"
 
-#include "replication/i_network_entity_factory.h"
-
 NetworkPeerGlobalComponent::~NetworkPeerGlobalComponent()
 {
 	if ( isTrackingRemotePeerConnect )

@@ -12,8 +12,6 @@
 
 #include "transmission_channels/transmission_channel.h"
 
-#include "replication/network_entity_factory_registry.h"
-
 class Buffer;
 
 namespace NetLib
@@ -66,7 +64,6 @@ namespace NetLib
 
 			PeerConnectionState GetConnectionState() const { return _connectionState; }
 			PeerType GetPeerType() const { return _type; }
-			void RegisterNetworkEntityFactory( INetworkEntityFactory* entityFactory );
 
 			// Delegates related
 			template < typename Functor >
@@ -110,8 +107,6 @@ namespace NetLib
 			void ExecuteOnLocalPeerDisconnect( ConnectionFailedReasonType reason );
 
 			RemotePeersHandler _remotePeersHandler;
-
-			NetworkEntityFactoryRegistry _networkEntityFactoryRegistry;
 
 		private:
 			void ProcessReceivedData();
