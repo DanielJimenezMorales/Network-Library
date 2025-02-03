@@ -52,8 +52,8 @@ void ServerPlayerControllerSystem::ConfigurePlayerControllerComponent( GameEntit
 		return;
 	}
 
-	const PlayerControllerConfiguration& player_controller_config =
-	    static_cast< const PlayerControllerConfiguration& >( *component_config_found->second );
+	const PlayerControllerComponentConfiguration& player_controller_config =
+	    static_cast< const PlayerControllerComponentConfiguration& >( *component_config_found->second );
 	PlayerControllerComponent& player_controller = entity.GetComponent< PlayerControllerComponent >();
-	player_controller.configuration.movementSpeed = player_controller_config.movementSpeed;
+	player_controller.movementSpeed = player_controller_config.movementSpeed;
 }

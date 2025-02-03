@@ -27,6 +27,7 @@
 #include "components/remote_player_controller_component.h"
 
 #include "component_configurations/sprite_renderer_component_configuration.h"
+#include "component_configurations/player_controller_component_configuration.h"
 
 #include "global_components/network_peer_global_component.h"
 
@@ -97,7 +98,7 @@ void SceneInitializer::InitializeScene( Scene& scene, NetLib::PeerType networkPe
 	SpriteRendererComponentConfiguration* player_sprite_renderer_config =
 	    new SpriteRendererComponentConfiguration( "sprites/PlayerSprites/playerHead.png" );
 	player_prefab.componentConfigurations[ player_sprite_renderer_config->name ] = player_sprite_renderer_config;
-	PlayerControllerConfiguration* player_controller_config = new PlayerControllerConfiguration( 25 );
+	PlayerControllerComponentConfiguration* player_controller_config = new PlayerControllerComponentConfiguration( 25 );
 	player_prefab.componentConfigurations[ player_controller_config->name ] = player_controller_config;
 	scene.RegisterPrefab( std::move( player_prefab ) );
 
