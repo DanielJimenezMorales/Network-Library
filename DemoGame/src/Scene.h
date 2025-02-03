@@ -56,6 +56,7 @@ class Scene
 		GameEntity CreateGameEntity( const std::string& prefab_name, const Vec2f& position );
 		GameEntity CreateGameEntity( const std::string& type, const BaseEntityConfiguration* config );
 		void DestroyGameEntity( const GameEntity& entity );
+		void DestroyGameEntity( const ECS::EntityId entity_id );
 
 		template < typename T >
 		GameEntity GetFirstEntityOfType();

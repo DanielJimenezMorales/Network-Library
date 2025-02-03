@@ -1,22 +1,23 @@
 #pragma once
-#include "replication/network_variable_changes_handler.h"
 #include "replication/network_entity_storage.h"
 
 namespace NetLib
 {
 	class ReplicationMessage;
-	class NetworkEntityFactoryRegistry;
 	struct OnNetworkEntityCreateConfig;
 
 	class ReplicationMessagesProcessor
 	{
 		public:
-			ReplicationMessagesProcessor( NetworkEntityFactoryRegistry* networkEntityFactoryRegistry );
+			ReplicationMessagesProcessor();
 
 			void Client_ProcessReceivedReplicationMessage( const ReplicationMessage& replicationMessage );
 
 			template < typename Functor >
 			uint32 SubscribeToOnNetworkEntityCreate( Functor&& functor );
+
+			template < typename Functor >
+			uint32 SubscribeToOnNetworkEntityDestroy( Functor&& functor );
 
 		private:
 			void ProcessReceivedCreateReplicationMessage( const ReplicationMessage& replicationMessage );
@@ -26,13 +27,21 @@ namespace NetLib
 			void RemoveNetworkEntity( uint32 networkEntityId );
 
 			NetworkEntityStorage _networkEntitiesStorage;
-			//NetworkEntityFactoryRegistry* _networkEntityFactoryRegistry;
 			std::function< uint32_t( const OnNetworkEntityCreateConfig& ) > _onNetworkEntityCreate;
+			std::function< void( uint32 ) > _onNetworkEntityDestroy;
 	};
+
 	template < typename Functor >
 	inline uint32 ReplicationMessagesProcessor::SubscribeToOnNetworkEntityCreate( Functor&& functor )
 	{
 		_onNetworkEntityCreate = std::move( functor );
+		return 0;
+	}
+
+	template < typename Functor >
+	inline uint32 ReplicationMessagesProcessor::SubscribeToOnNetworkEntityDestroy( Functor&& functor )
+	{
+		_onNetworkEntityDestroy = std::move( functor );
 		return 0;
 	}
 } // namespace NetLib

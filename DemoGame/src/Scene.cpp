@@ -127,6 +127,11 @@ void Scene::DestroyGameEntity( const GameEntity& entity )
 	_entitiesToRemoveRequests.push( entity.GetId() );
 }
 
+void Scene::DestroyGameEntity( const ECS::EntityId entity_id )
+{
+	_entitiesToRemoveRequests.push( entity_id );
+}
+
 GameEntity Scene::GetEntityFromId( uint32 id )
 {
 	return _entityContainer.GetEntityFromId( id );

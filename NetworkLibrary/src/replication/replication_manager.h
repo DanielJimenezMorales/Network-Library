@@ -13,7 +13,6 @@
 
 namespace NetLib
 {
-	class NetworkEntityFactoryRegistry;
 	struct OnNetworkEntityCreateConfig;
 
 	static constexpr uint32 INVALID_NETWORK_ENTITY_ID = 0;
@@ -21,11 +20,7 @@ namespace NetLib
 	class ReplicationManager
 	{
 		public:
-			ReplicationManager( NetworkEntityFactoryRegistry* networkEntityFactoryRegistry )
-			    : _nextNetworkEntityId( 1 )
-			    //, _networkEntityFactoryRegistry( networkEntityFactoryRegistry )
-			{
-			}
+			ReplicationManager();
 
 			uint32 CreateNetworkEntity( uint32 entityType, uint32 controlledByPeerId, float32 posX, float32 posY );
 			void RemoveNetworkEntity( uint32 networkEntityId );
@@ -39,6 +34,9 @@ namespace NetLib
 
 			template < typename Functor >
 			uint32 SubscribeToOnNetworkEntityCreate( Functor&& functor );
+
+			template < typename Functor >
+			uint32 SubscribeToOnNetworkEntityDestroy( Functor&& functor );
 
 		private:
 			NetworkEntityData& SpawnNewNetworkEntity( uint32 replicated_class_id, uint32 network_entity_id,
@@ -62,14 +60,20 @@ namespace NetLib
 
 			uint32 _nextNetworkEntityId;
 
-			//NetworkEntityFactoryRegistry* _networkEntityFactoryRegistry;
 			std::function< uint32_t( const OnNetworkEntityCreateConfig& ) > _onNetworkEntityCreate;
+			std::function< void( uint32 ) > _onNetworkEntityDestroy;
 	};
 
 	template < typename Functor >
 	inline uint32 ReplicationManager::SubscribeToOnNetworkEntityCreate( Functor&& functor )
 	{
 		_onNetworkEntityCreate = std::move( functor );
+		return 0;
+	}
+	template < typename Functor >
+	inline uint32 ReplicationManager::SubscribeToOnNetworkEntityDestroy( Functor&& functor )
+	{
+		_onNetworkEntityDestroy = std::move( functor );
 		return 0;
 	}
 } // namespace NetLib

@@ -57,6 +57,9 @@ namespace NetLib
 			template < typename Functor >
 			uint32 SubscribeToOnNetworkEntityCreate( Functor&& functor );
 
+			template < typename Functor >
+			uint32 SubscribeToOnNetworkEntityDestroy( Functor&& functor );
+
 		protected:
 			bool StartConcrete() override;
 			void ProcessMessageFromPeer( const Message& message, RemotePeer& remotePeer ) override;
@@ -99,5 +102,11 @@ namespace NetLib
 	inline uint32 Client::SubscribeToOnNetworkEntityCreate( Functor&& functor )
 	{
 		return _replicationMessagesProcessor.SubscribeToOnNetworkEntityCreate( std::forward< Functor >( functor ) );
+	}
+
+	template < typename Functor >
+	inline uint32 Client::SubscribeToOnNetworkEntityDestroy( Functor&& functor )
+	{
+		return _replicationMessagesProcessor.SubscribeToOnNetworkEntityDestroy( std::forward< Functor >( functor ) );
 	}
 } // namespace NetLib

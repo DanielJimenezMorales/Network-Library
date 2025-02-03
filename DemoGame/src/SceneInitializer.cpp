@@ -173,8 +173,11 @@ void SceneInitializer::InitializeScene( Scene& scene, NetLib::PeerType networkPe
 
 	if ( networkPeer->GetPeerType() == NetLib::PeerType::SERVER )
 	{
-		networkPeerComponent.GetPeerAsServer()->SubscribeToOnNetworkEntityCreate( std::bind(
-		    &NetworkEntityCreatorSystem::OnNetworkEntityCreate, network_entity_creator, std::placeholders::_1 ) );
+		NetLib::Server* server_peer = networkPeerComponent.GetPeerAsServer();
+		server_peer->SubscribeToOnNetworkEntityCreate( std::bind( &NetworkEntityCreatorSystem::OnNetworkEntityCreate,
+		                                                          network_entity_creator, std::placeholders::_1 ) );
+		server_peer->SubscribeToOnNetworkEntityDestroy( std::bind( &NetworkEntityCreatorSystem::OnNetworkEntityDestroy,
+		                                                           network_entity_creator, std::placeholders::_1 ) );
 
 		// Entity factories registration
 		ServerPlayerEntityFactory* player_entity_factory = new ServerPlayerEntityFactory();
@@ -205,8 +208,11 @@ void SceneInitializer::InitializeScene( Scene& scene, NetLib::PeerType networkPe
 
 	if ( networkPeer->GetPeerType() == NetLib::PeerType::CLIENT )
 	{
-		networkPeerComponent.GetPeerAsClient()->SubscribeToOnNetworkEntityCreate( std::bind(
-		    &NetworkEntityCreatorSystem::OnNetworkEntityCreate, network_entity_creator, std::placeholders::_1 ) );
+		NetLib::Client* client_peer = networkPeerComponent.GetPeerAsClient();
+		client_peer->SubscribeToOnNetworkEntityCreate( std::bind( &NetworkEntityCreatorSystem::OnNetworkEntityCreate,
+		                                                          network_entity_creator, std::placeholders::_1 ) );
+		client_peer->SubscribeToOnNetworkEntityDestroy( std::bind( &NetworkEntityCreatorSystem::OnNetworkEntityDestroy,
+		                                                           network_entity_creator, std::placeholders::_1 ) );
 
 		// Entity factories registration
 		ClientLocalPlayerEntityFactory* local_player_entity_factory = new ClientLocalPlayerEntityFactory();

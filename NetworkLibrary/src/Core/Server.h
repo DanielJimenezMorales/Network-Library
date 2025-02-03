@@ -36,6 +36,9 @@ namespace NetLib
 			template < typename Functor >
 			uint32 SubscribeToOnNetworkEntityCreate( Functor&& functor );
 
+			template < typename Functor >
+			uint32 SubscribeToOnNetworkEntityDestroy( Functor&& functor );
+
 			~Server() override;
 
 		protected:
@@ -89,5 +92,11 @@ namespace NetLib
 	inline uint32 Server::SubscribeToOnNetworkEntityCreate( Functor&& functor )
 	{
 		return _replicationManager.SubscribeToOnNetworkEntityCreate( std::forward< Functor >( functor ) );
+	}
+
+	template < typename Functor >
+	inline uint32 Server::SubscribeToOnNetworkEntityDestroy( Functor&& functor )
+	{
+		return _replicationManager.SubscribeToOnNetworkEntityDestroy( std::forward< Functor >( functor ) );
 	}
 } // namespace NetLib
