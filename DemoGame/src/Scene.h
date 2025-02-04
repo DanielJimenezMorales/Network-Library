@@ -16,17 +16,12 @@
 class GameEntity;
 class IPreTickSystem;
 
-struct BaseEntityConfiguration;
-class IEntityFactory;
-
 struct Vec2f;
 
 class Scene
 {
 	public:
 		Scene();
-
-		bool RegisterEntityFactory( const std::string& id, IEntityFactory* factory );
 
 		bool RegisterArchetype( const ECS::Archetype& archetype );
 
@@ -54,7 +49,6 @@ class Scene
 
 		GameEntity CreateGameEntity();
 		GameEntity CreateGameEntity( const std::string& prefab_name, const Vec2f& position );
-		GameEntity CreateGameEntity( const std::string& type, const BaseEntityConfiguration* config );
 		void DestroyGameEntity( const GameEntity& entity );
 		void DestroyGameEntity( const ECS::EntityId entity_id );
 
@@ -91,8 +85,6 @@ class Scene
 
 		std::queue< ECS::EntityId > _entitiesToRemoveRequests;
 		std::queue< std::string > _entitiesToCreateRequests;
-
-		std::unordered_map< std::string, IEntityFactory* > _entityFactories;
 
 		Common::Delegate< GameEntity& > _onEntityCreate;
 		Common::Delegate< GameEntity&, const ECS::Prefab& > _onEntityConfigure;

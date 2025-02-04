@@ -3,6 +3,8 @@
 #include "components/camera_component.h"
 #include "components/transform_component.h"
 
+#include "coordinates_conversion_utils.h"
+
 #include <cassert>
 
 CircleGizmo* CircleGizmo::Clone() const
@@ -18,8 +20,8 @@ void CircleGizmo::ConfigureConcrete( const GizmoConfiguration* configuration )
 	_radius = config.radius;
 }
 
-void CircleGizmo::RenderConcrete( const CameraComponent& camera, const TransformComponent& transform,
-                                  SDL_Renderer* renderer ) const
+void CircleGizmo::RenderConcrete( const CameraComponent& camera, const TransformComponent& camera_transform,
+                                  const TransformComponent& transform, SDL_Renderer* renderer ) const
 {
 	const Vec2f position = transform.GetPosition();
 
@@ -34,21 +36,28 @@ void CircleGizmo::RenderConcrete( const CameraComponent& camera, const Transform
 	while ( y <= x )
 	{
 		// Draw the points in all 8 octants
-		Vec2f renderPosition = camera.ConvertFromWorldPositionToScreenPosition( position + Vec2f( x, y ) );
+		Vec2f renderPosition =
+		    ConvertFromWorldPositionToScreenPosition( position + Vec2f( x, y ), camera, camera_transform );
 		SDL_RenderDrawPoint( renderer, renderPosition.X(), renderPosition.Y() );
-		renderPosition = camera.ConvertFromWorldPositionToScreenPosition( position + Vec2f( -x, y ) );
+		renderPosition =
+		    ConvertFromWorldPositionToScreenPosition( position + Vec2f( -x, y ), camera, camera_transform );
 		SDL_RenderDrawPoint( renderer, renderPosition.X(), renderPosition.Y() );
-		renderPosition = camera.ConvertFromWorldPositionToScreenPosition( position + Vec2f( x, -y ) );
+		renderPosition =
+		    ConvertFromWorldPositionToScreenPosition( position + Vec2f( x, -y ), camera, camera_transform );
 		SDL_RenderDrawPoint( renderer, renderPosition.X(), renderPosition.Y() );
-		renderPosition = camera.ConvertFromWorldPositionToScreenPosition( position + Vec2f( -x, -y ) );
+		renderPosition =
+		    ConvertFromWorldPositionToScreenPosition( position + Vec2f( -x, -y ), camera, camera_transform );
 		SDL_RenderDrawPoint( renderer, renderPosition.X(), renderPosition.Y() );
-		renderPosition = camera.ConvertFromWorldPositionToScreenPosition( position + Vec2f( y, x ) );
+		renderPosition = ConvertFromWorldPositionToScreenPosition( position + Vec2f( y, x ), camera, camera_transform );
 		SDL_RenderDrawPoint( renderer, renderPosition.X(), renderPosition.Y() );
-		renderPosition = camera.ConvertFromWorldPositionToScreenPosition( position + Vec2f( -y, x ) );
+		renderPosition =
+		    ConvertFromWorldPositionToScreenPosition( position + Vec2f( -y, x ), camera, camera_transform );
 		SDL_RenderDrawPoint( renderer, renderPosition.X(), renderPosition.Y() );
-		renderPosition = camera.ConvertFromWorldPositionToScreenPosition( position + Vec2f( y, -x ) );
+		renderPosition =
+		    ConvertFromWorldPositionToScreenPosition( position + Vec2f( y, -x ), camera, camera_transform );
 		SDL_RenderDrawPoint( renderer, renderPosition.X(), renderPosition.Y() );
-		renderPosition = camera.ConvertFromWorldPositionToScreenPosition( position + Vec2f( -y, -x ) );
+		renderPosition =
+		    ConvertFromWorldPositionToScreenPosition( position + Vec2f( -y, -x ), camera, camera_transform );
 		SDL_RenderDrawPoint( renderer, renderPosition.X(), renderPosition.Y() );
 
 		// Move to the next pixel vertically

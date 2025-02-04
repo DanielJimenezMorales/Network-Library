@@ -49,7 +49,7 @@ class GameEntity
 		T& AddComponent( Params&&... params );
 
 		template < typename T >
-		bool HasComponent();
+		bool HasComponent() const;
 
 		template < typename T >
 		T& GetComponent();
@@ -76,7 +76,7 @@ inline T& GameEntity::AddComponent( Params&&... params )
 };
 
 template < typename T >
-inline bool GameEntity::HasComponent()
+inline bool GameEntity::HasComponent() const
 {
 	assert( IsValid() );
 	return _entityContainer->HasEntityComponent< T >( *this );

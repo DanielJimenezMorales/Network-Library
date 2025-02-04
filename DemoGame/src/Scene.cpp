@@ -10,8 +10,6 @@
 
 #include "components/transform_component.h"
 
-#include "entity_factories/i_entity_factory.h"
-
 Scene::Scene()
     : _entityContainer()
     , _systemsHandler()
@@ -19,20 +17,6 @@ Scene::Scene()
     , _archetype_registry()
     , _prefab_registry()
 {
-}
-
-bool Scene::RegisterEntityFactory( const std::string& id, IEntityFactory* factory )
-{
-	assert( factory != nullptr );
-
-	auto id_found = _entityFactories.find( id );
-	if ( id_found != _entityFactories.cend() )
-	{
-		return false;
-	}
-
-	_entityFactories.insert( { id, factory } );
-	return true;
 }
 
 bool Scene::RegisterArchetype( const ECS::Archetype& archetype )
@@ -105,21 +89,6 @@ GameEntity Scene::CreateGameEntity( const std::string& prefab_name, const Vec2f&
 {
 	return SpawnEntity( prefab_name, position );
 	//_entitiesToCreateRequests.push( prefab_name );
-}
-
-GameEntity Scene::CreateGameEntity( const std::string& type, const BaseEntityConfiguration* config )
-{
-	auto factory_found = _entityFactories.find( type );
-	if ( factory_found == _entityFactories.cend() )
-	{
-		return GameEntity();
-	}
-
-	GameEntity new_entity = _entityContainer.CreateGameEntity();
-	IEntityFactory* factory = factory_found->second;
-	factory->Create( new_entity, config );
-	_onEntityCreate.Execute( new_entity );
-	return new_entity;
 }
 
 void Scene::DestroyGameEntity( const GameEntity& entity )

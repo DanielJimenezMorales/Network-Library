@@ -1,6 +1,8 @@
 #include "sprite_renderer_system.h"
 
 #include "GameEntity.hpp"
+#include "coordinates_conversion_utils.h"
+#include "Texture.h"
 #include "Texture.h"
 #include "Vec2f.h"
 #include "Logger.h"
@@ -25,8 +27,9 @@ SpriteRendererSystem::SpriteRendererSystem( SDL_Renderer* renderer )
 
 void SpriteRendererSystem::Execute( ECS::EntityContainer& entity_container, float32 elapsed_time )
 {
-	const GameEntity cameraEntity = entity_container.GetFirstEntityOfType< CameraComponent >();
-	const CameraComponent& cameraComponent = cameraEntity.GetComponent< CameraComponent >();
+	const GameEntity camera_entity = entity_container.GetFirstEntityOfType< CameraComponent >();
+	const CameraComponent& camera = camera_entity.GetComponent< CameraComponent >();
+	const TransformComponent& camera_transform = camera_entity.GetComponent< TransformComponent >();
 
 	std::vector< GameEntity > entities =
 	    entity_container.GetEntitiesOfBothTypes< SpriteRendererComponent, TransformComponent >();
@@ -36,7 +39,8 @@ void SpriteRendererSystem::Execute( ECS::EntityContainer& entity_container, floa
 		const SpriteRendererComponent& spriteRenderer = it->GetComponent< SpriteRendererComponent >();
 		const TransformComponent& transform = it->GetComponent< TransformComponent >();
 
-		Vec2f screenPosition = cameraComponent.ConvertFromWorldPositionToScreenPosition( transform.GetPosition() );
+		const Vec2f screenPosition =
+		    ConvertFromWorldPositionToScreenPosition( transform.GetPosition(), camera, camera_transform );
 		const Texture* texture = _textureResourceHandler.TryGetTextureFromHandler( spriteRenderer.textureHandler );
 		if ( texture == nullptr )
 		{

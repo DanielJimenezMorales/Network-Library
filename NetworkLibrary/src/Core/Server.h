@@ -1,8 +1,7 @@
 #pragma once
-
 #include <vector>
 
-#include "core/peer.h"
+#include "core/Peer.h"
 
 #include "inputs/remote_peer_inputs_handler.h"
 

@@ -29,7 +29,8 @@ class Gizmo
 		Gizmo& operator=( Gizmo&& other ) noexcept = default;
 
 		void Configure( const GizmoConfiguration* configuration );
-		void Render( const CameraComponent& camera, const TransformComponent& transform, SDL_Renderer* renderer ) const;
+		void Render( const CameraComponent& camera, const TransformComponent& camera_transform,
+		             const TransformComponent& transform, SDL_Renderer* renderer ) const;
 
 		virtual Gizmo* Clone() const = 0;
 
@@ -48,8 +49,8 @@ class Gizmo
 		Gizmo( Gizmo&& other ) noexcept = default;
 
 		virtual void ConfigureConcrete( const GizmoConfiguration* configuration ) = 0;
-		virtual void RenderConcrete( const CameraComponent& camera, const TransformComponent& transform,
-		                             SDL_Renderer* renderer ) const = 0;
+		virtual void RenderConcrete( const CameraComponent& camera, const TransformComponent& camera_transform,
+		                             const TransformComponent& transform, SDL_Renderer* renderer ) const = 0;
 
 	private:
 		uint8 r, g, b, a;
