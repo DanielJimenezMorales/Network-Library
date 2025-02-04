@@ -39,7 +39,14 @@ struct Collider2DComponent
 		std::unique_ptr< GizmoConfiguration > GetGizmo() const;
 
 		CollisionResponseType GetCollisionResponse() const { return _collisionResponseType; }
+		void SetCollisionResponse( CollisionResponseType collision_response_type )
+		{
+			_collisionResponseType = collision_response_type;
+		}
 		bool IsTrigger() const { return _isTrigger; }
+		void SetIsTrigger( bool is_trigger ) { _isTrigger = is_trigger; }
+
+		void SetBounds( Bounds2D* bounds ) { _bounds = bounds; }
 
 	private:
 		Bounds2D* _bounds;

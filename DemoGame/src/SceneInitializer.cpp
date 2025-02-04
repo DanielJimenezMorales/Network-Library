@@ -28,6 +28,9 @@
 
 #include "component_configurations/sprite_renderer_component_configuration.h"
 #include "component_configurations/player_controller_component_configuration.h"
+#include "component_configurations/collider_2d_component_configuration.h"
+
+#include "CircleBounds2D.h"
 
 #include "global_components/network_peer_global_component.h"
 
@@ -98,6 +101,10 @@ void SceneInitializer::InitializeScene( Scene& scene, NetLib::PeerType networkPe
 	SpriteRendererComponentConfiguration* player_sprite_renderer_config =
 	    new SpriteRendererComponentConfiguration( "sprites/PlayerSprites/playerHead.png" );
 	player_prefab.componentConfigurations[ player_sprite_renderer_config->name ] = player_sprite_renderer_config;
+	Collider2DComponentConfiguration* player_collider_2d_component_config = new Collider2DComponentConfiguration();
+	player_collider_2d_component_config->boundsConfiguration = new CircleBounds2DConfiguration( 5.f );
+	player_prefab.componentConfigurations[ player_collider_2d_component_config->name ] =
+	    player_collider_2d_component_config;
 	PlayerControllerComponentConfiguration* player_controller_config = new PlayerControllerComponentConfiguration( 25 );
 	player_prefab.componentConfigurations[ player_controller_config->name ] = player_controller_config;
 	scene.RegisterPrefab( std::move( player_prefab ) );
@@ -109,8 +116,18 @@ void SceneInitializer::InitializeScene( Scene& scene, NetLib::PeerType networkPe
 	    new SpriteRendererComponentConfiguration( "sprites/PlayerSprites/playerHead.png" );
 	remote_player_prefab.componentConfigurations[ remote_player_sprite_renderer_config->name ] =
 	    remote_player_sprite_renderer_config;
+	Collider2DComponentConfiguration* remote_player_collider_2d_component_config =
+	    new Collider2DComponentConfiguration();
+	remote_player_collider_2d_component_config->boundsConfiguration = new CircleBounds2DConfiguration( 5.f );
+	remote_player_prefab.componentConfigurations[ remote_player_collider_2d_component_config->name ] =
+	    remote_player_collider_2d_component_config;
 	scene.RegisterPrefab( std::move( remote_player_prefab ) );
 
+	CollisionDetectionSystem* collision_detection_system = new CollisionDetectionSystem();
+	auto on_configure_collider_2d_callback =
+	    std::bind( &CollisionDetectionSystem::ConfigureCollider2DComponent, collision_detection_system,
+	               std::placeholders::_1, std::placeholders::_2 );
+	scene.SubscribeToOnEntityConfigure( on_configure_collider_2d_callback );
 	SpriteRendererSystem* sprite_renderer_system = new SpriteRendererSystem( renderer );
 	auto on_configure_sprite_renderer_callback =
 	    std::bind( &SpriteRendererSystem::ConfigureSpriteRendererComponent, sprite_renderer_system,
@@ -232,7 +249,7 @@ void SceneInitializer::InitializeScene( Scene& scene, NetLib::PeerType networkPe
 		// Add Server-side collision detection system
 		ECS::SystemCoordinator* collision_detection_system_coordinator =
 		    new ECS::SystemCoordinator( ECS::ExecutionStage::PRETICK );
-		collision_detection_system_coordinator->AddSystemToTail( new CollisionDetectionSystem() );
+		collision_detection_system_coordinator->AddSystemToTail( collision_detection_system );
 		scene.AddSystem( collision_detection_system_coordinator );
 
 		//////////////////

@@ -9,6 +9,11 @@ struct Collider2DComponent;
 struct TransformComponent;
 class GameEntity;
 
+namespace ECS
+{
+	class Prefab;
+}
+
 struct MinimumTranslationVector
 {
 	public:
@@ -36,6 +41,8 @@ class CollisionDetectionSystem : public ECS::ISimpleSystem
 		CollisionDetectionSystem();
 
 		void Execute( ECS::EntityContainer& entity_container, float32 elapsed_time ) override;
+
+		void ConfigureCollider2DComponent( GameEntity& entity, const ECS::Prefab& prefab );
 
 	private:
 		///////////////////////////////////

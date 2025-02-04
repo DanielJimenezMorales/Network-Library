@@ -14,6 +14,21 @@ enum class CollisionShapeType : uint8
 	Circle = 1,
 };
 
+struct Bounds2DConfiguration
+{
+		virtual ~Bounds2DConfiguration() {}
+
+		virtual Bounds2DConfiguration* Clone() const = 0;
+
+		CollisionShapeType type;
+
+	protected:
+		Bounds2DConfiguration( CollisionShapeType type )
+		    : type( type )
+		{
+		}
+};
+
 class Bounds2D
 {
 	public:

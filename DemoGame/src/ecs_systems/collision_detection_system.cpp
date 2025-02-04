@@ -6,7 +6,12 @@
 #include "components/collider_2d_component.h"
 #include "components/transform_component.h"
 
+#include "component_configurations/collider_2d_component_configuration.h"
+
+#include "CircleBounds2D.h"
+
 #include "ecs/entity_container.h"
+#include "ecs/prefab.h"
 
 CollisionDetectionSystem::CollisionDetectionSystem()
     : ECS::ISimpleSystem()
@@ -29,6 +34,34 @@ void CollisionDetectionSystem::Execute( ECS::EntityContainer& entity_container, 
 	std::vector< GameEntity > entities =
 	    entity_container.GetEntitiesOfBothTypes< Collider2DComponent, TransformComponent >();
 	TickSweepAndPrune( entities );
+}
+
+void CollisionDetectionSystem::ConfigureCollider2DComponent( GameEntity& entity, const ECS::Prefab& prefab )
+{
+	auto component_config_found = prefab.componentConfigurations.find( "Collider2D" );
+	if ( component_config_found == prefab.componentConfigurations.end() )
+	{
+		return;
+	}
+
+	if ( !entity.HasComponent< Collider2DComponent >() )
+	{
+		return;
+	}
+
+	const Collider2DComponentConfiguration& component_config =
+	    static_cast< const Collider2DComponentConfiguration& >( *component_config_found->second );
+	Collider2DComponent& collider_2d = entity.GetComponent< Collider2DComponent >();
+
+	collider_2d.SetIsTrigger( component_config.isTrigger );
+	collider_2d.SetCollisionResponse( component_config.collisionResponseType );
+
+	if ( component_config.boundsConfiguration->type == CollisionShapeType::Circle )
+	{
+		const CircleBounds2DConfiguration& bounds_config =
+		    static_cast< const CircleBounds2DConfiguration& >( *component_config.boundsConfiguration );
+		collider_2d.SetBounds( new CircleBounds2D( bounds_config.radius ) );
+	}
 }
 
 void CollisionDetectionSystem::TickSweepAndPrune( std::vector< GameEntity >& collision_entities ) const
