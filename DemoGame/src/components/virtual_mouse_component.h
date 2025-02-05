@@ -3,6 +3,6 @@
 
 struct VirtualMouseComponent
 {
-public:
-	Vec2f position;
+	public:
+		bool dummy;
 };

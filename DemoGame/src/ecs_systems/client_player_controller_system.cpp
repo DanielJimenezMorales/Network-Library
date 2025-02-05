@@ -14,6 +14,7 @@
 
 #include "components/virtual_mouse_component.h"
 #include "components/input_component.h"
+#include "components/transform_component.h"
 
 #include "global_components/network_peer_global_component.h"
 
@@ -32,9 +33,9 @@ static void ProcessInputs( ECS::EntityContainer& entityContainer, InputState& ou
 	outInputState.movement.Y( inputComponent.inputController->GetAxis( VERTICAL_AXIS ) );
 	outInputState.movement.Normalize();
 
-	const VirtualMouseComponent& virtualMouseComponent =
-	    entityContainer.GetFirstComponentOfType< VirtualMouseComponent >();
-	outInputState.virtualMousePosition = virtualMouseComponent.position;
+	const GameEntity& virtual_mouse_entity = entityContainer.GetFirstEntityOfType< VirtualMouseComponent >();
+	const TransformComponent& virtual_mouse_transform = virtual_mouse_entity.GetComponent< TransformComponent >();
+	outInputState.virtualMousePosition = virtual_mouse_transform.GetPosition();
 }
 
 static void SendInputsToServer( ECS::EntityContainer& entityContainer, const InputState& inputState )

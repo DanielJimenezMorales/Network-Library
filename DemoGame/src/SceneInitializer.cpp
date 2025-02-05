@@ -101,6 +101,12 @@ static void RegisterArchetypes( Scene& scene )
 	dummy_archetype.components.push_back( "SpriteRenderer" );
 	dummy_archetype.components.push_back( "Collider2D" );
 	scene.RegisterArchetype( dummy_archetype );
+
+	ECS::Archetype virtual_mouse_archetype;
+	virtual_mouse_archetype.name.assign( "VirtualMouse" );
+	virtual_mouse_archetype.components.push_back( "Transform" );
+	virtual_mouse_archetype.components.push_back( "VirtualMouse" );
+	scene.RegisterArchetype( virtual_mouse_archetype );
 }
 
 static void RegisterPrefabs( Scene& scene )
@@ -160,6 +166,11 @@ static void RegisterPrefabs( Scene& scene )
 	dummy_prefab.componentConfigurations[ dummy_collider_2d_component_config->name ] =
 	    dummy_collider_2d_component_config;
 	scene.RegisterPrefab( std::move( dummy_prefab ) );
+
+	ECS::Prefab virtual_mouse_prefab;
+	virtual_mouse_prefab.name.assign( "VirtualMouse" );
+	virtual_mouse_prefab.archetype.assign( "VirtualMouse" );
+	scene.RegisterPrefab( std::move( virtual_mouse_prefab ) );
 }
 
 static void RegisterSystems( Scene& scene, NetLib::PeerType networkPeerType, SDL_Renderer* renderer )
@@ -337,8 +348,7 @@ void SceneInitializer::InitializeScene( Scene& scene, NetLib::PeerType networkPe
 		                                                           network_entity_creator, std::placeholders::_1 ) );
 
 		// Add virtual mouse
-		GameEntity virtualMouse = scene.CreateGameEntity();
-		virtualMouse.AddComponent< VirtualMouseComponent >();
+		scene.CreateGameEntity( "VirtualMouse", Vec2f( 0, 0 ) );
 
 		// Add virtual mouse system
 		ECS::SystemCoordinator* virtual_mouse_system_coordinator =

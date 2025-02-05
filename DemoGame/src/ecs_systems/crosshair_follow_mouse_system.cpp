@@ -11,12 +11,13 @@
 
 void CrosshairFollowMouseSystem::Execute( ECS::EntityContainer& entity_container, float32 elapsed_time )
 {
-	const VirtualMouseComponent& virtual_mouse_component =
-	    entity_container.GetFirstComponentOfType< VirtualMouseComponent >();
+	const GameEntity& virtual_mouse_entity = entity_container.GetFirstEntityOfType< VirtualMouseComponent >();
+
+	const TransformComponent& transform = virtual_mouse_entity.GetComponent< TransformComponent >();
 
 	GameEntity entity = entity_container.GetFirstEntityOfType< CrosshairComponent >();
 
 	// Update crosshair world position
 	TransformComponent& crosshairTransformComponent = entity.GetComponent< TransformComponent >();
-	crosshairTransformComponent.SetPosition( virtual_mouse_component.position );
+	crosshairTransformComponent.SetPosition( transform.GetPosition() );
 }
