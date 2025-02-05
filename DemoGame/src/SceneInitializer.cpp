@@ -318,8 +318,7 @@ void SceneInitializer::InitializeScene( Scene& scene, NetLib::PeerType networkPe
 	// Populate entities
 	scene.CreateGameEntity( "Camera", Vec2f( 0, 0 ) );
 
-	GameEntity inputsEntity = scene.CreateGameEntity();
-	inputsEntity.AddComponent< InputComponent >( keyboard, mouse );
+	scene.AddGlobalComponent< InputComponent >( keyboard, mouse );
 
 	NetworkPeerGlobalComponent& networkPeerComponent = scene.AddGlobalComponent< NetworkPeerGlobalComponent >();
 	NetLib::Peer* networkPeer;

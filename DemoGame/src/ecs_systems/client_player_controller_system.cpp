@@ -27,7 +27,7 @@ ClientPlayerControllerSystem::ClientPlayerControllerSystem()
 
 static void ProcessInputs( ECS::EntityContainer& entityContainer, InputState& outInputState )
 {
-	const InputComponent& inputComponent = entityContainer.GetFirstComponentOfType< InputComponent >();
+	const InputComponent& inputComponent = entityContainer.GetGlobalComponent< InputComponent >();
 
 	outInputState.movement.X( inputComponent.inputController->GetAxis( HORIZONTAL_AXIS ) );
 	outInputState.movement.Y( inputComponent.inputController->GetAxis( VERTICAL_AXIS ) );
