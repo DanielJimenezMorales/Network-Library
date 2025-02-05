@@ -269,6 +269,26 @@ static void RegisterSystems( Scene& scene, NetLib::PeerType networkPeerType, SDL
 	                                             gizmo_renderer_system, std::placeholders::_1 ) );
 }
 
+void SceneInitializer::ConfigureCameraComponent( GameEntity& entity, const ECS::Prefab& prefab ) const
+{
+	auto component_config_found = prefab.componentConfigurations.find( "Camera" );
+	if ( component_config_found == prefab.componentConfigurations.end() )
+	{
+		return;
+	}
+
+	if ( !entity.HasComponent< CameraComponent >() )
+	{
+		return;
+	}
+
+	const CameraComponentConfiguration& camera_config =
+	    static_cast< const CameraComponentConfiguration& >( *component_config_found->second );
+	CameraComponent& camera = entity.GetComponent< CameraComponent >();
+	camera.width = camera_config.width;
+	camera.height = camera_config.height;
+}
+
 void SceneInitializer::InitializeScene( Scene& scene, NetLib::PeerType networkPeerType, InputHandler& inputHandler,
                                         SDL_Renderer* renderer ) const
 {
@@ -276,6 +296,9 @@ void SceneInitializer::InitializeScene( Scene& scene, NetLib::PeerType networkPe
 	RegisterArchetypes( scene );
 	RegisterPrefabs( scene );
 	RegisterSystems( scene, networkPeerType, renderer );
+
+	scene.SubscribeToOnEntityConfigure(
+	    std::bind( &SceneInitializer::ConfigureCameraComponent, this, std::placeholders::_1, std::placeholders::_2 ) );
 
 	// Inputs
 	KeyboardController* keyboard = new KeyboardController();
@@ -293,9 +316,7 @@ void SceneInitializer::InitializeScene( Scene& scene, NetLib::PeerType networkPe
 	inputHandler.AddCursor( mouse );
 
 	// Populate entities
-	GameEntity mainCameraEntity = scene.CreateGameEntity();
-	// TODO Do not hardcode width and height values
-	mainCameraEntity.AddComponent< CameraComponent >( 512, 512 );
+	scene.CreateGameEntity( "Camera", Vec2f( 0, 0 ) );
 
 	GameEntity inputsEntity = scene.CreateGameEntity();
 	inputsEntity.AddComponent< InputComponent >( keyboard, mouse );
