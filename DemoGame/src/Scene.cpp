@@ -77,14 +77,6 @@ void Scene::AddPreTickSystem( IPreTickSystem* system )
 	_preTickSystems.push_back( system );
 }
 
-GameEntity Scene::CreateGameEntity()
-{
-	GameEntity newEntity = _entityContainer.CreateGameEntity();
-	newEntity.AddComponent< TransformComponent >();
-
-	return newEntity;
-}
-
 GameEntity Scene::CreateGameEntity( const std::string& prefab_name, const Vec2f& position )
 {
 	return SpawnEntity( prefab_name, position );

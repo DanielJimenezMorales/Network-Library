@@ -47,7 +47,6 @@ class Scene
 
 		void AddPreTickSystem( IPreTickSystem* system );
 
-		GameEntity CreateGameEntity();
 		GameEntity CreateGameEntity( const std::string& prefab_name, const Vec2f& position );
 		void DestroyGameEntity( const GameEntity& entity );
 		void DestroyGameEntity( const ECS::EntityId entity_id );
