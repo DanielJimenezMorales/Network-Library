@@ -1,0 +1,8 @@
+{
+	"name": "dummy",
+	"components": [
+		"Transform",
+		"SpriteRenderer",
+		"Collider2D"
+	]
+}

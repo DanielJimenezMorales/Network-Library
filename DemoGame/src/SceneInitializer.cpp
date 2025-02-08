@@ -47,6 +47,7 @@
 #include "ecs_systems/collision_detection_system.h"
 
 #include "network_entity_creator.h"
+#include "json_configuration_loader.h"
 
 static void RegisterComponents( Scene& scene )
 {
@@ -64,56 +65,21 @@ static void RegisterComponents( Scene& scene )
 
 static void RegisterArchetypes( Scene& scene )
 {
-	ECS::Archetype crosshair_archetype;
-	crosshair_archetype.name.assign( "Crosshair" );
-	crosshair_archetype.components.push_back( "Transform" );
-	crosshair_archetype.components.push_back( "SpriteRenderer" );
-	crosshair_archetype.components.push_back( "Crosshair" );
-	scene.RegisterArchetype( crosshair_archetype );
+	JsonConfigurationLoader configuration_loader;
+	std::vector< ECS::Archetype > loaded_archetypes;
+	configuration_loader.LoadArchetypes( loaded_archetypes );
 
-	ECS::Archetype player_archetype;
-	player_archetype.name.assign( "Player" );
-	player_archetype.components.push_back( "Transform" );
-	player_archetype.components.push_back( "SpriteRenderer" );
-	player_archetype.components.push_back( "Collider2D" );
-	player_archetype.components.push_back( "NetworkEntity" );
-	player_archetype.components.push_back( "PlayerController" );
-	scene.RegisterArchetype( player_archetype );
-
-	ECS::Archetype remote_player_archetype;
-	remote_player_archetype.name.assign( "RemotePlayer" );
-	remote_player_archetype.components.push_back( "Transform" );
-	remote_player_archetype.components.push_back( "SpriteRenderer" );
-	remote_player_archetype.components.push_back( "Collider2D" );
-	remote_player_archetype.components.push_back( "NetworkEntity" );
-	remote_player_archetype.components.push_back( "RemotePlayerController" );
-	scene.RegisterArchetype( remote_player_archetype );
-
-	ECS::Archetype camera_archetype;
-	camera_archetype.name.assign( "Camera" );
-	camera_archetype.components.push_back( "Transform" );
-	camera_archetype.components.push_back( "Camera" );
-	scene.RegisterArchetype( camera_archetype );
-
-	ECS::Archetype dummy_archetype;
-	dummy_archetype.name.assign( "Dummy" );
-	dummy_archetype.components.push_back( "Transform" );
-	dummy_archetype.components.push_back( "SpriteRenderer" );
-	dummy_archetype.components.push_back( "Collider2D" );
-	scene.RegisterArchetype( dummy_archetype );
-
-	ECS::Archetype virtual_mouse_archetype;
-	virtual_mouse_archetype.name.assign( "VirtualMouse" );
-	virtual_mouse_archetype.components.push_back( "Transform" );
-	virtual_mouse_archetype.components.push_back( "VirtualMouse" );
-	scene.RegisterArchetype( virtual_mouse_archetype );
+	for ( auto cit = loaded_archetypes.cbegin(); cit != loaded_archetypes.cend(); ++cit )
+	{
+		scene.RegisterArchetype( *cit );
+	}
 }
 
 static void RegisterPrefabs( Scene& scene )
 {
 	ECS::Prefab crosshair_prefab;
 	crosshair_prefab.name.assign( "Crosshair" );
-	crosshair_prefab.archetype.assign( "Crosshair" );
+	crosshair_prefab.archetype.assign( "crosshair" );
 	SpriteRendererComponentConfiguration* sprite_renderer_config =
 	    new SpriteRendererComponentConfiguration( "sprites/Crosshair/crosshair.png" );
 	crosshair_prefab.componentConfigurations[ sprite_renderer_config->name ] = sprite_renderer_config;
@@ -121,7 +87,7 @@ static void RegisterPrefabs( Scene& scene )
 
 	ECS::Prefab player_prefab;
 	player_prefab.name.assign( "Player" );
-	player_prefab.archetype.assign( "Player" );
+	player_prefab.archetype.assign( "player" );
 	SpriteRendererComponentConfiguration* player_sprite_renderer_config =
 	    new SpriteRendererComponentConfiguration( "sprites/PlayerSprites/playerHead.png" );
 	player_prefab.componentConfigurations[ player_sprite_renderer_config->name ] = player_sprite_renderer_config;
@@ -135,7 +101,7 @@ static void RegisterPrefabs( Scene& scene )
 
 	ECS::Prefab remote_player_prefab;
 	remote_player_prefab.name.assign( "RemotePlayer" );
-	remote_player_prefab.archetype.assign( "RemotePlayer" );
+	remote_player_prefab.archetype.assign( "remote_player" );
 	SpriteRendererComponentConfiguration* remote_player_sprite_renderer_config =
 	    new SpriteRendererComponentConfiguration( "sprites/PlayerSprites/playerHead.png" );
 	remote_player_prefab.componentConfigurations[ remote_player_sprite_renderer_config->name ] =
@@ -149,14 +115,14 @@ static void RegisterPrefabs( Scene& scene )
 
 	ECS::Prefab camera_prefab;
 	camera_prefab.name.assign( "Camera" );
-	camera_prefab.archetype.assign( "Camera" );
+	camera_prefab.archetype.assign( "camera" );
 	CameraComponentConfiguration* camera_component_config = new CameraComponentConfiguration( 512, 512 );
 	camera_prefab.componentConfigurations[ camera_component_config->name ] = camera_component_config;
 	scene.RegisterPrefab( std::move( camera_prefab ) );
 
 	ECS::Prefab dummy_prefab;
 	dummy_prefab.name.assign( "Dummy" );
-	dummy_prefab.archetype.assign( "Dummy" );
+	dummy_prefab.archetype.assign( "dummy" );
 	SpriteRendererComponentConfiguration* dummy_sprite_renderer_config =
 	    new SpriteRendererComponentConfiguration( "sprites/PlayerSprites/playerHead.png" );
 	dummy_prefab.componentConfigurations[ dummy_sprite_renderer_config->name ] = dummy_sprite_renderer_config;
@@ -169,7 +135,7 @@ static void RegisterPrefabs( Scene& scene )
 
 	ECS::Prefab virtual_mouse_prefab;
 	virtual_mouse_prefab.name.assign( "VirtualMouse" );
-	virtual_mouse_prefab.archetype.assign( "VirtualMouse" );
+	virtual_mouse_prefab.archetype.assign( "virtual_mouse" );
 	scene.RegisterPrefab( std::move( virtual_mouse_prefab ) );
 }
 
