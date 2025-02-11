@@ -77,13 +77,14 @@ static void RegisterArchetypes( Scene& scene )
 
 static void RegisterPrefabs( Scene& scene )
 {
-	ECS::Prefab crosshair_prefab;
-	crosshair_prefab.name.assign( "Crosshair" );
-	crosshair_prefab.archetype.assign( "crosshair" );
-	SpriteRendererComponentConfiguration* sprite_renderer_config =
-	    new SpriteRendererComponentConfiguration( "sprites/Crosshair/crosshair.png" );
-	crosshair_prefab.componentConfigurations[ sprite_renderer_config->name ] = sprite_renderer_config;
-	scene.RegisterPrefab( std::move( crosshair_prefab ) );
+	JsonConfigurationLoader configuration_loader;
+	std::vector< ECS::Prefab > loaded_prefabs;
+	configuration_loader.LoadPrefabs( loaded_prefabs );
+
+	for ( auto it = loaded_prefabs.begin(); it != loaded_prefabs.end(); ++it )
+	{
+		scene.RegisterPrefab( std::move( *it ) );
+	}
 
 	ECS::Prefab player_prefab;
 	player_prefab.name.assign( "Player" );
@@ -112,13 +113,6 @@ static void RegisterPrefabs( Scene& scene )
 	remote_player_prefab.componentConfigurations[ remote_player_collider_2d_component_config->name ] =
 	    remote_player_collider_2d_component_config;
 	scene.RegisterPrefab( std::move( remote_player_prefab ) );
-
-	ECS::Prefab camera_prefab;
-	camera_prefab.name.assign( "Camera" );
-	camera_prefab.archetype.assign( "camera" );
-	CameraComponentConfiguration* camera_component_config = new CameraComponentConfiguration( 512, 512 );
-	camera_prefab.componentConfigurations[ camera_component_config->name ] = camera_component_config;
-	scene.RegisterPrefab( std::move( camera_prefab ) );
 
 	ECS::Prefab dummy_prefab;
 	dummy_prefab.name.assign( "Dummy" );
