@@ -6,14 +6,18 @@
 #include <cstdint>
 #include <vector>
 #include <memory>
+#include <string>
 
 struct TransformComponent;
 
 enum class CollisionResponseType : uint8
 {
-	Static = 0,
-	Dynamic = 1
+	None = 0,
+	Static = 1,
+	Dynamic = 2
 };
+
+CollisionResponseType GetCollisionResponseTypeFromName( const std::string& name );
 
 struct Collider2DComponent
 {

@@ -85,52 +85,6 @@ static void RegisterPrefabs( Scene& scene )
 	{
 		scene.RegisterPrefab( std::move( *it ) );
 	}
-
-	ECS::Prefab player_prefab;
-	player_prefab.name.assign( "Player" );
-	player_prefab.archetype.assign( "player" );
-	SpriteRendererComponentConfiguration* player_sprite_renderer_config =
-	    new SpriteRendererComponentConfiguration( "sprites/PlayerSprites/playerHead.png" );
-	player_prefab.componentConfigurations[ player_sprite_renderer_config->name ] = player_sprite_renderer_config;
-	Collider2DComponentConfiguration* player_collider_2d_component_config = new Collider2DComponentConfiguration();
-	player_collider_2d_component_config->boundsConfiguration = new CircleBounds2DConfiguration( 5.f );
-	player_prefab.componentConfigurations[ player_collider_2d_component_config->name ] =
-	    player_collider_2d_component_config;
-	PlayerControllerComponentConfiguration* player_controller_config = new PlayerControllerComponentConfiguration( 25 );
-	player_prefab.componentConfigurations[ player_controller_config->name ] = player_controller_config;
-	scene.RegisterPrefab( std::move( player_prefab ) );
-
-	ECS::Prefab remote_player_prefab;
-	remote_player_prefab.name.assign( "RemotePlayer" );
-	remote_player_prefab.archetype.assign( "remote_player" );
-	SpriteRendererComponentConfiguration* remote_player_sprite_renderer_config =
-	    new SpriteRendererComponentConfiguration( "sprites/PlayerSprites/playerHead.png" );
-	remote_player_prefab.componentConfigurations[ remote_player_sprite_renderer_config->name ] =
-	    remote_player_sprite_renderer_config;
-	Collider2DComponentConfiguration* remote_player_collider_2d_component_config =
-	    new Collider2DComponentConfiguration();
-	remote_player_collider_2d_component_config->boundsConfiguration = new CircleBounds2DConfiguration( 5.f );
-	remote_player_prefab.componentConfigurations[ remote_player_collider_2d_component_config->name ] =
-	    remote_player_collider_2d_component_config;
-	scene.RegisterPrefab( std::move( remote_player_prefab ) );
-
-	ECS::Prefab dummy_prefab;
-	dummy_prefab.name.assign( "Dummy" );
-	dummy_prefab.archetype.assign( "dummy" );
-	SpriteRendererComponentConfiguration* dummy_sprite_renderer_config =
-	    new SpriteRendererComponentConfiguration( "sprites/PlayerSprites/playerHead.png" );
-	dummy_prefab.componentConfigurations[ dummy_sprite_renderer_config->name ] = dummy_sprite_renderer_config;
-	Collider2DComponentConfiguration* dummy_collider_2d_component_config = new Collider2DComponentConfiguration();
-	dummy_collider_2d_component_config->collisionResponseType = CollisionResponseType::Static;
-	dummy_collider_2d_component_config->boundsConfiguration = new CircleBounds2DConfiguration( 5.f );
-	dummy_prefab.componentConfigurations[ dummy_collider_2d_component_config->name ] =
-	    dummy_collider_2d_component_config;
-	scene.RegisterPrefab( std::move( dummy_prefab ) );
-
-	ECS::Prefab virtual_mouse_prefab;
-	virtual_mouse_prefab.name.assign( "VirtualMouse" );
-	virtual_mouse_prefab.archetype.assign( "virtual_mouse" );
-	scene.RegisterPrefab( std::move( virtual_mouse_prefab ) );
 }
 
 static void RegisterSystems( Scene& scene, NetLib::PeerType networkPeerType, SDL_Renderer* renderer )

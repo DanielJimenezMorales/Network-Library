@@ -8,6 +8,16 @@ Collider2DComponentConfiguration::Collider2DComponentConfiguration()
 {
 }
 
+Collider2DComponentConfiguration::Collider2DComponentConfiguration( Bounds2DConfiguration* bounds_config,
+                                                                    bool is_trigger,
+                                                                    CollisionResponseType collision_response_type )
+    : ECS::ComponentConfiguration( "Collider2D" )
+    , boundsConfiguration( bounds_config )
+    , isTrigger( is_trigger )
+    , collisionResponseType( collision_response_type )
+{
+}
+
 Collider2DComponentConfiguration::Collider2DComponentConfiguration( const Collider2DComponentConfiguration& other )
     : ECS::ComponentConfiguration( "Collider2D" )
     , boundsConfiguration( ( other.boundsConfiguration != nullptr ) ? other.boundsConfiguration->Clone() : nullptr )
