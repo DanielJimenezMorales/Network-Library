@@ -4,6 +4,10 @@ Last time updated: 12/02/2025
 ## Introduction:
 In this page we will discuss how to set up new archetypes and prefabs in order to be able to use them later in the code to create entities.
 
+## Index:
+- [Setting up archetypes](#setting-up-archetypes)
+- [Setting up prefabs](#setting-up-prefabs)
+
 ## Setting up archetypes
 Archetypes represents the skeleton of an entity as they will be containing a set of components that will be attached to an entity during its creation process. The engine will load archetypes from `.../NetworkLibrary/DemoGame/config_files/entity_archetypes` using a JSON loader, so we need to define them in this language.
 

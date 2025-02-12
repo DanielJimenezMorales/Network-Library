@@ -4,9 +4,13 @@ Last time updated: 12/02/2025
 ## Introduction:
 In this page we will discuss how to create and destroy ECS game entities.
 
+## Index:
+- [Creating a game entity](#creating-a-game-entity)
+- [Destroying a game entity](#destroying-a-game-entity)
+
 ## Creating a game entity
 The game entity creation is an instant process. That means that entities will be spawned as soon as the creation function is called. There won't be any kind of deferred creation process.
->> Dev notes: My initial thought was to make the game entity creation deferred in order to improve determinism for the network system. Creating game entities in the middle of a tick could be dangerous as it could lead into potential desyncs between different peers. However, the reason why I've not move forward with this approach is due to the World replication module from the Network Library requires an in-game entity ID inmediately after spawning a network entity in order to associate a Network Entity ID with an In-game Enity ID. And why does the Network Library need to do this association? Because whenever a DESTROY_ENTITY {NETWORK_ENTITY_ID} message arrives to the peer, the network library will need to notify this event to the engine indicating which In-game entity should be destroyed. This operation requires a conversion from the network entity id from the incoming message to the associated in-game entity id.
+> Dev notes: My initial thought was to make the game entity creation deferred in order to improve determinism for the network system. Creating game entities in the middle of a tick could be dangerous as it could lead into potential desyncs between different peers. However, the reason why I've not move forward with this approach is due to the World replication module from the Network Library requires an in-game entity ID inmediately after spawning a network entity in order to associate a Network Entity ID with an In-game Enity ID. And why does the Network Library need to do this association? Because whenever a DESTROY_ENTITY {NETWORK_ENTITY_ID} message arrives to the peer, the network library will need to notify this event to the engine indicating which In-game entity should be destroyed. This operation requires a conversion from the network entity id from the incoming message to the associated in-game entity id.
 
 In order to create a Game Entity there is only one way to do it. Devs will need to call to `Scene::CreateGameEntity` method. This method asks for the following parameters:
 - `const std::string& prefab_name`: The name of the prefab that will be used during the creation process.
