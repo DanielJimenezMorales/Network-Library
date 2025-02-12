@@ -1,13 +1,17 @@
 # ECS Approach
-Last time updated: 26/01/2025
+Last time updated: 12/02/2025
 
 ## Index:
 - Introduction
 - Dependencies
+- [How to configure archetypes and prefabs](how_to_configure_archetypes_and_prefabs.md)
+- [How to create and destroy game entities](how_to_create_and_destroy_game_entities.md)
 - Components
 - Game entities
 - Global components
 - Entity container
+- Archetypes
+- Prefabs
 - Entity factories
 - Simple systems
 - System coordinators
@@ -30,7 +34,11 @@ There are certain types of data structures that need to live inside our World bu
 ## Entity container:
 An Entity container is where all components from all entities are stored. Instead of letting each Game Entity stores all its components, like in an OOP paradigm, the entity container acts as a centralized storage for all the componentes of the same type. Internally, it uses pools of components of the same type. This data-oriented approach has a lot of benefits such as reducing memory fragmentation and cache misses, improving as a consequence access performance.
 
-The entity container not only stores normal components but also global components. However, in order to access them, devs will need to call to different methods. Internally, global components are stored in a separated pool. This pool will contain one single entity, called Global Entity, with all the global components attached.
+## Archetype:
+An archetype is a layout that contains a set of components that different game entities share.
+
+## Prefabs:
+A prefab represents a template for an already configured entity based on an archetype. A prefab will contain the configuration for the components of an archetype.
 
 ## Entity factories:
 Entities can only be created through special classes called factories (From the factory pattern). These factories will be responsible for attaching and initializing all the components that an entity of a certain type needs. In order to perform this first initialization, factories will receive an Entity Configu ration structure for flexibility purposes. Also, for symmetry, entity factories will also be responsible of de-initializing all the components of an entity, if neccessary.
