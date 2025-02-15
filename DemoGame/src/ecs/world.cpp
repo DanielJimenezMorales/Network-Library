@@ -1,18 +1,18 @@
-#include "Scene.h"
+#include "world.h"
 
 #include <cassert>
 
 #include "logger.h"
 
-#include "GameEntity.hpp"
-#include "IPreTickSystem.h"
 #include "Vec2f.h"
+
+#include "ecs/game_entity.hpp"
 
 #include "components/transform_component.h"
 
 namespace ECS
 {
-	Scene::Scene()
+	World::World()
 	    : _entityContainer()
 	    , _systemsHandler()
 	    , _componentRegistry()
@@ -21,101 +21,89 @@ namespace ECS
 	{
 	}
 
-	bool Scene::RegisterArchetype( const Archetype& archetype )
+	bool World::RegisterArchetype( const Archetype& archetype )
 	{
 		return _archetype_registry.RegisterArchetype( archetype );
 	}
 
-	bool Scene::RegisterPrefab( Prefab&& prefab )
+	bool World::RegisterPrefab( Prefab&& prefab )
 	{
 		return _prefab_registry.RegisterPrefab( std::forward< Prefab >( prefab ) );
 	}
 
-	void Scene::AddSystem( SystemCoordinator* system )
+	void World::AddSystem( SystemCoordinator* system )
 	{
 		_systemsHandler.AddSystem( system );
 	}
 
-	void Scene::Update( float32 elapsed_time )
+	void World::Update( float32 elapsed_time )
 	{
 		_systemsHandler.TickStage( _entityContainer, elapsed_time, ExecutionStage::UPDATE );
 	}
 
-	void Scene::PreTick( float32 elapsed_time )
+	void World::PreTick( float32 elapsed_time )
 	{
 		_systemsHandler.TickStage( _entityContainer, elapsed_time, ExecutionStage::PRETICK );
-
-		auto it = _preTickSystems.begin();
-		for ( ; it != _preTickSystems.end(); ++it )
-		{
-			( *it )->PreTick( _entityContainer, elapsed_time );
-		}
 	}
 
-	void Scene::Tick( float32 elapsed_time )
+	void World::Tick( float32 elapsed_time )
 	{
 		_systemsHandler.TickStage( _entityContainer, elapsed_time, ExecutionStage::TICK );
 	}
 
-	void Scene::PosTick( float32 elapsed_time )
+	void World::PosTick( float32 elapsed_time )
 	{
 		_systemsHandler.TickStage( _entityContainer, elapsed_time, ExecutionStage::POSTICK );
 	}
 
-	void Scene::Render( float32 elapsed_time )
+	void World::Render( float32 elapsed_time )
 	{
 		_systemsHandler.TickStage( _entityContainer, elapsed_time, ExecutionStage::RENDER );
 	}
 
-	void Scene::EndOfFrame()
+	void World::EndOfFrame()
 	{
 		DestroyPendingEntities();
 		CreatePendingEntities();
 	}
 
-	void Scene::AddPreTickSystem( IPreTickSystem* system )
-	{
-		assert( system != nullptr );
-		_preTickSystems.push_back( system );
-	}
-
-	GameEntity Scene::CreateGameEntity( const std::string& prefab_name, const Vec2f& position )
+	GameEntity World::CreateGameEntity( const std::string& prefab_name, const Vec2f& position )
 	{
 		return SpawnEntity( prefab_name, position );
 		//_entitiesToCreateRequests.push( prefab_name );
 	}
 
-	void Scene::DestroyGameEntity( const GameEntity& entity )
+	void World::DestroyGameEntity( const GameEntity& entity )
 	{
 		_entitiesToRemoveRequests.push( entity.GetId() );
 	}
 
-	void Scene::DestroyGameEntity( const EntityId entity_id )
+	void World::DestroyGameEntity( const EntityId entity_id )
 	{
 		_entitiesToRemoveRequests.push( entity_id );
 	}
 
-	GameEntity Scene::GetEntityFromId( uint32 id )
+	GameEntity World::GetEntityFromId( uint32 id )
 	{
 		return _entityContainer.GetEntityFromId( id );
 	}
 
-	void Scene::UnsubscribeFromOnEntityCreate( uint32 id )
+	void World::UnsubscribeFromOnEntityCreate( uint32 id )
 	{
 		_onEntityCreate.DeleteSubscriber( id );
 	}
 
-	void Scene::UnsubscribeFromOnEntityConfigure( uint32 id )
+	void World::UnsubscribeFromOnEntityConfigure( uint32 id )
 	{
 		_onEntityConfigure.DeleteSubscriber( id );
 	}
 
-	void Scene::UnsubscribeFromOnEntityDestroy( uint32 id )
+	void World::UnsubscribeFromOnEntityDestroy( uint32 id )
 	{
 		_onEntityDestroy.DeleteSubscriber( id );
 	}
 
-	void Scene::CreatePendingEntities()
+	void World::CreatePendingEntities()
 	{
 		while ( !_entitiesToCreateRequests.empty() )
 		{
@@ -126,7 +114,7 @@ namespace ECS
 		}
 	}
 
-	GameEntity Scene::SpawnEntity( const std::string& prefab_name, const Vec2f& position )
+	GameEntity World::SpawnEntity( const std::string& prefab_name, const Vec2f& position )
 	{
 		// Get prefab
 		const Prefab* prefab = _prefab_registry.TryGetPrefab( prefab_name );
@@ -171,7 +159,7 @@ namespace ECS
 		return new_entity;
 	}
 
-	bool Scene::AddComponentsToEntity( const Archetype& archetype, GameEntity& entity )
+	bool World::AddComponentsToEntity( const Archetype& archetype, GameEntity& entity )
 	{
 		bool result = true;
 		auto cit = archetype.components.cbegin();
@@ -189,7 +177,7 @@ namespace ECS
 		return result;
 	}
 
-	void Scene::DestroyPendingEntities()
+	void World::DestroyPendingEntities()
 	{
 		while ( !_entitiesToRemoveRequests.empty() )
 		{

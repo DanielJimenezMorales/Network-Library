@@ -4,9 +4,8 @@
 
 namespace ECS
 {
-	class Archetype
+	struct Archetype
 	{
-		public:
 			std::string name;
 			std::vector< std::string > components;
 	};

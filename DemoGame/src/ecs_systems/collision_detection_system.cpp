@@ -1,5 +1,4 @@
 #include "collision_detection_system.h"
-#include "GameEntity.hpp"
 #include "CollisionUtils.h"
 #include "Logger.h"
 
@@ -10,6 +9,7 @@
 
 #include "CircleBounds2D.h"
 
+#include "ecs/game_entity.hpp"
 #include "ecs/entity_container.h"
 #include "ecs/prefab.h"
 

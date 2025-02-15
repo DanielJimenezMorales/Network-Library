@@ -1,7 +1,8 @@
 #include "player_network_entity_serialization_callbacks.h"
 
-#include "GameEntity.hpp"
 #include "Vec2f.h"
+
+#include "ecs/game_entity.hpp"
 
 #include "components/transform_component.h"
 

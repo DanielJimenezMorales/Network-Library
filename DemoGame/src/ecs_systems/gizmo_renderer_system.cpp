@@ -1,8 +1,8 @@
 #include "gizmo_renderer_system.h"
 
 #include "ecs/entity_container.h"
+#include "ecs/game_entity.hpp"
 
-#include "GameEntity.hpp"
 #include "Gizmo.h"
 
 #include "components/gizmo_renderer_component.h"

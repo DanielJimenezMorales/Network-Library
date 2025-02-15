@@ -1,12 +1,12 @@
 #include "sprite_renderer_system.h"
 
-#include "GameEntity.hpp"
 #include "coordinates_conversion_utils.h"
 #include "Texture.h"
 #include "Texture.h"
 #include "Vec2f.h"
 #include "Logger.h"
 
+#include "ecs/game_entity.hpp"
 #include "ecs/entity_container.h"
 #include "ecs/prefab.h"
 

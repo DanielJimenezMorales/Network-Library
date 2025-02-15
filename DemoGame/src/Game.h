@@ -1,8 +1,9 @@
 #pragma once
 #include <SDL.h>
 
-#include "Scene.h"
 #include "InputHandler.h"
+
+#include "ecs/world.h"
 
 const uint32 FIXED_FRAMES_PER_SECOND = 50;
 const float32 FIXED_FRAME_TARGET_DURATION = 1.0f / FIXED_FRAMES_PER_SECOND;
@@ -32,7 +33,7 @@ class Game
 		SDL_Renderer* _renderer;
 		bool _isRunning;
 
-		ECS::Scene _activeScene;
+		ECS::World _activeScene;
 		// TODO The input handler should also be witin an ECS global component
 		InputHandler _inputHandler;
 };

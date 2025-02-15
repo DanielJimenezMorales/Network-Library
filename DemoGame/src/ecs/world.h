@@ -9,11 +9,8 @@
 #include "ecs/entity_container.h"
 #include "ecs/systems_handler.h"
 #include "ecs/component_registry.h"
-
-#include "archetype_registry.h"
-#include "prefab_registry.h"
-
-class IPreTickSystem;
+#include "ecs/archetype_registry.h"
+#include "ecs/prefab_registry.h"
 
 struct Vec2f;
 
@@ -21,10 +18,10 @@ namespace ECS
 {
 	class GameEntity;
 
-	class Scene
+	class World
 	{
 		public:
-			Scene();
+			World();
 
 			bool RegisterArchetype( const Archetype& archetype );
 
@@ -47,8 +44,6 @@ namespace ECS
 			void PosTick( float32 elapsed_time );
 			void Render( float32 elapsed_time );
 			void EndOfFrame();
-
-			void AddPreTickSystem( IPreTickSystem* system );
 
 			GameEntity CreateGameEntity( const std::string& prefab_name, const Vec2f& position );
 			void DestroyGameEntity( const GameEntity& entity );
@@ -83,8 +78,6 @@ namespace ECS
 			ArchetypeRegistry _archetype_registry;
 			PrefabRegistry _prefab_registry;
 
-			std::vector< IPreTickSystem* > _preTickSystems;
-
 			std::queue< EntityId > _entitiesToRemoveRequests;
 			std::queue< std::string > _entitiesToCreateRequests;
 
@@ -94,43 +87,43 @@ namespace ECS
 	};
 
 	template < typename T >
-	inline bool Scene::RegisterComponent( const std::string& name )
+	inline bool World::RegisterComponent( const std::string& name )
 	{
 		return _componentRegistry.RegisterComponent< T >( name );
 	}
 
 	template < typename T, typename... Params >
-	inline T& Scene::AddGlobalComponent( Params&&... params )
+	inline T& World::AddGlobalComponent( Params&&... params )
 	{
 		return _entityContainer.AddGlobalComponent< T >( std::forward< Params >( params )... );
 	}
 
 	template < typename T >
-	inline T& Scene::GetGlobalComponent()
+	inline T& World::GetGlobalComponent()
 	{
 		return _entityContainer.GetGlobalComponent< T >();
 	}
 
 	template < typename T >
-	inline GameEntity Scene::GetFirstEntityOfType()
+	inline GameEntity World::GetFirstEntityOfType()
 	{
 		return _entityContainer.GetFirstEntityOfType< T >();
 	}
 
 	template < typename Functor >
-	inline uint32 Scene::SubscribeToOnEntityCreate( Functor&& functor )
+	inline uint32 World::SubscribeToOnEntityCreate( Functor&& functor )
 	{
 		return _onEntityCreate.AddSubscriber( std::forward< Functor >( functor ) );
 	}
 
 	template < typename Functor >
-	inline uint32 Scene::SubscribeToOnEntityConfigure( Functor&& functor )
+	inline uint32 World::SubscribeToOnEntityConfigure( Functor&& functor )
 	{
 		return _onEntityConfigure.AddSubscriber( std::forward< Functor >( functor ) );
 	}
 
 	template < typename Functor >
-	inline uint32 Scene::SubscribeToOnEntityDestroy( Functor&& functor )
+	inline uint32 World::SubscribeToOnEntityDestroy( Functor&& functor )
 	{
 		return _onEntityDestroy.AddSubscriber( std::forward< Functor >( functor ) );
 	}

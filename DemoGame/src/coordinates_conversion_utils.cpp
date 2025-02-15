@@ -2,7 +2,7 @@
 
 #include <cassert>
 
-#include "GameEntity.hpp"
+#include "ecs/game_entity.hpp"
 
 #include "components/transform_component.h"
 #include "components/camera_component.h"

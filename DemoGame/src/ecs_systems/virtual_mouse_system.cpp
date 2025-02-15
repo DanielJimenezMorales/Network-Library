@@ -1,8 +1,8 @@
 #include "virtual_mouse_system.h"
 
-#include "GameEntity.hpp"
 #include "ICursor.h"
 
+#include "ecs/game_entity.hpp"
 #include "ecs/entity_container.h"
 
 #include "components/virtual_mouse_component.h"

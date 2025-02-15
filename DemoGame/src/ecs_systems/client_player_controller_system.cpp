@@ -1,6 +1,5 @@
 #include "client_player_controller_system.h"
 
-#include "GameEntity.hpp"
 #include "IInputController.h"
 #include "ICursor.h"
 #include "Vec2f.h"
@@ -9,6 +8,7 @@
 
 #include <vector>
 
+#include "ecs/game_entity.hpp"
 #include "ecs/entity_container.h"
 #include "ecs/prefab.h"
 

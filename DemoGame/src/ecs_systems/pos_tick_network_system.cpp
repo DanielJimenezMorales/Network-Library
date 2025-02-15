@@ -1,6 +1,6 @@
 #include "pos_tick_network_system.h"
 
-#include "GameEntity.hpp"
+#include "ecs/game_entity.hpp"
 
 #include "global_components/network_peer_global_component.h"
 

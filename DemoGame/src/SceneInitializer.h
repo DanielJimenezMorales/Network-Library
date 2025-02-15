@@ -9,14 +9,14 @@ class InputHandler;
 namespace ECS
 {
 	class GameEntity;
-	class Scene;
+	class World;
 	class Prefab;
 }
 
 class SceneInitializer
 {
 	public:
-		void InitializeScene( ECS::Scene& scene, NetLib::PeerType networkPeerType, InputHandler& inputHandler,
+		void InitializeScene( ECS::World& scene, NetLib::PeerType networkPeerType, InputHandler& inputHandler,
 		                      SDL_Renderer* renderer ) const;
 
 		// TODO Temp method. It shouldn't go here

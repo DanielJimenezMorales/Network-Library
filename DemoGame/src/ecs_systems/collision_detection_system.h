@@ -1,7 +1,6 @@
 #pragma once
 #include "ecs/i_simple_system.h"
 
-#include "IPreTickSystem.h"
 #include "Vec2f.h"
 #include <vector>
 

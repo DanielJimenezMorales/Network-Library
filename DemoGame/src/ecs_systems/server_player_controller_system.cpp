@@ -1,9 +1,9 @@
 #include "server_player_controller_system.h"
 
-#include "GameEntity.hpp"
 #include "InputState.h"
 #include "PlayerSimulator.h"
 
+#include "ecs/game_entity.hpp"
 #include "ecs/entity_container.h"
 #include "ecs/prefab.h"
 

@@ -1,7 +1,8 @@
 #include "PlayerSimulator.h"
 #include "InputState.h"
-#include "GameEntity.hpp"
 #include "Logger.h"
+
+#include "ecs/game_entity.hpp"
 
 #include "components/transform_component.h"
 #include "components/player_controller_component.h"

@@ -1,8 +1,9 @@
 #include "network_entity_creator.h"
 
-#include "Scene.h"
-#include "GameEntity.hpp"
 #include "Vec2f.h"
+
+#include "ecs/world.h"
+#include "ecs/game_entity.hpp"
 
 #include "components/network_entity_component.h"
 #include "global_components/network_peer_global_component.h"
@@ -18,7 +19,7 @@ NetworkEntityCreatorSystem::NetworkEntityCreatorSystem()
 {
 }
 
-void NetworkEntityCreatorSystem::SetScene( ECS::Scene* scene )
+void NetworkEntityCreatorSystem::SetScene( ECS::World* scene )
 {
 	_scene = scene;
 }
