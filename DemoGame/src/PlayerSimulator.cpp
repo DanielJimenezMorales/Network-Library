@@ -6,7 +6,7 @@
 #include "components/transform_component.h"
 #include "components/player_controller_component.h"
 
-void PlayerSimulator::Simulate( const InputState& inputs, GameEntity& playerEntity, float32 elapsedTime )
+void PlayerSimulator::Simulate( const InputState& inputs, ECS::GameEntity& playerEntity, float32 elapsedTime )
 {
 	TransformComponent& transform = playerEntity.GetComponent< TransformComponent >();
 	if ( inputs.movement.X() != 0 || inputs.movement.Y() != 0 )

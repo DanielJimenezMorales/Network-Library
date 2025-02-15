@@ -33,7 +33,7 @@ static void ProcessInputs( ECS::EntityContainer& entityContainer, InputState& ou
 	outInputState.movement.Y( inputComponent.inputController->GetAxis( VERTICAL_AXIS ) );
 	outInputState.movement.Normalize();
 
-	const GameEntity& virtual_mouse_entity = entityContainer.GetFirstEntityOfType< VirtualMouseComponent >();
+	const ECS::GameEntity& virtual_mouse_entity = entityContainer.GetFirstEntityOfType< VirtualMouseComponent >();
 	const TransformComponent& virtual_mouse_transform = virtual_mouse_entity.GetComponent< TransformComponent >();
 	outInputState.virtualMousePosition = virtual_mouse_transform.GetPosition();
 }

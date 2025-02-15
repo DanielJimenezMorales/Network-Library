@@ -27,11 +27,11 @@ SpriteRendererSystem::SpriteRendererSystem( SDL_Renderer* renderer )
 
 void SpriteRendererSystem::Execute( ECS::EntityContainer& entity_container, float32 elapsed_time )
 {
-	const GameEntity camera_entity = entity_container.GetFirstEntityOfType< CameraComponent >();
+	const ECS::GameEntity camera_entity = entity_container.GetFirstEntityOfType< CameraComponent >();
 	const CameraComponent& camera = camera_entity.GetComponent< CameraComponent >();
 	const TransformComponent& camera_transform = camera_entity.GetComponent< TransformComponent >();
 
-	std::vector< GameEntity > entities =
+	std::vector< ECS::GameEntity > entities =
 	    entity_container.GetEntitiesOfBothTypes< SpriteRendererComponent, TransformComponent >();
 	for ( auto it = entities.begin(); it != entities.end(); ++it )
 	{
@@ -59,7 +59,7 @@ void SpriteRendererSystem::Execute( ECS::EntityContainer& entity_container, floa
 	}
 }
 
-void SpriteRendererSystem::ConfigureSpriteRendererComponent( GameEntity& entity, const ECS::Prefab& prefab )
+void SpriteRendererSystem::ConfigureSpriteRendererComponent( ECS::GameEntity& entity, const ECS::Prefab& prefab )
 {
 	auto component_config_found = prefab.componentConfigurations.find( "SpriteRenderer" );
 	if ( component_config_found == prefab.componentConfigurations.end() )

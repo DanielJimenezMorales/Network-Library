@@ -7,7 +7,7 @@
 #include "components/transform_component.h"
 #include "components/camera_component.h"
 
-Vec2f ConvertFromWorldPositionToScreenPosition( Vec2f worldPosition, const GameEntity& camera_entity )
+Vec2f ConvertFromWorldPositionToScreenPosition( Vec2f worldPosition, const ECS::GameEntity& camera_entity )
 {
 	assert( camera_entity.HasComponent< CameraComponent >() );
 	assert( camera_entity.HasComponent< TransformComponent >() );
@@ -35,7 +35,7 @@ Vec2f ConvertFromWorldPositionToScreenPosition( Vec2f worldPosition, const Camer
 	return worldPosition;
 }
 
-Vec2f ConvertFromScreenPositionToWorldPosition( Vec2f screenPosition, const GameEntity& camera_entity )
+Vec2f ConvertFromScreenPositionToWorldPosition( Vec2f screenPosition, const ECS::GameEntity& camera_entity )
 {
 	assert( camera_entity.HasComponent< CameraComponent >() );
 	assert( camera_entity.HasComponent< TransformComponent >() );

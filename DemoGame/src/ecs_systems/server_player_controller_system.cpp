@@ -23,7 +23,7 @@ void ServerPlayerControllerSystem::Execute( ECS::EntityContainer& entity_contain
 	    entity_container.GetGlobalComponent< NetworkPeerGlobalComponent >();
 	NetLib::Server* serverPeer = networkPeerComponent.GetPeerAsServer();
 
-	std::vector< GameEntity > entities = entity_container.GetEntitiesOfType< PlayerControllerComponent >();
+	std::vector< ECS::GameEntity > entities = entity_container.GetEntitiesOfType< PlayerControllerComponent >();
 	for ( auto it = entities.begin(); it != entities.end(); ++it )
 	{
 		const NetworkEntityComponent& networkEntityComponent = it->GetComponent< NetworkEntityComponent >();
@@ -39,7 +39,8 @@ void ServerPlayerControllerSystem::Execute( ECS::EntityContainer& entity_contain
 	}
 }
 
-void ServerPlayerControllerSystem::ConfigurePlayerControllerComponent( GameEntity& entity, const ECS::Prefab& prefab )
+void ServerPlayerControllerSystem::ConfigurePlayerControllerComponent( ECS::GameEntity& entity,
+                                                                       const ECS::Prefab& prefab )
 {
 	auto component_config_found = prefab.componentConfigurations.find( "PlayerController" );
 	if ( component_config_found == prefab.componentConfigurations.end() )

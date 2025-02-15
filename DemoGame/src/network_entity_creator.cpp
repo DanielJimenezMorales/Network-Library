@@ -18,7 +18,7 @@ NetworkEntityCreatorSystem::NetworkEntityCreatorSystem()
 {
 }
 
-void NetworkEntityCreatorSystem::SetScene( Scene* scene )
+void NetworkEntityCreatorSystem::SetScene( ECS::Scene* scene )
 {
 	_scene = scene;
 }
@@ -51,7 +51,7 @@ uint32 NetworkEntityCreatorSystem::OnNetworkEntityCreate( const NetLib::OnNetwor
 		prefab_name.assign( "Player" );
 	}
 
-	const GameEntity entity = _scene->CreateGameEntity( prefab_name, Vec2f( config.positionX, config.positionY ) );
+	const ECS::GameEntity entity = _scene->CreateGameEntity( prefab_name, Vec2f( config.positionX, config.positionY ) );
 	return entity.GetId();
 }
 
@@ -60,7 +60,7 @@ void NetworkEntityCreatorSystem::OnNetworkEntityDestroy( uint32 in_game_id )
 	_scene->DestroyGameEntity( in_game_id );
 }
 
-void NetworkEntityCreatorSystem::OnNetworkEntityComponentConfigure( GameEntity& entity, const ECS::Prefab& prefab )
+void NetworkEntityCreatorSystem::OnNetworkEntityComponentConfigure( ECS::GameEntity& entity, const ECS::Prefab& prefab )
 {
 	if ( !entity.HasComponent< NetworkEntityComponent >() )
 	{

@@ -7,6 +7,7 @@ Last time updated: 12/02/2025
 - [ECS terms glossary](ecs_terms_glossary.md)
 - [How to configure archetypes and prefabs](how_to_configure_archetypes_and_prefabs.md)
 - [How to create and destroy game entities](how_to_create_and_destroy_game_entities.md)
+- [How to create new components](how_to_create_new_components.md)
 - A multithread friendly approach (FUTURE FEATURE)
 - References
 

@@ -15,5 +15,5 @@ class ServerPlayerControllerSystem : public ECS::ISimpleSystem
 
 		void Execute( ECS::EntityContainer& entity_container, float32 elapsed_time ) override;
 
-		void ConfigurePlayerControllerComponent( GameEntity& entity, const ECS::Prefab& prefab );
+		void ConfigurePlayerControllerComponent( ECS::GameEntity& entity, const ECS::Prefab& prefab );
 };

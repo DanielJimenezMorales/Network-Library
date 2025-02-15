@@ -15,7 +15,7 @@ void VirtualMouseSystem::Execute( ECS::EntityContainer& entity_container, float3
 	const CameraComponent& cameraComponent = entity_container.GetFirstComponentOfType< CameraComponent >();
 	const InputComponent& inputComponent = entity_container.GetGlobalComponent< InputComponent >();
 
-	std::vector< GameEntity > entities = entity_container.GetEntitiesOfType< VirtualMouseComponent >();
+	std::vector< ECS::GameEntity > entities = entity_container.GetEntitiesOfType< VirtualMouseComponent >();
 	for ( auto it = entities.begin(); it != entities.end(); ++it )
 	{
 		TransformComponent& virtual_mouse_transform = it->GetComponent< TransformComponent >();

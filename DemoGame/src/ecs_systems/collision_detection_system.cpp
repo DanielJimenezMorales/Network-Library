@@ -18,7 +18,7 @@ CollisionDetectionSystem::CollisionDetectionSystem()
 {
 }
 
-bool ReturnMinLeft( const GameEntity& colliderEntityA, const GameEntity& colliderEntityB )
+bool ReturnMinLeft( const ECS::GameEntity& colliderEntityA, const ECS::GameEntity& colliderEntityB )
 {
 	const Collider2DComponent& colliderA = colliderEntityA.GetComponent< Collider2DComponent >();
 	const TransformComponent& transformA = colliderEntityA.GetComponent< TransformComponent >();
@@ -31,12 +31,12 @@ bool ReturnMinLeft( const GameEntity& colliderEntityA, const GameEntity& collide
 
 void CollisionDetectionSystem::Execute( ECS::EntityContainer& entity_container, float32 elapsed_time )
 {
-	std::vector< GameEntity > entities =
+	std::vector< ECS::GameEntity > entities =
 	    entity_container.GetEntitiesOfBothTypes< Collider2DComponent, TransformComponent >();
 	TickSweepAndPrune( entities );
 }
 
-void CollisionDetectionSystem::ConfigureCollider2DComponent( GameEntity& entity, const ECS::Prefab& prefab )
+void CollisionDetectionSystem::ConfigureCollider2DComponent( ECS::GameEntity& entity, const ECS::Prefab& prefab )
 {
 	auto component_config_found = prefab.componentConfigurations.find( "Collider2D" );
 	if ( component_config_found == prefab.componentConfigurations.end() )
@@ -64,7 +64,7 @@ void CollisionDetectionSystem::ConfigureCollider2DComponent( GameEntity& entity,
 	}
 }
 
-void CollisionDetectionSystem::TickSweepAndPrune( std::vector< GameEntity >& collision_entities ) const
+void CollisionDetectionSystem::TickSweepAndPrune( std::vector< ECS::GameEntity >& collision_entities ) const
 {
 	// Sort by left in order to optimize the number of collision queries later.
 	SortCollidersByLeft( collision_entities );
@@ -138,7 +138,7 @@ bool CollisionDetectionSystem::AreTwoShapesCollidingUsingSAT( const Collider2DCo
 	return true;
 }
 
-void CollisionDetectionSystem::SortCollidersByLeft( std::vector< GameEntity >& collider_entities ) const
+void CollisionDetectionSystem::SortCollidersByLeft( std::vector< ECS::GameEntity >& collider_entities ) const
 {
 	std::sort( collider_entities.begin(), collider_entities.end(), ReturnMinLeft );
 }

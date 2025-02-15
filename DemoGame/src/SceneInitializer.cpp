@@ -49,7 +49,7 @@
 #include "network_entity_creator.h"
 #include "json_configuration_loader.h"
 
-static void RegisterComponents( Scene& scene )
+static void RegisterComponents( ECS::Scene& scene )
 {
 	scene.RegisterComponent< TransformComponent >( "Transform" );
 	scene.RegisterComponent< SpriteRendererComponent >( "SpriteRenderer" );
@@ -63,7 +63,7 @@ static void RegisterComponents( Scene& scene )
 	scene.RegisterComponent< RemotePlayerControllerComponent >( "RemotePlayerController" );
 }
 
-static void RegisterArchetypes( Scene& scene )
+static void RegisterArchetypes( ECS::Scene& scene )
 {
 	JsonConfigurationLoader configuration_loader;
 	std::vector< ECS::Archetype > loaded_archetypes;
@@ -75,7 +75,7 @@ static void RegisterArchetypes( Scene& scene )
 	}
 }
 
-static void RegisterPrefabs( Scene& scene )
+static void RegisterPrefabs( ECS::Scene& scene )
 {
 	JsonConfigurationLoader configuration_loader;
 	std::vector< ECS::Prefab > loaded_prefabs;
@@ -87,7 +87,7 @@ static void RegisterPrefabs( Scene& scene )
 	}
 }
 
-static void RegisterSystems( Scene& scene, NetLib::PeerType networkPeerType, SDL_Renderer* renderer )
+static void RegisterSystems( ECS::Scene& scene, NetLib::PeerType networkPeerType, SDL_Renderer* renderer )
 {
 	// Populate systems
 	// TODO Create a system storage in order to be able to free them at the end
@@ -183,7 +183,7 @@ static void RegisterSystems( Scene& scene, NetLib::PeerType networkPeerType, SDL
 	                                             gizmo_renderer_system, std::placeholders::_1 ) );
 }
 
-void SceneInitializer::ConfigureCameraComponent( GameEntity& entity, const ECS::Prefab& prefab ) const
+void SceneInitializer::ConfigureCameraComponent( ECS::GameEntity& entity, const ECS::Prefab& prefab ) const
 {
 	auto component_config_found = prefab.componentConfigurations.find( "Camera" );
 	if ( component_config_found == prefab.componentConfigurations.end() )
@@ -203,7 +203,7 @@ void SceneInitializer::ConfigureCameraComponent( GameEntity& entity, const ECS::
 	camera.height = camera_config.height;
 }
 
-void SceneInitializer::InitializeScene( Scene& scene, NetLib::PeerType networkPeerType, InputHandler& inputHandler,
+void SceneInitializer::InitializeScene( ECS::Scene& scene, NetLib::PeerType networkPeerType, InputHandler& inputHandler,
                                         SDL_Renderer* renderer ) const
 {
 	RegisterComponents( scene );

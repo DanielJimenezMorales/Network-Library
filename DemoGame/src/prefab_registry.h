@@ -4,23 +4,26 @@
 
 #include "ecs/prefab.h"
 
-class PrefabRegistry
+namespace ECS
 {
-	public:
-		PrefabRegistry();
-		PrefabRegistry( const PrefabRegistry& other ) = default;
-		PrefabRegistry( PrefabRegistry&& other ) noexcept = default;
+	class PrefabRegistry
+	{
+		public:
+			PrefabRegistry();
+			PrefabRegistry( const PrefabRegistry& other ) = default;
+			PrefabRegistry( PrefabRegistry&& other ) noexcept = default;
 
-		PrefabRegistry& operator=( const PrefabRegistry& other ) = default;
-		PrefabRegistry& operator=( PrefabRegistry&& other ) noexcept = default;
+			PrefabRegistry& operator=( const PrefabRegistry& other ) = default;
+			PrefabRegistry& operator=( PrefabRegistry&& other ) noexcept = default;
 
-		bool RegisterPrefab( ECS::Prefab&& prefab );
-		bool UnregisterPrefab( const std::string& name );
+			bool RegisterPrefab( Prefab&& prefab );
+			bool UnregisterPrefab( const std::string& name );
 
-		const ECS::Prefab* TryGetPrefab( const std::string& name ) const;
+			const ECS::Prefab* TryGetPrefab( const std::string& name ) const;
 
-	private:
-		bool IsPrefabValid( const ECS::Prefab& prefab ) const;
+		private:
+			bool IsPrefabValid( const Prefab& prefab ) const;
 
-		std::unordered_map< std::string, ECS::Prefab > _prefabs;
-};
+			std::unordered_map< std::string, Prefab > _prefabs;
+	};
+}

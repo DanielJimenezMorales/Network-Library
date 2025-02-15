@@ -5,8 +5,6 @@
 
 #include <SDL_image.h>
 
-class GameEntity;
-
 namespace ECS
 {
 	class Prefab;
@@ -21,7 +19,7 @@ class SpriteRendererSystem : public ECS::ISimpleSystem
 
 		TextureResourceHandler* GetTextureResourceHandler() { return &_textureResourceHandler; }
 
-		void ConfigureSpriteRendererComponent( GameEntity& entity, const ECS::Prefab& prefab );
+		void ConfigureSpriteRendererComponent( ECS::GameEntity& entity, const ECS::Prefab& prefab );
 
 	private:
 		SDL_Renderer* _renderer;

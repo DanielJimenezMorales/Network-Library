@@ -7,7 +7,6 @@
 
 struct Collider2DComponent;
 struct TransformComponent;
-class GameEntity;
 
 namespace ECS
 {
@@ -33,7 +32,7 @@ struct MinimumTranslationVector
 		float32 magnitude;
 };
 
-bool ReturnMinLeft( const GameEntity& colliderEntityA, const GameEntity& colliderEntityB );
+bool ReturnMinLeft( const ECS::GameEntity& colliderEntityA, const ECS::GameEntity& colliderEntityB );
 
 class CollisionDetectionSystem : public ECS::ISimpleSystem
 {
@@ -42,7 +41,7 @@ class CollisionDetectionSystem : public ECS::ISimpleSystem
 
 		void Execute( ECS::EntityContainer& entity_container, float32 elapsed_time ) override;
 
-		void ConfigureCollider2DComponent( GameEntity& entity, const ECS::Prefab& prefab );
+		void ConfigureCollider2DComponent( ECS::GameEntity& entity, const ECS::Prefab& prefab );
 
 	private:
 		///////////////////////////////////
@@ -53,13 +52,13 @@ class CollisionDetectionSystem : public ECS::ISimpleSystem
 		/// <para>This method is a close approximation to the 1D Sweep & Prune collision detection algorithm.
 		/// For more info see <see href="https://leanrada.com/notes/sweep-and-prune/">this link</see></para>
 		/// </summary>
-		void TickSweepAndPrune( std::vector< GameEntity >& collision_entities ) const;
+		void TickSweepAndPrune( std::vector< ECS::GameEntity >& collision_entities ) const;
 
 		/// <summary>
 		/// <para>Sort all potential colliders using X coordinate from left to right in order to be able to apply future
 		/// optimizations.</para>
 		/// </summary>
-		void SortCollidersByLeft( std::vector< GameEntity >& collider_entities ) const;
+		void SortCollidersByLeft( std::vector< ECS::GameEntity >& collider_entities ) const;
 
 		///////////////////////////////////////////////////////
 		// SAT COLLISION DETECTION ALGORITHM RELATED METHODS //

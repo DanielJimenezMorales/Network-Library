@@ -2,15 +2,19 @@
 #include "Vec2f.h"
 #include <stdint.h>
 
+namespace ECS
+{
+	class GameEntity;
+}
+
 class InputState;
-class GameEntity;
 struct TransformComponent;
 struct PlayerControllerComponent;
 
 class PlayerSimulator
 {
 	public:
-		static void Simulate( const InputState& inputs, GameEntity& playerEntity, float32 elapsedTime );
+		static void Simulate( const InputState& inputs, ECS::GameEntity& playerEntity, float32 elapsedTime );
 
 	private:
 		static Vec2f UpdatePosition( const Vec2f& inputs, const TransformComponent& transform,

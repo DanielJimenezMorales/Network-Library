@@ -7,7 +7,7 @@
 
 #include "core/buffer.h"
 
-void SerializeForOwner( const GameEntity& entity, NetLib::Buffer& buffer )
+void SerializeForOwner( const ECS::GameEntity& entity, NetLib::Buffer& buffer )
 {
 	const TransformComponent& transform = entity.GetComponent< TransformComponent >();
 	const Vec2f position = transform.GetPosition();
@@ -16,7 +16,7 @@ void SerializeForOwner( const GameEntity& entity, NetLib::Buffer& buffer )
 	buffer.WriteFloat( transform.GetRotationAngle() );
 }
 
-void SerializeForNonOwner( const GameEntity& entity, NetLib::Buffer& buffer )
+void SerializeForNonOwner( const ECS::GameEntity& entity, NetLib::Buffer& buffer )
 {
 	const TransformComponent& transform = entity.GetComponent< TransformComponent >();
 	const Vec2f position = transform.GetPosition();
@@ -25,7 +25,7 @@ void SerializeForNonOwner( const GameEntity& entity, NetLib::Buffer& buffer )
 	buffer.WriteFloat( transform.GetRotationAngle() );
 }
 
-void DeserializeForOwner( GameEntity& entity, NetLib::Buffer& buffer )
+void DeserializeForOwner( ECS::GameEntity& entity, NetLib::Buffer& buffer )
 {
 	TransformComponent& transform = entity.GetComponent< TransformComponent >();
 	Vec2f position;

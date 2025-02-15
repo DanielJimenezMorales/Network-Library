@@ -1,10 +1,9 @@
 #pragma once
 #include "numeric_types.h"
 
-class GameEntity;
-
 namespace ECS
 {
+	class GameEntity;
 	class EntityContainer;
 
 	class ISimpleSystem
