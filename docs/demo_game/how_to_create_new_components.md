@@ -19,11 +19,11 @@ struct HealthComponent
 ```
 
 ## Register the component
-Once the component has been defined in its own file, before using it devs will need to register that component in order to the world to be aware of it. To register a component, the function `bool Scene::RegisterComponent<T>(const std::string& name)` is used. This is a really important step as we will be able to attach components to a game entity based on its name during the [game entity creation process](how_to_create_and_destroy_game_entities.md). The following code snippet shows an example of how to use this function:
+Once the component has been defined in its own file, before using it devs will need to register that component in order to the world to be aware of it. To register a component, the function `bool ECS::World::RegisterComponent<T>(const std::string& name)` is used. This is a really important step as we will be able to attach components to a game entity based on its name during the [game entity creation process](how_to_create_and_destroy_game_entities.md). The following code snippet shows an example of how to use this function:
 ```cpp
-void RegisterHealthComponent(Scene& scene)
+void RegisterHealthComponent(ECS::World& world)
 {
-	const bool result = scene.RegisterComponent<HealthComponent>("HealthComponent");
+	const bool result = world.RegisterComponent<HealthComponent>("HealthComponent");
 	assert(result);
 }
 ```
