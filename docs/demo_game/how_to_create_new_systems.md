@@ -5,11 +5,11 @@ Last time updated: 16/02/2025
 In this page we will discuss how to create and use new systems within the ECS architecture.
 
 ## Index:
-- [Create the simple system](#create-the-simple-system)
-- [Create the system coordinator](#create-the-system-coordinator)
+- [Create a simple system](#create-a-simple-system)
+- [Create a system coordinator](#create-a-system-coordinator)
 - [Subscribe to events](#subscribe-to-events)
 
-## Create the simple system
+## Create a simple system
 The first step is to implement the logic that the new system is going to have. In order to do that, we will need to create a new C++ class that implements the `ECS::ISimpleSystem` interface. The implementation requirements will be to fill out the following methods:
 - **void ECS::ISimplySystem::Execute(ECS::EntityContainer& entity_container, float32 elapsed_time)**: In this method we will implement all the logic. `ECS::EntityContainer entity_container` will be the class where all the different global components and entities along with their components will live in. `float32 elapsed_time` is the time that has passed since the last time that method was called.
 
@@ -35,7 +35,7 @@ public:
 };
 ```
 
-## Create the system coordinator
+## Create a system coordinator
 The next step will be instantiating a `ECS::SystemCoordinator` in order to add our simple system. The system coordinator will act as a wrapper containing an ordered list of one or more simple systems. Since this is a naive example, we would not be using all the benefits of the system coordinator. However, if we have two different simple systems that, within the same execution stage, we want one of them to execute before than the other one, we will have a system coordinator to register the simple systems in the desired execution order.
 
 When creating a system coordinator, you will need to specify in which `ECS::ExecutionStage` its simple systems will be executed. The `ECS::ExecutionStage` is an enum that it could have values like UPDATE, PRETICK, TICK, POSTICK, RENDER...

@@ -28,7 +28,7 @@ There are certain types of data structures that need to live inside our World bu
 An Entity container is where all components from all entities are stored. Instead of letting each Game Entity stores all its components, like in an OOP paradigm, the entity container acts as a centralized storage for all the componentes of the same type. Internally, it uses pools of components of the same type. This data-oriented approach has a lot of benefits such as reducing memory fragmentation and cache misses, improving as a consequence access performance.
 
 ## Archetype:
-An archetype is a layout that contains a set of components that different game entities share.
+An archetype is a layout that contains a set of components that different game entities will share.
 
 ## Prefabs:
 A prefab represents a template for an already configured entity based on an archetype. A prefab will contain the configuration for the components of an archetype.
@@ -40,6 +40,4 @@ Simple systems corresponds to the S in ECS. These systems are logic-only classes
 Sometimes, there can be cases where we want one simple system to execute before another one. In order to do that, the game loop stages were created. For example, we know that a simple system added to the UPDATE stage will be executed before that a simple system added to the RENDER stage. However, this is not the perfect solution since within the same stage we could run into the same problem. In order to fix this, the system coordinator was created. The coordinator will contain an ordered set of simple systems of the same stage that will be executed following that order.
 
 ## Events:
-This approach offers a few ECS-related events.
-- OnEntityCreate<GameEntity>: A new entity has been created.
-- OnEntityDestroy<GameEntity>: An entity is about to get destroyed.
+Events are functions that notify other parts of the code about different ECS-actions happening in a flexible and scalable way. For example, when an entity has spawned. In order to get notified of these events you will need first to subscribe to them. In order to know all the different types of events, visit this [post](ecs_events.md).

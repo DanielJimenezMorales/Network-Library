@@ -2,21 +2,21 @@
 Last time updated: 12/02/2025
 
 ## Index:
-- Introduction
-- Dependencies
+- [Dependencies](#dependencies)
+- [A multithread friendly approach (FUTURE FEATURE + CONSIDERATIONS)](#a-multithread-friendly-approach-(future-feature-+-considerations))
+- [References](#references)
 - [ECS terms glossary](ecs_terms_glossary.md)
 - [ECS events](ecs_events.md)
 - [How to configure archetypes and prefabs](how_to_configure_archetypes_and_prefabs.md)
 - [How to create and destroy game entities](how_to_create_and_destroy_game_entities.md)
 - [How to create new components](how_to_create_new_components.md)
 - [How to create new systems](how_to_create_new_systems.md)
-- A multithread friendly approach (FUTURE FEATURE)
-- References
 
 ## Dependencies:
-This ECS approach uses [Entt](https://github.com/skypjack/entt) for a low level components management. I would like to switch to a custom ECS approach in the future. However I've not found the time/priority to work on it.
+This ECS approach uses [Entt](https://github.com/skypjack/entt) for a low level components management.
+> Notes for myself: I would like to switch to a custom ECS approach in the future. However I've not found the time/priority to work on it.
 
-## A multithread friendly approach (FUTURE FEATURE)
+## A multithread friendly approach (FUTURE FEATURE + CONSIDERATIONS)
 I am aiming for implementing a multithreaded ECS approach. In order to do this, I've thought in three different ways:
 1. Parallelize simple systems: As we have been discussing above, simple systems contain logic that reads and writes data from components and/or global components. If we are able to, somehow parallelize this execution in a way that there are no systems reading and/or writting to the same component at the same time we could speed up a bit this process. The system orchestrator is planned to be an algorithm for ordering systems in order to satisfy this concept.
 
