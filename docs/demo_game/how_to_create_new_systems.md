@@ -1,5 +1,5 @@
 # Create new systems
-Last time updated: 15/02/2025
+Last time updated: 16/02/2025
 
 ## Introduction:
 In this page we will discuss how to create and use new systems within the ECS architecture.
@@ -43,19 +43,21 @@ When creating a system coordinator, you will need to specify in which `ECS::Exec
 
 The following code snippet will show how to create a system coordinator:
 ```cpp
-ECS::SystemCoordinator* CreateHealthSystemCoordinator()
-{
-	DamageEntitiesSystem damage_entities_system = new DamageEntitiesSystem();
+DamageEntitiesSystem* damage_entities_system = new DamageEntitiesSystem();
 
-	//Create the system coordinator. For this example we will be telling the coordinator to execute during the Tick stage.
-	ECS::SystemCoordinator* system_coordinator = new ECS::SystemCoordinator( ECS::ExecutionStage::TICK );
+//Create the system coordinator. For this example we will be telling the coordinator to execute during the Tick stage.
+ECS::SystemCoordinator* system_coordinator = new ECS::SystemCoordinator(ECS::ExecutionStage::TICK);
 
-	//Configure the execution order of simple systems. In this case we only have one so there is no order.
-	system_coordinator->AddSystemToTail( damage_entities_system );
+//Configure the execution order of simple systems. In this case we only have one so there is no order.
+system_coordinator->AddSystemToTail(damage_entities_system);
+return system_coordinator;
+```
 
-	return system_coordinator;
-}
+Once the new system coordinator has been created, we will add it to the world:
+```cpp
+//Add system coordinator to ECS::World
+world.AddSystem(system_coordinator);
 ```
 
 ## Subscribe to events
-TODO
+Sometimes systems will be interested in subscribing to different [events of the ECS architecture](ecs_events.md).
