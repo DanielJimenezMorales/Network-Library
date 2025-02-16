@@ -22,7 +22,7 @@ namespace NetLib
 	    , _timeSinceLastTimeRequest( 0.0f )
 	    , _numberOfInitialTimeRequestBurstLeft( NUMBER_OF_INITIAL_TIME_REQUESTS_BURST )
 	    , _currentState( ClientState::CS_Disconnected )
-	    , _replicationMessagesProcessor( &_networkEntityFactoryRegistry )
+	    , _replicationMessagesProcessor()
 	    , _clientIndex( 0 )
 	{
 	}

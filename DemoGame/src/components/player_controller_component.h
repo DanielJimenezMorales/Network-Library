@@ -1,5 +1,5 @@
 #pragma once
-#include "PlayerControllerConfiguration.h"
+#include "component_configurations/player_controller_component_configuration.h"
 
 #include "replication/network_variable.hpp"
 #include "replication/network_variable_changes_handler.h"
@@ -7,18 +7,11 @@
 struct PlayerControllerComponent
 {
 	public:
+		PlayerControllerComponent() {}
+
 		PlayerControllerComponent( NetLib::NetworkVariableChangesHandler* networkVariableChangesHandler,
-		                           uint32 networkEntityId, const PlayerControllerConfiguration& configuration )
-		    : networkEntityId( networkEntityId )
-		    , posX( networkVariableChangesHandler, networkEntityId )
-		    , posY( networkVariableChangesHandler, networkEntityId )
-		    , rotationAngle( networkVariableChangesHandler, networkEntityId )
-		    , configuration( configuration ){};
+		                           uint32 networkEntityId, const PlayerControllerComponentConfiguration& configuration )
+		    : movementSpeed( configuration.movementSpeed ){};
 
-		const PlayerControllerConfiguration configuration;
-		uint32 networkEntityId;
-		NetLib::NetworkVariable< float > posX;
-		NetLib::NetworkVariable< float > posY;
-
-		NetLib::NetworkVariable< float > rotationAngle;
+		uint32 movementSpeed;
 };

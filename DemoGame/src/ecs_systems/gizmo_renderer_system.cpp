@@ -1,8 +1,8 @@
 #include "gizmo_renderer_system.h"
 
 #include "ecs/entity_container.h"
+#include "ecs/game_entity.hpp"
 
-#include "GameEntity.hpp"
 #include "Gizmo.h"
 
 #include "components/gizmo_renderer_component.h"
@@ -19,9 +19,11 @@ GizmoRendererSystem::GizmoRendererSystem( SDL_Renderer* renderer )
 
 void GizmoRendererSystem::Execute( ECS::EntityContainer& entity_container, float32 elapsed_time )
 {
-	const CameraComponent& camera = entity_container.GetFirstComponentOfType< CameraComponent >();
+	const ECS::GameEntity& camera_entity = entity_container.GetFirstEntityOfType< CameraComponent >();
+	const CameraComponent& camera = camera_entity.GetComponent< CameraComponent >();
+	const TransformComponent& camera_transform = camera_entity.GetComponent< TransformComponent >();
 
-	std::vector< GameEntity > entities =
+	std::vector< ECS::GameEntity > entities =
 	    entity_container.GetEntitiesOfBothTypes< GizmoRendererComponent, TransformComponent >();
 	for ( auto it = entities.begin(); it != entities.end(); ++it )
 	{
@@ -34,14 +36,14 @@ void GizmoRendererSystem::Execute( ECS::EntityContainer& entity_container, float
 			continue;
 		}
 
-		gizmo->Render( camera, transform, _renderer );
+		gizmo->Render( camera, camera_transform, transform, _renderer );
 
 		// TODO cache the color in a variable so I dont need to hardcode it in different places of the code
 		SDL_SetRenderDrawColor( _renderer, 255, 0, 0, 255 );
 	}
 }
 
-void GizmoRendererSystem::AllocateGizmoRendererComponentIfHasCollider( GameEntity& entity )
+void GizmoRendererSystem::AllocateGizmoRendererComponentIfHasCollider(ECS::GameEntity& entity )
 {
 	if ( !entity.HasComponent< Collider2DComponent >() )
 	{
@@ -53,7 +55,7 @@ void GizmoRendererSystem::AllocateGizmoRendererComponentIfHasCollider( GameEntit
 	entity.AddComponent< GizmoRendererComponent >( gizmo_handler );
 }
 
-void GizmoRendererSystem::DeallocateGizmoRendererComponentIfHasCollider( GameEntity& entity )
+void GizmoRendererSystem::DeallocateGizmoRendererComponentIfHasCollider(ECS::GameEntity& entity )
 {
 	if ( !entity.HasComponent< Collider2DComponent >() )
 	{

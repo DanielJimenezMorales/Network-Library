@@ -4,6 +4,11 @@
 struct SpriteRendererComponent
 {
 	public:
+		SpriteRendererComponent()
+		    : textureHandler( TextureHandler::GetInvalid() )
+		{
+		}
+
 		SpriteRendererComponent( const TextureHandler& texture_handler )
 		    : textureHandler( texture_handler )
 		{

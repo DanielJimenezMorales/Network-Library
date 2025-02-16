@@ -1,8 +1,8 @@
 #include "system_coordinator.h"
 
-#include "GameEntity.hpp"
+#include "ecs/game_entity.hpp"
 
-#include "i_simple_system.h"
+#include "ecs/i_simple_system.h"
 
 #include <cassert>
 

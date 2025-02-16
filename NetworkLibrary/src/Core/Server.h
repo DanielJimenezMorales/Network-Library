@@ -1,8 +1,7 @@
 #pragma once
-
 #include <vector>
 
-#include "core/peer.h"
+#include "core/Peer.h"
 
 #include "inputs/remote_peer_inputs_handler.h"
 
@@ -32,6 +31,12 @@ namespace NetLib
 			// TODO Create a method for destroying all network entities controlled by a remote peer
 			void RegisterInputStateFactory( IInputStateFactory* factory );
 			const IInputState* GetInputFromRemotePeer( uint32 remotePeerId );
+
+			template < typename Functor >
+			uint32 SubscribeToOnNetworkEntityCreate( Functor&& functor );
+
+			template < typename Functor >
+			uint32 SubscribeToOnNetworkEntityDestroy( Functor&& functor );
 
 			~Server() override;
 
@@ -81,4 +86,16 @@ namespace NetLib
 
 			ReplicationManager _replicationManager;
 	};
+
+	template < typename Functor >
+	inline uint32 Server::SubscribeToOnNetworkEntityCreate( Functor&& functor )
+	{
+		return _replicationManager.SubscribeToOnNetworkEntityCreate( std::forward< Functor >( functor ) );
+	}
+
+	template < typename Functor >
+	inline uint32 Server::SubscribeToOnNetworkEntityDestroy( Functor&& functor )
+	{
+		return _replicationManager.SubscribeToOnNetworkEntityDestroy( std::forward< Functor >( functor ) );
+	}
 } // namespace NetLib

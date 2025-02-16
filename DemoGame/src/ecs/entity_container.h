@@ -6,11 +6,10 @@
 #include "numeric_types.h"
 #include <cassert>
 
-class GameEntity;
-
 namespace ECS
 {
 	typedef uint32 EntityId;
+	class GameEntity;
 
 	class EntityContainer
 	{

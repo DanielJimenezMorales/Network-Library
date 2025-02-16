@@ -1,10 +1,8 @@
 #include "SceneInitializer.h"
-#include "Scene.h"
-#include "GameEntity.hpp"
+
 #include "core/client.h"
 #include "core/server.h"
 #include "core/initializer.h"
-#include "NetworkEntityFactory.h"
 #include "KeyboardController.h"
 #include "MouseController.h"
 #include "InputActionIdsConfiguration.h"
@@ -14,6 +12,8 @@
 #include "CircleBounds2D.h"
 
 #include "ecs/system_coordinator.h"
+#include "ecs/world.h"
+#include "ecs/game_entity.hpp"
 
 #include "components/transform_component.h"
 #include "components/virtual_mouse_component.h"
@@ -23,6 +23,16 @@
 #include "components/input_component.h"
 #include "components/collider_2d_component.h"
 #include "components/gizmo_renderer_component.h"
+#include "components/network_entity_component.h"
+#include "components/player_controller_component.h"
+#include "components/remote_player_controller_component.h"
+
+#include "component_configurations/sprite_renderer_component_configuration.h"
+#include "component_configurations/player_controller_component_configuration.h"
+#include "component_configurations/collider_2d_component_configuration.h"
+#include "component_configurations/camera_component_configuration.h"
+
+#include "CircleBounds2D.h"
 
 #include "global_components/network_peer_global_component.h"
 
@@ -37,124 +47,49 @@
 #include "ecs_systems/pos_tick_network_system.h"
 #include "ecs_systems/collision_detection_system.h"
 
-#include "entity_factories/client_local_player_entity_factory.h"
-#include "entity_factories/client_remote_player_entity_factory.h"
-#include "entity_factories/server_player_entity_factory.h"
+#include "network_entity_creator.h"
+#include "json_configuration_loader.h"
 
-void SceneInitializer::InitializeScene( Scene& scene, NetLib::PeerType networkPeerType, InputHandler& inputHandler,
-                                        SDL_Renderer* renderer ) const
+static void RegisterComponents( ECS::World& scene )
 {
-	SpriteRendererSystem* sprite_renderer_system = new SpriteRendererSystem( renderer );
-	GizmoRendererSystem* gizmo_renderer_system = new GizmoRendererSystem( renderer );
+	scene.RegisterComponent< TransformComponent >( "Transform" );
+	scene.RegisterComponent< SpriteRendererComponent >( "SpriteRenderer" );
+	scene.RegisterComponent< Collider2DComponent >( "Collider2D" );
+	scene.RegisterComponent< CameraComponent >( "Camera" );
+	scene.RegisterComponent< VirtualMouseComponent >( "VirtualMouse" );
+	scene.RegisterComponent< InputComponent >( "Input" );
+	scene.RegisterComponent< CrosshairComponent >( "Crosshair" );
+	scene.RegisterComponent< NetworkEntityComponent >( "NetworkEntity" );
+	scene.RegisterComponent< PlayerControllerComponent >( "PlayerController" );
+	scene.RegisterComponent< RemotePlayerControllerComponent >( "RemotePlayerController" );
+}
 
-	// Inputs
-	KeyboardController* keyboard = new KeyboardController();
-	InputButton button( JUMP_BUTTON, SDLK_q );
-	keyboard->AddButtonMap( button );
-	InputAxis axis( HORIZONTAL_AXIS, SDLK_d, SDLK_a );
-	keyboard->AddAxisMap( axis );
-	InputAxis axis2( VERTICAL_AXIS, SDLK_w, SDLK_s );
-	keyboard->AddAxisMap( axis2 );
-	inputHandler.AddController( keyboard );
+static void RegisterArchetypes( ECS::World& scene )
+{
+	JsonConfigurationLoader configuration_loader;
+	std::vector< ECS::Archetype > loaded_archetypes;
+	configuration_loader.LoadArchetypes( loaded_archetypes );
 
-	MouseController* mouse = new MouseController();
-	InputButton mouseButton( MOUSE_LEFT_CLICK_BUTTON, SDL_BUTTON_LEFT );
-	mouse->AddButtonMap( mouseButton );
-	inputHandler.AddCursor( mouse );
-
-	// Populate entities
-	GameEntity mainCameraEntity = scene.CreateGameEntity();
-	// TODO Do not hardcode width and height values
-	mainCameraEntity.AddComponent< CameraComponent >( Vec2f( 0.f, 0.f ), 512, 512 );
-
-	GameEntity inputsEntity = scene.CreateGameEntity();
-	inputsEntity.AddComponent< InputComponent >( keyboard, mouse );
-
-	NetworkPeerGlobalComponent& networkPeerComponent = scene.AddGlobalComponent< NetworkPeerGlobalComponent >();
-	NetLib::Peer* networkPeer;
-	if ( networkPeerType == NetLib::PeerType::SERVER )
+	for ( auto cit = loaded_archetypes.cbegin(); cit != loaded_archetypes.cend(); ++cit )
 	{
-		networkPeer = new NetLib::Server( 2 );
+		scene.RegisterArchetype( *cit );
 	}
-	else if ( networkPeerType == NetLib::PeerType::CLIENT )
+}
+
+static void RegisterPrefabs( ECS::World& scene )
+{
+	JsonConfigurationLoader configuration_loader;
+	std::vector< ECS::Prefab > loaded_prefabs;
+	configuration_loader.LoadPrefabs( loaded_prefabs );
+
+	for ( auto it = loaded_prefabs.begin(); it != loaded_prefabs.end(); ++it )
 	{
-		networkPeer = new NetLib::Client( 5 );
+		scene.RegisterPrefab( std::move( *it ) );
 	}
+}
 
-	// TODO Make this initializer internal when calling to start
-	NetLib::Initializer::Initialize();
-	NetworkEntityFactory* networkEntityFactory = new NetworkEntityFactory();
-	networkEntityFactory->SetScene( &scene );
-	networkEntityFactory->SetPeerType( networkPeerType );
-	networkPeer->RegisterNetworkEntityFactory( networkEntityFactory );
-	networkPeerComponent.peer = networkPeer;
-
-	if ( networkPeer->GetPeerType() == NetLib::PeerType::SERVER )
-	{
-		// Entity factories registration
-		ServerPlayerEntityFactory* player_entity_factory = new ServerPlayerEntityFactory();
-		player_entity_factory->Configure( sprite_renderer_system->GetTextureResourceHandler() );
-		scene.RegisterEntityFactory( "PLAYER", player_entity_factory );
-
-		InputStateFactory* inputStateFactory = new InputStateFactory();
-		networkPeerComponent.GetPeerAsServer()->RegisterInputStateFactory( inputStateFactory );
-		networkPeerComponent.inputStateFactory = inputStateFactory;
-		networkPeerComponent.TrackOnRemotePeerConnect();
-
-		// Add dummy collider entity
-		GameEntity colliderEntity = scene.CreateGameEntity();
-		TransformComponent& colliderEntityTransform = colliderEntity.GetComponent< TransformComponent >();
-		colliderEntityTransform.SetPosition( Vec2f( 10.f, 10.f ) );
-
-		TextureHandler texture_handler =
-		    sprite_renderer_system->GetTextureResourceHandler()->LoadTexture( "sprites/PlayerSprites/PlayerHead.png" );
-		colliderEntity.AddComponent< SpriteRendererComponent >( texture_handler );
-
-		CircleBounds2D* circleBounds2D = new CircleBounds2D( 5.f );
-		colliderEntity.AddComponent< Collider2DComponent >( circleBounds2D, false, CollisionResponseType::Static );
-
-		const GizmoHandler& gizmo_handler =
-		    gizmo_renderer_system->GetGizmoResourceHandler().CreateGizmo( circleBounds2D->GetGizmo().get() );
-		colliderEntity.AddComponent< GizmoRendererComponent >( gizmo_handler );
-	}
-
-	if ( networkPeer->GetPeerType() == NetLib::PeerType::CLIENT )
-	{
-		// Entity factories registration
-		ClientLocalPlayerEntityFactory* local_player_entity_factory = new ClientLocalPlayerEntityFactory();
-		local_player_entity_factory->Configure( sprite_renderer_system->GetTextureResourceHandler() );
-		scene.RegisterEntityFactory( "LOCAL_PLAYER", local_player_entity_factory );
-
-		ClientRemotePlayerEntityFactory* remote_player_entity_factory = new ClientRemotePlayerEntityFactory();
-		remote_player_entity_factory->Configure( sprite_renderer_system->GetTextureResourceHandler() );
-		scene.RegisterEntityFactory( "REMOTE_PLAYER", remote_player_entity_factory );
-
-		// Add virtual mouse
-		GameEntity virtualMouse = scene.CreateGameEntity();
-		virtualMouse.AddComponent< VirtualMouseComponent >();
-
-		// Add virtual mouse system
-		ECS::SystemCoordinator* virtual_mouse_system_coordinator =
-		    new ECS::SystemCoordinator( ECS::ExecutionStage::UPDATE );
-		virtual_mouse_system_coordinator->AddSystemToTail( new VirtualMouseSystem() );
-		scene.AddSystem( virtual_mouse_system_coordinator );
-
-		// Add crosshair if being a client
-		GameEntity crosshairEntity = scene.CreateGameEntity();
-
-		TextureHandler texture_handler =
-		    sprite_renderer_system->GetTextureResourceHandler()->LoadTexture( "sprites/Crosshair/crosshair.png" );
-
-		crosshairEntity.AddComponent< SpriteRendererComponent >( texture_handler );
-		crosshairEntity.AddComponent< CrosshairComponent >();
-
-		// Add crosshair follow mouse system
-		ECS::SystemCoordinator* crosshair_follow_mouse_system_coordinator =
-		    new ECS::SystemCoordinator( ECS::ExecutionStage::UPDATE );
-		crosshair_follow_mouse_system_coordinator->AddSystemToTail( new CrosshairFollowMouseSystem() );
-		scene.AddSystem( crosshair_follow_mouse_system_coordinator );
-	}
-
+static void RegisterSystems( ECS::World& scene, NetLib::PeerType networkPeerType, SDL_Renderer* renderer )
+{
 	// Populate systems
 	// TODO Create a system storage in order to be able to free them at the end
 	if ( networkPeerType == NetLib::PeerType::SERVER )
@@ -166,7 +101,12 @@ void SceneInitializer::InitializeScene( Scene& scene, NetLib::PeerType networkPe
 		// Add Server-side collision detection system
 		ECS::SystemCoordinator* collision_detection_system_coordinator =
 		    new ECS::SystemCoordinator( ECS::ExecutionStage::PRETICK );
-		collision_detection_system_coordinator->AddSystemToTail( new CollisionDetectionSystem() );
+		CollisionDetectionSystem* collision_detection_system = new CollisionDetectionSystem();
+		auto on_configure_collider_2d_callback =
+		    std::bind( &CollisionDetectionSystem::ConfigureCollider2DComponent, collision_detection_system,
+		               std::placeholders::_1, std::placeholders::_2 );
+		scene.SubscribeToOnEntityConfigure( on_configure_collider_2d_callback );
+		collision_detection_system_coordinator->AddSystemToTail( collision_detection_system );
 		scene.AddSystem( collision_detection_system_coordinator );
 
 		//////////////////
@@ -176,7 +116,12 @@ void SceneInitializer::InitializeScene( Scene& scene, NetLib::PeerType networkPe
 		// Add Server-side player controller system
 		ECS::SystemCoordinator* server_player_controller_system_coordinator =
 		    new ECS::SystemCoordinator( ECS::ExecutionStage::TICK );
-		server_player_controller_system_coordinator->AddSystemToTail( new ServerPlayerControllerSystem() );
+		ServerPlayerControllerSystem* server_player_controller_system = new ServerPlayerControllerSystem();
+		server_player_controller_system_coordinator->AddSystemToTail( server_player_controller_system );
+		auto on_configure_player_controller_callback =
+		    std::bind( &ServerPlayerControllerSystem::ConfigurePlayerControllerComponent,
+		               server_player_controller_system, std::placeholders::_1, std::placeholders::_2 );
+		scene.SubscribeToOnEntityConfigure( on_configure_player_controller_callback );
 		scene.AddSystem( server_player_controller_system_coordinator );
 	}
 	else if ( networkPeerType == NetLib::PeerType::CLIENT )
@@ -223,12 +168,136 @@ void SceneInitializer::InitializeScene( Scene& scene, NetLib::PeerType networkPe
 	//////////////////
 
 	ECS::SystemCoordinator* render_system_coordinator = new ECS::SystemCoordinator( ECS::ExecutionStage::RENDER );
+	SpriteRendererSystem* sprite_renderer_system = new SpriteRendererSystem( renderer );
+	auto on_configure_sprite_renderer_callback =
+	    std::bind( &SpriteRendererSystem::ConfigureSpriteRendererComponent, sprite_renderer_system,
+	               std::placeholders::_1, std::placeholders::_2 );
+	scene.SubscribeToOnEntityConfigure( on_configure_sprite_renderer_callback );
 	render_system_coordinator->AddSystemToTail( sprite_renderer_system );
 
+	GizmoRendererSystem* gizmo_renderer_system = new GizmoRendererSystem( renderer );
 	render_system_coordinator->AddSystemToTail( gizmo_renderer_system );
 	scene.AddSystem( render_system_coordinator );
 	scene.SubscribeToOnEntityCreate( std::bind( &GizmoRendererSystem::AllocateGizmoRendererComponentIfHasCollider,
 	                                            gizmo_renderer_system, std::placeholders::_1 ) );
 	scene.SubscribeToOnEntityDestroy( std::bind( &GizmoRendererSystem::DeallocateGizmoRendererComponentIfHasCollider,
 	                                             gizmo_renderer_system, std::placeholders::_1 ) );
+}
+
+void SceneInitializer::ConfigureCameraComponent( ECS::GameEntity& entity, const ECS::Prefab& prefab ) const
+{
+	auto component_config_found = prefab.componentConfigurations.find( "Camera" );
+	if ( component_config_found == prefab.componentConfigurations.end() )
+	{
+		return;
+	}
+
+	if ( !entity.HasComponent< CameraComponent >() )
+	{
+		return;
+	}
+
+	const CameraComponentConfiguration& camera_config =
+	    static_cast< const CameraComponentConfiguration& >( *component_config_found->second );
+	CameraComponent& camera = entity.GetComponent< CameraComponent >();
+	camera.width = camera_config.width;
+	camera.height = camera_config.height;
+}
+
+void SceneInitializer::InitializeScene( ECS::World& scene, NetLib::PeerType networkPeerType, InputHandler& inputHandler,
+                                        SDL_Renderer* renderer ) const
+{
+	RegisterComponents( scene );
+	RegisterArchetypes( scene );
+	RegisterPrefabs( scene );
+	RegisterSystems( scene, networkPeerType, renderer );
+
+	scene.SubscribeToOnEntityConfigure(
+	    std::bind( &SceneInitializer::ConfigureCameraComponent, this, std::placeholders::_1, std::placeholders::_2 ) );
+
+	// Inputs
+	KeyboardController* keyboard = new KeyboardController();
+	InputButton button( JUMP_BUTTON, SDLK_q );
+	keyboard->AddButtonMap( button );
+	InputAxis axis( HORIZONTAL_AXIS, SDLK_d, SDLK_a );
+	keyboard->AddAxisMap( axis );
+	InputAxis axis2( VERTICAL_AXIS, SDLK_w, SDLK_s );
+	keyboard->AddAxisMap( axis2 );
+	inputHandler.AddController( keyboard );
+
+	MouseController* mouse = new MouseController();
+	InputButton mouseButton( MOUSE_LEFT_CLICK_BUTTON, SDL_BUTTON_LEFT );
+	mouse->AddButtonMap( mouseButton );
+	inputHandler.AddCursor( mouse );
+
+	// Populate entities
+	scene.CreateGameEntity( "Camera", Vec2f( 0, 0 ) );
+
+	scene.AddGlobalComponent< InputComponent >( keyboard, mouse );
+
+	NetworkPeerGlobalComponent& networkPeerComponent = scene.AddGlobalComponent< NetworkPeerGlobalComponent >();
+	NetLib::Peer* networkPeer;
+	if ( networkPeerType == NetLib::PeerType::SERVER )
+	{
+		networkPeer = new NetLib::Server( 2 );
+	}
+	else if ( networkPeerType == NetLib::PeerType::CLIENT )
+	{
+		networkPeer = new NetLib::Client( 5 );
+	}
+
+	// TODO Make this initializer internal when calling to start
+	NetLib::Initializer::Initialize();
+	networkPeerComponent.peer = networkPeer;
+
+	NetworkEntityCreatorSystem* network_entity_creator = new NetworkEntityCreatorSystem();
+	network_entity_creator->SetScene( &scene );
+	network_entity_creator->SetPeerType( networkPeerType );
+	scene.SubscribeToOnEntityConfigure( std::bind( &NetworkEntityCreatorSystem::OnNetworkEntityComponentConfigure,
+	                                               network_entity_creator, std::placeholders::_1,
+	                                               std::placeholders::_2 ) );
+
+	if ( networkPeer->GetPeerType() == NetLib::PeerType::SERVER )
+	{
+		NetLib::Server* server_peer = networkPeerComponent.GetPeerAsServer();
+		server_peer->SubscribeToOnNetworkEntityCreate( std::bind( &NetworkEntityCreatorSystem::OnNetworkEntityCreate,
+		                                                          network_entity_creator, std::placeholders::_1 ) );
+		server_peer->SubscribeToOnNetworkEntityDestroy( std::bind( &NetworkEntityCreatorSystem::OnNetworkEntityDestroy,
+		                                                           network_entity_creator, std::placeholders::_1 ) );
+
+		InputStateFactory* inputStateFactory = new InputStateFactory();
+		networkPeerComponent.GetPeerAsServer()->RegisterInputStateFactory( inputStateFactory );
+		networkPeerComponent.inputStateFactory = inputStateFactory;
+		networkPeerComponent.TrackOnRemotePeerConnect();
+
+		// Add dummy collider entity
+		scene.CreateGameEntity( "Dummy", Vec2f( 10.f, 10.f ) );
+	}
+
+	if ( networkPeer->GetPeerType() == NetLib::PeerType::CLIENT )
+	{
+		NetLib::Client* client_peer = networkPeerComponent.GetPeerAsClient();
+		client_peer->SubscribeToOnNetworkEntityCreate( std::bind( &NetworkEntityCreatorSystem::OnNetworkEntityCreate,
+		                                                          network_entity_creator, std::placeholders::_1 ) );
+		client_peer->SubscribeToOnNetworkEntityDestroy( std::bind( &NetworkEntityCreatorSystem::OnNetworkEntityDestroy,
+		                                                           network_entity_creator, std::placeholders::_1 ) );
+
+		// Add virtual mouse
+		scene.CreateGameEntity( "VirtualMouse", Vec2f( 0, 0 ) );
+
+		// Add virtual mouse system
+		ECS::SystemCoordinator* virtual_mouse_system_coordinator =
+		    new ECS::SystemCoordinator( ECS::ExecutionStage::UPDATE );
+		virtual_mouse_system_coordinator->AddSystemToTail( new VirtualMouseSystem() );
+		scene.AddSystem( virtual_mouse_system_coordinator );
+
+		// Add crosshair if being a client
+		scene.CreateGameEntity( "Crosshair", Vec2f( 0, 0 ) );
+
+		// Add crosshair follow mouse system
+		ECS::SystemCoordinator* crosshair_follow_mouse_system_coordinator =
+		    new ECS::SystemCoordinator( ECS::ExecutionStage::UPDATE );
+		crosshair_follow_mouse_system_coordinator->AddSystemToTail( new CrosshairFollowMouseSystem() );
+		scene.AddSystem( crosshair_follow_mouse_system_coordinator );
+	}
 }

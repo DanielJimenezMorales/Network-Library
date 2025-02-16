@@ -1,6 +1,19 @@
 #pragma once
 #include "Bounds2D.h"
 
+struct CircleBounds2DConfiguration : Bounds2DConfiguration
+{
+		CircleBounds2DConfiguration( float32 radius )
+		    : Bounds2DConfiguration( CollisionShapeType::Circle )
+		    , radius( radius )
+		{
+		}
+
+		CircleBounds2DConfiguration* Clone() const override { return new CircleBounds2DConfiguration( *this ); }
+
+		float32 radius;
+};
+
 struct CircleBounds2D : public Bounds2D
 {
 	public:

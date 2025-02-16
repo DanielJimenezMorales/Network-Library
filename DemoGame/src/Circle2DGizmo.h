@@ -37,8 +37,8 @@ class CircleGizmo : public Gizmo
 
 	protected:
 		void ConfigureConcrete( const GizmoConfiguration* configuration ) override;
-		void RenderConcrete( const CameraComponent& camera, const TransformComponent& transform,
-		                     SDL_Renderer* renderer ) const override;
+		void RenderConcrete( const CameraComponent& camera, const TransformComponent& camera_transform,
+		                     const TransformComponent& transform, SDL_Renderer* renderer ) const override;
 
 	private:
 		float32 _radius;

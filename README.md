@@ -3,7 +3,7 @@ Network library for realtime multiplayer games written in C++
 
 This repository contains four different projects:
 1. Network library
-2. Demo game
+2. Demo game. [Docs](docs/demo_game/demo_game_index.md)
 3. Common (Shared files between Demo game and Network Library projects)
 4. Tests
 

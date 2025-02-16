@@ -1,0 +1,20 @@
+{
+	"name": "RemotePlayer",
+	"archetype": "remote_player",
+	"component_configs": [
+		{
+			"name": "SpriteRenderer",
+			"texture_path": "sprites/PlayerSprites/playerHead.png"
+		},
+		{
+			"name": "Collider2D",
+			"collision_response_type": "Dynamic",
+			"is_trigger": false,
+			"bounds_config":
+			{
+				"type":"Circle",
+				"radius":5
+			}
+		}
+	]
+}

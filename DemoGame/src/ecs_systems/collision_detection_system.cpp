@@ -1,19 +1,24 @@
 #include "collision_detection_system.h"
-#include "GameEntity.hpp"
 #include "CollisionUtils.h"
 #include "Logger.h"
 
 #include "components/collider_2d_component.h"
 #include "components/transform_component.h"
 
+#include "component_configurations/collider_2d_component_configuration.h"
+
+#include "CircleBounds2D.h"
+
+#include "ecs/game_entity.hpp"
 #include "ecs/entity_container.h"
+#include "ecs/prefab.h"
 
 CollisionDetectionSystem::CollisionDetectionSystem()
     : ECS::ISimpleSystem()
 {
 }
 
-bool ReturnMinLeft( const GameEntity& colliderEntityA, const GameEntity& colliderEntityB )
+bool ReturnMinLeft( const ECS::GameEntity& colliderEntityA, const ECS::GameEntity& colliderEntityB )
 {
 	const Collider2DComponent& colliderA = colliderEntityA.GetComponent< Collider2DComponent >();
 	const TransformComponent& transformA = colliderEntityA.GetComponent< TransformComponent >();
@@ -26,12 +31,40 @@ bool ReturnMinLeft( const GameEntity& colliderEntityA, const GameEntity& collide
 
 void CollisionDetectionSystem::Execute( ECS::EntityContainer& entity_container, float32 elapsed_time )
 {
-	std::vector< GameEntity > entities =
+	std::vector< ECS::GameEntity > entities =
 	    entity_container.GetEntitiesOfBothTypes< Collider2DComponent, TransformComponent >();
 	TickSweepAndPrune( entities );
 }
 
-void CollisionDetectionSystem::TickSweepAndPrune( std::vector< GameEntity >& collision_entities ) const
+void CollisionDetectionSystem::ConfigureCollider2DComponent( ECS::GameEntity& entity, const ECS::Prefab& prefab )
+{
+	auto component_config_found = prefab.componentConfigurations.find( "Collider2D" );
+	if ( component_config_found == prefab.componentConfigurations.end() )
+	{
+		return;
+	}
+
+	if ( !entity.HasComponent< Collider2DComponent >() )
+	{
+		return;
+	}
+
+	const Collider2DComponentConfiguration& component_config =
+	    static_cast< const Collider2DComponentConfiguration& >( *component_config_found->second );
+	Collider2DComponent& collider_2d = entity.GetComponent< Collider2DComponent >();
+
+	collider_2d.SetIsTrigger( component_config.isTrigger );
+	collider_2d.SetCollisionResponse( component_config.collisionResponseType );
+
+	if ( component_config.boundsConfiguration->type == CollisionShapeType::Circle )
+	{
+		const CircleBounds2DConfiguration& bounds_config =
+		    static_cast< const CircleBounds2DConfiguration& >( *component_config.boundsConfiguration );
+		collider_2d.SetBounds( new CircleBounds2D( bounds_config.radius ) );
+	}
+}
+
+void CollisionDetectionSystem::TickSweepAndPrune( std::vector< ECS::GameEntity >& collision_entities ) const
 {
 	// Sort by left in order to optimize the number of collision queries later.
 	SortCollidersByLeft( collision_entities );
@@ -105,7 +138,7 @@ bool CollisionDetectionSystem::AreTwoShapesCollidingUsingSAT( const Collider2DCo
 	return true;
 }
 
-void CollisionDetectionSystem::SortCollidersByLeft( std::vector< GameEntity >& collider_entities ) const
+void CollisionDetectionSystem::SortCollidersByLeft( std::vector< ECS::GameEntity >& collider_entities ) const
 {
 	std::sort( collider_entities.begin(), collider_entities.end(), ReturnMinLeft );
 }

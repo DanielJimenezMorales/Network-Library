@@ -6,18 +6,23 @@
 #include <cstdint>
 #include <vector>
 #include <memory>
+#include <string>
 
 struct TransformComponent;
 
 enum class CollisionResponseType : uint8
 {
-	Static = 0,
-	Dynamic = 1
+	None = 0,
+	Static = 1,
+	Dynamic = 2
 };
+
+CollisionResponseType GetCollisionResponseTypeFromName( const std::string& name );
 
 struct Collider2DComponent
 {
 	public:
+		Collider2DComponent();
 		Collider2DComponent( Bounds2D* bounds, bool isTrigger, CollisionResponseType responseType );
 		Collider2DComponent( const Collider2DComponent& ) = delete;
 		Collider2DComponent( Collider2DComponent&& other ) noexcept;
@@ -38,7 +43,14 @@ struct Collider2DComponent
 		std::unique_ptr< GizmoConfiguration > GetGizmo() const;
 
 		CollisionResponseType GetCollisionResponse() const { return _collisionResponseType; }
+		void SetCollisionResponse( CollisionResponseType collision_response_type )
+		{
+			_collisionResponseType = collision_response_type;
+		}
 		bool IsTrigger() const { return _isTrigger; }
+		void SetIsTrigger( bool is_trigger ) { _isTrigger = is_trigger; }
+
+		void SetBounds( Bounds2D* bounds ) { _bounds = bounds; }
 
 	private:
 		Bounds2D* _bounds;

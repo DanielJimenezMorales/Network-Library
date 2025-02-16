@@ -1,6 +1,5 @@
 #include "client_player_controller_system.h"
 
-#include "GameEntity.hpp"
 #include "IInputController.h"
 #include "ICursor.h"
 #include "Vec2f.h"
@@ -9,10 +8,13 @@
 
 #include <vector>
 
+#include "ecs/game_entity.hpp"
 #include "ecs/entity_container.h"
+#include "ecs/prefab.h"
 
 #include "components/virtual_mouse_component.h"
 #include "components/input_component.h"
+#include "components/transform_component.h"
 
 #include "global_components/network_peer_global_component.h"
 
@@ -25,15 +27,15 @@ ClientPlayerControllerSystem::ClientPlayerControllerSystem()
 
 static void ProcessInputs( ECS::EntityContainer& entityContainer, InputState& outInputState )
 {
-	const InputComponent& inputComponent = entityContainer.GetFirstComponentOfType< InputComponent >();
+	const InputComponent& inputComponent = entityContainer.GetGlobalComponent< InputComponent >();
 
 	outInputState.movement.X( inputComponent.inputController->GetAxis( HORIZONTAL_AXIS ) );
 	outInputState.movement.Y( inputComponent.inputController->GetAxis( VERTICAL_AXIS ) );
 	outInputState.movement.Normalize();
 
-	const VirtualMouseComponent& virtualMouseComponent =
-	    entityContainer.GetFirstComponentOfType< VirtualMouseComponent >();
-	outInputState.virtualMousePosition = virtualMouseComponent.position;
+	const ECS::GameEntity& virtual_mouse_entity = entityContainer.GetFirstEntityOfType< VirtualMouseComponent >();
+	const TransformComponent& virtual_mouse_transform = virtual_mouse_entity.GetComponent< TransformComponent >();
+	outInputState.virtualMousePosition = virtual_mouse_transform.GetPosition();
 }
 
 static void SendInputsToServer( ECS::EntityContainer& entityContainer, const InputState& inputState )

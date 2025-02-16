@@ -23,7 +23,7 @@ namespace NetLib
 	Server::Server( int32 maxConnections )
 	    : Peer( PeerType::SERVER, maxConnections, 1024, 1024 )
 	    , _remotePeerInputsHandler()
-	    , _replicationManager( &_networkEntityFactoryRegistry )
+	    , _replicationManager()
 	{
 	}
 

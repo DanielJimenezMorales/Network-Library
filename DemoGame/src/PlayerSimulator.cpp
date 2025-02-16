@@ -1,13 +1,13 @@
 #include "PlayerSimulator.h"
 #include "InputState.h"
-#include "GameEntity.hpp"
-#include "PlayerControllerConfiguration.h"
 #include "Logger.h"
+
+#include "ecs/game_entity.hpp"
 
 #include "components/transform_component.h"
 #include "components/player_controller_component.h"
 
-void PlayerSimulator::Simulate( const InputState& inputs, GameEntity& playerEntity, float32 elapsedTime )
+void PlayerSimulator::Simulate( const InputState& inputs, ECS::GameEntity& playerEntity, float32 elapsedTime )
 {
 	TransformComponent& transform = playerEntity.GetComponent< TransformComponent >();
 	if ( inputs.movement.X() != 0 || inputs.movement.Y() != 0 )
@@ -15,22 +15,21 @@ void PlayerSimulator::Simulate( const InputState& inputs, GameEntity& playerEnti
 		LOG_WARNING( "MOVEMENT {x: %f, y: %f}", inputs.movement.X(), inputs.movement.Y() );
 	}
 	PlayerControllerComponent& networkComponent = playerEntity.GetComponent< PlayerControllerComponent >();
-	Vec2f updatedPosition = UpdatePosition( inputs.movement, transform, networkComponent.configuration, elapsedTime );
+	Vec2f updatedPosition = UpdatePosition( inputs.movement, transform, networkComponent, elapsedTime );
 	ApplyPosition( updatedPosition, transform );
 
 	transform.SetPosition( updatedPosition );
-	networkComponent.posX = updatedPosition.X();
-	networkComponent.posY = updatedPosition.Y();
+	/*networkComponent.posX = updatedPosition.X();
+	networkComponent.posY = updatedPosition.Y();*/
 
-	Vec2f updatedLookAt =
-	    UpdateLookAt( inputs.virtualMousePosition, transform, networkComponent.configuration, elapsedTime );
+	Vec2f updatedLookAt = UpdateLookAt( inputs.virtualMousePosition, transform, networkComponent, elapsedTime );
 	transform.LookAt( inputs.virtualMousePosition );
 
-	networkComponent.rotationAngle = transform.GetRotationAngle();
+	// networkComponent.rotationAngle = transform.GetRotationAngle();
 }
 
 Vec2f PlayerSimulator::UpdatePosition( const Vec2f& inputs, const TransformComponent& transform,
-                                       const PlayerControllerConfiguration& configuration, float32 elapsedTime )
+                                       const PlayerControllerComponent& configuration, float32 elapsedTime )
 {
 	Vec2f currentPosition = transform.GetPosition();
 
@@ -46,7 +45,7 @@ void PlayerSimulator::ApplyPosition( const Vec2f& position, TransformComponent& 
 }
 
 Vec2f PlayerSimulator::UpdateLookAt( const Vec2f& virtualMousePosition, const TransformComponent& transform,
-                                     const PlayerControllerConfiguration& configuration, float32 elapsedTime )
+                                     const PlayerControllerComponent& configuration, float32 elapsedTime )
 {
 	return Vec2f();
 }

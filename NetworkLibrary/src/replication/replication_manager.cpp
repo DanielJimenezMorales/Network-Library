@@ -6,12 +6,16 @@
 
 #include "communication/message_factory.h"
 
-#include "replication/i_network_entity_factory.h"
 #include "replication/replication_action_type.h"
-#include "replication/network_entity_factory_registry.h"
+#include "replication/on_network_entity_create_config.h"
 
 namespace NetLib
 {
+	ReplicationManager::ReplicationManager()
+	    : _nextNetworkEntityId( 1 )
+	{
+	}
+
 	NetworkEntityData& ReplicationManager::SpawnNewNetworkEntity( uint32 replicated_class_id, uint32 network_entity_id,
 	                                                              uint32 controlled_by_peer_id, float32 pos_x,
 	                                                              float32 pos_y )
@@ -20,10 +24,16 @@ namespace NetLib
 		NetworkEntityData& new_entity_data =
 		    _networkEntitiesStorage.AddNetworkEntity( replicated_class_id, network_entity_id, controlled_by_peer_id );
 
-		// Spawn network entity in world through its custom factory
-		const uint32 gameEntity = _networkEntityFactoryRegistry->CreateNetworkEntity(
-		    replicated_class_id, network_entity_id, controlled_by_peer_id, pos_x, pos_y,
-		    new_entity_data.communicationCallbacks );
+		// Spawn network entity in world
+		OnNetworkEntityCreateConfig network_entity_create_config;
+		network_entity_create_config.entityType = replicated_class_id;
+		network_entity_create_config.entityId = network_entity_id;
+		network_entity_create_config.controlledByPeerId = controlled_by_peer_id;
+		network_entity_create_config.positionX = pos_x;
+		network_entity_create_config.positionY = pos_y;
+		network_entity_create_config.communicationCallbacks = &new_entity_data.communicationCallbacks;
+		// TODO Also evaluate if we need inGameId for something
+		const uint32 gameEntity = _onNetworkEntityCreate( network_entity_create_config );
 
 		new_entity_data.inGameId = gameEntity;
 		return new_entity_data;
@@ -75,7 +85,7 @@ namespace NetLib
 		replicationMessage->replicationAction = static_cast< uint8 >( ReplicationActionType::UPDATE );
 		replicationMessage->networkEntityId = networkEntityId;
 		replicationMessage->controlledByPeerId = controlledByPeerId;
-		// TODO Use some wrtie stream here instead of manual buffer
+		// TODO Use some write stream here instead of manual buffer
 		replicationMessage->dataSize = buffer.GetAccessIndex();
 		replicationMessage->data = new uint8[ replicationMessage->dataSize ];
 		buffer.CopyUsedData( replicationMessage->data, replicationMessage->dataSize );
@@ -138,7 +148,7 @@ namespace NetLib
 		}
 
 		// Destroy object through its custom factory
-		_networkEntityFactoryRegistry->RemoveNetworkEntity( gameEntity->inGameId );
+		_onNetworkEntityDestroy( gameEntity->inGameId );
 
 		// Remove network enttiy data
 		_networkEntitiesStorage.RemoveNetworkEntity( networkEntityId );

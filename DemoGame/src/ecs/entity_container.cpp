@@ -1,6 +1,6 @@
 #include "entity_container.h"
 
-#include "GameEntity.hpp"
+#include "ecs/game_entity.hpp"
 
 namespace ECS
 {

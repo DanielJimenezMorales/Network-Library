@@ -128,7 +128,8 @@ project "DemoGame"
 		"vendor/sdl2/SDL2_image-2.8.2/include/",
 		"vendor/sdl2/SDL2_mixer-2.8.0/include/",
 		"vendor/sdl2/SDL2_ttf-2.22.0/include/",
-		"vendor/entt/include/"
+		"vendor/entt/include/",
+		"vendor/json/include/"
 	}
 
 	dependson
