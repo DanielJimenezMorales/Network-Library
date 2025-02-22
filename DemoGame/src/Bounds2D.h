@@ -1,5 +1,6 @@
 #pragma once
 #include "Vec2f.h"
+#include "numeric_types.h"
 
 #include "Gizmo.h"
 

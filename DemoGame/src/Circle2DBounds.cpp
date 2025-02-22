@@ -4,6 +4,11 @@
 
 #include "components/transform_component.h"
 
+float32 CircleBounds2D::GetRadius() const
+{
+	return _radius;
+}
+
 // TODO Change name to this file
 void CircleBounds2D::GetAxes( const TransformComponent& transform, std::vector< Vec2f >& outAxes ) const
 {

@@ -23,6 +23,8 @@ struct CircleBounds2D : public Bounds2D
 		{
 		}
 
+		float32 GetRadius() const;
+
 		void GetAxes( const TransformComponent& transform, std::vector< Vec2f >& outAxes ) const override;
 		void ProjectAxis( const TransformComponent& transform, const Vec2f& axis, float& outMin,
 		                  float& outMax ) const override;
