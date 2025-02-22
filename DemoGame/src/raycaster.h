@@ -6,24 +6,31 @@
 
 #include <vector>
 
-struct TransformComponent;
-class CircleBounds2D;
-
-struct Ray
+namespace Raycaster
 {
-		Vec2f origin;
-		Vec2f direction;
-		uint32 maxDistance;
-};
+	struct Ray
+	{
+			Vec2f origin;
+			Vec2f direction;
+			uint32 maxDistance;
+	};
 
-struct RaycastResult
-{
-		ECS::GameEntity entity;
-		Vec2f position;
-		Vec2f normal;
-		uint32 squaredDistance;
-};
+	struct RaycastResult
+	{
+			RaycastResult()
+			    : entity( ECS::GameEntity() )
+			    , position()
+			    , normal()
+			    , squaredDistance( 0 )
+			{
+			}
 
-bool PerformRaycastAgainstSphere( const Ray& ray, const TransformComponent& circle_transform,
-                                  const CircleBounds2D& circle_collider, RaycastResult& out_result );
-RaycastResult ExecuteRaycast( const Ray& ray, const std::vector< ECS::GameEntity >& entities_with_colliders );
+			ECS::GameEntity entity;
+			Vec2f position;
+			Vec2f normal;
+			uint32 squaredDistance;
+	};
+
+	RaycastResult ExecuteRaycast( const Ray& ray, const std::vector< ECS::GameEntity >& entities_with_colliders,
+	                              const ECS::GameEntity& entity_to_exclude );
+}

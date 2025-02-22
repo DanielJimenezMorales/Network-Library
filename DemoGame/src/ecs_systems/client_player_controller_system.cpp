@@ -5,6 +5,7 @@
 #include "Vec2f.h"
 #include "InputActionIdsConfiguration.h"
 #include "InputState.h"
+#include "raycaster.h"
 
 #include <vector>
 
@@ -15,6 +16,8 @@
 #include "components/virtual_mouse_component.h"
 #include "components/input_component.h"
 #include "components/transform_component.h"
+#include "components/collider_2d_component.h"
+#include "components/player_controller_component.h"
 
 #include "global_components/network_peer_global_component.h"
 
@@ -32,6 +35,8 @@ static void ProcessInputs( ECS::EntityContainer& entityContainer, InputState& ou
 	outInputState.movement.X( inputComponent.inputController->GetAxis( HORIZONTAL_AXIS ) );
 	outInputState.movement.Y( inputComponent.inputController->GetAxis( VERTICAL_AXIS ) );
 	outInputState.movement.Normalize();
+
+	outInputState.isShooting = inputComponent.cursor->GetButtonPressed( SHOOT_BUTTON );
 
 	const ECS::GameEntity& virtual_mouse_entity = entityContainer.GetFirstEntityOfType< VirtualMouseComponent >();
 	const TransformComponent& virtual_mouse_transform = virtual_mouse_entity.GetComponent< TransformComponent >();
@@ -59,4 +64,23 @@ void ClientPlayerControllerSystem::Execute( ECS::EntityContainer& entity_contain
 	InputState inputState;
 	ProcessInputs( entity_container, inputState );
 	SendInputsToServer( entity_container, inputState );
+
+	if ( inputState.isShooting )
+	{
+		const ECS::GameEntity local_player = entity_container.GetFirstEntityOfType< PlayerControllerComponent >();
+		const TransformComponent& local_player_transform = local_player.GetComponent< TransformComponent >();
+
+		Raycaster::Ray ray;
+		ray.origin = local_player_transform.GetPosition();
+		ray.direction = local_player_transform.ConvertRotationAngleToNormalizedDirection();
+		ray.maxDistance = 100;
+
+		const std::vector< ECS::GameEntity > entities_with_colliders =
+		    entity_container.GetEntitiesOfBothTypes< Collider2DComponent, TransformComponent >();
+		const Raycaster::RaycastResult result = Raycaster::ExecuteRaycast( ray, entities_with_colliders, local_player );
+		if ( result.entity.IsValid() )
+		{
+			bool r = true;
+		}
+	}
 }

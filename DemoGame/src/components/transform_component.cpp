@@ -76,6 +76,12 @@ Vec2f TransformComponent::GetForwardVector() const
 	return forwardVector;
 }
 
+Vec2f TransformComponent::ConvertRotationAngleToNormalizedDirection() const
+{
+	const float32 angle_in_radians = _rotationAngle * M_PI / 180.f;
+	return Vec2f( std::cosf( angle_in_radians ), std::sinf( angle_in_radians ) );
+}
+
 void TransformComponent::SetRotationAngle( float32 newRotationAngle )
 {
 	_rotationAngle = std::fmodf( newRotationAngle, 360.0f );

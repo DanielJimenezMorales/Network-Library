@@ -29,6 +29,8 @@ struct TransformComponent
 		Vec2f GetScale() const { return _scale; }
 		void SetScale( const Vec2f& newScale ) { _scale = newScale; }
 
+		Vec2f ConvertRotationAngleToNormalizedDirection() const;
+
 	private:
 		Vec2f _position;
 

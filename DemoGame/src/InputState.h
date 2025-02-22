@@ -12,5 +12,6 @@ public:
 	void Deserialize(NetLib::Buffer& buffer) override;
 
 	Vec2f movement;
+	bool isShooting;
 	Vec2f virtualMousePosition;
 };

@@ -217,8 +217,6 @@ void SceneInitializer::InitializeScene( ECS::World& scene, NetLib::PeerType netw
 
 	// Inputs
 	KeyboardController* keyboard = new KeyboardController();
-	InputButton button( JUMP_BUTTON, SDLK_q );
-	keyboard->AddButtonMap( button );
 	InputAxis axis( HORIZONTAL_AXIS, SDLK_d, SDLK_a );
 	keyboard->AddAxisMap( axis );
 	InputAxis axis2( VERTICAL_AXIS, SDLK_w, SDLK_s );
@@ -226,8 +224,8 @@ void SceneInitializer::InitializeScene( ECS::World& scene, NetLib::PeerType netw
 	inputHandler.AddController( keyboard );
 
 	MouseController* mouse = new MouseController();
-	InputButton mouseButton( MOUSE_LEFT_CLICK_BUTTON, SDL_BUTTON_LEFT );
-	mouse->AddButtonMap( mouseButton );
+	InputButton mouse_shoot_button( SHOOT_BUTTON, SDL_BUTTON_LEFT );
+	mouse->AddButtonMap( mouse_shoot_button );
 	inputHandler.AddCursor( mouse );
 
 	// Populate entities
@@ -257,6 +255,9 @@ void SceneInitializer::InitializeScene( ECS::World& scene, NetLib::PeerType netw
 	                                               network_entity_creator, std::placeholders::_1,
 	                                               std::placeholders::_2 ) );
 
+	// Add dummy collider entity
+	scene.CreateGameEntity("Dummy", Vec2f(10.f, 10.f));
+
 	if ( networkPeer->GetPeerType() == NetLib::PeerType::SERVER )
 	{
 		NetLib::Server* server_peer = networkPeerComponent.GetPeerAsServer();
@@ -270,8 +271,6 @@ void SceneInitializer::InitializeScene( ECS::World& scene, NetLib::PeerType netw
 		networkPeerComponent.inputStateFactory = inputStateFactory;
 		networkPeerComponent.TrackOnRemotePeerConnect();
 
-		// Add dummy collider entity
-		scene.CreateGameEntity( "Dummy", Vec2f( 10.f, 10.f ) );
 	}
 
 	if ( networkPeer->GetPeerType() == NetLib::PeerType::CLIENT )
