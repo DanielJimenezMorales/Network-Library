@@ -1,0 +1,10 @@
+{
+	"name": "Raycast",
+	"archetype": "raycast",
+	"component_configs": [
+		{
+			"name": "TemporaryLifetime",
+			"lifetime": 1
+		}
+	]
+}

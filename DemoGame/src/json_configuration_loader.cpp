@@ -11,6 +11,7 @@
 #include "component_configurations/camera_component_configuration.h"
 #include "component_configurations/collider_2d_component_configuration.h"
 #include "component_configurations/player_controller_component_configuration.h"
+#include "component_configurations/temporary_lifetime_component_configuration.h"
 
 #include "CircleBounds2D.h"
 
@@ -59,6 +60,11 @@ static void ParseComponentConfiguration( const nlohmann::json& json_data,
 		const uint32 movement_speed = json_data[ "movement_speed" ];
 		out_component_config = new PlayerControllerComponentConfiguration( movement_speed );
 	}
+	else if ( component_name == "TemporaryLifetime" )
+	{
+		const float32 lifetime = json_data[ "lifetime" ];
+		out_component_config = new TemporaryLifetimeComponentConfiguration( lifetime );
+	}
 }
 
 bool JsonConfigurationLoader::LoadPrefabs( std::vector< ECS::Prefab >& out_prefabs )
@@ -91,6 +97,7 @@ bool JsonConfigurationLoader::LoadPrefabs( std::vector< ECS::Prefab >& out_prefa
 			{
 				ECS::ComponentConfiguration* component_config = nullptr;
 				ParseComponentConfiguration( *components_cit, component_config );
+				assert( component_config != nullptr );
 				prefab.componentConfigurations[ component_config->name ] = component_config;
 			}
 		}

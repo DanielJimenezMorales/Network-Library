@@ -69,9 +69,12 @@ namespace Raycaster
 
 		for ( auto cit = entities_with_colliders.cbegin(); cit != entities_with_colliders.cend(); ++cit )
 		{
-			if ( *cit == entity_to_exclude )
+			if ( entity_to_exclude.IsValid() )
 			{
-				continue;
+				if ( *cit == entity_to_exclude )
+				{
+					continue;
+				}
 			}
 
 			const TransformComponent& transform = cit->GetComponent< TransformComponent >();

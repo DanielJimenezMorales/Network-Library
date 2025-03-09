@@ -22,6 +22,7 @@ struct TransformComponent
 		// Rotation
 		float32 GetRotationAngle() const { return _rotationAngle; }
 		void SetRotationAngle( float32 newRotationAngle );
+		void SetRotationLookAt( Vec2f look_at_direction );
 		void LookAt( const Vec2f& position );
 		Vec2f GetForwardVector() const;
 

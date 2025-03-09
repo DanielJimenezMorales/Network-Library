@@ -26,6 +26,8 @@
 #include "components/network_entity_component.h"
 #include "components/player_controller_component.h"
 #include "components/remote_player_controller_component.h"
+#include "components/raycast_component.h"
+#include "components/temporary_lifetime_component.h"
 
 #include "component_configurations/sprite_renderer_component_configuration.h"
 #include "component_configurations/player_controller_component_configuration.h"
@@ -46,6 +48,7 @@
 #include "ecs_systems/pre_tick_network_system.h"
 #include "ecs_systems/pos_tick_network_system.h"
 #include "ecs_systems/collision_detection_system.h"
+#include "ecs_systems/temporary_lifetime_objects_system.h"
 
 #include "network_entity_creator.h"
 #include "json_configuration_loader.h"
@@ -62,6 +65,8 @@ static void RegisterComponents( ECS::World& scene )
 	scene.RegisterComponent< NetworkEntityComponent >( "NetworkEntity" );
 	scene.RegisterComponent< PlayerControllerComponent >( "PlayerController" );
 	scene.RegisterComponent< RemotePlayerControllerComponent >( "RemotePlayerController" );
+	scene.RegisterComponent< RaycastComponent >( "Raycast" );
+	scene.RegisterComponent< TemporaryLifetimeComponent >( "TemporaryLifetime" );
 }
 
 static void RegisterArchetypes( ECS::World& scene )
@@ -92,6 +97,22 @@ static void RegisterSystems( ECS::World& scene, NetLib::PeerType networkPeerType
 {
 	// Populate systems
 	// TODO Create a system storage in order to be able to free them at the end
+
+	/////////////////////
+	// PRE TICK SYSTEMS
+	/////////////////////
+
+	// Add temporary lifetime objects system
+	ECS::SystemCoordinator* temporary_lifetime_objects_system_coordinator =
+	    new ECS::SystemCoordinator( ECS::ExecutionStage::UPDATE );
+	TemporaryLifetimeObjectsSystem* temporary_lifetime_objects_system = new TemporaryLifetimeObjectsSystem( &scene );
+	auto on_configure_temporary_lifetime_callback =
+	    std::bind( &TemporaryLifetimeObjectsSystem::ConfigureTemporaryLifetimeComponent,
+	               temporary_lifetime_objects_system, std::placeholders::_1, std::placeholders::_2 );
+	scene.SubscribeToOnEntityConfigure( on_configure_temporary_lifetime_callback );
+	temporary_lifetime_objects_system_coordinator->AddSystemToTail( temporary_lifetime_objects_system );
+	scene.AddSystem( temporary_lifetime_objects_system_coordinator );
+
 	if ( networkPeerType == NetLib::PeerType::SERVER )
 	{
 		/////////////////////
@@ -133,7 +154,7 @@ static void RegisterSystems( ECS::World& scene, NetLib::PeerType networkPeerType
 		// Add Client-side player controller system
 		ECS::SystemCoordinator* client_player_controller_system_coordinator =
 		    new ECS::SystemCoordinator( ECS::ExecutionStage::TICK );
-		client_player_controller_system_coordinator->AddSystemToTail( new ClientPlayerControllerSystem() );
+		client_player_controller_system_coordinator->AddSystemToTail( new ClientPlayerControllerSystem( &scene ) );
 		scene.AddSystem( client_player_controller_system_coordinator );
 
 		// Add Client-side remote player controller system
@@ -178,9 +199,9 @@ static void RegisterSystems( ECS::World& scene, NetLib::PeerType networkPeerType
 	GizmoRendererSystem* gizmo_renderer_system = new GizmoRendererSystem( renderer );
 	render_system_coordinator->AddSystemToTail( gizmo_renderer_system );
 	scene.AddSystem( render_system_coordinator );
-	scene.SubscribeToOnEntityCreate( std::bind( &GizmoRendererSystem::AllocateGizmoRendererComponentIfHasCollider,
+	scene.SubscribeToOnEntityCreate( std::bind( &GizmoRendererSystem::AllocateGizmoRendererComponent,
 	                                            gizmo_renderer_system, std::placeholders::_1 ) );
-	scene.SubscribeToOnEntityDestroy( std::bind( &GizmoRendererSystem::DeallocateGizmoRendererComponentIfHasCollider,
+	scene.SubscribeToOnEntityDestroy( std::bind( &GizmoRendererSystem::DeallocateGizmoRendererComponent,
 	                                             gizmo_renderer_system, std::placeholders::_1 ) );
 }
 
@@ -256,7 +277,7 @@ void SceneInitializer::InitializeScene( ECS::World& scene, NetLib::PeerType netw
 	                                               std::placeholders::_2 ) );
 
 	// Add dummy collider entity
-	scene.CreateGameEntity("Dummy", Vec2f(10.f, 10.f));
+	scene.CreateGameEntity( "Dummy", Vec2f( 10.f, 10.f ) );
 
 	if ( networkPeer->GetPeerType() == NetLib::PeerType::SERVER )
 	{
@@ -270,7 +291,6 @@ void SceneInitializer::InitializeScene( ECS::World& scene, NetLib::PeerType netw
 		networkPeerComponent.GetPeerAsServer()->RegisterInputStateFactory( inputStateFactory );
 		networkPeerComponent.inputStateFactory = inputStateFactory;
 		networkPeerComponent.TrackOnRemotePeerConnect();
-
 	}
 
 	if ( networkPeer->GetPeerType() == NetLib::PeerType::CLIENT )

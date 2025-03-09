@@ -12,6 +12,7 @@
 #include "ecs/game_entity.hpp"
 #include "ecs/entity_container.h"
 #include "ecs/prefab.h"
+#include "ecs/world.h"
 
 #include "components/virtual_mouse_component.h"
 #include "components/input_component.h"
@@ -23,8 +24,9 @@
 
 #include "core/client.h"
 
-ClientPlayerControllerSystem::ClientPlayerControllerSystem()
+ClientPlayerControllerSystem::ClientPlayerControllerSystem( ECS::World* world )
     : ECS::ISimpleSystem()
+    , _world( world )
 {
 }
 
@@ -82,5 +84,7 @@ void ClientPlayerControllerSystem::Execute( ECS::EntityContainer& entity_contain
 		{
 			bool r = true;
 		}
+
+		ECS::GameEntity entity = _world->CreateGameEntity( "Raycast", ray.origin, ray.direction );
 	}
 }

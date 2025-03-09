@@ -1,6 +1,7 @@
 #include "gizmo_resource_handler.h"
 
 #include "Circle2DGizmo.h"
+#include "ray_gizmo.h"
 
 #include <cassert>
 
@@ -35,7 +36,7 @@ GizmoResourceHandler& GizmoResourceHandler::operator=( GizmoResourceHandler&& ot
 
 GizmoHandler GizmoResourceHandler::CreateGizmo( const GizmoConfiguration* configuration )
 {
-	assert(configuration != nullptr);
+	assert( configuration != nullptr );
 
 	GizmoPool* pool = ForceGetGizmoPool( configuration->type );
 	return ( pool != nullptr ) ? pool->CreateGizmo( configuration ) : GizmoHandler::GetInvalid();
@@ -68,6 +69,9 @@ void GizmoResourceHandler::Allocate( uint32 number )
 
 	CircleGizmo circle_gizmo;
 	_pools.try_emplace( GizmoType::CIRCLE2D, circle_gizmo, number );
+
+	RayGizmo ray_gizmo;
+	_pools.try_emplace( GizmoType::RAY, ray_gizmo, number );
 }
 
 void GizmoResourceHandler::Free()
