@@ -8,6 +8,8 @@
 
 #include <cassert>
 
+#include "logger.h"
+
 namespace Raycaster
 {
 	/// <summary>
@@ -100,7 +102,9 @@ namespace Raycaster
 					}
 				case CollisionShapeType::Convex:
 					{
-						// TODO Implement
+						// TODO This can be implemented with collision between ray and convex shape using SAT
+						LOG_ERROR( "RAYCAST AGAINST CONVEX SHAPE IS NOT IMPLEMENTED" );
+						assert( false );
 						break;
 					}
 			}
