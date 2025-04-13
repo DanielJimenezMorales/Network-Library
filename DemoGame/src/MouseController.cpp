@@ -1,35 +1,35 @@
 #include "MouseController.h"
 
-void MouseController::AddButtonMap(const InputButton& inputButton)
+void MouseController::AddButtonMap( const InputButton& inputButton )
 {
-	_actionToButtonMap[inputButton.actionId] = inputButton;
-	_keyToButtonActionMap[static_cast<uint8>(inputButton.code)] = inputButton.actionId;
+	_actionToButtonMap[ inputButton.actionId ] = inputButton;
+	_keyToButtonActionMap[ static_cast< uint8 >( inputButton.code ) ] = inputButton.actionId;
 }
 
-void MouseController::HandleEvent(const SDL_Event& event)
+void MouseController::HandleEvent( const SDL_Event& event )
 {
-	if (event.type != SDL_MOUSEBUTTONDOWN && event.type != SDL_MOUSEBUTTONUP && event.type != SDL_MOUSEMOTION)
+	if ( event.type != SDL_MOUSEBUTTONDOWN && event.type != SDL_MOUSEBUTTONUP && event.type != SDL_MOUSEMOTION )
 	{
 		return;
 	}
 
-	if (event.type == SDL_MOUSEMOTION)
+	if ( event.type == SDL_MOUSEMOTION )
 	{
 		_mouseDeltaX = event.motion.xrel;
 		_mouseDeltaY = event.motion.yrel;
 		return;
 	}
 
-	HandleButton(event);
+	HandleButton( event );
 }
 
 void MouseController::ResetEvents()
 {
-	for (auto& item : _actionToButtonMap)
+	for ( auto& item : _actionToButtonMap )
 	{
-		if (item.second.currentState == ButtonState::Released)
+		if ( item.second.currentState == ButtonState::Released )
 		{
-			SetInputButtonState(item.second, ButtonState::None);
+			SetInputButtonState( item.second, ButtonState::None );
 		}
 
 		item.second.handledThisFrame = false;
@@ -41,30 +41,31 @@ void MouseController::ResetEvents()
 
 void MouseController::UpdateUnhandledButtons()
 {
-	for (auto& item : _actionToButtonMap)
+	for ( auto& item : _actionToButtonMap )
 	{
-		if (!item.second.handledThisFrame)
+		if ( !item.second.handledThisFrame )
 		{
-			SetInputButtonState(item.second, item.second.currentState);
+			SetInputButtonState( item.second, item.second.currentState );
 		}
 	}
 }
 
-bool MouseController::GetButtonDown(int32 actionId) const
+bool MouseController::GetButtonDown( int32 actionId ) const
 {
-	auto inputButton = _actionToButtonMap.find(actionId);
-	if (inputButton == _actionToButtonMap.cend())
+	auto inputButton = _actionToButtonMap.find( actionId );
+	if ( inputButton == _actionToButtonMap.cend() )
 	{
 		return false;
 	}
 
-	return (inputButton->second.currentState == ButtonState::Pressed && inputButton->second.previousState != ButtonState::Pressed);
+	return ( inputButton->second.currentState == ButtonState::Pressed &&
+	         inputButton->second.previousState != ButtonState::Pressed );
 }
 
-bool MouseController::GetButtonPressed(int32 actionId) const
+bool MouseController::GetButtonPressed( int32 actionId ) const
 {
-	auto inputButton = _actionToButtonMap.find(actionId);
-	if (inputButton == _actionToButtonMap.cend())
+	auto inputButton = _actionToButtonMap.find( actionId );
+	if ( inputButton == _actionToButtonMap.cend() )
 	{
 		return false;
 	}
@@ -72,10 +73,10 @@ bool MouseController::GetButtonPressed(int32 actionId) const
 	return inputButton->second.currentState == ButtonState::Pressed;
 }
 
-bool MouseController::GetButtonUp(int32 actionId) const
+bool MouseController::GetButtonUp( int32 actionId ) const
 {
-	auto inputButton = _actionToButtonMap.find(actionId);
-	if (inputButton == _actionToButtonMap.cend())
+	auto inputButton = _actionToButtonMap.find( actionId );
+	if ( inputButton == _actionToButtonMap.cend() )
 	{
 		return false;
 	}
@@ -83,39 +84,39 @@ bool MouseController::GetButtonUp(int32 actionId) const
 	return inputButton->second.currentState == ButtonState::Released;
 }
 
-void MouseController::GetPosition(int32& x, int32& y) const
+void MouseController::GetPosition( int32& x, int32& y ) const
 {
-	SDL_GetMouseState(&x, &y);
+	SDL_GetMouseState( &x, &y );
 }
 
-void MouseController::GetDelta(int32& x, int32& y) const
+void MouseController::GetDelta( int32& x, int32& y ) const
 {
 	x = _mouseDeltaX;
 	y = _mouseDeltaY;
 }
 
-void MouseController::HandleButton(const SDL_Event& event)
+void MouseController::HandleButton( const SDL_Event& event )
 {
-	uint8 code = event.button.button;
-	auto action = _keyToButtonActionMap.find(code);
-	if (action == _keyToButtonActionMap.cend())
+	const uint8 code = event.button.button;
+	auto action = _keyToButtonActionMap.find( code );
+	if ( action == _keyToButtonActionMap.cend() )
 	{
 		return;
 	}
 
-	if (event.button.state == SDL_PRESSED)
+	if ( event.button.state == SDL_PRESSED )
 	{
-		_actionToButtonMap[action->second].handledThisFrame = true;
-		SetInputButtonState(_actionToButtonMap[action->second], ButtonState::Pressed);
+		_actionToButtonMap[ action->second ].handledThisFrame = true;
+		SetInputButtonState( _actionToButtonMap[ action->second ], ButtonState::Pressed );
 	}
-	else if (event.button.state == SDL_RELEASED)
+	else if ( event.button.state == SDL_RELEASED )
 	{
-		_actionToButtonMap[action->second].handledThisFrame = true;
-		SetInputButtonState(_actionToButtonMap[action->second], ButtonState::Released);
+		_actionToButtonMap[ action->second ].handledThisFrame = true;
+		SetInputButtonState( _actionToButtonMap[ action->second ], ButtonState::Released );
 	}
 }
 
-void MouseController::SetInputButtonState(InputButton& button, ButtonState newState)
+void MouseController::SetInputButtonState( InputButton& button, ButtonState newState )
 {
 	button.previousState = button.currentState;
 	button.currentState = newState;

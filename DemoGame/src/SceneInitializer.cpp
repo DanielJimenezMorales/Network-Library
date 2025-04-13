@@ -245,7 +245,7 @@ void SceneInitializer::InitializeScene( ECS::World& scene, NetLib::PeerType netw
 	inputHandler.AddController( keyboard );
 
 	MouseController* mouse = new MouseController();
-	InputButton mouse_shoot_button( SHOOT_BUTTON, SDL_BUTTON_LEFT );
+	const InputButton mouse_shoot_button( SHOOT_BUTTON, SDL_BUTTON_LEFT );
 	mouse->AddButtonMap( mouse_shoot_button );
 	inputHandler.AddCursor( mouse );
 

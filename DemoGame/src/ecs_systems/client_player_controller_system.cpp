@@ -38,7 +38,7 @@ static void ProcessInputs( ECS::EntityContainer& entityContainer, InputState& ou
 	outInputState.movement.Y( inputComponent.inputController->GetAxis( VERTICAL_AXIS ) );
 	outInputState.movement.Normalize();
 
-	outInputState.isShooting = inputComponent.cursor->GetButtonPressed( SHOOT_BUTTON );
+	outInputState.isShooting = inputComponent.cursor->GetButtonDown( SHOOT_BUTTON );
 
 	const ECS::GameEntity& virtual_mouse_entity = entityContainer.GetFirstEntityOfType< VirtualMouseComponent >();
 	const TransformComponent& virtual_mouse_transform = virtual_mouse_entity.GetComponent< TransformComponent >();
