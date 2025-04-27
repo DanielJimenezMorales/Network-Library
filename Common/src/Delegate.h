@@ -6,7 +6,7 @@
 #include "fixed_size_function.hpp"
 #include "logger.h"
 
-//TODO Improve delegate
+//TODO Make the delegate thread-safe
 namespace Common
 {
 	// This is a no allocation multicast delegate. It works like a C# Action delegate so it always return void and it
