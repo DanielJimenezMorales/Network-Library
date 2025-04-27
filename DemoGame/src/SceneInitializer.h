@@ -21,4 +21,5 @@ class SceneInitializer
 
 		// TODO Temp method. It shouldn't go here
 		void ConfigureCameraComponent( ECS::GameEntity& entity, const ECS::Prefab& prefab ) const;
+		void ConfigureHealthComponent( ECS::GameEntity& entity, const ECS::Prefab& prefab ) const;
 };

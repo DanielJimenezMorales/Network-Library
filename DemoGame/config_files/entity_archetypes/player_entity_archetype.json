@@ -5,6 +5,7 @@
 		"SpriteRenderer",
 		"Collider2D",
 		"NetworkEntity",
-		"PlayerController"
+		"PlayerController",
+		"HealthComponent"
 	]
 }

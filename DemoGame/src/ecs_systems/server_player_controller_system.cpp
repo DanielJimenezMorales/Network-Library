@@ -6,15 +6,42 @@
 #include "ecs/game_entity.hpp"
 #include "ecs/entity_container.h"
 #include "ecs/prefab.h"
+#include "ecs/world.h"
 
 #include "components/player_controller_component.h"
 #include "components/network_entity_component.h"
+#include "components/transform_component.h"
 
 #include "global_components/network_peer_global_component.h"
 
-ServerPlayerControllerSystem::ServerPlayerControllerSystem()
-    : ECS::ISimpleSystem()
+#include "player_simulation/player_state.h"
+#include "player_simulation/player_state_configuration.h"
+
+static PlayerStateConfiguration GetHardcodedStateConfig()
 {
+	PlayerStateConfiguration config;
+	config.movementSpeed = 25;
+	return config;
+}
+
+ServerPlayerControllerSystem::ServerPlayerControllerSystem( ECS::World* world )
+    : ECS::ISimpleSystem()
+    , _playerStateSimulator( world, GetHardcodedStateConfig() )
+{
+}
+
+static void CreatePlayerState( const ECS::GameEntity& player_entity, PlayerState& player_state )
+{
+	const TransformComponent& transform = player_entity.GetComponent< TransformComponent >();
+	player_state.position = transform.GetPosition();
+	player_state.rotationAngle = transform.GetRotationAngle();
+}
+
+static void ApplyPlayerState( ECS::GameEntity& player_entity, const PlayerState& player_state )
+{
+	TransformComponent& transform = player_entity.GetComponent< TransformComponent >();
+	transform.SetPosition( player_state.position );
+	transform.SetRotationAngle( player_state.rotationAngle );
 }
 
 void ServerPlayerControllerSystem::Execute( ECS::EntityContainer& entity_container, float32 elapsed_time )
@@ -35,7 +62,14 @@ void ServerPlayerControllerSystem::Execute( ECS::EntityContainer& entity_contain
 		}
 
 		const InputState* inputState = static_cast< const InputState* >( baseInputState );
-		PlayerSimulator::Simulate( *inputState, *it, elapsed_time );
+
+		PlayerState currentPlayerState;
+		CreatePlayerState( *it, currentPlayerState );
+		PlayerState resultPlayerState;
+		_playerStateSimulator.Simulate( *inputState, currentPlayerState, resultPlayerState, elapsed_time );
+		ApplyPlayerState( *it, resultPlayerState );
+
+		// PlayerSimulator::Simulate( *inputState, *it, elapsed_time );
 	}
 }
 

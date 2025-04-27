@@ -27,11 +27,13 @@
 #include "components/remote_player_controller_component.h"
 #include "components/raycast_component.h"
 #include "components/temporary_lifetime_component.h"
+#include "components/health_component.h"
 
 #include "component_configurations/sprite_renderer_component_configuration.h"
 #include "component_configurations/player_controller_component_configuration.h"
 #include "component_configurations/collider_2d_component_configuration.h"
 #include "component_configurations/camera_component_configuration.h"
+#include "component_configurations/health_component_configuration.h"
 
 #include "CircleBounds2D.h"
 
@@ -66,6 +68,7 @@ static void RegisterComponents( ECS::World& scene )
 	scene.RegisterComponent< RemotePlayerControllerComponent >( "RemotePlayerController" );
 	scene.RegisterComponent< RaycastComponent >( "Raycast" );
 	scene.RegisterComponent< TemporaryLifetimeComponent >( "TemporaryLifetime" );
+	scene.RegisterComponent< HealthComponent >( "HealthComponent" );
 }
 
 static void RegisterArchetypes( ECS::World& scene )
@@ -136,7 +139,7 @@ static void RegisterSystems( ECS::World& scene, NetLib::PeerType networkPeerType
 		// Add Server-side player controller system
 		ECS::SystemCoordinator* server_player_controller_system_coordinator =
 		    new ECS::SystemCoordinator( ECS::ExecutionStage::TICK );
-		ServerPlayerControllerSystem* server_player_controller_system = new ServerPlayerControllerSystem();
+		ServerPlayerControllerSystem* server_player_controller_system = new ServerPlayerControllerSystem(&scene);
 		server_player_controller_system_coordinator->AddSystemToTail( server_player_controller_system );
 		auto on_configure_player_controller_callback =
 		    std::bind( &ServerPlayerControllerSystem::ConfigurePlayerControllerComponent,
@@ -229,6 +232,26 @@ void SceneInitializer::ConfigureCameraComponent( ECS::GameEntity& entity, const 
 	camera.height = camera_config.height;
 }
 
+void SceneInitializer::ConfigureHealthComponent( ECS::GameEntity& entity, const ECS::Prefab& prefab ) const
+{
+	auto component_config_found = prefab.componentConfigurations.find( "Health" );
+	if ( component_config_found == prefab.componentConfigurations.end() )
+	{
+		return;
+	}
+
+	if ( !entity.HasComponent< HealthComponent >() )
+	{
+		return;
+	}
+
+	const HealthComponentConfiguration& health_config =
+	    static_cast< const HealthComponentConfiguration& >( *component_config_found->second );
+	HealthComponent& health = entity.GetComponent< HealthComponent >();
+	health.maxHealth = health_config.maxHealth;
+	health.currentHealth = health_config.currentHealth;
+}
+
 void SceneInitializer::InitializeScene( ECS::World& scene, NetLib::PeerType networkPeerType, InputHandler& inputHandler,
                                         SDL_Renderer* renderer ) const
 {
@@ -237,8 +260,11 @@ void SceneInitializer::InitializeScene( ECS::World& scene, NetLib::PeerType netw
 	RegisterPrefabs( scene );
 	RegisterSystems( scene, networkPeerType, renderer );
 
+	// These subscriptions are also temp until I find a better place for them
 	scene.SubscribeToOnEntityConfigure(
 	    std::bind( &SceneInitializer::ConfigureCameraComponent, this, std::placeholders::_1, std::placeholders::_2 ) );
+	scene.SubscribeToOnEntityConfigure(
+	    std::bind( &SceneInitializer::ConfigureHealthComponent, this, std::placeholders::_1, std::placeholders::_2 ) );
 
 	// Inputs
 	KeyboardController* keyboard = new KeyboardController();

@@ -19,6 +19,7 @@
 #include "components/transform_component.h"
 #include "components/collider_2d_component.h"
 #include "components/player_controller_component.h"
+#include "components/health_component.h"
 
 #include "global_components/network_peer_global_component.h"
 
@@ -93,7 +94,12 @@ void ClientPlayerControllerSystem::Execute( ECS::EntityContainer& entity_contain
 		const Raycaster::RaycastResult result = Raycaster::ExecuteRaycast( ray, entities_with_colliders, local_player );
 		if ( result.entity.IsValid() )
 		{
-			bool r = true;
+			ECS::GameEntity entity_hit = result.entity;
+			if ( entity_hit.HasComponent< HealthComponent >() )
+			{
+				HealthComponent& health = entity_hit.GetComponent< HealthComponent >();
+				health.currentHealth -= 20;
+			}
 		}
 
 		ECS::GameEntity entity = _world->CreateGameEntity( "Raycast", ray.origin, ray.direction );
