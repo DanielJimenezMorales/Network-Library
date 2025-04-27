@@ -57,4 +57,7 @@ void ServerPlayerControllerSystem::ConfigurePlayerControllerComponent( ECS::Game
 	    static_cast< const PlayerControllerComponentConfiguration& >( *component_config_found->second );
 	PlayerControllerComponent& player_controller = entity.GetComponent< PlayerControllerComponent >();
 	player_controller.movementSpeed = player_controller_config.movementSpeed;
+	player_controller.fireRatePerSecond = player_controller_config.fireRatePerSecond;
+	player_controller.fireRate = 1 / player_controller.fireRatePerSecond;
+	player_controller.timeLeftUntilNextShot = 0.f;
 }

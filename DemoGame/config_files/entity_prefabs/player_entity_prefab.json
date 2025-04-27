@@ -18,7 +18,8 @@
 		},
 		{
 			"name": "PlayerController",
-			"movement_speed":25
+			"movement_speed": 25,
+			"fire_rate_per_second" : 10
 		}
 	]
 }

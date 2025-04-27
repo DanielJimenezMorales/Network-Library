@@ -6,9 +6,10 @@
 struct PlayerControllerComponentConfiguration : public ECS::ComponentConfiguration
 {
 		PlayerControllerComponentConfiguration();
-		PlayerControllerComponentConfiguration( uint32 movement_speed );
+		PlayerControllerComponentConfiguration( uint32 movement_speed, uint32 fire_rate_per_second );
 
 		PlayerControllerComponentConfiguration* Clone() const override;
 
 		uint32 movementSpeed;
+		uint32 fireRatePerSecond;
 };

@@ -9,7 +9,6 @@
 #include "InputHandler.h"
 #include "ITextureLoader.h"
 #include "InputStateFactory.h"
-#include "CircleBounds2D.h"
 
 #include "ecs/system_coordinator.h"
 #include "ecs/world.h"
@@ -154,7 +153,12 @@ static void RegisterSystems( ECS::World& scene, NetLib::PeerType networkPeerType
 		// Add Client-side player controller system
 		ECS::SystemCoordinator* client_player_controller_system_coordinator =
 		    new ECS::SystemCoordinator( ECS::ExecutionStage::TICK );
-		client_player_controller_system_coordinator->AddSystemToTail( new ClientPlayerControllerSystem( &scene ) );
+		ClientPlayerControllerSystem* client_player_controller_system = new ClientPlayerControllerSystem( &scene );
+		client_player_controller_system_coordinator->AddSystemToTail( client_player_controller_system );
+		auto on_configure_player_controller_callback =
+		    std::bind( &ClientPlayerControllerSystem::ConfigurePlayerControllerComponent,
+		               client_player_controller_system, std::placeholders::_1, std::placeholders::_2 );
+		scene.SubscribeToOnEntityConfigure( on_configure_player_controller_callback );
 		scene.AddSystem( client_player_controller_system_coordinator );
 
 		// Add Client-side remote player controller system
