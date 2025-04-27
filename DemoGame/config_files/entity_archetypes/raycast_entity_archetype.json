@@ -1,0 +1,8 @@
+{
+	"name": "raycast",
+	"components": [
+		"Transform",
+		"Raycast",
+		"TemporaryLifetime"
+	]
+}

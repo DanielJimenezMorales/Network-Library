@@ -69,7 +69,13 @@ namespace ECS
 
 	GameEntity World::CreateGameEntity( const std::string& prefab_name, const Vec2f& position )
 	{
-		return SpawnEntity( prefab_name, position );
+		return CreateGameEntity( prefab_name, position, Vec2f( 0, -1 ) );
+	}
+
+	GameEntity World::CreateGameEntity( const std::string& prefab_name, const Vec2f& position,
+	                                    const Vec2f& look_at_direction )
+	{
+		return SpawnEntity( prefab_name, position, look_at_direction );
 		//_entitiesToCreateRequests.push( prefab_name );
 	}
 
@@ -114,7 +120,8 @@ namespace ECS
 		}
 	}
 
-	GameEntity World::SpawnEntity( const std::string& prefab_name, const Vec2f& position )
+	GameEntity World::SpawnEntity( const std::string& prefab_name, const Vec2f& position,
+	                               const Vec2f& look_at_direction )
 	{
 		// Get prefab
 		const Prefab* prefab = _prefab_registry.TryGetPrefab( prefab_name );
@@ -150,6 +157,7 @@ namespace ECS
 
 		TransformComponent& new_entity_transform = new_entity.GetComponent< TransformComponent >();
 		new_entity_transform.SetPosition( position );
+		new_entity_transform.SetRotationLookAt( look_at_direction );
 
 		// Configure components
 		_onEntityConfigure.Execute( new_entity, *prefab );

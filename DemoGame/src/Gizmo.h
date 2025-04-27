@@ -9,7 +9,8 @@ struct TransformComponent;
 enum class GizmoType : uint32
 {
 	NONE = 0,
-	CIRCLE2D = 1
+	CIRCLE2D = 1,
+	RAY = 2
 };
 
 struct GizmoConfiguration

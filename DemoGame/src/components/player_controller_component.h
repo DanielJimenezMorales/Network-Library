@@ -11,7 +11,16 @@ struct PlayerControllerComponent
 
 		PlayerControllerComponent( NetLib::NetworkVariableChangesHandler* networkVariableChangesHandler,
 		                           uint32 networkEntityId, const PlayerControllerComponentConfiguration& configuration )
-		    : movementSpeed( configuration.movementSpeed ){};
+		    : movementSpeed( configuration.movementSpeed )
+		    , fireRatePerSecond( configuration.fireRatePerSecond )
+		    , fireRate( 1 / fireRatePerSecond )
+		    , timeLeftUntilNextShot( 0.f )
+		{
+		}
 
 		uint32 movementSpeed;
+		// This value can't be higher than the game Tick Rate
+		uint32 fireRatePerSecond;
+		float32 fireRate;
+		float32 timeLeftUntilNextShot;
 };

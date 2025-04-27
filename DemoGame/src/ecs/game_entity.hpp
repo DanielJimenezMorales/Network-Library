@@ -34,11 +34,12 @@ namespace ECS
 				return *this;
 			}
 
-			bool operator==( const GameEntity& other )
+			bool operator==( const GameEntity& other ) const
 			{
 				return _ecsEntityId == other._ecsEntityId && _entityContainer == other._entityContainer;
 			}
-			bool operator!=( const GameEntity& other ) { return !( *this == other ); }
+
+			bool operator!=( const GameEntity& other ) const { return !( *this == other ); }
 
 			EntityId GetId() const { return _ecsEntityId; }
 

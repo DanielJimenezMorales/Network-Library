@@ -46,6 +46,8 @@ namespace ECS
 			void EndOfFrame();
 
 			GameEntity CreateGameEntity( const std::string& prefab_name, const Vec2f& position );
+			GameEntity CreateGameEntity( const std::string& prefab_name, const Vec2f& position,
+			                             const Vec2f& look_at_direction );
 			void DestroyGameEntity( const GameEntity& entity );
 			void DestroyGameEntity( const EntityId entity_id );
 
@@ -67,7 +69,8 @@ namespace ECS
 
 		private:
 			void CreatePendingEntities();
-			GameEntity SpawnEntity( const std::string& prefab_name, const Vec2f& position );
+			GameEntity SpawnEntity( const std::string& prefab_name, const Vec2f& position,
+			                        const Vec2f& look_at_direction );
 			bool AddComponentsToEntity( const Archetype& archetype, GameEntity& entity );
 			void DestroyPendingEntities();
 

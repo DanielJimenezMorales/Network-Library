@@ -32,6 +32,7 @@ struct Collider2DComponent
 		Collider2DComponent& operator=( const Collider2DComponent& ) = delete;
 		Collider2DComponent& operator=( Collider2DComponent&& other ) noexcept;
 
+		const Bounds2D* GetBounds2D() const { return _bounds; }
 		CollisionShapeType GetShapeType() const { return _bounds->GetShapeType(); }
 		void GetAxes( const TransformComponent& transform, std::vector< Vec2f >& outAxes ) const;
 		void ProjectAxis( const TransformComponent& transform, const Vec2f& axis, float& outMin, float& outMax ) const;

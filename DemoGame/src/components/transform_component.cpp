@@ -38,7 +38,7 @@ void TransformComponent::LookAt( const Vec2f& position )
 	// FORMULA of angle between two vectors: Cos(angle) = dotProduct(V1, V1) / (Mag(V1) * Mag(V2)) --> angle =
 	// arcos(dotProduct(V1, V1) / (Mag(V1) * Mag(V2)))
 
-	float32 dotProduct = ( direction.X() * forward.X() ) + ( direction.Y() * forward.Y() );
+	const float32 dotProduct = ( direction.X() * forward.X() ) + ( direction.Y() * forward.Y() );
 	float32 angleCosine = dotProduct / ( direction.Magnitude() * forward.Magnitude() );
 
 	// Check it because due to floating point precision error, it could happen.
@@ -54,13 +54,13 @@ void TransformComponent::LookAt( const Vec2f& position )
 	float32 angleInRadians = std::acosf( angleCosine );
 
 	// Calculate rotation direction
-	float32 crossProduct = ( direction.X() * forward.Y() ) - ( forward.X() * direction.Y() );
+	const float32 crossProduct = ( direction.X() * forward.Y() ) - ( forward.X() * direction.Y() );
 	if ( crossProduct < 0.f )
 	{
 		angleInRadians = -angleInRadians;
 	}
 
-	float32 angleInDegrees = angleInRadians * ( 180.f / M_PI );
+	const float32 angleInDegrees = angleInRadians * ( 180.f / M_PI );
 
 	SetRotationAngle( _rotationAngle + angleInDegrees );
 }
@@ -76,7 +76,24 @@ Vec2f TransformComponent::GetForwardVector() const
 	return forwardVector;
 }
 
+Vec2f TransformComponent::ConvertRotationAngleToNormalizedDirection() const
+{
+	const float32 angle_in_radians = _rotationAngle * M_PI / 180.f;
+	return Vec2f( std::cosf( angle_in_radians ), std::sinf( angle_in_radians ) );
+}
+
 void TransformComponent::SetRotationAngle( float32 newRotationAngle )
 {
 	_rotationAngle = std::fmodf( newRotationAngle, 360.0f );
+}
+
+void TransformComponent::SetRotationLookAt( Vec2f look_at_direction )
+{
+	look_at_direction.Normalize();
+
+	const float32 angle_in_radians = std::atan2f( look_at_direction.X(), look_at_direction.Y() );
+	const float angle_in_degrees = angle_in_radians * 180.f / M_PI;
+
+	//+180 degrees in order to align with Vec2f(0, 1) being assigned to 0 degrees.
+	_rotationAngle = angle_in_degrees + 180.f;
 }

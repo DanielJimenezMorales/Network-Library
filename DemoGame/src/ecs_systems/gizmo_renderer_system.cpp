@@ -4,12 +4,14 @@
 #include "ecs/game_entity.hpp"
 
 #include "Gizmo.h"
+#include "ray_gizmo.h"
 
 #include "components/gizmo_renderer_component.h"
 #include "components/transform_component.h"
 #include "components/camera_component.h"
 
 #include "components/collider_2d_component.h"
+#include "components/raycast_component.h"
 
 GizmoRendererSystem::GizmoRendererSystem( SDL_Renderer* renderer )
     : ECS::ISimpleSystem()
@@ -43,26 +45,40 @@ void GizmoRendererSystem::Execute( ECS::EntityContainer& entity_container, float
 	}
 }
 
-void GizmoRendererSystem::AllocateGizmoRendererComponentIfHasCollider(ECS::GameEntity& entity )
+void GizmoRendererSystem::AllocateGizmoRendererComponent( ECS::GameEntity& entity )
 {
-	if ( !entity.HasComponent< Collider2DComponent >() )
+	const bool has_raycast = entity.HasComponent< RaycastComponent >();
+	const bool has_collider = entity.HasComponent< RaycastComponent >();
+	if ( entity.HasComponent< RaycastComponent >() )
+	{
+		const RaycastComponent& raycast = entity.GetComponent< RaycastComponent >();
+		RayGizmoConfiguration ray_gizmo_config;
+		ray_gizmo_config.type = GizmoType::RAY;
+		ray_gizmo_config.length = raycast.distance;
+
+		const GizmoHandler gizmo_handler = _gizmoResourceHandler.CreateGizmo( &ray_gizmo_config );
+		entity.AddComponent< GizmoRendererComponent >( gizmo_handler );
+	}
+	else if ( entity.HasComponent< Collider2DComponent >() )
+	{
+		const Collider2DComponent& collider = entity.GetComponent< Collider2DComponent >();
+		const GizmoHandler gizmo_handler = _gizmoResourceHandler.CreateGizmo( collider.GetGizmo().get() );
+		entity.AddComponent< GizmoRendererComponent >( gizmo_handler );
+	}
+	else
 	{
 		return;
 	}
-
-	const Collider2DComponent& collider = entity.GetComponent< Collider2DComponent >();
-	const GizmoHandler gizmo_handler = _gizmoResourceHandler.CreateGizmo( collider.GetGizmo().get() );
-	entity.AddComponent< GizmoRendererComponent >( gizmo_handler );
 }
 
-void GizmoRendererSystem::DeallocateGizmoRendererComponentIfHasCollider(ECS::GameEntity& entity )
+void GizmoRendererSystem::DeallocateGizmoRendererComponent( ECS::GameEntity& entity )
 {
-	if ( !entity.HasComponent< Collider2DComponent >() )
+	if ( !entity.HasComponent< GizmoRendererComponent >() )
 	{
 		return;
 	}
 
-	GizmoRendererComponent& gizmo_renderer = entity.GetComponent< GizmoRendererComponent >();
+	const GizmoRendererComponent& gizmo_renderer = entity.GetComponent< GizmoRendererComponent >();
 	const bool remove_successfully = _gizmoResourceHandler.RemoveGizmo( gizmo_renderer.gizmoHandler );
 	assert( remove_successfully );
 }
