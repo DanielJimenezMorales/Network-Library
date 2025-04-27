@@ -1,7 +1,6 @@
 #include "server_player_controller_system.h"
 
 #include "InputState.h"
-#include "PlayerSimulator.h"
 
 #include "ecs/game_entity.hpp"
 #include "ecs/entity_container.h"
@@ -68,8 +67,6 @@ void ServerPlayerControllerSystem::Execute( ECS::EntityContainer& entity_contain
 		PlayerState resultPlayerState;
 		_playerStateSimulator.Simulate( *inputState, currentPlayerState, resultPlayerState, elapsed_time );
 		ApplyPlayerState( *it, resultPlayerState );
-
-		// PlayerSimulator::Simulate( *inputState, *it, elapsed_time );
 	}
 }
 
