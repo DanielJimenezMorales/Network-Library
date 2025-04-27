@@ -71,6 +71,7 @@ void ClientPlayerControllerSystem::Execute( ECS::EntityContainer& entity_contain
 	ECS::GameEntity local_player = entity_container.GetFirstEntityOfType< PlayerControllerComponent >();
 	PlayerControllerComponent& local_player_controller = local_player.GetComponent< PlayerControllerComponent >();
 
+	//TODO add this into the player simulator
 	// Update time left until next shot
 	local_player_controller.timeLeftUntilNextShot -= elapsed_time;
 	if ( local_player_controller.timeLeftUntilNextShot <= 0.f )
@@ -80,7 +81,7 @@ void ClientPlayerControllerSystem::Execute( ECS::EntityContainer& entity_contain
 
 	if ( inputState.isShooting && local_player_controller.timeLeftUntilNextShot == 0.f )
 	{
-		local_player_controller.timeLeftUntilNextShot = local_player_controller.fireRate;
+		local_player_controller.timeLeftUntilNextShot = local_player_controller.stateConfiguration.GetFireRate();
 
 		const TransformComponent& local_player_transform = local_player.GetComponent< TransformComponent >();
 
@@ -94,12 +95,6 @@ void ClientPlayerControllerSystem::Execute( ECS::EntityContainer& entity_contain
 		const Raycaster::RaycastResult result = Raycaster::ExecuteRaycast( ray, entities_with_colliders, local_player );
 		if ( result.entity.IsValid() )
 		{
-			ECS::GameEntity entity_hit = result.entity;
-			if ( entity_hit.HasComponent< HealthComponent >() )
-			{
-				HealthComponent& health = entity_hit.GetComponent< HealthComponent >();
-				health.currentHealth -= 20;
-			}
 		}
 
 		ECS::GameEntity entity = _world->CreateGameEntity( "Raycast", ray.origin, ray.direction );
@@ -122,9 +117,11 @@ void ClientPlayerControllerSystem::ConfigurePlayerControllerComponent( ECS::Game
 
 	const PlayerControllerComponentConfiguration& player_controller_config =
 	    static_cast< const PlayerControllerComponentConfiguration& >( *component_config_found->second );
+
+	const PlayerStateConfiguration playerStateConfig(player_controller_config.movementSpeed, player_controller_config.fireRatePerSecond);
+
 	PlayerControllerComponent& player_controller = entity.GetComponent< PlayerControllerComponent >();
-	player_controller.movementSpeed = player_controller_config.movementSpeed;
-	player_controller.fireRatePerSecond = player_controller_config.fireRatePerSecond;
-	player_controller.fireRate = 1.f / player_controller.fireRatePerSecond;
+	player_controller.stateConfiguration = playerStateConfig;
+
 	player_controller.timeLeftUntilNextShot = 0.f;
 }

@@ -16,16 +16,9 @@
 #include "player_simulation/player_state.h"
 #include "player_simulation/player_state_configuration.h"
 
-static PlayerStateConfiguration GetHardcodedStateConfig()
-{
-	PlayerStateConfiguration config;
-	config.movementSpeed = 25;
-	return config;
-}
-
 ServerPlayerControllerSystem::ServerPlayerControllerSystem( ECS::World* world )
     : ECS::ISimpleSystem()
-    , _playerStateSimulator( world, GetHardcodedStateConfig() )
+    , _playerStateSimulator( world )
 {
 }
 
@@ -62,10 +55,14 @@ void ServerPlayerControllerSystem::Execute( ECS::EntityContainer& entity_contain
 
 		const InputState* inputState = static_cast< const InputState* >( baseInputState );
 
+		const PlayerControllerComponent& playerController = it->GetComponent< PlayerControllerComponent >();
+		const PlayerStateConfiguration& playerStateConfiguration = playerController.stateConfiguration;
+
 		PlayerState currentPlayerState;
 		CreatePlayerState( *it, currentPlayerState );
 		PlayerState resultPlayerState;
-		_playerStateSimulator.Simulate( *inputState, currentPlayerState, resultPlayerState, elapsed_time );
+		_playerStateSimulator.Simulate( *inputState, currentPlayerState, resultPlayerState, playerStateConfiguration,
+		                                elapsed_time );
 		ApplyPlayerState( *it, resultPlayerState );
 	}
 }
@@ -86,9 +83,11 @@ void ServerPlayerControllerSystem::ConfigurePlayerControllerComponent( ECS::Game
 
 	const PlayerControllerComponentConfiguration& player_controller_config =
 	    static_cast< const PlayerControllerComponentConfiguration& >( *component_config_found->second );
+
+	const PlayerStateConfiguration playerStateConfig(player_controller_config.movementSpeed, player_controller_config.fireRatePerSecond);
+
 	PlayerControllerComponent& player_controller = entity.GetComponent< PlayerControllerComponent >();
-	player_controller.movementSpeed = player_controller_config.movementSpeed;
-	player_controller.fireRatePerSecond = player_controller_config.fireRatePerSecond;
-	player_controller.fireRate = 1 / player_controller.fireRatePerSecond;
+	player_controller.stateConfiguration = playerStateConfig;
+
 	player_controller.timeLeftUntilNextShot = 0.f;
 }
