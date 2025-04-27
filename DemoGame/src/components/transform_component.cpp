@@ -3,6 +3,7 @@
 #include <SDL_stdinc.h>
 #include <cmath>
 #include "Logger.h"
+#include "MathUtils.h"
 
 TransformComponent::TransformComponent()
     : _position( 0.f, 0.f )
@@ -78,8 +79,7 @@ Vec2f TransformComponent::GetForwardVector() const
 
 Vec2f TransformComponent::ConvertRotationAngleToNormalizedDirection() const
 {
-	const float32 angle_in_radians = _rotationAngle * M_PI / 180.f;
-	return Vec2f( std::cosf( angle_in_radians ), std::sinf( angle_in_radians ) );
+	return ConvertAngleToNormalizedDirection( _rotationAngle );
 }
 
 void TransformComponent::SetRotationAngle( float32 newRotationAngle )

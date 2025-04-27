@@ -71,8 +71,8 @@ void ClientPlayerControllerSystem::Execute( ECS::EntityContainer& entity_contain
 	ECS::GameEntity local_player = entity_container.GetFirstEntityOfType< PlayerControllerComponent >();
 	PlayerControllerComponent& local_player_controller = local_player.GetComponent< PlayerControllerComponent >();
 
-	//TODO add this into the player simulator
-	// Update time left until next shot
+	// TODO add this into the player simulator
+	//  Update time left until next shot
 	local_player_controller.timeLeftUntilNextShot -= elapsed_time;
 	if ( local_player_controller.timeLeftUntilNextShot <= 0.f )
 	{
@@ -95,6 +95,7 @@ void ClientPlayerControllerSystem::Execute( ECS::EntityContainer& entity_contain
 		const Raycaster::RaycastResult result = Raycaster::ExecuteRaycast( ray, entities_with_colliders, local_player );
 		if ( result.entity.IsValid() )
 		{
+			bool r = true; 
 		}
 
 		ECS::GameEntity entity = _world->CreateGameEntity( "Raycast", ray.origin, ray.direction );
@@ -118,7 +119,8 @@ void ClientPlayerControllerSystem::ConfigurePlayerControllerComponent( ECS::Game
 	const PlayerControllerComponentConfiguration& player_controller_config =
 	    static_cast< const PlayerControllerComponentConfiguration& >( *component_config_found->second );
 
-	const PlayerStateConfiguration playerStateConfig(player_controller_config.movementSpeed, player_controller_config.fireRatePerSecond);
+	const PlayerStateConfiguration playerStateConfig( player_controller_config.movementSpeed,
+	                                                  player_controller_config.fireRatePerSecond );
 
 	PlayerControllerComponent& player_controller = entity.GetComponent< PlayerControllerComponent >();
 	player_controller.stateConfiguration = playerStateConfig;

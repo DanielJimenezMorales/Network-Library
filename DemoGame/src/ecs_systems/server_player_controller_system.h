@@ -21,5 +21,6 @@ class ServerPlayerControllerSystem : public ECS::ISimpleSystem
 		void ConfigurePlayerControllerComponent( ECS::GameEntity& entity, const ECS::Prefab& prefab );
 
 	private:
+		ECS::World* _world;
 		PlayerStateSimulator _playerStateSimulator;
 };

@@ -7,8 +7,11 @@ struct PlayerState
 		{
 			position = Vec2f( 0.f, 0.f );
 			rotationAngle = 0.f;
+			timeLeftUntilNextShot = 0.f;
 		}
 
 		Vec2f position;
 		float32 rotationAngle;
+
+		float32 timeLeftUntilNextShot;
 };

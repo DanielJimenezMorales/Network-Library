@@ -55,6 +55,9 @@ namespace ECS
 			GameEntity GetFirstEntityOfType();
 			GameEntity GetEntityFromId( uint32 id );
 
+			template < typename T1, typename T2 >
+			const std::vector< GameEntity > GetEntitiesOfBothTypes() const;
+
 			template < typename Functor >
 			uint32 SubscribeToOnEntityCreate( Functor&& functor );
 			void UnsubscribeFromOnEntityCreate( uint32 id );
@@ -111,6 +114,12 @@ namespace ECS
 	inline GameEntity World::GetFirstEntityOfType()
 	{
 		return _entityContainer.GetFirstEntityOfType< T >();
+	}
+
+	template < typename T1, typename T2 >
+	inline const std::vector< GameEntity > World::GetEntitiesOfBothTypes() const
+	{
+		return _entityContainer.GetEntitiesOfBothTypes< T1, T2 >();
 	}
 
 	template < typename Functor >

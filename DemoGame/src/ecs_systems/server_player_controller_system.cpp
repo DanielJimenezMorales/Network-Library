@@ -18,7 +18,8 @@
 
 ServerPlayerControllerSystem::ServerPlayerControllerSystem( ECS::World* world )
     : ECS::ISimpleSystem()
-    , _playerStateSimulator( world )
+    , _world( world )
+    , _playerStateSimulator()
 {
 }
 
@@ -27,6 +28,9 @@ static void CreatePlayerState( const ECS::GameEntity& player_entity, PlayerState
 	const TransformComponent& transform = player_entity.GetComponent< TransformComponent >();
 	player_state.position = transform.GetPosition();
 	player_state.rotationAngle = transform.GetRotationAngle();
+
+	const PlayerControllerComponent& playerController = player_entity.GetComponent< PlayerControllerComponent >();
+	player_state.timeLeftUntilNextShot = playerController.timeLeftUntilNextShot;
 }
 
 static void ApplyPlayerState( ECS::GameEntity& player_entity, const PlayerState& player_state )
@@ -34,6 +38,9 @@ static void ApplyPlayerState( ECS::GameEntity& player_entity, const PlayerState&
 	TransformComponent& transform = player_entity.GetComponent< TransformComponent >();
 	transform.SetPosition( player_state.position );
 	transform.SetRotationAngle( player_state.rotationAngle );
+
+	PlayerControllerComponent& playerController = player_entity.GetComponent< PlayerControllerComponent >();
+	playerController.timeLeftUntilNextShot = player_state.timeLeftUntilNextShot;
 }
 
 void ServerPlayerControllerSystem::Execute( ECS::EntityContainer& entity_container, float32 elapsed_time )
@@ -61,6 +68,7 @@ void ServerPlayerControllerSystem::Execute( ECS::EntityContainer& entity_contain
 		PlayerState currentPlayerState;
 		CreatePlayerState( *it, currentPlayerState );
 		PlayerState resultPlayerState;
+		_playerStateSimulator.Configure( _world, *it );
 		_playerStateSimulator.Simulate( *inputState, currentPlayerState, resultPlayerState, playerStateConfiguration,
 		                                elapsed_time );
 		ApplyPlayerState( *it, resultPlayerState );
@@ -84,7 +92,8 @@ void ServerPlayerControllerSystem::ConfigurePlayerControllerComponent( ECS::Game
 	const PlayerControllerComponentConfiguration& player_controller_config =
 	    static_cast< const PlayerControllerComponentConfiguration& >( *component_config_found->second );
 
-	const PlayerStateConfiguration playerStateConfig(player_controller_config.movementSpeed, player_controller_config.fireRatePerSecond);
+	const PlayerStateConfiguration playerStateConfig( player_controller_config.movementSpeed,
+	                                                  player_controller_config.fireRatePerSecond );
 
 	PlayerControllerComponent& player_controller = entity.GetComponent< PlayerControllerComponent >();
 	player_controller.stateConfiguration = playerStateConfig;
