@@ -220,3 +220,78 @@ project "Tests"
 
 	filter "configurations:Release"
 		optimize "On"
+
+group "Tests"
+project "TestDemoGame"
+	kind "ConsoleApp"
+	location "TestDemoGame"
+	language "C++"
+	targetdir "%{prj.name}/bin"
+	targetname "%{prj.name}_%{cfg.buildcfg}"
+
+	files
+	{
+		"vendor/googletest/googletest/src/gtest-all.cc",
+		"%{prj.name}/src/**.h",
+		"%{prj.name}/src/**.cpp",
+		"DemoGame/src/**.cpp"
+	}
+
+	removefiles
+	{
+		"DemoGame/src/main.cpp"
+	}
+
+	includedirs
+	{
+		--Delete later
+		"vendor/json/include/",
+		"NetworkLibrary/src/",
+		"vendor/sdl2/SDL2-2.30.1/include/",
+		"vendor/sdl2/SDL2_image-2.8.2/include/",
+		"vendor/sdl2/SDL2_mixer-2.8.0/include/",
+		"vendor/sdl2/SDL2_ttf-2.22.0/include/",
+
+		"vendor/entt/include/",
+		"vendor/googletest/googletest/include",
+		"vendor/googletest/googletest",
+		"DemoGame/src/",
+		"Common/src/",
+		"%{prj.name}/src/"
+	}
+
+	libdirs
+	{
+		--Delete later
+		"NetworkLibrary/bin",
+		"vendor/sdl2/SDL2-2.30.1/lib/x64",
+		"vendor/sdl2/SDL2_image-2.8.2/lib/x64",
+		"vendor/sdl2/SDL2_mixer-2.8.0/lib/x64",
+		"vendor/sdl2/SDL2_ttf-2.22.0/lib/x64"
+	}
+
+	links
+	{
+		--Delete later
+		"NetworkLibrary_%{cfg.buildcfg}",
+		"vendor/sdl2/SDL2-2.30.1/lib/x64/SDL2",
+		"vendor/sdl2/SDL2-2.30.1/lib/x64/SDL2main",
+		"vendor/sdl2/SDL2_image-2.8.2/lib/x64/SDL2_image",
+		"vendor/sdl2/SDL2_mixer-2.8.0/lib/x64/SDL2_mixer",
+		"vendor/sdl2/SDL2_ttf-2.22.0/lib/x64/SDL2_ttf"
+	}
+
+	dependson
+	{
+		"DemoGame"
+	}
+
+	filter "configurations:Debug"
+		defines
+		{
+			"LOG_ENABLED"
+		}
+		symbols "On"
+
+	filter "configurations:Release"
+		optimize "On"

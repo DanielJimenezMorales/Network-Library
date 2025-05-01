@@ -50,6 +50,9 @@ class Gizmo
 		Gizmo( Gizmo&& other ) noexcept = default;
 
 		virtual void ConfigureConcrete( const GizmoConfiguration* configuration ) = 0;
+
+		// TODO Decouple this function from here. I think it's better to create a BaseGizmoRenderer and a
+		// ConcreteGizmoRenderer classes. This should only contain data in order to remove the SDL include
 		virtual void RenderConcrete( const CameraComponent& camera, const TransformComponent& camera_transform,
 		                             const TransformComponent& transform, SDL_Renderer* renderer ) const = 0;
 
