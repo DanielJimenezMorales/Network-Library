@@ -25,8 +25,18 @@ class PlayerStateSimulator
 		bool Simulate( const InputState& inputs, const PlayerState& current_state, PlayerState& result_state,
 		               const PlayerStateConfiguration& configuration, float32 elapsed_time );
 
+		template < typename Functor >
+		uint32 SubscribeToOnShotPerformed( Functor&& functor );
+		void UnsubscribeFromOnShotPerformed( uint32 id );
+
 	private:
 		PlayerMovementController _movementController;
 		PlayerRotationController _rotationController;
 		PlayerShootingController _shootingController;
 };
+
+template < typename Functor >
+inline uint32 PlayerStateSimulator::SubscribeToOnShotPerformed( Functor&& functor )
+{
+	return _shootingController.OnShotPerformed.AddSubscriber( std::forward< Functor >( functor ) );
+}

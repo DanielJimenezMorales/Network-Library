@@ -29,3 +29,8 @@ bool PlayerStateSimulator::Simulate( const InputState& inputs, const PlayerState
 
 	return true;
 }
+
+void PlayerStateSimulator::UnsubscribeFromOnShotPerformed( uint32 id )
+{
+	_shootingController.OnShotPerformed.DeleteSubscriber( id );
+}

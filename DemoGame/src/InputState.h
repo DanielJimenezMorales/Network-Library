@@ -12,6 +12,7 @@ class InputState : public NetLib::IInputState
 		void Serialize( NetLib::Buffer& buffer ) const override;
 		void Deserialize( NetLib::Buffer& buffer ) override;
 
+		uint64 id;
 		Vec2f movement;
 		bool isShooting;
 		Vec2f virtualMousePosition;

@@ -7,6 +7,7 @@
 #include "logger.h"
 
 //TODO Make the delegate thread-safe
+//TODO Add Delegate handler instead of using a naive uint id
 namespace Common
 {
 	// This is a no allocation multicast delegate. It works like a C# Action delegate so it always return void and it
