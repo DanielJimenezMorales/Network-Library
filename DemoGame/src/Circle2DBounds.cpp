@@ -1,6 +1,6 @@
 #include "CircleBounds2D.h"
 
-#include "Circle2DGizmo.h"
+#include "gizmos/circle_gizmo.h"
 
 #include "components/transform_component.h"
 

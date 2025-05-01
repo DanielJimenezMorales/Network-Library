@@ -3,8 +3,9 @@
 #include "ecs/entity_container.h"
 #include "ecs/game_entity.hpp"
 
-#include "Gizmo.h"
-#include "ray_gizmo.h"
+#include "gizmos/ray_gizmo.h"
+#include "gizmos/circle_gizmo_renderer.h"
+#include "gizmos/ray_gizmo_renderer.h"
 
 #include "components/gizmo_renderer_component.h"
 #include "components/transform_component.h"
@@ -16,7 +17,14 @@
 GizmoRendererSystem::GizmoRendererSystem( SDL_Renderer* renderer )
     : ECS::ISimpleSystem()
     , _renderer( renderer )
+    , _gizmoRenderers()
 {
+	InitGizmoRenderers();
+}
+
+GizmoRendererSystem::~GizmoRendererSystem()
+{
+	DeallocateGizmoRenderers();
 }
 
 void GizmoRendererSystem::Execute( ECS::EntityContainer& entity_container, float32 elapsed_time )
@@ -38,7 +46,13 @@ void GizmoRendererSystem::Execute( ECS::EntityContainer& entity_container, float
 			continue;
 		}
 
-		gizmo->Render( camera, camera_transform, transform, _renderer );
+		auto gizmo_renderer_found = _gizmoRenderers.find( gizmo->GetType() );
+		if ( gizmo_renderer_found != _gizmoRenderers.end() )
+		{
+			const GizmoRenderer* gizmo_renderer = gizmo_renderer_found->second;
+			assert( gizmo_renderer != nullptr );
+			gizmo_renderer->Render( *gizmo, camera, camera_transform, transform, _renderer );
+		}
 
 		// TODO cache the color in a variable so I dont need to hardcode it in different places of the code
 		SDL_SetRenderDrawColor( _renderer, 255, 0, 0, 255 );
@@ -81,4 +95,25 @@ void GizmoRendererSystem::DeallocateGizmoRendererComponent( ECS::GameEntity& ent
 	const GizmoRendererComponent& gizmo_renderer = entity.GetComponent< GizmoRendererComponent >();
 	const bool remove_successfully = _gizmoResourceHandler.RemoveGizmo( gizmo_renderer.gizmoHandler );
 	assert( remove_successfully );
+}
+
+void GizmoRendererSystem::InitGizmoRenderers()
+{
+	_gizmoRenderers[ GizmoType::RAY ] = new RayGizmoRenderer();
+	_gizmoRenderers[ GizmoType::CIRCLE2D ] = new CircleGizmoRenderer();
+}
+
+void GizmoRendererSystem::DeallocateGizmoRenderers()
+{
+	auto it = _gizmoRenderers.begin();
+	for ( ; it != _gizmoRenderers.end(); ++it )
+	{
+		if ( it->second != nullptr )
+		{
+			delete it->second;
+			it->second = nullptr;
+		}
+	}
+
+	_gizmoRenderers.clear();
 }

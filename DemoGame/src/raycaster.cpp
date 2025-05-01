@@ -12,8 +12,6 @@
 
 namespace Raycaster
 {
-	// TODO Unit test this function in different use cases since there might be something wrong with it
-
 	/// <summary>
 	/// The algorithm here has been used from the section 5.3.2 Intersecting Ray or Segment Against Sphere from the book
 	/// https://www.r-5.org/files/books/computers/algo-list/realtime-3d/Christer_Ericson-Real-Time_Collision_Detection-EN.pdf

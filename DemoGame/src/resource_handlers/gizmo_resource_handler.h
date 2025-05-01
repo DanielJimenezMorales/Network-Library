@@ -1,7 +1,7 @@
 #pragma once
 #include "numeric_types.h"
 
-#include "Gizmo.h"
+#include "gizmos/Gizmo.h"
 
 #include "resource_handlers/gizmo_pool.h"
 

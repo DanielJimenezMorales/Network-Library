@@ -1,36 +1,40 @@
-#include "Circle2DGizmo.h"
-
-#include "components/camera_component.h"
-#include "components/transform_component.h"
-
-#include "coordinates_conversion_utils.h"
+#include "circle_gizmo_renderer.h"
 
 #include <cassert>
 
-CircleGizmo* CircleGizmo::Clone() const
+#include "numeric_types.h"
+#include "Vec2f.h"
+#include "coordinates_conversion_utils.h"
+
+#include "components/transform_component.h"
+#include "components/camera_component.h"
+
+#include "gizmos/gizmo.h"
+#include "gizmos/circle_gizmo.h"
+
+CircleGizmoRenderer::CircleGizmoRenderer()
+    : GizmoRenderer()
 {
-	return new CircleGizmo( *this );
 }
 
-void CircleGizmo::ConfigureConcrete( const GizmoConfiguration* configuration )
+void CircleGizmoRenderer::Render( const Gizmo& gizmo, const CameraComponent& camera,
+                                  const TransformComponent& camera_transform, const TransformComponent& transform,
+                                  SDL_Renderer* renderer ) const
 {
-	assert( configuration->type == GizmoType::CIRCLE2D );
+	assert( gizmo.GetType() == GizmoType::CIRCLE2D );
 
-	const CircleGizmoConfiguration& config = static_cast< const CircleGizmoConfiguration& >( *configuration );
-	_radius = config.radius;
-}
-
-void CircleGizmo::RenderConcrete( const CameraComponent& camera, const TransformComponent& camera_transform,
-                                  const TransformComponent& transform, SDL_Renderer* renderer ) const
-{
+	const CircleGizmo& circle_gizmo = static_cast< const CircleGizmo& >( gizmo );
 	const Vec2f position = transform.GetPosition();
 
 	// Start at the top of the circle
-	float32 x = _radius;
+	float32 x = circle_gizmo.GetRadius();
 	float32 y = 0;
 
 	// Decision parameter (initial value)
 	float32 decisionOver2 = 1 - x;
+
+	SDL_SetRenderDrawColor( renderer, circle_gizmo.GetR(), circle_gizmo.GetG(), circle_gizmo.GetB(),
+	                        circle_gizmo.GetA() );
 
 	// We loop until x < y, covering one octant
 	while ( y <= x )

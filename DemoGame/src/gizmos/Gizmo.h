@@ -1,11 +1,6 @@
 #pragma once
 #include "numeric_types.h"
 
-#include "SDL.h"
-
-struct CameraComponent;
-struct TransformComponent;
-
 enum class GizmoType : uint32
 {
 	NONE = 0,
@@ -29,9 +24,13 @@ class Gizmo
 		Gizmo& operator=( const Gizmo& other ) = default;
 		Gizmo& operator=( Gizmo&& other ) noexcept = default;
 
+		GizmoType GetType() const { return _type; }
+		uint8 GetR() const { return r; }
+		uint8 GetG() const { return g; }
+		uint8 GetB() const { return b; }
+		uint8 GetA() const { return a; }
+
 		void Configure( const GizmoConfiguration* configuration );
-		void Render( const CameraComponent& camera, const TransformComponent& camera_transform,
-		             const TransformComponent& transform, SDL_Renderer* renderer ) const;
 
 		virtual Gizmo* Clone() const = 0;
 
@@ -50,11 +49,6 @@ class Gizmo
 		Gizmo( Gizmo&& other ) noexcept = default;
 
 		virtual void ConfigureConcrete( const GizmoConfiguration* configuration ) = 0;
-
-		// TODO Decouple this function from here. I think it's better to create a BaseGizmoRenderer and a
-		// ConcreteGizmoRenderer classes. This should only contain data in order to remove the SDL include
-		virtual void RenderConcrete( const CameraComponent& camera, const TransformComponent& camera_transform,
-		                             const TransformComponent& transform, SDL_Renderer* renderer ) const = 0;
 
 	private:
 		uint8 r, g, b, a;

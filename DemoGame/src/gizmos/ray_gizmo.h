@@ -1,5 +1,5 @@
 #pragma once
-#include "gizmo.h"
+#include "gizmos/gizmo.h"
 
 struct RayGizmoConfiguration : public GizmoConfiguration
 {
@@ -33,12 +33,12 @@ class RayGizmo : public Gizmo
 		RayGizmo& operator=( const RayGizmo& other ) = default;
 		RayGizmo& operator=( RayGizmo&& other ) noexcept = default;
 
+		float32 GetLength() const { return _length; }
+
 		RayGizmo* Clone() const override;
 
 	protected:
 		void ConfigureConcrete( const GizmoConfiguration* configuration ) override;
-		void RenderConcrete( const CameraComponent& camera, const TransformComponent& camera_transform,
-		                     const TransformComponent& transform, SDL_Renderer* renderer ) const override;
 
 	private:
 		float32 _length;

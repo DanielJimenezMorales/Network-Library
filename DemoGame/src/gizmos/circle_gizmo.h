@@ -1,5 +1,5 @@
 #pragma once
-#include "Gizmo.h"
+#include "gizmos/Gizmo.h"
 
 struct CircleGizmoConfiguration : public GizmoConfiguration
 {
@@ -33,12 +33,12 @@ class CircleGizmo : public Gizmo
 		CircleGizmo& operator=( const CircleGizmo& other ) = default;
 		CircleGizmo& operator=( CircleGizmo&& other ) noexcept = default;
 
+		float32 GetRadius() const { return _radius; }
+
 		CircleGizmo* Clone() const override;
 
 	protected:
 		void ConfigureConcrete( const GizmoConfiguration* configuration ) override;
-		void RenderConcrete( const CameraComponent& camera, const TransformComponent& camera_transform,
-		                     const TransformComponent& transform, SDL_Renderer* renderer ) const override;
 
 	private:
 		float32 _radius;
