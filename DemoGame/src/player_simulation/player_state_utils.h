@@ -1,4 +1,5 @@
 #pragma once
+#include "numeric_types.h"
 
 namespace ECS
 {
@@ -7,5 +8,5 @@ namespace ECS
 
 struct PlayerState;
 
-void CreatePlayerStateFromPlayerEntity(const ECS::GameEntity& player_entity, PlayerState& player_state);
-void ApplyPlayerStateToPlayerEntity(ECS::GameEntity& player_entity, const PlayerState& player_state);
+PlayerState GetPlayerStateFromPlayerEntity( const ECS::GameEntity& player_entity, uint32 current_tick );
+void ApplyPlayerStateToPlayerEntity( ECS::GameEntity& player_entity, const PlayerState& player_state );

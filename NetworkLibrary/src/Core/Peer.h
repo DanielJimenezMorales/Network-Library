@@ -64,6 +64,7 @@ namespace NetLib
 
 			PeerConnectionState GetConnectionState() const { return _connectionState; }
 			PeerType GetPeerType() const { return _type; }
+			uint32 GetCurrentTick() const { return _currentTick; }
 
 			// Delegates related
 			template < typename Functor >
@@ -151,6 +152,8 @@ namespace NetLib
 			uint8* _receiveBuffer;
 			const uint32 _sendBufferSize;
 			uint8* _sendBuffer;
+
+			uint32 _currentTick;
 
 			// Stop request
 			bool _isStopRequested;

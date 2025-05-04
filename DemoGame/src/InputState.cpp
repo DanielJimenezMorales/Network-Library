@@ -2,14 +2,23 @@
 
 #include "core/buffer.h"
 
+InputState::InputState()
+    : IInputState()
+    , tick( 0 )
+    , movement( 0.f, 0.f )
+    , isShooting( false )
+    , virtualMousePosition( 0.f, 0.f )
+{
+}
+
 int32 InputState::GetSize() const
 {
-	return ( 1 * sizeof( uint64 ) ) + ( 4 * sizeof( float32 ) ) + ( 1 * sizeof( uint8 ) );
+	return ( 1 * sizeof( uint32 ) ) + ( 4 * sizeof( float32 ) ) + ( 1 * sizeof( uint8 ) );
 }
 
 void InputState::Serialize( NetLib::Buffer& buffer ) const
 {
-	buffer.WriteLong( id );
+	buffer.WriteInteger( tick );
 	buffer.WriteFloat( movement.X() );
 	buffer.WriteFloat( movement.Y() );
 
@@ -21,7 +30,7 @@ void InputState::Serialize( NetLib::Buffer& buffer ) const
 
 void InputState::Deserialize( NetLib::Buffer& buffer )
 {
-	id = buffer.ReadLong();
+	tick = buffer.ReadInteger();
 
 	movement.X( buffer.ReadFloat() );
 	movement.Y( buffer.ReadFloat() );

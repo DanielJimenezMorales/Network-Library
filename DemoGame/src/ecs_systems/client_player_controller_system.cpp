@@ -5,8 +5,7 @@
 #include "Vec2f.h"
 #include "InputActionIdsConfiguration.h"
 #include "raycaster.h"
-
-#include <vector>
+#include "client_side_prediction_buffer_slot.h"
 
 #include "ecs/game_entity.hpp"
 #include "ecs/entity_container.h"
@@ -19,10 +18,12 @@
 #include "components/collider_2d_component.h"
 #include "components/player_controller_component.h"
 #include "components/health_component.h"
+#include "components/client_side_prediction_component.h"
 
 #include "global_components/network_peer_global_component.h"
 
 #include "player_simulation/player_state_utils.h"
+#include "player_simulation/client_player_simulation_callbacks.h"
 
 #include "core/client.h"
 
@@ -30,21 +31,11 @@ ClientPlayerControllerSystem::ClientPlayerControllerSystem( ECS::World* world )
     : ECS::ISimpleSystem()
     , _world( world )
     , _nextInputStateId( 0 )
-    , _predictionBuffer()
 {
-	InitPredictionBuffer();
+	SubscribeToSimulationCallbacks();
 }
 
-void ClientPlayerControllerSystem::InitPredictionBuffer()
-{
-	_predictionBuffer.reserve( MAX_PREDICTION_BUFFER_SIZE );
-	for ( uint32 i = 0; i < MAX_PREDICTION_BUFFER_SIZE; ++i )
-	{
-		_predictionBuffer.emplace_back();
-	}
-}
-
-void ClientPlayerControllerSystem::ProcessInputs( ECS::EntityContainer& entityContainer, InputState& outInputState )
+static void ProcessInputs( ECS::EntityContainer& entityContainer, InputState& outInputState )
 {
 	const InputComponent& inputComponent = entityContainer.GetGlobalComponent< InputComponent >();
 
@@ -57,19 +48,34 @@ void ClientPlayerControllerSystem::ProcessInputs( ECS::EntityContainer& entityCo
 	const ECS::GameEntity& virtual_mouse_entity = entityContainer.GetFirstEntityOfType< VirtualMouseComponent >();
 	const TransformComponent& virtual_mouse_transform = virtual_mouse_entity.GetComponent< TransformComponent >();
 	outInputState.virtualMousePosition = virtual_mouse_transform.GetPosition();
-
-	outInputState.id = _nextInputStateId;
-	++_nextInputStateId;
 }
 
-void ClientPlayerControllerSystem::SavePlayerStateInBuffer( const InputState& input_state,
-                                                            const PlayerState& player_state )
+static InputState GetInputState( ECS::EntityContainer& entityContainer, uint32 current_tick, float32 elapsed_time )
 {
-	const uint32 slotIndex = input_state.id % MAX_PREDICTION_BUFFER_SIZE;
-	PredictionBufferSlot& slot = _predictionBuffer[ slotIndex ];
-	slot.isValid = true;
-	slot.inputState = input_state;
-	slot.playerState = player_state;
+	InputState inputState;
+	inputState.tick = current_tick;
+	ProcessInputs( entityContainer, inputState );
+	return inputState;
+}
+
+void ClientPlayerControllerSystem::OnShotPerformedCallback()
+{
+	OnShotPerformed( *_world, _currentPlayerEntityBeingProcessed );
+}
+
+void ClientPlayerControllerSystem::SubscribeToSimulationCallbacks()
+{
+	auto onShotPerformedCallback = std::bind( &ClientPlayerControllerSystem::OnShotPerformedCallback, this );
+	_playerStateSimulator.SubscribeToOnShotPerformed( onShotPerformedCallback );
+}
+
+void ClientPlayerControllerSystem::SavePlayerStateInBuffer(
+    ClientSidePredictionComponent& client_side_prediction_component, const InputState& input_state,
+    const PlayerState& player_state )
+{
+	const uint32 slotIndex = input_state.tick % client_side_prediction_component.MAX_PREDICTION_BUFFER_SIZE;
+	client_side_prediction_component.inputStatesBuffer[ slotIndex ] = input_state;
+	client_side_prediction_component.playerStatesBuffer[ slotIndex ] = player_state;
 }
 
 static void SendInputsToServer( ECS::EntityContainer& entityContainer, const InputState& inputState )
@@ -90,52 +96,25 @@ void ClientPlayerControllerSystem::Execute( ECS::EntityContainer& entity_contain
 		return;
 	}
 
-	InputState inputState;
-	ProcessInputs( entity_container, inputState );
+	const uint32 currentTick = networkPeerComponent.peer->GetCurrentTick();
+
+	const InputState inputState = GetInputState( entity_container, currentTick, elapsed_time );
 	SendInputsToServer( entity_container, inputState );
 
 	ECS::GameEntity local_player = entity_container.GetFirstEntityOfType< PlayerControllerComponent >();
+	_currentPlayerEntityBeingProcessed = local_player;
+
+	const PlayerState currentPlayerState = GetPlayerStateFromPlayerEntity( local_player, currentTick );
+
+	ClientSidePredictionComponent& clientSidePredictionComponent =
+	    local_player.GetComponent< ClientSidePredictionComponent >();
+	SavePlayerStateInBuffer( clientSidePredictionComponent, inputState, currentPlayerState );
+
 	PlayerControllerComponent& local_player_controller = local_player.GetComponent< PlayerControllerComponent >();
 	const PlayerStateConfiguration& playerStateConfiguration = local_player_controller.stateConfiguration;
-
-	PlayerState currentPlayerState;
-	CreatePlayerStateFromPlayerEntity( local_player, currentPlayerState );
-
-	PlayerState resultPlayerState;
-	_playerStateSimulator.Simulate( inputState, currentPlayerState, resultPlayerState, playerStateConfiguration,
-	                                elapsed_time );
-
-	SavePlayerStateInBuffer( inputState, resultPlayerState );
-
-	// TODO add this into the player simulator
-	//  Update time left until next shot
-	local_player_controller.timeLeftUntilNextShot -= elapsed_time;
-	if ( local_player_controller.timeLeftUntilNextShot <= 0.f )
-	{
-		local_player_controller.timeLeftUntilNextShot = 0.f;
-	}
-
-	if ( inputState.isShooting && local_player_controller.timeLeftUntilNextShot == 0.f )
-	{
-		local_player_controller.timeLeftUntilNextShot = local_player_controller.stateConfiguration.GetFireRate();
-
-		const TransformComponent& local_player_transform = local_player.GetComponent< TransformComponent >();
-
-		Raycaster::Ray ray;
-		ray.origin = local_player_transform.GetPosition();
-		ray.direction = local_player_transform.ConvertRotationAngleToNormalizedDirection();
-		ray.maxDistance = 100;
-
-		const std::vector< ECS::GameEntity > entities_with_colliders =
-		    entity_container.GetEntitiesOfBothTypes< Collider2DComponent, TransformComponent >();
-		const Raycaster::RaycastResult result = Raycaster::ExecuteRaycast( ray, entities_with_colliders, local_player );
-		if ( result.entity.IsValid() )
-		{
-			bool r = true;
-		}
-
-		ECS::GameEntity entity = _world->CreateGameEntity( "Raycast", ray.origin, ray.direction );
-	}
+	const PlayerState resultPlayerState =
+	    _playerStateSimulator.Simulate( inputState, currentPlayerState, playerStateConfiguration, elapsed_time );
+	_currentPlayerEntityBeingProcessed = ECS::GameEntity();
 }
 
 void ClientPlayerControllerSystem::ConfigurePlayerControllerComponent( ECS::GameEntity& entity,
@@ -162,4 +141,23 @@ void ClientPlayerControllerSystem::ConfigurePlayerControllerComponent( ECS::Game
 	player_controller.stateConfiguration = playerStateConfig;
 
 	player_controller.timeLeftUntilNextShot = 0.f;
+}
+
+void ClientPlayerControllerSystem::ConfigureClientSidePredictorComponent( ECS::GameEntity& entity,
+                                                                          const ECS::Prefab& prefab )
+{
+	if ( !entity.HasComponent< ClientSidePredictionComponent >() )
+	{
+		return;
+	}
+
+	ClientSidePredictionComponent& clientSidePredictor = entity.GetComponent< ClientSidePredictionComponent >();
+
+	clientSidePredictor.inputStatesBuffer.reserve( clientSidePredictor.MAX_PREDICTION_BUFFER_SIZE );
+	clientSidePredictor.playerStatesBuffer.reserve( clientSidePredictor.MAX_PREDICTION_BUFFER_SIZE );
+	for ( uint32 i = 0; i < clientSidePredictor.MAX_PREDICTION_BUFFER_SIZE; ++i )
+	{
+		clientSidePredictor.inputStatesBuffer.emplace_back();
+		clientSidePredictor.playerStatesBuffer.emplace_back();
+	}
 }

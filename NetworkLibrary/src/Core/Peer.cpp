@@ -38,6 +38,7 @@ namespace NetLib
 			return false;
 		}
 
+		_currentTick = 1;
 		LOG_INFO( "Peer started succesfully" );
 		return true;
 	}
@@ -73,6 +74,9 @@ namespace NetLib
 		{
 			StopInternal();
 		}
+
+		assert( _currentTick < MAX_UINT32 );
+		++_currentTick;
 
 		return true;
 	}
@@ -114,6 +118,7 @@ namespace NetLib
 	    , _isStopRequested( false )
 	    , _stopRequestShouldNotifyRemotePeers( false )
 	    , _stopRequestReason( ConnectionFailedReasonType::CFR_UNKNOWN )
+	    , _currentTick( 0 )
 	{
 		_receiveBuffer = new uint8[ _receiveBufferSize ];
 		_sendBuffer = new uint8[ _sendBufferSize ];

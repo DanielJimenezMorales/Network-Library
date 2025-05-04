@@ -1,6 +1,10 @@
 #pragma once
 #include "ecs/i_simple_system.h"
 
+#include "ecs/game_entity.hpp"
+
+#include "numeric_types.h"
+
 #include "player_simulation/player_state_simulator.h"
 #include "player_simulation/player_state.h"
 
@@ -14,21 +18,9 @@ namespace ECS
 	class Prefab;
 }
 
-struct PredictionBufferSlot
-{
-		PredictionBufferSlot()
-		    : isValid( false )
-		    , inputState()
-		    , playerState()
-		{
-		}
+struct ClientSidePredictionComponent;
 
-		bool isValid;
-		InputState inputState;
-		PlayerState playerState;
-};
-
-//TODO Rename this class to something related to Client-side prediction
+// TODO Rename this class to something related to Client-side prediction
 class ClientPlayerControllerSystem : public ECS::ISimpleSystem
 {
 	public:
@@ -37,18 +29,18 @@ class ClientPlayerControllerSystem : public ECS::ISimpleSystem
 		void Execute( ECS::EntityContainer& entity_container, float32 elapsed_time ) override;
 
 		void ConfigurePlayerControllerComponent( ECS::GameEntity& entity, const ECS::Prefab& prefab );
+		void ConfigureClientSidePredictorComponent( ECS::GameEntity& entity, const ECS::Prefab& prefab );
 
 	private:
-		void InitPredictionBuffer();
-		void ProcessInputs( ECS::EntityContainer& entityContainer, InputState& outInputState );
-		void SavePlayerStateInBuffer( const InputState& input_state, const PlayerState& player_state );
+		void OnShotPerformedCallback();
+		void SubscribeToSimulationCallbacks();
+		void SavePlayerStateInBuffer( ClientSidePredictionComponent& client_side_prediction_component,
+		                              const InputState& input_state, const PlayerState& player_state );
 
 		ECS::World* _world;
+		ECS::GameEntity _currentPlayerEntityBeingProcessed;
 
 		uint64 _nextInputStateId;
-
-		const uint32 MAX_PREDICTION_BUFFER_SIZE = 256;
-		std::vector< PredictionBufferSlot > _predictionBuffer;
 
 		PlayerStateSimulator _playerStateSimulator;
 };

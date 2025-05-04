@@ -6,6 +6,7 @@
 		"Collider2D",
 		"NetworkEntity",
 		"PlayerController",
-		"HealthComponent"
+		"HealthComponent",
+		"ClientSidePrediction"
 	]
 }

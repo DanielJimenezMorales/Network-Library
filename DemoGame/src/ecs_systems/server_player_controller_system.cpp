@@ -46,12 +46,10 @@ void ServerPlayerControllerSystem::Execute( ECS::EntityContainer& entity_contain
 		const PlayerControllerComponent& playerController = it->GetComponent< PlayerControllerComponent >();
 		const PlayerStateConfiguration& playerStateConfiguration = playerController.stateConfiguration;
 
-		PlayerState currentPlayerState;
-		CreatePlayerStateFromPlayerEntity( *it, currentPlayerState );
-		PlayerState resultPlayerState;
+		const PlayerState currentPlayerState = GetPlayerStateFromPlayerEntity( *it, inputState->tick );
 		_playerStateSimulator.Configure( _world, *it );
-		_playerStateSimulator.Simulate( *inputState, currentPlayerState, resultPlayerState, playerStateConfiguration,
-		                                elapsed_time );
+		const PlayerState resultPlayerState =
+		    _playerStateSimulator.Simulate( *inputState, currentPlayerState, playerStateConfiguration, elapsed_time );
 		ApplyPlayerStateToPlayerEntity( *it, resultPlayerState );
 	}
 }

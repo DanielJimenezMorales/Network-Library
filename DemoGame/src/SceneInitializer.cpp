@@ -28,6 +28,7 @@
 #include "components/raycast_component.h"
 #include "components/temporary_lifetime_component.h"
 #include "components/health_component.h"
+#include "components/client_side_prediction_component.h"
 
 #include "component_configurations/sprite_renderer_component_configuration.h"
 #include "component_configurations/player_controller_component_configuration.h"
@@ -69,6 +70,7 @@ static void RegisterComponents( ECS::World& scene )
 	scene.RegisterComponent< RaycastComponent >( "Raycast" );
 	scene.RegisterComponent< TemporaryLifetimeComponent >( "TemporaryLifetime" );
 	scene.RegisterComponent< HealthComponent >( "HealthComponent" );
+	scene.RegisterComponent< ClientSidePredictionComponent >( "ClientSidePrediction" );
 }
 
 static void RegisterArchetypes( ECS::World& scene )
@@ -139,7 +141,7 @@ static void RegisterSystems( ECS::World& scene, NetLib::PeerType networkPeerType
 		// Add Server-side player controller system
 		ECS::SystemCoordinator* server_player_controller_system_coordinator =
 		    new ECS::SystemCoordinator( ECS::ExecutionStage::TICK );
-		ServerPlayerControllerSystem* server_player_controller_system = new ServerPlayerControllerSystem(&scene);
+		ServerPlayerControllerSystem* server_player_controller_system = new ServerPlayerControllerSystem( &scene );
 		server_player_controller_system_coordinator->AddSystemToTail( server_player_controller_system );
 		auto on_configure_player_controller_callback =
 		    std::bind( &ServerPlayerControllerSystem::ConfigurePlayerControllerComponent,
@@ -162,6 +164,10 @@ static void RegisterSystems( ECS::World& scene, NetLib::PeerType networkPeerType
 		    std::bind( &ClientPlayerControllerSystem::ConfigurePlayerControllerComponent,
 		               client_player_controller_system, std::placeholders::_1, std::placeholders::_2 );
 		scene.SubscribeToOnEntityConfigure( on_configure_player_controller_callback );
+		auto on_configure_client_side_predictor_callback =
+		    std::bind( &ClientPlayerControllerSystem::ConfigureClientSidePredictorComponent,
+		               client_player_controller_system, std::placeholders::_1, std::placeholders::_2 );
+		scene.SubscribeToOnEntityConfigure( on_configure_client_side_predictor_callback );
 		scene.AddSystem( client_player_controller_system_coordinator );
 
 		// Add Client-side remote player controller system

@@ -17,17 +17,16 @@ void PlayerStateSimulator::Configure( const ECS::World* world, const ECS::GameEn
 {
 }
 
-bool PlayerStateSimulator::Simulate( const InputState& inputs, const PlayerState& current_state,
-                                     PlayerState& result_state, const PlayerStateConfiguration& configuration,
+PlayerState PlayerStateSimulator::Simulate( const InputState& inputs, const PlayerState& current_state, const PlayerStateConfiguration& configuration,
                                      float32 elapsed_time )
 {
-	result_state.ZeroOut();
+	PlayerState playerState;
 
-	_movementController.Simulate( inputs, current_state, result_state, elapsed_time, configuration );
-	_rotationController.Simulate( inputs, current_state, result_state, elapsed_time, configuration );
-	_shootingController.Simulate( inputs, current_state, result_state, elapsed_time, configuration );
+	_movementController.Simulate( inputs, current_state, playerState, elapsed_time, configuration );
+	_rotationController.Simulate( inputs, current_state, playerState, elapsed_time, configuration );
+	_shootingController.Simulate( inputs, current_state, playerState, elapsed_time, configuration );
 
-	return true;
+	return playerState;
 }
 
 void PlayerStateSimulator::UnsubscribeFromOnShotPerformed( uint32 id )
