@@ -3,19 +3,19 @@
 #include "ICursor.h"
 
 #include "ecs/game_entity.hpp"
-#include "ecs/entity_container.h"
+#include "ecs/world.h"
 
 #include "components/virtual_mouse_component.h"
 #include "components/camera_component.h"
 #include "components/input_component.h"
 #include "components/transform_component.h"
 
-void VirtualMouseSystem::Execute( ECS::EntityContainer& entity_container, float32 elapsed_time )
+void VirtualMouseSystem::Execute( ECS::World& world, float32 elapsed_time )
 {
-	const CameraComponent& cameraComponent = entity_container.GetFirstComponentOfType< CameraComponent >();
-	const InputComponent& inputComponent = entity_container.GetGlobalComponent< InputComponent >();
+	const CameraComponent& cameraComponent = world.GetFirstComponentOfType< CameraComponent >();
+	const InputComponent& inputComponent = world.GetGlobalComponent< InputComponent >();
 
-	std::vector< ECS::GameEntity > entities = entity_container.GetEntitiesOfType< VirtualMouseComponent >();
+	std::vector< ECS::GameEntity > entities = world.GetEntitiesOfType< VirtualMouseComponent >();
 	for ( auto it = entities.begin(); it != entities.end(); ++it )
 	{
 		TransformComponent& virtual_mouse_transform = it->GetComponent< TransformComponent >();

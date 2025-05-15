@@ -1,6 +1,7 @@
 #include "remote_player_controller_system.h"
 
 #include "ecs/game_entity.hpp"
+#include "ecs/world.h"
 
 #include "components/transform_component.h"
 #include "components/remote_player_controller_component.h"
@@ -10,9 +11,9 @@ RemotePlayerControllerSystem::RemotePlayerControllerSystem()
 {
 }
 
-void RemotePlayerControllerSystem::Execute( ECS::EntityContainer& entity_container, float32 elapsed_time )
+void RemotePlayerControllerSystem::Execute( ECS::World& world, float32 elapsed_time )
 {
-	std::vector< ECS::GameEntity > entities = entity_container.GetEntitiesOfType< RemotePlayerControllerComponent >();
+	std::vector< ECS::GameEntity > entities = world.GetEntitiesOfType< RemotePlayerControllerComponent >();
 	// TODO Is this still valid?
 	for ( auto it = entities.begin(); it != entities.end(); ++it )
 	{

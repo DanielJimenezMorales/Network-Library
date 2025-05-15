@@ -4,19 +4,15 @@
 namespace ECS
 {
 	class Prefab;
-	class World;
 	class GameEntity;
 }
 
 class TemporaryLifetimeObjectsSystem : public ECS::ISimpleSystem
 {
 	public:
-		TemporaryLifetimeObjectsSystem( ECS::World* world );
+		TemporaryLifetimeObjectsSystem();
 
-		void Execute( ECS::EntityContainer& entity_container, float32 elapsed_time ) override;
+		void Execute( ECS::World& world, float32 elapsed_time ) override;
 
 		void ConfigureTemporaryLifetimeComponent( ECS::GameEntity& entity, const ECS::Prefab& prefab );
-
-	private:
-		ECS::World* _world;
 };

@@ -3,7 +3,6 @@
 #include "InputState.h"
 
 #include "ecs/game_entity.hpp"
-#include "ecs/entity_container.h"
 #include "ecs/prefab.h"
 #include "ecs/world.h"
 
@@ -17,20 +16,18 @@
 #include "player_simulation/player_state_configuration.h"
 #include "player_simulation/player_state_utils.h"
 
-ServerPlayerControllerSystem::ServerPlayerControllerSystem( ECS::World* world )
+ServerPlayerControllerSystem::ServerPlayerControllerSystem()
     : ECS::ISimpleSystem()
-    , _world( world )
     , _playerStateSimulator()
 {
 }
 
-void ServerPlayerControllerSystem::Execute( ECS::EntityContainer& entity_container, float32 elapsed_time )
+void ServerPlayerControllerSystem::Execute( ECS::World& world, float32 elapsed_time )
 {
-	NetworkPeerGlobalComponent& networkPeerComponent =
-	    entity_container.GetGlobalComponent< NetworkPeerGlobalComponent >();
+	NetworkPeerGlobalComponent& networkPeerComponent = world.GetGlobalComponent< NetworkPeerGlobalComponent >();
 	NetLib::Server* serverPeer = networkPeerComponent.GetPeerAsServer();
 
-	std::vector< ECS::GameEntity > entities = entity_container.GetEntitiesOfType< PlayerControllerComponent >();
+	std::vector< ECS::GameEntity > entities = world.GetEntitiesOfType< PlayerControllerComponent >();
 	for ( auto it = entities.begin(); it != entities.end(); ++it )
 	{
 		const NetworkEntityComponent& networkEntityComponent = it->GetComponent< NetworkEntityComponent >();
@@ -47,7 +44,7 @@ void ServerPlayerControllerSystem::Execute( ECS::EntityContainer& entity_contain
 		const PlayerStateConfiguration& playerStateConfiguration = playerController.stateConfiguration;
 
 		const PlayerState currentPlayerState = GetPlayerStateFromPlayerEntity( *it, inputState->tick );
-		_playerStateSimulator.Configure( _world, *it );
+		_playerStateSimulator.Configure( world, *it );
 		const PlayerState resultPlayerState =
 		    _playerStateSimulator.Simulate( *inputState, currentPlayerState, playerStateConfiguration, elapsed_time );
 		ApplyPlayerStateToPlayerEntity( *it, resultPlayerState );

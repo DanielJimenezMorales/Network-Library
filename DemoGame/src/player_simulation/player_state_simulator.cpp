@@ -13,7 +13,7 @@ PlayerStateSimulator::PlayerStateSimulator()
 {
 }
 
-void PlayerStateSimulator::Configure( const ECS::World* world, const ECS::GameEntity& player_entity )
+void PlayerStateSimulator::Configure( const ECS::World& world, const ECS::GameEntity& player_entity )
 {
 }
 

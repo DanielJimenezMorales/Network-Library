@@ -31,7 +31,7 @@ namespace ECS
 		_systems.clear();
 	}
 
-	void SystemsHandler::TickStage( EntityContainer& entity_container, float32 elapsed_time, ExecutionStage stage )
+	void SystemsHandler::TickStage(World& world, float32 elapsed_time, ExecutionStage stage )
 	{
 		auto systems_found = _systems.find( stage );
 
@@ -41,7 +41,7 @@ namespace ECS
 			auto it = stage_systems.begin();
 			for ( ; it != stage_systems.end(); ++it )
 			{
-				( *it )->Execute( entity_container, elapsed_time );
+				( *it )->Execute( world, elapsed_time );
 			}
 		}
 	}

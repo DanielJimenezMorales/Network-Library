@@ -10,10 +10,13 @@ struct ClientSidePredictionComponent
 		ClientSidePredictionComponent()
 		    : inputStatesBuffer()
 		    , playerStatesBuffer()
+		    , playerStatesReceivedFromServer()
 		{
 		}
 
 		const uint32 MAX_PREDICTION_BUFFER_SIZE = 256;
 		std::vector< InputState > inputStatesBuffer;
 		std::vector< PlayerState > playerStatesBuffer;
+
+		std::vector< PlayerState > playerStatesReceivedFromServer;
 };

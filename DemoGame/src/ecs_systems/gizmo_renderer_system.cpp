@@ -1,6 +1,6 @@
 #include "gizmo_renderer_system.h"
 
-#include "ecs/entity_container.h"
+#include "ecs/world.h"
 #include "ecs/game_entity.hpp"
 
 #include "gizmos/ray_gizmo.h"
@@ -27,14 +27,14 @@ GizmoRendererSystem::~GizmoRendererSystem()
 	DeallocateGizmoRenderers();
 }
 
-void GizmoRendererSystem::Execute( ECS::EntityContainer& entity_container, float32 elapsed_time )
+void GizmoRendererSystem::Execute( ECS::World& world, float32 elapsed_time )
 {
-	const ECS::GameEntity& camera_entity = entity_container.GetFirstEntityOfType< CameraComponent >();
+	const ECS::GameEntity& camera_entity = world.GetFirstEntityOfType< CameraComponent >();
 	const CameraComponent& camera = camera_entity.GetComponent< CameraComponent >();
 	const TransformComponent& camera_transform = camera_entity.GetComponent< TransformComponent >();
 
 	std::vector< ECS::GameEntity > entities =
-	    entity_container.GetEntitiesOfBothTypes< GizmoRendererComponent, TransformComponent >();
+	    world.GetEntitiesOfBothTypes< GizmoRendererComponent, TransformComponent >();
 	for ( auto it = entities.begin(); it != entities.end(); ++it )
 	{
 		const TransformComponent& transform = it->GetComponent< TransformComponent >();

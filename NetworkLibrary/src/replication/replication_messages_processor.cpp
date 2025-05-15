@@ -17,6 +17,7 @@ namespace NetLib
 {
 	ReplicationMessagesProcessor::ReplicationMessagesProcessor()
 	    : _networkEntitiesStorage()
+	    , _localPeerId( 0 )
 	{
 	}
 
@@ -38,6 +39,11 @@ namespace NetLib
 			default:
 				LOG_WARNING( "Invalid replication action. Skipping it..." );
 		}
+	}
+
+	void ReplicationMessagesProcessor::SetLocalClientId( uint32 id )
+	{
+		_localPeerId = id;
 	}
 
 	void ReplicationMessagesProcessor::ProcessReceivedCreateReplicationMessage(
@@ -111,7 +117,15 @@ namespace NetLib
 
 		// TODO Pass entity state to target entity
 		Buffer buffer( replicationMessage.data, replicationMessage.dataSize );
-		entity_data->communicationCallbacks.OnUnserializeEntityStateForOwner.Execute( buffer );
+
+		if ( entity_data->controlledByPeerId == _localPeerId )
+		{
+			entity_data->communicationCallbacks.OnUnserializeEntityStateForOwner.Execute( buffer );
+		}
+		else
+		{
+			entity_data->communicationCallbacks.OnUnserializeEntityStateForNonOwner.Execute( buffer );
+		}
 	}
 
 	void ReplicationMessagesProcessor::ProcessReceivedDestroyReplicationMessage(

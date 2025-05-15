@@ -76,12 +76,20 @@ void NetworkEntityCreatorSystem::OnNetworkEntityComponentConfigure( ECS::GameEnt
 		};
 
 		_config.communicationCallbacks->OnUnserializeEntityStateForOwner.AddSubscriber( callback_for_owner );
+
+		auto callback_for_non_owner = [ entity ]( NetLib::Buffer& buffer ) mutable
+		{
+			DeserializeForNonOwner( entity, buffer );
+		};
+
+		_config.communicationCallbacks->OnUnserializeEntityStateForNonOwner.AddSubscriber( callback_for_non_owner );
 	}
 	else if ( _peerType == NetLib::PeerType::SERVER )
 	{
-		auto callback_for_owner = [ entity ]( NetLib::Buffer& buffer ) mutable
+		const ECS::World& world = *_scene;
+		auto callback_for_owner = [ &world, entity ]( NetLib::Buffer& buffer ) mutable
 		{
-			SerializeForOwner( entity, buffer );
+			SerializeForOwner( world, entity, buffer );
 		};
 
 		_config.communicationCallbacks->OnSerializeEntityStateForOwner.AddSubscriber( callback_for_owner );

@@ -1,4 +1,4 @@
-#include "client_player_controller_system.h"
+#include "client_local_player_predictor_system.h"
 
 #include "IInputController.h"
 #include "ICursor.h"
@@ -8,7 +8,6 @@
 #include "client_side_prediction_buffer_slot.h"
 
 #include "ecs/game_entity.hpp"
-#include "ecs/entity_container.h"
 #include "ecs/prefab.h"
 #include "ecs/world.h"
 
@@ -27,7 +26,7 @@
 
 #include "core/client.h"
 
-ClientPlayerControllerSystem::ClientPlayerControllerSystem( ECS::World* world )
+ClientLocalPlayerPredictorSystem::ClientLocalPlayerPredictorSystem( ECS::World* world )
     : ECS::ISimpleSystem()
     , _world( world )
     , _nextInputStateId( 0 )
@@ -35,9 +34,9 @@ ClientPlayerControllerSystem::ClientPlayerControllerSystem( ECS::World* world )
 	SubscribeToSimulationCallbacks();
 }
 
-static void ProcessInputs( ECS::EntityContainer& entityContainer, InputState& outInputState )
+static void ProcessInputs( ECS::World& world, InputState& outInputState )
 {
-	const InputComponent& inputComponent = entityContainer.GetGlobalComponent< InputComponent >();
+	const InputComponent& inputComponent = world.GetGlobalComponent< InputComponent >();
 
 	outInputState.movement.X( inputComponent.inputController->GetAxis( HORIZONTAL_AXIS ) );
 	outInputState.movement.Y( inputComponent.inputController->GetAxis( VERTICAL_AXIS ) );
@@ -45,31 +44,31 @@ static void ProcessInputs( ECS::EntityContainer& entityContainer, InputState& ou
 
 	outInputState.isShooting = inputComponent.cursor->GetButtonPressed( SHOOT_BUTTON );
 
-	const ECS::GameEntity& virtual_mouse_entity = entityContainer.GetFirstEntityOfType< VirtualMouseComponent >();
+	const ECS::GameEntity& virtual_mouse_entity = world.GetFirstEntityOfType< VirtualMouseComponent >();
 	const TransformComponent& virtual_mouse_transform = virtual_mouse_entity.GetComponent< TransformComponent >();
 	outInputState.virtualMousePosition = virtual_mouse_transform.GetPosition();
 }
 
-static InputState GetInputState( ECS::EntityContainer& entityContainer, uint32 current_tick, float32 elapsed_time )
+static InputState GetInputState( ECS::World& world, uint32 current_tick, float32 elapsed_time )
 {
 	InputState inputState;
 	inputState.tick = current_tick;
-	ProcessInputs( entityContainer, inputState );
+	ProcessInputs( world, inputState );
 	return inputState;
 }
 
-void ClientPlayerControllerSystem::OnShotPerformedCallback()
+void ClientLocalPlayerPredictorSystem::OnShotPerformedCallback()
 {
 	OnShotPerformed( *_world, _currentPlayerEntityBeingProcessed );
 }
 
-void ClientPlayerControllerSystem::SubscribeToSimulationCallbacks()
+void ClientLocalPlayerPredictorSystem::SubscribeToSimulationCallbacks()
 {
-	auto onShotPerformedCallback = std::bind( &ClientPlayerControllerSystem::OnShotPerformedCallback, this );
+	auto onShotPerformedCallback = std::bind( &ClientLocalPlayerPredictorSystem::OnShotPerformedCallback, this );
 	_playerStateSimulator.SubscribeToOnShotPerformed( onShotPerformedCallback );
 }
 
-void ClientPlayerControllerSystem::SavePlayerStateInBuffer(
+void ClientLocalPlayerPredictorSystem::SavePlayerStateInBuffer(
     ClientSidePredictionComponent& client_side_prediction_component, const InputState& input_state,
     const PlayerState& player_state )
 {
@@ -78,19 +77,17 @@ void ClientPlayerControllerSystem::SavePlayerStateInBuffer(
 	client_side_prediction_component.playerStatesBuffer[ slotIndex ] = player_state;
 }
 
-static void SendInputsToServer( ECS::EntityContainer& entityContainer, const InputState& inputState )
+static void SendInputsToServer( ECS::World& world, const InputState& inputState )
 {
-	NetworkPeerGlobalComponent& networkPeerComponent =
-	    entityContainer.GetGlobalComponent< NetworkPeerGlobalComponent >();
+	NetworkPeerGlobalComponent& networkPeerComponent = world.GetGlobalComponent< NetworkPeerGlobalComponent >();
 
 	NetLib::Client& networkClient = *static_cast< NetLib::Client* >( networkPeerComponent.peer );
 	networkClient.SendInputs( inputState );
 }
 
-void ClientPlayerControllerSystem::Execute( ECS::EntityContainer& entity_container, float32 elapsed_time )
+void ClientLocalPlayerPredictorSystem::Execute( ECS::World& world, float32 elapsed_time )
 {
-	const NetworkPeerGlobalComponent& networkPeerComponent =
-	    entity_container.GetGlobalComponent< NetworkPeerGlobalComponent >();
+	const NetworkPeerGlobalComponent& networkPeerComponent = world.GetGlobalComponent< NetworkPeerGlobalComponent >();
 	if ( networkPeerComponent.peer->GetConnectionState() != NetLib::PCS_Connected )
 	{
 		return;
@@ -98,10 +95,10 @@ void ClientPlayerControllerSystem::Execute( ECS::EntityContainer& entity_contain
 
 	const uint32 currentTick = networkPeerComponent.peer->GetCurrentTick();
 
-	const InputState inputState = GetInputState( entity_container, currentTick, elapsed_time );
-	SendInputsToServer( entity_container, inputState );
+	const InputState inputState = GetInputState( world, currentTick, elapsed_time );
+	SendInputsToServer( world, inputState );
 
-	ECS::GameEntity local_player = entity_container.GetFirstEntityOfType< PlayerControllerComponent >();
+	ECS::GameEntity local_player = world.GetFirstEntityOfType< PlayerControllerComponent >();
 	_currentPlayerEntityBeingProcessed = local_player;
 
 	const PlayerState currentPlayerState = GetPlayerStateFromPlayerEntity( local_player, currentTick );
@@ -115,10 +112,12 @@ void ClientPlayerControllerSystem::Execute( ECS::EntityContainer& entity_contain
 	const PlayerState resultPlayerState =
 	    _playerStateSimulator.Simulate( inputState, currentPlayerState, playerStateConfiguration, elapsed_time );
 	_currentPlayerEntityBeingProcessed = ECS::GameEntity();
+
+	// TODO Apply changes
 }
 
-void ClientPlayerControllerSystem::ConfigurePlayerControllerComponent( ECS::GameEntity& entity,
-                                                                       const ECS::Prefab& prefab )
+void ClientLocalPlayerPredictorSystem::ConfigurePlayerControllerComponent( ECS::GameEntity& entity,
+                                                                           const ECS::Prefab& prefab )
 {
 	auto component_config_found = prefab.componentConfigurations.find( "PlayerController" );
 	if ( component_config_found == prefab.componentConfigurations.end() )
@@ -143,8 +142,8 @@ void ClientPlayerControllerSystem::ConfigurePlayerControllerComponent( ECS::Game
 	player_controller.timeLeftUntilNextShot = 0.f;
 }
 
-void ClientPlayerControllerSystem::ConfigureClientSidePredictorComponent( ECS::GameEntity& entity,
-                                                                          const ECS::Prefab& prefab )
+void ClientLocalPlayerPredictorSystem::ConfigureClientSidePredictorComponent( ECS::GameEntity& entity,
+                                                                              const ECS::Prefab& prefab )
 {
 	if ( !entity.HasComponent< ClientSidePredictionComponent >() )
 	{

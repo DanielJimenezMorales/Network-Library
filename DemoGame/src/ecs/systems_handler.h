@@ -6,7 +6,7 @@
 
 namespace ECS
 {
-	class EntityContainer;
+	class World;
 
 	/// <summary>
 	/// <para>The systems handler acts as a storage of all different systems for each execution stage.</para>
@@ -22,7 +22,7 @@ namespace ECS
 
 			void Clear();
 
-			void TickStage( EntityContainer& entity_container, float elapsed_time, ExecutionStage stage );
+			void TickStage( World& world, float elapsed_time, ExecutionStage stage );
 
 		private:
 			std::unordered_map< ExecutionStage, std::vector< SystemCoordinator* > > _systems;

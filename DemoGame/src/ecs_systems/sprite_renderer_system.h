@@ -15,7 +15,7 @@ class SpriteRendererSystem : public ECS::ISimpleSystem
 	public:
 		SpriteRendererSystem( SDL_Renderer* renderer );
 
-		void Execute( ECS::EntityContainer& entity_container, float32 elapsed_time ) override;
+		void Execute( ECS::World& world, float32 elapsed_time ) override;
 
 		TextureResourceHandler* GetTextureResourceHandler() { return &_textureResourceHandler; }
 

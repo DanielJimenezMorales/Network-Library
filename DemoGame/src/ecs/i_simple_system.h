@@ -4,7 +4,7 @@
 namespace ECS
 {
 	class GameEntity;
-	class EntityContainer;
+	class World;
 
 	class ISimpleSystem
 	{
@@ -12,6 +12,6 @@ namespace ECS
 			ISimpleSystem() {}
 			virtual ~ISimpleSystem() {}
 
-			virtual void Execute( EntityContainer& entity_container, float32 elapsed_time ) = 0;
+			virtual void Execute( World& world, float32 elapsed_time ) = 0;
 	};
 }

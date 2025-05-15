@@ -14,19 +14,18 @@
 
 namespace ECS
 {
-	class World;
 	class Prefab;
 }
 
 struct ClientSidePredictionComponent;
 
 // TODO Rename this class to something related to Client-side prediction
-class ClientPlayerControllerSystem : public ECS::ISimpleSystem
+class ClientLocalPlayerPredictorSystem : public ECS::ISimpleSystem
 {
 	public:
-		ClientPlayerControllerSystem( ECS::World* world );
+		ClientLocalPlayerPredictorSystem( ECS::World* world );
 
-		void Execute( ECS::EntityContainer& entity_container, float32 elapsed_time ) override;
+		void Execute( ECS::World& world, float32 elapsed_time ) override;
 
 		void ConfigurePlayerControllerComponent( ECS::GameEntity& entity, const ECS::Prefab& prefab );
 		void ConfigureClientSidePredictorComponent( ECS::GameEntity& entity, const ECS::Prefab& prefab );
@@ -37,6 +36,7 @@ class ClientPlayerControllerSystem : public ECS::ISimpleSystem
 		void SavePlayerStateInBuffer( ClientSidePredictionComponent& client_side_prediction_component,
 		                              const InputState& input_state, const PlayerState& player_state );
 
+		// TODO Remove this world dependency asap
 		ECS::World* _world;
 		ECS::GameEntity _currentPlayerEntityBeingProcessed;
 

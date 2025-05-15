@@ -8,19 +8,17 @@
 namespace ECS
 {
 	class Prefab;
-	class World;
 }
 
 class ServerPlayerControllerSystem : public ECS::ISimpleSystem
 {
 	public:
-		ServerPlayerControllerSystem( ECS::World* world );
+		ServerPlayerControllerSystem();
 
-		void Execute( ECS::EntityContainer& entity_container, float32 elapsed_time ) override;
+		void Execute( ECS::World& world, float32 elapsed_time ) override;
 
 		void ConfigurePlayerControllerComponent( ECS::GameEntity& entity, const ECS::Prefab& prefab );
 
 	private:
-		ECS::World* _world;
 		PlayerStateSimulator _playerStateSimulator;
 };

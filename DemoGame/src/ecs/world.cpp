@@ -38,27 +38,27 @@ namespace ECS
 
 	void World::Update( float32 elapsed_time )
 	{
-		_systemsHandler.TickStage( _entityContainer, elapsed_time, ExecutionStage::UPDATE );
+		_systemsHandler.TickStage( *this, elapsed_time, ExecutionStage::UPDATE );
 	}
 
 	void World::PreTick( float32 elapsed_time )
 	{
-		_systemsHandler.TickStage( _entityContainer, elapsed_time, ExecutionStage::PRETICK );
+		_systemsHandler.TickStage( *this, elapsed_time, ExecutionStage::PRETICK );
 	}
 
 	void World::Tick( float32 elapsed_time )
 	{
-		_systemsHandler.TickStage( _entityContainer, elapsed_time, ExecutionStage::TICK );
+		_systemsHandler.TickStage( *this, elapsed_time, ExecutionStage::TICK );
 	}
 
 	void World::PosTick( float32 elapsed_time )
 	{
-		_systemsHandler.TickStage( _entityContainer, elapsed_time, ExecutionStage::POSTICK );
+		_systemsHandler.TickStage( *this, elapsed_time, ExecutionStage::POSTICK );
 	}
 
 	void World::Render( float32 elapsed_time )
 	{
-		_systemsHandler.TickStage( _entityContainer, elapsed_time, ExecutionStage::RENDER );
+		_systemsHandler.TickStage( *this, elapsed_time, ExecutionStage::RENDER );
 	}
 
 	void World::EndOfFrame()
