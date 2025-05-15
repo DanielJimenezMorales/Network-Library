@@ -7,6 +7,7 @@
 
 #include "components/transform_component.h"
 #include "components/client_side_prediction_component.h"
+#include "components/server_player_state_storage_component.h"
 
 #include "global_components/network_peer_global_component.h"
 
@@ -17,9 +18,9 @@
 
 void SerializeForOwner( const ECS::World& world, const ECS::GameEntity& entity, NetLib::Buffer& buffer )
 {
-	const NetworkPeerGlobalComponent& networkPeer = world.GetGlobalComponent< NetworkPeerGlobalComponent >();
-	PlayerState playerState = GetPlayerStateFromPlayerEntity( entity, networkPeer.peer->GetCurrentTick() );
-	SerializePlayerStateToBuffer( playerState, buffer );
+	const ServerPlayerStateStorageComponent& serverPlayerStateStorage =
+	    entity.GetComponent< ServerPlayerStateStorageComponent >();
+	SerializePlayerStateToBuffer( serverPlayerStateStorage.lastPlayerStateSimulated, buffer );
 }
 
 void SerializeForNonOwner( const ECS::GameEntity& entity, NetLib::Buffer& buffer )
@@ -38,8 +39,7 @@ void DeserializeForOwner( ECS::GameEntity& entity, NetLib::Buffer& buffer )
 	    entity.GetComponent< ClientSidePredictionComponent >();
 
 	clientSidePredictionComponent.playerStatesReceivedFromServer.push_back( playerState );
-
-	ApplyPlayerStateToPlayerEntity( entity, playerState );
+	clientSidePredictionComponent.isPendingPlayerStateFromServer = true;
 }
 
 void DeserializeForNonOwner( ECS::GameEntity& entity, NetLib::Buffer& buffer )

@@ -17,10 +17,11 @@ void PlayerStateSimulator::Configure( const ECS::World& world, const ECS::GameEn
 {
 }
 
-PlayerState PlayerStateSimulator::Simulate( const InputState& inputs, const PlayerState& current_state, const PlayerStateConfiguration& configuration,
-                                     float32 elapsed_time )
+PlayerState PlayerStateSimulator::Simulate( const InputState& inputs, const PlayerState& current_state,
+                                            const PlayerStateConfiguration& configuration, float32 elapsed_time )
 {
 	PlayerState playerState;
+	playerState.tick = inputs.tick;
 
 	_movementController.Simulate( inputs, current_state, playerState, elapsed_time, configuration );
 	_rotationController.Simulate( inputs, current_state, playerState, elapsed_time, configuration );

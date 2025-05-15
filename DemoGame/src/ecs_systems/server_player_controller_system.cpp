@@ -9,6 +9,7 @@
 #include "components/player_controller_component.h"
 #include "components/network_entity_component.h"
 #include "components/transform_component.h"
+#include "components/server_player_state_storage_component.h"
 
 #include "global_components/network_peer_global_component.h"
 
@@ -48,6 +49,10 @@ void ServerPlayerControllerSystem::Execute( ECS::World& world, float32 elapsed_t
 		const PlayerState resultPlayerState =
 		    _playerStateSimulator.Simulate( *inputState, currentPlayerState, playerStateConfiguration, elapsed_time );
 		ApplyPlayerStateToPlayerEntity( *it, resultPlayerState );
+
+		ServerPlayerStateStorageComponent& serverPlayerStateStorage =
+		    it->GetComponent< ServerPlayerStateStorageComponent >();
+		serverPlayerStateStorage.lastPlayerStateSimulated = resultPlayerState;
 	}
 }
 

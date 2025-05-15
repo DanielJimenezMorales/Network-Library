@@ -29,6 +29,7 @@
 #include "components/temporary_lifetime_component.h"
 #include "components/health_component.h"
 #include "components/client_side_prediction_component.h"
+#include "components/server_player_state_storage_component.h"
 
 #include "component_configurations/sprite_renderer_component_configuration.h"
 #include "component_configurations/player_controller_component_configuration.h"
@@ -42,6 +43,7 @@
 
 #include "ecs_systems/server_player_controller_system.h"
 #include "ecs_systems/client_local_player_predictor_system.h"
+#include "ecs_systems/client_local_player_server_reconciliator_system.h"
 #include "ecs_systems/remote_player_controller_system.h"
 #include "ecs_systems/crosshair_follow_mouse_system.h"
 #include "ecs_systems/sprite_renderer_system.h"
@@ -71,6 +73,7 @@ static void RegisterComponents( ECS::World& scene )
 	scene.RegisterComponent< TemporaryLifetimeComponent >( "TemporaryLifetime" );
 	scene.RegisterComponent< HealthComponent >( "HealthComponent" );
 	scene.RegisterComponent< ClientSidePredictionComponent >( "ClientSidePrediction" );
+	scene.RegisterComponent< ServerPlayerStateStorageComponent >( "ServerPlayerStateStorage" );
 }
 
 static void RegisterArchetypes( ECS::World& scene )
@@ -158,17 +161,23 @@ static void RegisterSystems( ECS::World& scene, NetLib::PeerType networkPeerType
 		// Add Client-side player controller system
 		ECS::SystemCoordinator* client_player_controller_system_coordinator =
 		    new ECS::SystemCoordinator( ECS::ExecutionStage::TICK );
-		ClientLocalPlayerPredictorSystem* client_player_controller_system =
+
+		ClientLocalPlayerServerReconciliatorSystem* client_local_player_server_reconciliator_system =
+		    new ClientLocalPlayerServerReconciliatorSystem();
+		client_player_controller_system_coordinator->AddSystemToTail( client_local_player_server_reconciliator_system );
+
+		ClientLocalPlayerPredictorSystem* client_local_player_predictor_system =
 		    new ClientLocalPlayerPredictorSystem( &scene );
-		client_player_controller_system_coordinator->AddSystemToTail( client_player_controller_system );
+		client_player_controller_system_coordinator->AddSystemToTail( client_local_player_predictor_system );
 		auto on_configure_player_controller_callback =
 		    std::bind( &ClientLocalPlayerPredictorSystem::ConfigurePlayerControllerComponent,
-		               client_player_controller_system, std::placeholders::_1, std::placeholders::_2 );
+		               client_local_player_predictor_system, std::placeholders::_1, std::placeholders::_2 );
 		scene.SubscribeToOnEntityConfigure( on_configure_player_controller_callback );
 		auto on_configure_client_side_predictor_callback =
 		    std::bind( &ClientLocalPlayerPredictorSystem::ConfigureClientSidePredictorComponent,
-		               client_player_controller_system, std::placeholders::_1, std::placeholders::_2 );
+		               client_local_player_predictor_system, std::placeholders::_1, std::placeholders::_2 );
 		scene.SubscribeToOnEntityConfigure( on_configure_client_side_predictor_callback );
+
 		scene.AddSystem( client_player_controller_system_coordinator );
 
 		// Add Client-side remote player controller system

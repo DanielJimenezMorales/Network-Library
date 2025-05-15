@@ -19,4 +19,11 @@ struct PlayerState
 		float32 rotationAngle;
 
 		float32 timeLeftUntilNextShot;
+
+		bool operator==( const PlayerState& other ) const
+		{
+			return tick == other.tick && position == other.position && rotationAngle == other.rotationAngle;
+		}
+
+		bool operator!=( const PlayerState& other ) const { return !operator==( other ); }
 };

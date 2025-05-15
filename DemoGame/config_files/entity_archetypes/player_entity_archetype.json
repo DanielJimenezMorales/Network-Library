@@ -7,6 +7,7 @@
 		"NetworkEntity",
 		"PlayerController",
 		"HealthComponent",
-		"ClientSidePrediction"
+		"ClientSidePrediction",
+		"ServerPlayerStateStorage"
 	]
 }

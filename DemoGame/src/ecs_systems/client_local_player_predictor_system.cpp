@@ -70,11 +70,12 @@ void ClientLocalPlayerPredictorSystem::SubscribeToSimulationCallbacks()
 
 void ClientLocalPlayerPredictorSystem::SavePlayerStateInBuffer(
     ClientSidePredictionComponent& client_side_prediction_component, const InputState& input_state,
-    const PlayerState& player_state )
+    const PlayerState& resulted_player_state, float32 elapsed_time )
 {
-	const uint32 slotIndex = input_state.tick % client_side_prediction_component.MAX_PREDICTION_BUFFER_SIZE;
+	const uint32 slotIndex = client_side_prediction_component.ConvertTickToBufferSlotIndex( input_state.tick );
 	client_side_prediction_component.inputStatesBuffer[ slotIndex ] = input_state;
-	client_side_prediction_component.playerStatesBuffer[ slotIndex ] = player_state;
+	client_side_prediction_component.elapsedTimeBuffer[ slotIndex ] = elapsed_time;
+	client_side_prediction_component.resultedPlayerStatesBuffer[ slotIndex ] = resulted_player_state;
 }
 
 static void SendInputsToServer( ECS::World& world, const InputState& inputState )
@@ -103,17 +104,17 @@ void ClientLocalPlayerPredictorSystem::Execute( ECS::World& world, float32 elaps
 
 	const PlayerState currentPlayerState = GetPlayerStateFromPlayerEntity( local_player, currentTick );
 
-	ClientSidePredictionComponent& clientSidePredictionComponent =
-	    local_player.GetComponent< ClientSidePredictionComponent >();
-	SavePlayerStateInBuffer( clientSidePredictionComponent, inputState, currentPlayerState );
-
 	PlayerControllerComponent& local_player_controller = local_player.GetComponent< PlayerControllerComponent >();
 	const PlayerStateConfiguration& playerStateConfiguration = local_player_controller.stateConfiguration;
 	const PlayerState resultPlayerState =
 	    _playerStateSimulator.Simulate( inputState, currentPlayerState, playerStateConfiguration, elapsed_time );
 	_currentPlayerEntityBeingProcessed = ECS::GameEntity();
 
-	// TODO Apply changes
+	ClientSidePredictionComponent& clientSidePredictionComponent =
+	    local_player.GetComponent< ClientSidePredictionComponent >();
+	SavePlayerStateInBuffer( clientSidePredictionComponent, inputState, resultPlayerState, elapsed_time );
+
+	ApplyPlayerStateToPlayerEntity( local_player, resultPlayerState );
 }
 
 void ClientLocalPlayerPredictorSystem::ConfigurePlayerControllerComponent( ECS::GameEntity& entity,
@@ -153,10 +154,12 @@ void ClientLocalPlayerPredictorSystem::ConfigureClientSidePredictorComponent( EC
 	ClientSidePredictionComponent& clientSidePredictor = entity.GetComponent< ClientSidePredictionComponent >();
 
 	clientSidePredictor.inputStatesBuffer.reserve( clientSidePredictor.MAX_PREDICTION_BUFFER_SIZE );
-	clientSidePredictor.playerStatesBuffer.reserve( clientSidePredictor.MAX_PREDICTION_BUFFER_SIZE );
+	clientSidePredictor.elapsedTimeBuffer.reserve( clientSidePredictor.MAX_PREDICTION_BUFFER_SIZE );
+	clientSidePredictor.resultedPlayerStatesBuffer.reserve( clientSidePredictor.MAX_PREDICTION_BUFFER_SIZE );
 	for ( uint32 i = 0; i < clientSidePredictor.MAX_PREDICTION_BUFFER_SIZE; ++i )
 	{
 		clientSidePredictor.inputStatesBuffer.emplace_back();
-		clientSidePredictor.playerStatesBuffer.emplace_back();
+		clientSidePredictor.elapsedTimeBuffer.emplace_back();
+		clientSidePredictor.resultedPlayerStatesBuffer.emplace_back();
 	}
 }

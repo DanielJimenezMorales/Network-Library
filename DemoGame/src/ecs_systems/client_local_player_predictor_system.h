@@ -34,7 +34,8 @@ class ClientLocalPlayerPredictorSystem : public ECS::ISimpleSystem
 		void OnShotPerformedCallback();
 		void SubscribeToSimulationCallbacks();
 		void SavePlayerStateInBuffer( ClientSidePredictionComponent& client_side_prediction_component,
-		                              const InputState& input_state, const PlayerState& player_state );
+		                              const InputState& input_state, const PlayerState& resulted_player_state,
+		                              float32 elapsed_time );
 
 		// TODO Remove this world dependency asap
 		ECS::World* _world;
