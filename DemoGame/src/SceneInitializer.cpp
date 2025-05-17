@@ -30,6 +30,8 @@
 #include "components/health_component.h"
 #include "components/client_side_prediction_component.h"
 #include "components/server_player_state_storage_component.h"
+#include "components/ghost_object_component.h"
+#include "components/interpolated_object_component.h"
 
 #include "component_configurations/sprite_renderer_component_configuration.h"
 #include "component_configurations/player_controller_component_configuration.h"
@@ -53,6 +55,7 @@
 #include "ecs_systems/pos_tick_network_system.h"
 #include "ecs_systems/collision_detection_system.h"
 #include "ecs_systems/temporary_lifetime_objects_system.h"
+#include "ecs_systems/interpolated_player_objects updater_system.h"
 
 #include "network_entity_creator.h"
 #include "json_configuration_loader.h"
@@ -73,6 +76,8 @@ static void RegisterComponents( ECS::World& scene )
 	scene.RegisterComponent< TemporaryLifetimeComponent >( "TemporaryLifetime" );
 	scene.RegisterComponent< HealthComponent >( "HealthComponent" );
 	// This is client side only
+	scene.RegisterComponent< GhostObjectComponent >( "GhostObject" );
+	scene.RegisterComponent< InterpolatedObjectComponent >( "InterpolatedObject" );
 	scene.RegisterComponent< ClientSidePredictionComponent >( "ClientSidePrediction" );
 	// This is server side only
 	scene.RegisterComponent< ServerPlayerStateStorageComponent >( "ServerPlayerStateStorage" );
@@ -156,6 +161,18 @@ static void RegisterSystems( ECS::World& scene, NetLib::PeerType networkPeerType
 	}
 	else if ( networkPeerType == NetLib::PeerType::CLIENT )
 	{
+		//////////////////
+		// UPDATE SYSTEMS
+		//////////////////
+
+		// Add interpolated player objects system
+		ECS::SystemCoordinator* interpolated_player_objects_system_coordinator =
+		    new ECS::SystemCoordinator( ECS::ExecutionStage::UPDATE );
+		InterpolatedPlayerObjectUpdaterSystem* interpolated_player_objects_system =
+		    new InterpolatedPlayerObjectUpdaterSystem();
+		interpolated_player_objects_system_coordinator->AddSystemToTail( interpolated_player_objects_system );
+		scene.AddSystem( interpolated_player_objects_system_coordinator );
+
 		//////////////////
 		// TICK SYSTEMS
 		//////////////////

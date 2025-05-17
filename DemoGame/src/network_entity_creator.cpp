@@ -7,6 +7,7 @@
 
 #include "components/network_entity_component.h"
 #include "global_components/network_peer_global_component.h"
+#include "components/ghost_object_component.h"
 
 #include "replication/network_entity_communication_callbacks.h"
 
@@ -40,7 +41,7 @@ uint32 NetworkEntityCreatorSystem::OnNetworkEntityCreate( const NetLib::OnNetwor
 		const NetLib::Client* client = network_peer.GetPeerAsClient();
 		if ( client->GetLocalClientId() == config.controlledByPeerId )
 		{
-			prefab_name.assign( "Player" );
+			prefab_name.assign( "ClientPlayerGhost" );
 		}
 		else
 		{
@@ -53,6 +54,15 @@ uint32 NetworkEntityCreatorSystem::OnNetworkEntityCreate( const NetLib::OnNetwor
 	}
 
 	const ECS::GameEntity entity = _scene->CreateGameEntity( prefab_name, Vec2f( config.positionX, config.positionY ) );
+
+	if ( prefab_name == "ClientPlayerGhost" )
+	{
+		ECS::GameEntity interpolatedEntity =
+		    _scene->CreateGameEntity( "ClientPlayerInterpolated", Vec2f( config.positionX, config.positionY ) );
+		GhostObjectComponent& ghostObject = interpolatedEntity.GetComponent< GhostObjectComponent >();
+		ghostObject.entity = entity;
+	}
+
 	return entity.GetId();
 }
 
