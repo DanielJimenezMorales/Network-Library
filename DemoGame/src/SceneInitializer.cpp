@@ -72,7 +72,9 @@ static void RegisterComponents( ECS::World& scene )
 	scene.RegisterComponent< RaycastComponent >( "Raycast" );
 	scene.RegisterComponent< TemporaryLifetimeComponent >( "TemporaryLifetime" );
 	scene.RegisterComponent< HealthComponent >( "HealthComponent" );
+	// This is client side only
 	scene.RegisterComponent< ClientSidePredictionComponent >( "ClientSidePrediction" );
+	// This is server side only
 	scene.RegisterComponent< ServerPlayerStateStorageComponent >( "ServerPlayerStateStorage" );
 }
 

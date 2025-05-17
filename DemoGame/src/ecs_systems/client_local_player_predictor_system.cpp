@@ -6,6 +6,7 @@
 #include "InputActionIdsConfiguration.h"
 #include "raycaster.h"
 #include "client_side_prediction_buffer_slot.h"
+#include "InputState.h"
 
 #include "ecs/game_entity.hpp"
 #include "ecs/prefab.h"
@@ -68,9 +69,9 @@ void ClientLocalPlayerPredictorSystem::SubscribeToSimulationCallbacks()
 	_playerStateSimulator.SubscribeToOnShotPerformed( onShotPerformedCallback );
 }
 
-void ClientLocalPlayerPredictorSystem::SavePlayerStateInBuffer(
-    ClientSidePredictionComponent& client_side_prediction_component, const InputState& input_state,
-    const PlayerState& resulted_player_state, float32 elapsed_time )
+static void SavePlayerStateInBuffer( ClientSidePredictionComponent& client_side_prediction_component,
+                                     const InputState& input_state, const PlayerState& resulted_player_state,
+                                     float32 elapsed_time )
 {
 	const uint32 slotIndex = client_side_prediction_component.ConvertTickToBufferSlotIndex( input_state.tick );
 	client_side_prediction_component.inputStatesBuffer[ slotIndex ] = input_state;
@@ -86,6 +87,31 @@ static void SendInputsToServer( ECS::World& world, const InputState& inputState 
 	networkClient.SendInputs( inputState );
 }
 
+void ClientLocalPlayerPredictorSystem::ExecuteLocalPrediction( ECS::GameEntity& entity, const InputState& input_state,
+                                                               float32 elapsed_time )
+{
+	_currentPlayerEntityBeingProcessed = entity;
+
+	// Get the current state and the configuration for the predicted entity
+	const PlayerState currentState = GetPlayerStateFromPlayerEntity( entity, input_state.tick );
+
+	PlayerControllerComponent& localPlayerController = entity.GetComponent< PlayerControllerComponent >();
+	const PlayerStateConfiguration& playerStateConfiguration = localPlayerController.stateConfiguration;
+
+	// Simulate the player logic locally and get the resulted simulation state
+	const PlayerState resultPlayerState =
+	    _playerStateSimulator.Simulate( input_state, currentState, playerStateConfiguration, elapsed_time );
+	_currentPlayerEntityBeingProcessed = ECS::GameEntity();
+
+	// Store the data in the prediction buffer in case we need to reconcile with the server later.
+	ClientSidePredictionComponent& clientSidePredictionComponent =
+	    entity.GetComponent< ClientSidePredictionComponent >();
+	SavePlayerStateInBuffer( clientSidePredictionComponent, input_state, resultPlayerState, elapsed_time );
+
+	// Apply the resulted simulation state to the entity
+	ApplyPlayerStateToPlayerEntity( entity, resultPlayerState );
+}
+
 void ClientLocalPlayerPredictorSystem::Execute( ECS::World& world, float32 elapsed_time )
 {
 	const NetworkPeerGlobalComponent& networkPeerComponent = world.GetGlobalComponent< NetworkPeerGlobalComponent >();
@@ -94,27 +120,19 @@ void ClientLocalPlayerPredictorSystem::Execute( ECS::World& world, float32 elaps
 		return;
 	}
 
+	// Get the current network simulation tick
 	const uint32 currentTick = networkPeerComponent.peer->GetCurrentTick();
 
+	// Get the current input state and send it to the server
 	const InputState inputState = GetInputState( world, currentTick, elapsed_time );
 	SendInputsToServer( world, inputState );
 
-	ECS::GameEntity local_player = world.GetFirstEntityOfType< PlayerControllerComponent >();
-	_currentPlayerEntityBeingProcessed = local_player;
-
-	const PlayerState currentPlayerState = GetPlayerStateFromPlayerEntity( local_player, currentTick );
-
-	PlayerControllerComponent& local_player_controller = local_player.GetComponent< PlayerControllerComponent >();
-	const PlayerStateConfiguration& playerStateConfiguration = local_player_controller.stateConfiguration;
-	const PlayerState resultPlayerState =
-	    _playerStateSimulator.Simulate( inputState, currentPlayerState, playerStateConfiguration, elapsed_time );
-	_currentPlayerEntityBeingProcessed = ECS::GameEntity();
-
-	ClientSidePredictionComponent& clientSidePredictionComponent =
-	    local_player.GetComponent< ClientSidePredictionComponent >();
-	SavePlayerStateInBuffer( clientSidePredictionComponent, inputState, resultPlayerState, elapsed_time );
-
-	ApplyPlayerStateToPlayerEntity( local_player, resultPlayerState );
+	// Predict the next simulation state based on the inputs for each predicted entity
+	std::vector< ECS::GameEntity > localPredictedEntities = world.GetEntitiesOfType< ClientSidePredictionComponent >();
+	for ( auto it = localPredictedEntities.begin(); it != localPredictedEntities.end(); ++it )
+	{
+		ExecuteLocalPrediction( *it, inputState, elapsed_time );
+	}
 }
 
 void ClientLocalPlayerPredictorSystem::ConfigurePlayerControllerComponent( ECS::GameEntity& entity,

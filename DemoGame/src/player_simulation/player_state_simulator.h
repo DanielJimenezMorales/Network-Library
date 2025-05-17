@@ -20,8 +20,6 @@ class PlayerStateSimulator
 	public:
 		PlayerStateSimulator();
 
-		void Configure( const ECS::World& world, const ECS::GameEntity& player_entity );
-
 		PlayerState Simulate( const InputState& inputs, const PlayerState& current_state,
 		                      const PlayerStateConfiguration& configuration, float32 elapsed_time );
 

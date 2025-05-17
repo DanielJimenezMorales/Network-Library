@@ -8,8 +8,6 @@
 #include "player_simulation/player_state_simulator.h"
 #include "player_simulation/player_state.h"
 
-#include "InputState.h"
-
 #include <vector>
 
 namespace ECS
@@ -17,9 +15,14 @@ namespace ECS
 	class Prefab;
 }
 
+class InputState;
 struct ClientSidePredictionComponent;
 
-// TODO Rename this class to something related to Client-side prediction
+/// <summary>
+/// This system is client-side only.
+/// It predicts the local player state based on the input without waiting for receiving the official state from the
+/// server. This system helps to minimize latency and increases in-game responsiveness.
+/// </summary>
 class ClientLocalPlayerPredictorSystem : public ECS::ISimpleSystem
 {
 	public:
@@ -33,12 +36,11 @@ class ClientLocalPlayerPredictorSystem : public ECS::ISimpleSystem
 	private:
 		void OnShotPerformedCallback();
 		void SubscribeToSimulationCallbacks();
-		void SavePlayerStateInBuffer( ClientSidePredictionComponent& client_side_prediction_component,
-		                              const InputState& input_state, const PlayerState& resulted_player_state,
-		                              float32 elapsed_time );
+		void ExecuteLocalPrediction( ECS::GameEntity& entity, const InputState& input_state, float32 elapsed_time );
 
 		// TODO Remove this world dependency asap
 		ECS::World* _world;
+		// TODO Remove this variable asap
 		ECS::GameEntity _currentPlayerEntityBeingProcessed;
 
 		uint64 _nextInputStateId;

@@ -3,8 +3,6 @@
 
 #include "numeric_types.h"
 
-#include "player_simulation/player_state_simulator.h"
-
 namespace ECS
 {
 	class Prefab;
@@ -18,7 +16,4 @@ class ServerPlayerControllerSystem : public ECS::ISimpleSystem
 		void Execute( ECS::World& world, float32 elapsed_time ) override;
 
 		void ConfigurePlayerControllerComponent( ECS::GameEntity& entity, const ECS::Prefab& prefab );
-
-	private:
-		PlayerStateSimulator _playerStateSimulator;
 };

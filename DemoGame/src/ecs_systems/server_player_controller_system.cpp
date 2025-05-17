@@ -1,5 +1,7 @@
 #include "server_player_controller_system.h"
 
+#include <cassert>
+
 #include "InputState.h"
 
 #include "ecs/game_entity.hpp"
@@ -16,11 +18,54 @@
 #include "player_simulation/player_state.h"
 #include "player_simulation/player_state_configuration.h"
 #include "player_simulation/player_state_utils.h"
+#include "player_simulation/player_state_simulator.h"
 
 ServerPlayerControllerSystem::ServerPlayerControllerSystem()
     : ECS::ISimpleSystem()
-    , _playerStateSimulator()
 {
+}
+
+static const InputState* GetInputForPlayer( const ECS::GameEntity& entity, NetLib::Server* server_peer )
+{
+	assert( entity.HasComponent< NetworkEntityComponent >() );
+
+	// Get the network entity componet in order to get the controlled peer id and be able to grab the current inputs
+	// to simulate
+	const NetworkEntityComponent& networkEntityComponent = entity.GetComponent< NetworkEntityComponent >();
+	const NetLib::IInputState* baseInputState =
+	    server_peer->GetInputFromRemotePeer( networkEntityComponent.controlledByPeerId );
+
+	// If we don't have any input state from the remote peer we skip this entity
+	// TODO Server should always have inputs to simulate. If no inputs have arrived from server duplicate and return
+	// the last known input from this peer
+	if ( baseInputState == nullptr )
+	{
+		return nullptr;
+	}
+
+	return static_cast< const InputState* >( baseInputState );
+}
+
+static void ExecutePlayerSimulation( ECS::GameEntity& entity, const InputState& input_state, float32 elapsed_time )
+{
+	// Get all data needed for the simulation
+	const PlayerControllerComponent& playerController = entity.GetComponent< PlayerControllerComponent >();
+	const PlayerStateConfiguration& playerStateConfiguration = playerController.stateConfiguration;
+	const PlayerState currentPlayerState = GetPlayerStateFromPlayerEntity( entity, input_state.tick );
+	PlayerStateSimulator playerStateSimulator;
+
+	// Simulate the player logic and get the resulted simulation state
+	const PlayerState resultPlayerState =
+	    playerStateSimulator.Simulate( input_state, currentPlayerState, playerStateConfiguration, elapsed_time );
+
+	// Apply the resulted simulation state to the entity
+	ApplyPlayerStateToPlayerEntity( entity, resultPlayerState );
+
+	// Save resulted simulation state in order to recover all its info when serializing it to send it to the target
+	// client
+	ServerPlayerStateStorageComponent& serverPlayerStateStorage =
+	    entity.GetComponent< ServerPlayerStateStorageComponent >();
+	serverPlayerStateStorage.lastPlayerStateSimulated = resultPlayerState;
 }
 
 void ServerPlayerControllerSystem::Execute( ECS::World& world, float32 elapsed_time )
@@ -31,28 +76,16 @@ void ServerPlayerControllerSystem::Execute( ECS::World& world, float32 elapsed_t
 	std::vector< ECS::GameEntity > entities = world.GetEntitiesOfType< PlayerControllerComponent >();
 	for ( auto it = entities.begin(); it != entities.end(); ++it )
 	{
-		const NetworkEntityComponent& networkEntityComponent = it->GetComponent< NetworkEntityComponent >();
-		const NetLib::IInputState* baseInputState =
-		    serverPeer->GetInputFromRemotePeer( networkEntityComponent.controlledByPeerId );
-		if ( baseInputState == nullptr )
+		// Get the input state for the current player.
+		const InputState* inputState = GetInputForPlayer( *it, serverPeer );
+		if ( inputState == nullptr )
 		{
-			return;
+			LOG_WARNING( "No input state found for player. Skipping its simulation..." );
+			continue;
 		}
 
-		const InputState* inputState = static_cast< const InputState* >( baseInputState );
-
-		const PlayerControllerComponent& playerController = it->GetComponent< PlayerControllerComponent >();
-		const PlayerStateConfiguration& playerStateConfiguration = playerController.stateConfiguration;
-
-		const PlayerState currentPlayerState = GetPlayerStateFromPlayerEntity( *it, inputState->tick );
-		_playerStateSimulator.Configure( world, *it );
-		const PlayerState resultPlayerState =
-		    _playerStateSimulator.Simulate( *inputState, currentPlayerState, playerStateConfiguration, elapsed_time );
-		ApplyPlayerStateToPlayerEntity( *it, resultPlayerState );
-
-		ServerPlayerStateStorageComponent& serverPlayerStateStorage =
-		    it->GetComponent< ServerPlayerStateStorageComponent >();
-		serverPlayerStateStorage.lastPlayerStateSimulated = resultPlayerState;
+		// Execute player simulation based on inputs
+		ExecutePlayerSimulation( *it, *inputState, elapsed_time );
 	}
 }
 
