@@ -53,10 +53,28 @@ namespace Raycaster
 			const float32 squared_distance = Vec2f::GetSquareDistance( collision_position, ray_origin );
 			if ( squared_distance <= ray_squared_max_distance )
 			{
-				// Gather data
-				out_result.position = collision_position;
-				out_result.squaredDistance = Vec2f::GetSquareDistance( collision_position, ray_origin );
-				has_collided = true;
+				// Check if collision point is inside the ray segment [Ray origin, Ray end]
+				const Vec2f ray_end = ray_origin + ( ray.maxDistance * ray_direction );
+
+				// Depending on whether the X and Y coordinates are bigger in the origin or in the end, we will need to
+				// invert the checks operations
+				const bool is_in_ray_x_segment =
+				    ( ray_origin.X() < ray_end.X() )
+				        ? ( collision_position.X() >= ray_origin.X() && collision_position.X() <= ray_end.X() )
+				        : ( collision_position.X() <= ray_origin.X() && collision_position.X() >= ray_end.X() );
+
+				const bool is_in_ray_y_segment =
+				    ( ray_origin.Y() < ray_end.Y() )
+				        ? ( collision_position.Y() >= ray_origin.Y() && collision_position.Y() <= ray_end.Y() )
+				        : ( collision_position.Y() <= ray_origin.Y() && collision_position.Y() >= ray_end.Y() );
+
+				if ( is_in_ray_x_segment && is_in_ray_y_segment )
+				{
+					// Gather data
+					out_result.position = collision_position;
+					out_result.squaredDistance = Vec2f::GetSquareDistance( collision_position, ray_origin );
+					has_collided = true;
+				}
 			}
 		}
 

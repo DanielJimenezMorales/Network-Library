@@ -1,6 +1,5 @@
 #include "temporary_lifetime_objects_system.h"
 
-#include "ecs/entity_container.h"
 #include "ecs/game_entity.hpp"
 #include "ecs/world.h"
 
@@ -10,16 +9,15 @@
 
 #include <vector>
 
-TemporaryLifetimeObjectsSystem::TemporaryLifetimeObjectsSystem( ECS::World* world )
+TemporaryLifetimeObjectsSystem::TemporaryLifetimeObjectsSystem()
     : ECS::ISimpleSystem()
-    , _world( world )
 {
 }
 
-void TemporaryLifetimeObjectsSystem::Execute( ECS::EntityContainer& entity_container, float32 elapsed_time )
+void TemporaryLifetimeObjectsSystem::Execute( ECS::World& world, float32 elapsed_time )
 {
 	std::vector< ECS::GameEntity > temporary_lifetime_entities =
-	    entity_container.GetEntitiesOfType< TemporaryLifetimeComponent >();
+	    world.GetEntitiesOfType< TemporaryLifetimeComponent >();
 	for ( auto it = temporary_lifetime_entities.begin(); it != temporary_lifetime_entities.end(); ++it )
 	{
 		TemporaryLifetimeComponent& temporary_lifetime = it->GetComponent< TemporaryLifetimeComponent >();
@@ -27,7 +25,7 @@ void TemporaryLifetimeObjectsSystem::Execute( ECS::EntityContainer& entity_conta
 
 		if ( temporary_lifetime.lifetimeLeft <= 0.f )
 		{
-			_world->DestroyGameEntity( *it );
+			world.DestroyGameEntity( *it );
 		}
 	}
 }

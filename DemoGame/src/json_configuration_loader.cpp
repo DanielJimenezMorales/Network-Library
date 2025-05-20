@@ -12,6 +12,7 @@
 #include "component_configurations/collider_2d_component_configuration.h"
 #include "component_configurations/player_controller_component_configuration.h"
 #include "component_configurations/temporary_lifetime_component_configuration.h"
+#include "component_configurations/health_component_configuration.h"
 
 #include "CircleBounds2D.h"
 
@@ -65,6 +66,12 @@ static void ParseComponentConfiguration( const nlohmann::json& json_data,
 	{
 		const float32 lifetime = json_data[ "lifetime" ];
 		out_component_config = new TemporaryLifetimeComponentConfiguration( lifetime );
+	}
+	else if ( component_name == "Health" )
+	{
+		const uint32 max_health = json_data[ "max_health" ];
+		const uint32 current_health = (json_data.contains("current_health")) ? json_data["current_health"] : max_health;
+		out_component_config = new HealthComponentConfiguration( max_health, current_health );
 	}
 }
 

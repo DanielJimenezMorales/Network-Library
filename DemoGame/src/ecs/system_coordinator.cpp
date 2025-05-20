@@ -1,6 +1,7 @@
 #include "system_coordinator.h"
 
 #include "ecs/game_entity.hpp"
+#include "ecs/world.h"
 
 #include "ecs/i_simple_system.h"
 
@@ -26,13 +27,13 @@ namespace ECS
 		_systems.push_back( system );
 	}
 
-	void SystemCoordinator::Execute( EntityContainer& entity_container, float elapsed_time )
+	void SystemCoordinator::Execute( World& world, float elapsed_time )
 	{
 		auto system_pairs_it = _systems.begin();
 		for ( ; system_pairs_it != _systems.end(); ++system_pairs_it )
 		{
 			// Execute system
-			( *system_pairs_it )->Execute( entity_container, elapsed_time );
+			( *system_pairs_it )->Execute( world, elapsed_time );
 		}
 	}
 } // namespace ECS

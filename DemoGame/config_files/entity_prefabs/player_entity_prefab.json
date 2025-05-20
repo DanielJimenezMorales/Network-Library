@@ -10,16 +10,19 @@
 			"name": "Collider2D",
 			"collision_response_type": "Dynamic",
 			"is_trigger": false,
-			"bounds_config":
-			{
-				"type":"Circle",
-				"radius":5
+			"bounds_config": {
+				"type": "Circle",
+				"radius": 5
 			}
 		},
 		{
 			"name": "PlayerController",
 			"movement_speed": 25,
-			"fire_rate_per_second" : 10
+			"fire_rate_per_second": 10
+		},
+		{
+			"name": "Health",
+			"max_health": 100
 		}
 	]
 }

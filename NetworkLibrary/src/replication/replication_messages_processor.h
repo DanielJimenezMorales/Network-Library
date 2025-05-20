@@ -13,6 +13,8 @@ namespace NetLib
 
 			void Client_ProcessReceivedReplicationMessage( const ReplicationMessage& replicationMessage );
 
+			void SetLocalClientId( uint32 id );
+
 			template < typename Functor >
 			uint32 SubscribeToOnNetworkEntityCreate( Functor&& functor );
 
@@ -29,6 +31,8 @@ namespace NetLib
 			NetworkEntityStorage _networkEntitiesStorage;
 			std::function< uint32_t( const OnNetworkEntityCreateConfig& ) > _onNetworkEntityCreate;
 			std::function< void( uint32 ) > _onNetworkEntityDestroy;
+
+			uint32 _localPeerId;
 	};
 
 	template < typename Functor >

@@ -242,6 +242,9 @@ namespace NetLib
 		_clientIndex = message.clientIndexAssigned;
 		_currentState = ClientState::CS_Connected;
 
+		// TODO Do not hardcode it like this. It might looks weird
+		_replicationMessagesProcessor.SetLocalClientId( _clientIndex );
+
 		LOG_INFO( "Connection accepted!" );
 		ExecuteOnLocalPeerConnect();
 	}

@@ -27,18 +27,25 @@
 #include "components/remote_player_controller_component.h"
 #include "components/raycast_component.h"
 #include "components/temporary_lifetime_component.h"
+#include "components/health_component.h"
+#include "components/client_side_prediction_component.h"
+#include "components/server_player_state_storage_component.h"
+#include "components/ghost_object_component.h"
+#include "components/interpolated_object_component.h"
 
 #include "component_configurations/sprite_renderer_component_configuration.h"
 #include "component_configurations/player_controller_component_configuration.h"
 #include "component_configurations/collider_2d_component_configuration.h"
 #include "component_configurations/camera_component_configuration.h"
+#include "component_configurations/health_component_configuration.h"
 
 #include "CircleBounds2D.h"
 
 #include "global_components/network_peer_global_component.h"
 
 #include "ecs_systems/server_player_controller_system.h"
-#include "ecs_systems/client_player_controller_system.h"
+#include "ecs_systems/client_local_player_predictor_system.h"
+#include "ecs_systems/client_local_player_server_reconciliator_system.h"
 #include "ecs_systems/remote_player_controller_system.h"
 #include "ecs_systems/crosshair_follow_mouse_system.h"
 #include "ecs_systems/sprite_renderer_system.h"
@@ -48,6 +55,7 @@
 #include "ecs_systems/pos_tick_network_system.h"
 #include "ecs_systems/collision_detection_system.h"
 #include "ecs_systems/temporary_lifetime_objects_system.h"
+#include "ecs_systems/interpolated_player_objects updater_system.h"
 
 #include "network_entity_creator.h"
 #include "json_configuration_loader.h"
@@ -66,6 +74,13 @@ static void RegisterComponents( ECS::World& scene )
 	scene.RegisterComponent< RemotePlayerControllerComponent >( "RemotePlayerController" );
 	scene.RegisterComponent< RaycastComponent >( "Raycast" );
 	scene.RegisterComponent< TemporaryLifetimeComponent >( "TemporaryLifetime" );
+	scene.RegisterComponent< HealthComponent >( "HealthComponent" );
+	// This is client side only
+	scene.RegisterComponent< GhostObjectComponent >( "GhostObject" );
+	scene.RegisterComponent< InterpolatedObjectComponent >( "InterpolatedObject" );
+	scene.RegisterComponent< ClientSidePredictionComponent >( "ClientSidePrediction" );
+	// This is server side only
+	scene.RegisterComponent< ServerPlayerStateStorageComponent >( "ServerPlayerStateStorage" );
 }
 
 static void RegisterArchetypes( ECS::World& scene )
@@ -104,7 +119,7 @@ static void RegisterSystems( ECS::World& scene, NetLib::PeerType networkPeerType
 	// Add temporary lifetime objects system
 	ECS::SystemCoordinator* temporary_lifetime_objects_system_coordinator =
 	    new ECS::SystemCoordinator( ECS::ExecutionStage::UPDATE );
-	TemporaryLifetimeObjectsSystem* temporary_lifetime_objects_system = new TemporaryLifetimeObjectsSystem( &scene );
+	TemporaryLifetimeObjectsSystem* temporary_lifetime_objects_system = new TemporaryLifetimeObjectsSystem();
 	auto on_configure_temporary_lifetime_callback =
 	    std::bind( &TemporaryLifetimeObjectsSystem::ConfigureTemporaryLifetimeComponent,
 	               temporary_lifetime_objects_system, std::placeholders::_1, std::placeholders::_2 );
@@ -147,18 +162,41 @@ static void RegisterSystems( ECS::World& scene, NetLib::PeerType networkPeerType
 	else if ( networkPeerType == NetLib::PeerType::CLIENT )
 	{
 		//////////////////
+		// UPDATE SYSTEMS
+		//////////////////
+
+		// Add interpolated player objects system
+		ECS::SystemCoordinator* interpolated_player_objects_system_coordinator =
+		    new ECS::SystemCoordinator( ECS::ExecutionStage::UPDATE );
+		InterpolatedPlayerObjectUpdaterSystem* interpolated_player_objects_system =
+		    new InterpolatedPlayerObjectUpdaterSystem();
+		interpolated_player_objects_system_coordinator->AddSystemToTail( interpolated_player_objects_system );
+		scene.AddSystem( interpolated_player_objects_system_coordinator );
+
+		//////////////////
 		// TICK SYSTEMS
 		//////////////////
 
 		// Add Client-side player controller system
 		ECS::SystemCoordinator* client_player_controller_system_coordinator =
 		    new ECS::SystemCoordinator( ECS::ExecutionStage::TICK );
-		ClientPlayerControllerSystem* client_player_controller_system = new ClientPlayerControllerSystem( &scene );
-		client_player_controller_system_coordinator->AddSystemToTail( client_player_controller_system );
+
+		ClientLocalPlayerServerReconciliatorSystem* client_local_player_server_reconciliator_system =
+		    new ClientLocalPlayerServerReconciliatorSystem();
+		client_player_controller_system_coordinator->AddSystemToTail( client_local_player_server_reconciliator_system );
+
+		ClientLocalPlayerPredictorSystem* client_local_player_predictor_system =
+		    new ClientLocalPlayerPredictorSystem( &scene );
+		client_player_controller_system_coordinator->AddSystemToTail( client_local_player_predictor_system );
 		auto on_configure_player_controller_callback =
-		    std::bind( &ClientPlayerControllerSystem::ConfigurePlayerControllerComponent,
-		               client_player_controller_system, std::placeholders::_1, std::placeholders::_2 );
+		    std::bind( &ClientLocalPlayerPredictorSystem::ConfigurePlayerControllerComponent,
+		               client_local_player_predictor_system, std::placeholders::_1, std::placeholders::_2 );
 		scene.SubscribeToOnEntityConfigure( on_configure_player_controller_callback );
+		auto on_configure_client_side_predictor_callback =
+		    std::bind( &ClientLocalPlayerPredictorSystem::ConfigureClientSidePredictorComponent,
+		               client_local_player_predictor_system, std::placeholders::_1, std::placeholders::_2 );
+		scene.SubscribeToOnEntityConfigure( on_configure_client_side_predictor_callback );
+
 		scene.AddSystem( client_player_controller_system_coordinator );
 
 		// Add Client-side remote player controller system
@@ -229,6 +267,26 @@ void SceneInitializer::ConfigureCameraComponent( ECS::GameEntity& entity, const 
 	camera.height = camera_config.height;
 }
 
+void SceneInitializer::ConfigureHealthComponent( ECS::GameEntity& entity, const ECS::Prefab& prefab ) const
+{
+	auto component_config_found = prefab.componentConfigurations.find( "Health" );
+	if ( component_config_found == prefab.componentConfigurations.end() )
+	{
+		return;
+	}
+
+	if ( !entity.HasComponent< HealthComponent >() )
+	{
+		return;
+	}
+
+	const HealthComponentConfiguration& health_config =
+	    static_cast< const HealthComponentConfiguration& >( *component_config_found->second );
+	HealthComponent& health = entity.GetComponent< HealthComponent >();
+	health.maxHealth = health_config.maxHealth;
+	health.currentHealth = health_config.currentHealth;
+}
+
 void SceneInitializer::InitializeScene( ECS::World& scene, NetLib::PeerType networkPeerType, InputHandler& inputHandler,
                                         SDL_Renderer* renderer ) const
 {
@@ -237,8 +295,11 @@ void SceneInitializer::InitializeScene( ECS::World& scene, NetLib::PeerType netw
 	RegisterPrefabs( scene );
 	RegisterSystems( scene, networkPeerType, renderer );
 
+	// These subscriptions are also temp until I find a better place for them
 	scene.SubscribeToOnEntityConfigure(
 	    std::bind( &SceneInitializer::ConfigureCameraComponent, this, std::placeholders::_1, std::placeholders::_2 ) );
+	scene.SubscribeToOnEntityConfigure(
+	    std::bind( &SceneInitializer::ConfigureHealthComponent, this, std::placeholders::_1, std::placeholders::_2 ) );
 
 	// Inputs
 	KeyboardController* keyboard = new KeyboardController();

@@ -7,7 +7,7 @@
 #include "Logger.h"
 
 #include "ecs/game_entity.hpp"
-#include "ecs/entity_container.h"
+#include "ecs/world.h"
 #include "ecs/prefab.h"
 
 #include "components/transform_component.h"
@@ -25,14 +25,14 @@ SpriteRendererSystem::SpriteRendererSystem( SDL_Renderer* renderer )
 	assert( _renderer != nullptr );
 }
 
-void SpriteRendererSystem::Execute( ECS::EntityContainer& entity_container, float32 elapsed_time )
+void SpriteRendererSystem::Execute( ECS::World& world, float32 elapsed_time )
 {
-	const ECS::GameEntity camera_entity = entity_container.GetFirstEntityOfType< CameraComponent >();
+	const ECS::GameEntity camera_entity = world.GetFirstEntityOfType< CameraComponent >();
 	const CameraComponent& camera = camera_entity.GetComponent< CameraComponent >();
 	const TransformComponent& camera_transform = camera_entity.GetComponent< TransformComponent >();
 
 	std::vector< ECS::GameEntity > entities =
-	    entity_container.GetEntitiesOfBothTypes< SpriteRendererComponent, TransformComponent >();
+	    world.GetEntitiesOfBothTypes< SpriteRendererComponent, TransformComponent >();
 	for ( auto it = entities.begin(); it != entities.end(); ++it )
 	{
 		// auto [spriteRenderer, transform] = view.get<SpriteRendererComponent, TransformComponent>(entity);

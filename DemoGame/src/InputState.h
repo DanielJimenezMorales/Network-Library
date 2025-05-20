@@ -1,17 +1,24 @@
 #pragma once
 #include "inputs/i_input_state.h"
 
+#include "numeric_types.h"
+
 #include "Vec2f.h"
-#include <cstdint>
 
 class InputState : public NetLib::IInputState
 {
-public:
-	int32 GetSize() const override;
-	void Serialize(NetLib::Buffer& buffer) const override;
-	void Deserialize(NetLib::Buffer& buffer) override;
+	public:
+		InputState();
 
-	Vec2f movement;
-	bool isShooting;
-	Vec2f virtualMousePosition;
+		int32 GetSize() const override;
+		void Serialize( NetLib::Buffer& buffer ) const override;
+		void Deserialize( NetLib::Buffer& buffer ) override;
+
+		// Header fields
+		uint32 tick;
+
+		// Body fields
+		Vec2f movement;
+		bool isShooting;
+		Vec2f virtualMousePosition;
 };

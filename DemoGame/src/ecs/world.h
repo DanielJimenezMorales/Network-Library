@@ -37,7 +37,12 @@ namespace ECS
 
 			template < typename T >
 			T& GetGlobalComponent();
+			template < typename T >
+			const T& GetGlobalComponent() const;
 
+			// TODO Instead of having all these predefined functions, create one function to to tick the systems.
+			// Instead of pass it a compiled enum, pass it something like a string to add flexibility and create as many
+			// execution stages as you want.
 			void Update( float32 elapsed_time );
 			void PreTick( float32 elapsed_time );
 			void Tick( float32 elapsed_time );
@@ -54,6 +59,19 @@ namespace ECS
 			template < typename T >
 			GameEntity GetFirstEntityOfType();
 			GameEntity GetEntityFromId( uint32 id );
+
+			template < typename T >
+			std::vector< GameEntity > GetEntitiesOfType();
+			template < typename T >
+			const std::vector< GameEntity > GetEntitiesOfType() const;
+
+			template < typename T1, typename T2 >
+			const std::vector< GameEntity > GetEntitiesOfBothTypes() const;
+
+			template < typename T >
+			T& GetFirstComponentOfType();
+			template < typename T >
+			const T& GetFirstComponentOfType() const;
 
 			template < typename Functor >
 			uint32 SubscribeToOnEntityCreate( Functor&& functor );
@@ -108,9 +126,45 @@ namespace ECS
 	}
 
 	template < typename T >
+	inline const T& World::GetGlobalComponent() const
+	{
+		return _entityContainer.GetGlobalComponent< T >();
+	}
+
+	template < typename T >
 	inline GameEntity World::GetFirstEntityOfType()
 	{
 		return _entityContainer.GetFirstEntityOfType< T >();
+	}
+
+	template < typename T >
+	inline std::vector< GameEntity > World::GetEntitiesOfType()
+	{
+		return _entityContainer.GetEntitiesOfType< T >();
+	}
+
+	template < typename T >
+	inline const std::vector< GameEntity > World::GetEntitiesOfType() const
+	{
+		return _entityContainer.GetEntitiesOfType< T >();
+	}
+
+	template < typename T1, typename T2 >
+	inline const std::vector< GameEntity > World::GetEntitiesOfBothTypes() const
+	{
+		return _entityContainer.GetEntitiesOfBothTypes< T1, T2 >();
+	}
+
+	template < typename T >
+	inline T& World::GetFirstComponentOfType()
+	{
+		return _entityContainer.GetFirstComponentOfType< T >();
+	}
+
+	template < typename T >
+	inline const T& World::GetFirstComponentOfType() const
+	{
+		return _entityContainer.GetFirstComponentOfType< T >();
 	}
 
 	template < typename Functor >

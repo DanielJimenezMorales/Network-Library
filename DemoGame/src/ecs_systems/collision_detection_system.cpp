@@ -10,7 +10,7 @@
 #include "CircleBounds2D.h"
 
 #include "ecs/game_entity.hpp"
-#include "ecs/entity_container.h"
+#include "ecs/world.h"
 #include "ecs/prefab.h"
 
 CollisionDetectionSystem::CollisionDetectionSystem()
@@ -29,10 +29,9 @@ bool ReturnMinLeft( const ECS::GameEntity& colliderEntityA, const ECS::GameEntit
 	return colliderA.GetMinX( transformA ) < colliderB.GetMinX( transformB );
 }
 
-void CollisionDetectionSystem::Execute( ECS::EntityContainer& entity_container, float32 elapsed_time )
+void CollisionDetectionSystem::Execute( ECS::World& world, float32 elapsed_time )
 {
-	std::vector< ECS::GameEntity > entities =
-	    entity_container.GetEntitiesOfBothTypes< Collider2DComponent, TransformComponent >();
+	std::vector< ECS::GameEntity > entities = world.GetEntitiesOfBothTypes< Collider2DComponent, TransformComponent >();
 	TickSweepAndPrune( entities );
 }
 
