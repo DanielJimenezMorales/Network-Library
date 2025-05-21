@@ -1,9 +1,12 @@
 #pragma once
 
-namespace ECS
+namespace Engine
 {
-	class World;
-	class GameEntity;
+	namespace ECS
+	{
+		class World;
+		class GameEntity;
+	}
 }
 
-void OnShotPerformed( ECS::World& world, const ECS::GameEntity& player_entity );
+void OnShotPerformed( Engine::ECS::World& world, const Engine::ECS::GameEntity& player_entity );

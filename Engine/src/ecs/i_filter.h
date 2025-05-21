@@ -2,18 +2,20 @@
 
 #include <vector>
 
-class GameEntity;
-
-namespace ECS
+namespace Engine
 {
-	class EntityContainer;
-
-	class IFilter
+	namespace ECS
 	{
-		public:
-			IFilter() {}
-			virtual ~IFilter() {}
+		class GameEntity;
+		class EntityContainer;
 
-			virtual std::vector< GameEntity > Apply( EntityContainer& entity_container ) const = 0;
-	};
+		class IFilter
+		{
+			public:
+				IFilter() {}
+				virtual ~IFilter() {}
+
+				virtual std::vector< GameEntity > Apply( EntityContainer& entity_container ) const = 0;
+		};
+	}
 }

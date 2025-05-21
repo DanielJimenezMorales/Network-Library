@@ -6,11 +6,11 @@
 #include "global_components/network_peer_global_component.h"
 
 PosTickNetworkSystem::PosTickNetworkSystem()
-    : ECS::ISimpleSystem()
+    : Engine::ECS::ISimpleSystem()
 {
 }
 
-void PosTickNetworkSystem::Execute( ECS::World& world, float32 elapsed_time )
+void PosTickNetworkSystem::Execute( Engine::ECS::World& world, float32 elapsed_time )
 {
 	NetworkPeerGlobalComponent& networkPeerComponent = world.GetGlobalComponent< NetworkPeerGlobalComponent >();
 	networkPeerComponent.peer->Tick( elapsed_time );

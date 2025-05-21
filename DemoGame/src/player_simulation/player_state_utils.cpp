@@ -9,12 +9,12 @@
 
 #include "core/Buffer.h"
 
-PlayerState GetPlayerStateFromPlayerEntity( const ECS::GameEntity& player_entity, uint32 current_tick )
+PlayerState GetPlayerStateFromPlayerEntity( const Engine::ECS::GameEntity& player_entity, uint32 current_tick )
 {
 	PlayerState playerState;
 	playerState.tick = current_tick;
 
-	const TransformComponent& transform = player_entity.GetComponent< TransformComponent >();
+	const Engine::TransformComponent& transform = player_entity.GetComponent< Engine::TransformComponent >();
 	playerState.position = transform.GetPosition();
 	playerState.rotationAngle = transform.GetRotationAngle();
 
@@ -24,9 +24,9 @@ PlayerState GetPlayerStateFromPlayerEntity( const ECS::GameEntity& player_entity
 	return playerState;
 }
 
-void ApplyPlayerStateToPlayerEntity( ECS::GameEntity& player_entity, const PlayerState& player_state )
+void ApplyPlayerStateToPlayerEntity( Engine::ECS::GameEntity& player_entity, const PlayerState& player_state )
 {
-	TransformComponent& transform = player_entity.GetComponent< TransformComponent >();
+	Engine::TransformComponent& transform = player_entity.GetComponent< Engine::TransformComponent >();
 	transform.SetPosition( player_state.position );
 	transform.SetRotationAngle( player_state.rotationAngle );
 

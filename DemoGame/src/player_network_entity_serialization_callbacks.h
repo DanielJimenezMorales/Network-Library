@@ -1,9 +1,12 @@
 #pragma once
 
-namespace ECS
+namespace Engine
 {
-	class GameEntity;
-	class World;
+	namespace ECS
+	{
+		class GameEntity;
+		class World;
+	}
 }
 
 namespace NetLib
@@ -11,7 +14,8 @@ namespace NetLib
 	class Buffer;
 }
 
-void SerializeForOwner(const ECS::World& world, const ECS::GameEntity& entity, NetLib::Buffer& buffer );
-void SerializeForNonOwner( const ECS::GameEntity& entity, NetLib::Buffer& buffer );
-void DeserializeForOwner( ECS::GameEntity& entity, NetLib::Buffer& buffer );
-void DeserializeForNonOwner( ECS::GameEntity& entity, NetLib::Buffer& buffer );
+void SerializeForOwner( const Engine::ECS::World& world, const Engine::ECS::GameEntity& entity,
+                        NetLib::Buffer& buffer );
+void SerializeForNonOwner( const Engine::ECS::GameEntity& entity, NetLib::Buffer& buffer );
+void DeserializeForOwner( Engine::ECS::GameEntity& entity, NetLib::Buffer& buffer );
+void DeserializeForNonOwner( Engine::ECS::GameEntity& entity, NetLib::Buffer& buffer );

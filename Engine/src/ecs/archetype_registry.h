@@ -4,26 +4,29 @@
 
 #include "ecs/archetype.h"
 
-namespace ECS
+namespace Engine
 {
-	class ArchetypeRegistry
+	namespace ECS
 	{
-		public:
-			ArchetypeRegistry();
-			ArchetypeRegistry( const ArchetypeRegistry& other ) = default;
-			ArchetypeRegistry( ArchetypeRegistry&& other ) noexcept = default;
+		class ArchetypeRegistry
+		{
+			public:
+				ArchetypeRegistry();
+				ArchetypeRegistry( const ArchetypeRegistry& other ) = default;
+				ArchetypeRegistry( ArchetypeRegistry&& other ) noexcept = default;
 
-			ArchetypeRegistry& operator=( const ArchetypeRegistry& other ) = default;
-			ArchetypeRegistry& operator=( ArchetypeRegistry&& other ) noexcept = default;
+				ArchetypeRegistry& operator=( const ArchetypeRegistry& other ) = default;
+				ArchetypeRegistry& operator=( ArchetypeRegistry&& other ) noexcept = default;
 
-			bool RegisterArchetype( const Archetype& archetype );
-			bool UnregisterArchetype( const std::string& name );
+				bool RegisterArchetype( const Archetype& archetype );
+				bool UnregisterArchetype( const std::string& name );
 
-			bool TryGetArchetype( const std::string& name, Archetype& out_archetype ) const;
+				bool TryGetArchetype( const std::string& name, Archetype& out_archetype ) const;
 
-		private:
-			bool IsArchetypeValid( const Archetype& archetype ) const;
+			private:
+				bool IsArchetypeValid( const Archetype& archetype ) const;
 
-			std::unordered_map< std::string, Archetype > _archetypes;
-	};
+				std::unordered_map< std::string, Archetype > _archetypes;
+		};
+	}
 }

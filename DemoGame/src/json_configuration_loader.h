@@ -12,7 +12,7 @@ class JsonConfigurationLoader : public IConfigurationLoader
 	public:
 		JsonConfigurationLoader();
 
-		bool LoadArchetypes( std::vector< ECS::Archetype >& out_archetypes ) override
+		bool LoadArchetypes( std::vector< Engine::ECS::Archetype >& out_archetypes ) override
 		{
 			static const std::string relative_path = "config_files/entity_archetypes/";
 			std::vector< std::string > archetype_files;
@@ -27,7 +27,7 @@ class JsonConfigurationLoader : public IConfigurationLoader
 					continue;
 				}
 
-				ECS::Archetype archetype;
+				Engine::ECS::Archetype archetype;
 
 				nlohmann::json data = nlohmann::json::parse( input_stream );
 				archetype.name.assign( data[ "name" ] );
@@ -46,7 +46,7 @@ class JsonConfigurationLoader : public IConfigurationLoader
 			return true;
 		};
 
-		bool LoadPrefabs( std::vector< ECS::Prefab >& out_prefabs ) override;
+		bool LoadPrefabs( std::vector< Engine::ECS::Prefab >& out_prefabs ) override;
 
 	private:
 		bool GetAllFilesInDirectory( std::vector< std::string >& out_files, const std::string& directory_name );

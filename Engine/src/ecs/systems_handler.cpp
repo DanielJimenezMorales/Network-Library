@@ -2,47 +2,50 @@
 
 #include <cassert>
 
-namespace ECS
+namespace Engine
 {
-	SystemsHandler::SystemsHandler()
-	    : _systems()
+	namespace ECS
 	{
-	}
-
-	void SystemsHandler::AddSystem( SystemCoordinator* system )
-	{
-		assert( system != nullptr );
-
-		const ExecutionStage stage = system->GetStage();
-		auto systems_found = _systems.find( stage );
-
-		if ( systems_found != _systems.end() )
+		SystemsHandler::SystemsHandler()
+		    : _systems()
 		{
-			systems_found->second.push_back( system );
 		}
-		else
+
+		void SystemsHandler::AddSystem( SystemCoordinator* system )
 		{
-			_systems.insert( { stage, std::vector< SystemCoordinator* >( { system } ) } );
-		}
-	}
+			assert( system != nullptr );
 
-	void SystemsHandler::Clear()
-	{
-		_systems.clear();
-	}
+			const ExecutionStage stage = system->GetStage();
+			auto systems_found = _systems.find( stage );
 
-	void SystemsHandler::TickStage(World& world, float32 elapsed_time, ExecutionStage stage )
-	{
-		auto systems_found = _systems.find( stage );
-
-		if ( systems_found != _systems.end() )
-		{
-			auto& stage_systems = systems_found->second;
-			auto it = stage_systems.begin();
-			for ( ; it != stage_systems.end(); ++it )
+			if ( systems_found != _systems.end() )
 			{
-				( *it )->Execute( world, elapsed_time );
+				systems_found->second.push_back( system );
+			}
+			else
+			{
+				_systems.insert( { stage, std::vector< SystemCoordinator* >( { system } ) } );
 			}
 		}
-	}
-} // namespace ECS
+
+		void SystemsHandler::Clear()
+		{
+			_systems.clear();
+		}
+
+		void SystemsHandler::TickStage( World& world, float32 elapsed_time, ExecutionStage stage )
+		{
+			auto systems_found = _systems.find( stage );
+
+			if ( systems_found != _systems.end() )
+			{
+				auto& stage_systems = systems_found->second;
+				auto it = stage_systems.begin();
+				for ( ; it != stage_systems.end(); ++it )
+				{
+					( *it )->Execute( world, elapsed_time );
+				}
+			}
+		}
+	} // namespace ECS
+} // namespace Engine

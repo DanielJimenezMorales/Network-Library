@@ -59,19 +59,19 @@
 #include "network_entity_creator.h"
 #include "json_configuration_loader.h"
 
-static void RegisterComponents( ECS::World& scene )
+static void RegisterComponents( Engine::ECS::World& scene )
 {
-	scene.RegisterComponent< TransformComponent >( "Transform" );
-	scene.RegisterComponent< SpriteRendererComponent >( "SpriteRenderer" );
-	scene.RegisterComponent< Collider2DComponent >( "Collider2D" );
-	scene.RegisterComponent< CameraComponent >( "Camera" );
+	scene.RegisterComponent< Engine::TransformComponent >( "Transform" );
+	scene.RegisterComponent< Engine::SpriteRendererComponent >( "SpriteRenderer" );
+	scene.RegisterComponent< Engine::Collider2DComponent >( "Collider2D" );
+	scene.RegisterComponent< Engine::CameraComponent >( "Camera" );
 	scene.RegisterComponent< VirtualMouseComponent >( "VirtualMouse" );
 	scene.RegisterComponent< InputComponent >( "Input" );
 	scene.RegisterComponent< CrosshairComponent >( "Crosshair" );
 	scene.RegisterComponent< NetworkEntityComponent >( "NetworkEntity" );
 	scene.RegisterComponent< PlayerControllerComponent >( "PlayerController" );
 	scene.RegisterComponent< RemotePlayerControllerComponent >( "RemotePlayerController" );
-	scene.RegisterComponent< RaycastComponent >( "Raycast" );
+	scene.RegisterComponent< Engine::RaycastComponent >( "Raycast" );
 	scene.RegisterComponent< TemporaryLifetimeComponent >( "TemporaryLifetime" );
 	scene.RegisterComponent< HealthComponent >( "HealthComponent" );
 	// This is client side only
@@ -82,10 +82,10 @@ static void RegisterComponents( ECS::World& scene )
 	scene.RegisterComponent< ServerPlayerStateStorageComponent >( "ServerPlayerStateStorage" );
 }
 
-static void RegisterArchetypes( ECS::World& scene )
+static void RegisterArchetypes( Engine::ECS::World& scene )
 {
 	JsonConfigurationLoader configuration_loader;
-	std::vector< ECS::Archetype > loaded_archetypes;
+	std::vector< Engine::ECS::Archetype > loaded_archetypes;
 	configuration_loader.LoadArchetypes( loaded_archetypes );
 
 	for ( auto cit = loaded_archetypes.cbegin(); cit != loaded_archetypes.cend(); ++cit )
@@ -94,10 +94,10 @@ static void RegisterArchetypes( ECS::World& scene )
 	}
 }
 
-static void RegisterPrefabs( ECS::World& scene )
+static void RegisterPrefabs( Engine::ECS::World& scene )
 {
 	JsonConfigurationLoader configuration_loader;
-	std::vector< ECS::Prefab > loaded_prefabs;
+	std::vector< Engine::ECS::Prefab > loaded_prefabs;
 	configuration_loader.LoadPrefabs( loaded_prefabs );
 
 	for ( auto it = loaded_prefabs.begin(); it != loaded_prefabs.end(); ++it )
@@ -106,7 +106,7 @@ static void RegisterPrefabs( ECS::World& scene )
 	}
 }
 
-static void RegisterSystems( ECS::World& scene, NetLib::PeerType networkPeerType, SDL_Renderer* renderer )
+static void RegisterSystems( Engine::ECS::World& scene, NetLib::PeerType networkPeerType, SDL_Renderer* renderer )
 {
 	// Populate systems
 	// TODO Create a system storage in order to be able to free them at the end
@@ -116,8 +116,8 @@ static void RegisterSystems( ECS::World& scene, NetLib::PeerType networkPeerType
 	/////////////////////
 
 	// Add temporary lifetime objects system
-	ECS::SystemCoordinator* temporary_lifetime_objects_system_coordinator =
-	    new ECS::SystemCoordinator( ECS::ExecutionStage::UPDATE );
+	Engine::ECS::SystemCoordinator* temporary_lifetime_objects_system_coordinator =
+	    new Engine::ECS::SystemCoordinator( Engine::ECS::ExecutionStage::UPDATE );
 	TemporaryLifetimeObjectsSystem* temporary_lifetime_objects_system = new TemporaryLifetimeObjectsSystem();
 	auto on_configure_temporary_lifetime_callback =
 	    std::bind( &TemporaryLifetimeObjectsSystem::ConfigureTemporaryLifetimeComponent,
@@ -133,11 +133,11 @@ static void RegisterSystems( ECS::World& scene, NetLib::PeerType networkPeerType
 		/////////////////////
 
 		// Add Server-side collision detection system
-		ECS::SystemCoordinator* collision_detection_system_coordinator =
-		    new ECS::SystemCoordinator( ECS::ExecutionStage::PRETICK );
-		CollisionDetectionSystem* collision_detection_system = new CollisionDetectionSystem();
+		Engine::ECS::SystemCoordinator* collision_detection_system_coordinator =
+		    new Engine::ECS::SystemCoordinator( Engine::ECS::ExecutionStage::PRETICK );
+		Engine::CollisionDetectionSystem* collision_detection_system = new Engine::CollisionDetectionSystem();
 		auto on_configure_collider_2d_callback =
-		    std::bind( &CollisionDetectionSystem::ConfigureCollider2DComponent, collision_detection_system,
+		    std::bind( &Engine::CollisionDetectionSystem::ConfigureCollider2DComponent, collision_detection_system,
 		               std::placeholders::_1, std::placeholders::_2 );
 		scene.SubscribeToOnEntityConfigure( on_configure_collider_2d_callback );
 		collision_detection_system_coordinator->AddSystemToTail( collision_detection_system );
@@ -148,8 +148,8 @@ static void RegisterSystems( ECS::World& scene, NetLib::PeerType networkPeerType
 		//////////////////
 
 		// Add Server-side player controller system
-		ECS::SystemCoordinator* server_player_controller_system_coordinator =
-		    new ECS::SystemCoordinator( ECS::ExecutionStage::TICK );
+		Engine::ECS::SystemCoordinator* server_player_controller_system_coordinator =
+		    new Engine::ECS::SystemCoordinator( Engine::ECS::ExecutionStage::TICK );
 		ServerPlayerControllerSystem* server_player_controller_system = new ServerPlayerControllerSystem();
 		server_player_controller_system_coordinator->AddSystemToTail( server_player_controller_system );
 		auto on_configure_player_controller_callback =
@@ -165,8 +165,8 @@ static void RegisterSystems( ECS::World& scene, NetLib::PeerType networkPeerType
 		//////////////////
 
 		// Add interpolated player objects system
-		ECS::SystemCoordinator* interpolated_player_objects_system_coordinator =
-		    new ECS::SystemCoordinator( ECS::ExecutionStage::UPDATE );
+		Engine::ECS::SystemCoordinator* interpolated_player_objects_system_coordinator =
+		    new Engine::ECS::SystemCoordinator( Engine::ECS::ExecutionStage::UPDATE );
 		InterpolatedPlayerObjectUpdaterSystem* interpolated_player_objects_system =
 		    new InterpolatedPlayerObjectUpdaterSystem();
 		interpolated_player_objects_system_coordinator->AddSystemToTail( interpolated_player_objects_system );
@@ -177,8 +177,8 @@ static void RegisterSystems( ECS::World& scene, NetLib::PeerType networkPeerType
 		//////////////////
 
 		// Add Client-side player controller system
-		ECS::SystemCoordinator* client_player_controller_system_coordinator =
-		    new ECS::SystemCoordinator( ECS::ExecutionStage::TICK );
+		Engine::ECS::SystemCoordinator* client_player_controller_system_coordinator =
+		    new Engine::ECS::SystemCoordinator( Engine::ECS::ExecutionStage::TICK );
 
 		ClientLocalPlayerServerReconciliatorSystem* client_local_player_server_reconciliator_system =
 		    new ClientLocalPlayerServerReconciliatorSystem();
@@ -199,8 +199,8 @@ static void RegisterSystems( ECS::World& scene, NetLib::PeerType networkPeerType
 		scene.AddSystem( client_player_controller_system_coordinator );
 
 		// Add Client-side remote player controller system
-		ECS::SystemCoordinator* client_remote_player_controller_system_coordinator =
-		    new ECS::SystemCoordinator( ECS::ExecutionStage::TICK );
+		Engine::ECS::SystemCoordinator* client_remote_player_controller_system_coordinator =
+		    new Engine::ECS::SystemCoordinator( Engine::ECS::ExecutionStage::TICK );
 		client_player_controller_system_coordinator->AddSystemToTail( new RemotePlayerControllerSystem() );
 		scene.AddSystem( client_remote_player_controller_system_coordinator );
 	}
@@ -210,8 +210,8 @@ static void RegisterSystems( ECS::World& scene, NetLib::PeerType networkPeerType
 	/////////////////////
 
 	// Add pre-tick network system
-	ECS::SystemCoordinator* pre_tick_network_system_coordinator =
-	    new ECS::SystemCoordinator( ECS::ExecutionStage::PRETICK );
+	Engine::ECS::SystemCoordinator* pre_tick_network_system_coordinator =
+	    new Engine::ECS::SystemCoordinator( Engine::ECS::ExecutionStage::PRETICK );
 	pre_tick_network_system_coordinator->AddSystemToTail( new PreTickNetworkSystem() );
 	scene.AddSystem( pre_tick_network_system_coordinator );
 
@@ -220,8 +220,8 @@ static void RegisterSystems( ECS::World& scene, NetLib::PeerType networkPeerType
 	/////////////////////
 
 	// Add pos-tick network system
-	ECS::SystemCoordinator* pos_tick_network_system_coordinator =
-	    new ECS::SystemCoordinator( ECS::ExecutionStage::POSTICK );
+	Engine::ECS::SystemCoordinator* pos_tick_network_system_coordinator =
+	    new Engine::ECS::SystemCoordinator( Engine::ECS::ExecutionStage::POSTICK );
 	pos_tick_network_system_coordinator->AddSystemToTail( new PosTickNetworkSystem() );
 	scene.AddSystem( pos_tick_network_system_coordinator );
 
@@ -229,24 +229,26 @@ static void RegisterSystems( ECS::World& scene, NetLib::PeerType networkPeerType
 	// RENDER SYSTEMS
 	//////////////////
 
-	ECS::SystemCoordinator* render_system_coordinator = new ECS::SystemCoordinator( ECS::ExecutionStage::RENDER );
-	SpriteRendererSystem* sprite_renderer_system = new SpriteRendererSystem( renderer );
+	Engine::ECS::SystemCoordinator* render_system_coordinator =
+	    new Engine::ECS::SystemCoordinator( Engine::ECS::ExecutionStage::RENDER );
+	Engine::SpriteRendererSystem* sprite_renderer_system = new Engine::SpriteRendererSystem( renderer );
 	auto on_configure_sprite_renderer_callback =
-	    std::bind( &SpriteRendererSystem::ConfigureSpriteRendererComponent, sprite_renderer_system,
+	    std::bind( &Engine::SpriteRendererSystem::ConfigureSpriteRendererComponent, sprite_renderer_system,
 	               std::placeholders::_1, std::placeholders::_2 );
 	scene.SubscribeToOnEntityConfigure( on_configure_sprite_renderer_callback );
 	render_system_coordinator->AddSystemToTail( sprite_renderer_system );
 
-	GizmoRendererSystem* gizmo_renderer_system = new GizmoRendererSystem( renderer );
+	Engine::GizmoRendererSystem* gizmo_renderer_system = new Engine::GizmoRendererSystem( renderer );
 	render_system_coordinator->AddSystemToTail( gizmo_renderer_system );
 	scene.AddSystem( render_system_coordinator );
-	scene.SubscribeToOnEntityCreate( std::bind( &GizmoRendererSystem::AllocateGizmoRendererComponent,
+	scene.SubscribeToOnEntityCreate( std::bind( &Engine::GizmoRendererSystem::AllocateGizmoRendererComponent,
 	                                            gizmo_renderer_system, std::placeholders::_1 ) );
-	scene.SubscribeToOnEntityDestroy( std::bind( &GizmoRendererSystem::DeallocateGizmoRendererComponent,
+	scene.SubscribeToOnEntityDestroy( std::bind( &Engine::GizmoRendererSystem::DeallocateGizmoRendererComponent,
 	                                             gizmo_renderer_system, std::placeholders::_1 ) );
 }
 
-void SceneInitializer::ConfigureCameraComponent( ECS::GameEntity& entity, const ECS::Prefab& prefab ) const
+void SceneInitializer::ConfigureCameraComponent( Engine::ECS::GameEntity& entity,
+                                                 const Engine::ECS::Prefab& prefab ) const
 {
 	auto component_config_found = prefab.componentConfigurations.find( "Camera" );
 	if ( component_config_found == prefab.componentConfigurations.end() )
@@ -254,19 +256,20 @@ void SceneInitializer::ConfigureCameraComponent( ECS::GameEntity& entity, const 
 		return;
 	}
 
-	if ( !entity.HasComponent< CameraComponent >() )
+	if ( !entity.HasComponent< Engine::CameraComponent >() )
 	{
 		return;
 	}
 
-	const CameraComponentConfiguration& camera_config =
-	    static_cast< const CameraComponentConfiguration& >( *component_config_found->second );
-	CameraComponent& camera = entity.GetComponent< CameraComponent >();
+	const Engine::CameraComponentConfiguration& camera_config =
+	    static_cast< const Engine::CameraComponentConfiguration& >( *component_config_found->second );
+	Engine::CameraComponent& camera = entity.GetComponent< Engine::CameraComponent >();
 	camera.width = camera_config.width;
 	camera.height = camera_config.height;
 }
 
-void SceneInitializer::ConfigureHealthComponent( ECS::GameEntity& entity, const ECS::Prefab& prefab ) const
+void SceneInitializer::ConfigureHealthComponent( Engine::ECS::GameEntity& entity,
+                                                 const Engine::ECS::Prefab& prefab ) const
 {
 	auto component_config_found = prefab.componentConfigurations.find( "Health" );
 	if ( component_config_found == prefab.componentConfigurations.end() )
@@ -286,8 +289,8 @@ void SceneInitializer::ConfigureHealthComponent( ECS::GameEntity& entity, const 
 	health.currentHealth = health_config.currentHealth;
 }
 
-void SceneInitializer::InitializeScene( ECS::World& scene, NetLib::PeerType networkPeerType, InputHandler& inputHandler,
-                                        SDL_Renderer* renderer ) const
+void SceneInitializer::InitializeScene( Engine::ECS::World& scene, NetLib::PeerType networkPeerType,
+                                        Engine::InputHandler& inputHandler, SDL_Renderer* renderer ) const
 {
 	RegisterComponents( scene );
 	RegisterArchetypes( scene );
@@ -301,15 +304,15 @@ void SceneInitializer::InitializeScene( ECS::World& scene, NetLib::PeerType netw
 	    std::bind( &SceneInitializer::ConfigureHealthComponent, this, std::placeholders::_1, std::placeholders::_2 ) );
 
 	// Inputs
-	KeyboardController* keyboard = new KeyboardController();
-	InputAxis axis( HORIZONTAL_AXIS, SDLK_d, SDLK_a );
+	Engine::KeyboardController* keyboard = new Engine::KeyboardController();
+	Engine::InputAxis axis( HORIZONTAL_AXIS, SDLK_d, SDLK_a );
 	keyboard->AddAxisMap( axis );
-	InputAxis axis2( VERTICAL_AXIS, SDLK_w, SDLK_s );
+	Engine::InputAxis axis2( VERTICAL_AXIS, SDLK_w, SDLK_s );
 	keyboard->AddAxisMap( axis2 );
 	inputHandler.AddController( keyboard );
 
-	MouseController* mouse = new MouseController();
-	const InputButton mouse_shoot_button( SHOOT_BUTTON, SDL_BUTTON_LEFT );
+	Engine::MouseController* mouse = new Engine::MouseController();
+	const Engine::InputButton mouse_shoot_button( SHOOT_BUTTON, SDL_BUTTON_LEFT );
 	mouse->AddButtonMap( mouse_shoot_button );
 	inputHandler.AddCursor( mouse );
 
@@ -369,8 +372,8 @@ void SceneInitializer::InitializeScene( ECS::World& scene, NetLib::PeerType netw
 		scene.CreateGameEntity( "VirtualMouse", Vec2f( 0, 0 ) );
 
 		// Add virtual mouse system
-		ECS::SystemCoordinator* virtual_mouse_system_coordinator =
-		    new ECS::SystemCoordinator( ECS::ExecutionStage::UPDATE );
+		Engine::ECS::SystemCoordinator* virtual_mouse_system_coordinator =
+		    new Engine::ECS::SystemCoordinator( Engine::ECS::ExecutionStage::UPDATE );
 		virtual_mouse_system_coordinator->AddSystemToTail( new VirtualMouseSystem() );
 		scene.AddSystem( virtual_mouse_system_coordinator );
 
@@ -378,8 +381,8 @@ void SceneInitializer::InitializeScene( ECS::World& scene, NetLib::PeerType netw
 		scene.CreateGameEntity( "Crosshair", Vec2f( 0, 0 ) );
 
 		// Add crosshair follow mouse system
-		ECS::SystemCoordinator* crosshair_follow_mouse_system_coordinator =
-		    new ECS::SystemCoordinator( ECS::ExecutionStage::UPDATE );
+		Engine::ECS::SystemCoordinator* crosshair_follow_mouse_system_coordinator =
+		    new Engine::ECS::SystemCoordinator( Engine::ECS::ExecutionStage::UPDATE );
 		crosshair_follow_mouse_system_coordinator->AddSystemToTail( new CrosshairFollowMouseSystem() );
 		scene.AddSystem( crosshair_follow_mouse_system_coordinator );
 	}

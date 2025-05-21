@@ -3,10 +3,10 @@
 
 #include "ecs/component_configuration.h"
 
-struct HealthComponentConfiguration : public ECS::ComponentConfiguration
+struct HealthComponentConfiguration : public Engine::ECS::ComponentConfiguration
 {
 		HealthComponentConfiguration( uint32 max_health, uint32 current_health )
-		    : ECS::ComponentConfiguration( "Health" )
+		    : Engine::ECS::ComponentConfiguration( "Health" )
 		    , maxHealth( max_health )
 		    , currentHealth( current_health )
 		{

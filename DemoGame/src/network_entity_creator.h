@@ -3,11 +3,14 @@
 
 #include "core/Peer.h"
 
-namespace ECS
+namespace Engine
 {
-	class GameEntity;
-	class World;
-	class Prefab;
+	namespace ECS
+	{
+		class GameEntity;
+		class World;
+		class Prefab;
+	}
 }
 
 class NetworkEntityCreatorSystem
@@ -15,14 +18,14 @@ class NetworkEntityCreatorSystem
 	public:
 		NetworkEntityCreatorSystem();
 
-		void SetScene( ECS::World* scene );
+		void SetScene( Engine::ECS::World* scene );
 		void SetPeerType( NetLib::PeerType peer_type );
 		uint32 OnNetworkEntityCreate( const NetLib::OnNetworkEntityCreateConfig& config );
 		void OnNetworkEntityDestroy( uint32 in_game_id );
-		void OnNetworkEntityComponentConfigure( ECS::GameEntity& entity, const ECS::Prefab& prefab );
+		void OnNetworkEntityComponentConfigure( Engine::ECS::GameEntity& entity, const Engine::ECS::Prefab& prefab );
 
 	private:
-		ECS::World* _scene;
+		Engine::ECS::World* _scene;
 		NetLib::OnNetworkEntityCreateConfig _config;
 		NetLib::PeerType _peerType;
 };

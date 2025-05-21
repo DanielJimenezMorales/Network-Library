@@ -10,15 +10,15 @@
 #include "components/input_component.h"
 #include "components/transform_component.h"
 
-void VirtualMouseSystem::Execute( ECS::World& world, float32 elapsed_time )
+void VirtualMouseSystem::Execute( Engine::ECS::World& world, float32 elapsed_time )
 {
-	const CameraComponent& cameraComponent = world.GetFirstComponentOfType< CameraComponent >();
+	const Engine::CameraComponent& cameraComponent = world.GetFirstComponentOfType< Engine::CameraComponent >();
 	const InputComponent& inputComponent = world.GetGlobalComponent< InputComponent >();
 
-	std::vector< ECS::GameEntity > entities = world.GetEntitiesOfType< VirtualMouseComponent >();
+	std::vector< Engine::ECS::GameEntity > entities = world.GetEntitiesOfType< VirtualMouseComponent >();
 	for ( auto it = entities.begin(); it != entities.end(); ++it )
 	{
-		TransformComponent& virtual_mouse_transform = it->GetComponent< TransformComponent >();
+		Engine::TransformComponent& virtual_mouse_transform = it->GetComponent< Engine::TransformComponent >();
 
 		int32 mouseDeltaX, mouseDeltaY = 0;
 		inputComponent.cursor->GetDelta( mouseDeltaX, mouseDeltaY );

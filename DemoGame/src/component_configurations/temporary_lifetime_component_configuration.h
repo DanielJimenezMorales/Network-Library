@@ -3,10 +3,10 @@
 
 #include "ecs/component_configuration.h"
 
-struct TemporaryLifetimeComponentConfiguration : public ECS::ComponentConfiguration
+struct TemporaryLifetimeComponentConfiguration : public Engine::ECS::ComponentConfiguration
 {
 		TemporaryLifetimeComponentConfiguration( float32 lifetime )
-		    : ECS::ComponentConfiguration( "TemporaryLifetime" )
+		    : Engine::ECS::ComponentConfiguration( "TemporaryLifetime" )
 		    , lifetime( lifetime )
 		{
 		}

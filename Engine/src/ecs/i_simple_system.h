@@ -1,17 +1,20 @@
 #pragma once
 #include "numeric_types.h"
 
-namespace ECS
+namespace Engine
 {
-	class GameEntity;
-	class World;
-
-	class ISimpleSystem
+	namespace ECS
 	{
-		public:
-			ISimpleSystem() {}
-			virtual ~ISimpleSystem() {}
+		class GameEntity;
+		class World;
 
-			virtual void Execute( World& world, float32 elapsed_time ) = 0;
-	};
+		class ISimpleSystem
+		{
+			public:
+				ISimpleSystem() {}
+				virtual ~ISimpleSystem() {}
+
+				virtual void Execute( World& world, float32 elapsed_time ) = 0;
+		};
+	}
 }

@@ -3,17 +3,20 @@
 
 #include "ecs/component_configuration.h"
 
-struct CameraComponentConfiguration : public ECS::ComponentConfiguration
+namespace Engine
 {
-		CameraComponentConfiguration( int32 width, int32 height )
-		    : ECS::ComponentConfiguration( "Camera" )
-		    , width( width )
-		    , height( height )
-		{
-		}
+	struct CameraComponentConfiguration : public ECS::ComponentConfiguration
+	{
+			CameraComponentConfiguration( int32 width, int32 height )
+			    : ECS::ComponentConfiguration( "Camera" )
+			    , width( width )
+			    , height( height )
+			{
+			}
 
-		CameraComponentConfiguration* Clone() const override { return new CameraComponentConfiguration( *this ); }
+			CameraComponentConfiguration* Clone() const override { return new CameraComponentConfiguration( *this ); }
 
-		int32 width;
-		int32 height;
-};
+			int32 width;
+			int32 height;
+	};
+}

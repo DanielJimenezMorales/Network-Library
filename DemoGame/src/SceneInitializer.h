@@ -3,23 +3,26 @@
 
 #include <SDL_image.h>
 
-class InputHandler;
-
 // TODO TEMP
-namespace ECS
+namespace Engine
 {
-	class GameEntity;
-	class World;
-	class Prefab;
+	class InputHandler;
+
+	namespace ECS
+	{
+		class GameEntity;
+		class World;
+		class Prefab;
+	}
 }
 
 class SceneInitializer
 {
 	public:
-		void InitializeScene( ECS::World& scene, NetLib::PeerType networkPeerType, InputHandler& inputHandler,
-		                      SDL_Renderer* renderer ) const;
+		void InitializeScene( Engine::ECS::World& scene, NetLib::PeerType networkPeerType,
+		                      Engine::InputHandler& inputHandler, SDL_Renderer* renderer ) const;
 
 		// TODO Temp method. It shouldn't go here
-		void ConfigureCameraComponent( ECS::GameEntity& entity, const ECS::Prefab& prefab ) const;
-		void ConfigureHealthComponent( ECS::GameEntity& entity, const ECS::Prefab& prefab ) const;
+		void ConfigureCameraComponent( Engine::ECS::GameEntity& entity, const Engine::ECS::Prefab& prefab ) const;
+		void ConfigureHealthComponent( Engine::ECS::GameEntity& entity, const Engine::ECS::Prefab& prefab ) const;
 };

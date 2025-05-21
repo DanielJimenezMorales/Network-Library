@@ -6,31 +6,34 @@
 
 #include <vector>
 
-namespace Raycaster
+namespace Engine
 {
-	struct Ray
+	namespace Raycaster
 	{
-			Vec2f origin;
-			Vec2f direction;
-			uint32 maxDistance;
-	};
+		struct Ray
+		{
+				Vec2f origin;
+				Vec2f direction;
+				uint32 maxDistance;
+		};
 
-	struct RaycastResult
-	{
-			RaycastResult()
-			    : entity( ECS::GameEntity() )
-			    , position()
-			    , normal()
-			    , squaredDistance( 0 )
-			{
-			}
+		struct RaycastResult
+		{
+				RaycastResult()
+				    : entity( ECS::GameEntity() )
+				    , position()
+				    , normal()
+				    , squaredDistance( 0 )
+				{
+				}
 
-			ECS::GameEntity entity;
-			Vec2f position;
-			Vec2f normal;
-			uint32 squaredDistance;
-	};
+				ECS::GameEntity entity;
+				Vec2f position;
+				Vec2f normal;
+				uint32 squaredDistance;
+		};
 
-	RaycastResult ExecuteRaycast( const Ray& ray, const std::vector< ECS::GameEntity >& entities_with_colliders,
-	                              const ECS::GameEntity& entity_to_exclude );
+		RaycastResult ExecuteRaycast( const Ray& ray, const std::vector< ECS::GameEntity >& entities_with_colliders,
+		                              const ECS::GameEntity& entity_to_exclude );
+	}
 }

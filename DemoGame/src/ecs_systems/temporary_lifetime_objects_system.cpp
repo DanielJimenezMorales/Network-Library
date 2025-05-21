@@ -10,13 +10,13 @@
 #include <vector>
 
 TemporaryLifetimeObjectsSystem::TemporaryLifetimeObjectsSystem()
-    : ECS::ISimpleSystem()
+    : Engine::ECS::ISimpleSystem()
 {
 }
 
-void TemporaryLifetimeObjectsSystem::Execute( ECS::World& world, float32 elapsed_time )
+void TemporaryLifetimeObjectsSystem::Execute( Engine::ECS::World& world, float32 elapsed_time )
 {
-	std::vector< ECS::GameEntity > temporary_lifetime_entities =
+	std::vector< Engine::ECS::GameEntity > temporary_lifetime_entities =
 	    world.GetEntitiesOfType< TemporaryLifetimeComponent >();
 	for ( auto it = temporary_lifetime_entities.begin(); it != temporary_lifetime_entities.end(); ++it )
 	{
@@ -30,8 +30,8 @@ void TemporaryLifetimeObjectsSystem::Execute( ECS::World& world, float32 elapsed
 	}
 }
 
-void TemporaryLifetimeObjectsSystem::ConfigureTemporaryLifetimeComponent( ECS::GameEntity& entity,
-                                                                          const ECS::Prefab& prefab )
+void TemporaryLifetimeObjectsSystem::ConfigureTemporaryLifetimeComponent( Engine::ECS::GameEntity& entity,
+                                                                          const Engine::ECS::Prefab& prefab )
 {
 	auto component_config_found = prefab.componentConfigurations.find( "TemporaryLifetime" );
 	if ( component_config_found == prefab.componentConfigurations.end() )

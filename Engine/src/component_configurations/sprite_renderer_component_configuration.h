@@ -1,11 +1,14 @@
 #pragma once
 #include "ecs/component_configuration.h"
 
-struct SpriteRendererComponentConfiguration : public ECS::ComponentConfiguration
+namespace Engine
 {
-		SpriteRendererComponentConfiguration( const std::string& texture_path );
+	struct SpriteRendererComponentConfiguration : public ECS::ComponentConfiguration
+	{
+			SpriteRendererComponentConfiguration( const std::string& texture_path );
 
-		SpriteRendererComponentConfiguration* Clone() const override;
+			SpriteRendererComponentConfiguration* Clone() const override;
 
-		std::string texturePath;
-};
+			std::string texturePath;
+	};
+}

@@ -7,17 +7,17 @@
 #include "components/remote_player_controller_component.h"
 
 RemotePlayerControllerSystem::RemotePlayerControllerSystem()
-    : ECS::ISimpleSystem()
+    : Engine::ECS::ISimpleSystem()
 {
 }
 
-void RemotePlayerControllerSystem::Execute( ECS::World& world, float32 elapsed_time )
+void RemotePlayerControllerSystem::Execute( Engine::ECS::World& world, float32 elapsed_time )
 {
-	std::vector< ECS::GameEntity > entities = world.GetEntitiesOfType< RemotePlayerControllerComponent >();
+	std::vector< Engine::ECS::GameEntity > entities = world.GetEntitiesOfType< RemotePlayerControllerComponent >();
 	// TODO Is this still valid?
 	for ( auto it = entities.begin(); it != entities.end(); ++it )
 	{
-		TransformComponent& transform = it->GetComponent< TransformComponent >();
+		Engine::TransformComponent& transform = it->GetComponent< Engine::TransformComponent >();
 		const RemotePlayerControllerComponent& networkComponent = it->GetComponent< RemotePlayerControllerComponent >();
 	}
 

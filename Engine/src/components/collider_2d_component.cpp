@@ -2,20 +2,23 @@
 
 #include "logger.h"
 
-CollisionResponseType GetCollisionResponseTypeFromName( const std::string& name )
+namespace Engine
 {
-	if ( name == "Static" )
+	CollisionResponseType GetCollisionResponseTypeFromName( const std::string& name )
 	{
-		return CollisionResponseType::Static;
-	}
-	else if ( name == "Dynamic" )
-	{
-		return CollisionResponseType::Dynamic;
-	}
-	else
-	{
-		LOG_ERROR( "[GetCollisionResponseTypeFromName] : Can't parse %s to collision response type", name.c_str() );
-	}
+		if ( name == "Static" )
+		{
+			return CollisionResponseType::Static;
+		}
+		else if ( name == "Dynamic" )
+		{
+			return CollisionResponseType::Dynamic;
+		}
+		else
+		{
+			LOG_ERROR( "[GetCollisionResponseTypeFromName] : Can't parse %s to collision response type", name.c_str() );
+		}
 
-	return CollisionResponseType::None;
+		return CollisionResponseType::None;
+	}
 }

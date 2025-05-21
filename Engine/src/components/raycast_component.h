@@ -1,12 +1,15 @@
 #pragma once
 #include "numeric_types.h"
 
-struct RaycastComponent
+namespace Engine
 {
-		RaycastComponent()
-		    : distance( 100.f )
-		{
-		}
+	struct RaycastComponent
+	{
+			RaycastComponent()
+			    : distance( 100.f )
+			{
+			}
 
-		float32 distance;
-};
+			float32 distance;
+	};
+}

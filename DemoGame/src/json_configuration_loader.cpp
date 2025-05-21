@@ -15,6 +15,7 @@
 #include "component_configurations/health_component_configuration.h"
 
 #include "collisions/CircleBounds2D.h"
+#include "collisions/CollisionUtils.h"
 
 JsonConfigurationLoader::JsonConfigurationLoader()
     : IConfigurationLoader()
@@ -22,39 +23,39 @@ JsonConfigurationLoader::JsonConfigurationLoader()
 }
 
 static void ParseComponentConfiguration( const nlohmann::json& json_data,
-                                         ECS::ComponentConfiguration*& out_component_config )
+                                         Engine::ECS::ComponentConfiguration*& out_component_config )
 {
 	const std::string component_name = json_data[ "name" ];
 	if ( component_name == "SpriteRenderer" )
 	{
 		const std::string texture_name = json_data[ "texture_path" ];
-		out_component_config = new SpriteRendererComponentConfiguration( texture_name );
+		out_component_config = new Engine::SpriteRendererComponentConfiguration( texture_name );
 	}
 	else if ( component_name == "Camera" )
 	{
 		const int32 width = json_data[ "width" ];
 		const int32 height = json_data[ "height" ];
-		out_component_config = new CameraComponentConfiguration( width, height );
+		out_component_config = new Engine::CameraComponentConfiguration( width, height );
 	}
 	else if ( component_name == "Collider2D" )
 	{
 		const bool is_trigger = json_data.value( "is_trigger", false );
 		const std::string collision_response_type_name = json_data.value( "collision_response_type", "Static" );
-		const CollisionResponseType collision_response_type =
-		    GetCollisionResponseTypeFromName( collision_response_type_name );
+		const Engine::CollisionResponseType collision_response_type =
+		    Engine::GetCollisionResponseTypeFromName( collision_response_type_name );
 
 		const nlohmann::json bounds_json_data = json_data[ "bounds_config" ];
 		const std::string bounds_type = bounds_json_data[ "type" ];
-		Bounds2DConfiguration* bounds_config = nullptr;
+		Engine::Bounds2DConfiguration* bounds_config = nullptr;
 
 		if ( bounds_type == "Circle" )
 		{
 			const float32 radius = bounds_json_data[ "radius" ];
-			bounds_config = new CircleBounds2DConfiguration( radius );
+			bounds_config = new Engine::CircleBounds2DConfiguration( radius );
 		}
 
 		out_component_config =
-		    new Collider2DComponentConfiguration( bounds_config, is_trigger, collision_response_type );
+		    new Engine::Collider2DComponentConfiguration( bounds_config, is_trigger, collision_response_type );
 	}
 	else if ( component_name == "PlayerController" )
 	{
@@ -70,12 +71,13 @@ static void ParseComponentConfiguration( const nlohmann::json& json_data,
 	else if ( component_name == "Health" )
 	{
 		const uint32 max_health = json_data[ "max_health" ];
-		const uint32 current_health = (json_data.contains("current_health")) ? json_data["current_health"] : max_health;
+		const uint32 current_health =
+		    ( json_data.contains( "current_health" ) ) ? json_data[ "current_health" ] : max_health;
 		out_component_config = new HealthComponentConfiguration( max_health, current_health );
 	}
 }
 
-bool JsonConfigurationLoader::LoadPrefabs( std::vector< ECS::Prefab >& out_prefabs )
+bool JsonConfigurationLoader::LoadPrefabs( std::vector< Engine::ECS::Prefab >& out_prefabs )
 {
 	static const std::string relative_path = "config_files/entity_prefabs/";
 	std::vector< std::string > prefab_files;
@@ -90,7 +92,7 @@ bool JsonConfigurationLoader::LoadPrefabs( std::vector< ECS::Prefab >& out_prefa
 			continue;
 		}
 
-		ECS::Prefab prefab;
+		Engine::ECS::Prefab prefab;
 
 		nlohmann::json data = nlohmann::json::parse( input_stream );
 		prefab.name.assign( data[ "name" ] );
@@ -103,7 +105,7 @@ bool JsonConfigurationLoader::LoadPrefabs( std::vector< ECS::Prefab >& out_prefa
 			for ( auto components_cit = component_configs.cbegin(); components_cit != component_configs.cend();
 			      ++components_cit )
 			{
-				ECS::ComponentConfiguration* component_config = nullptr;
+				Engine::ECS::ComponentConfiguration* component_config = nullptr;
 				ParseComponentConfiguration( *components_cit, component_config );
 				assert( component_config != nullptr );
 				prefab.componentConfigurations[ component_config->name ] = component_config;

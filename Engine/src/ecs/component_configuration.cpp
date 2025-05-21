@@ -1,6 +1,12 @@
 #include "component_configuration.h"
 
-ECS::ComponentConfiguration::ComponentConfiguration( const std::string& name )
-    : name( name )
+namespace Engine
 {
+	namespace ECS
+	{
+		ComponentConfiguration::ComponentConfiguration( const std::string& name )
+		    : name( name )
+		{
+		}
+	}
 }

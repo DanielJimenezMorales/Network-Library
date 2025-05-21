@@ -1,7 +1,10 @@
 #pragma once
 
-class IInputController;
-class ICursor;
+namespace Engine
+{
+	class IInputController;
+	class ICursor;
+}
 
 struct InputComponent
 {
@@ -12,12 +15,12 @@ struct InputComponent
 		{
 		}
 
-		InputComponent( IInputController* inputController, ICursor* cursor )
+		InputComponent( Engine::IInputController* inputController, Engine::ICursor* cursor )
 		    : inputController( inputController )
 		    , cursor( cursor )
 		{
 		}
 
-		IInputController* inputController;
-		ICursor* cursor;
+		Engine::IInputController* inputController;
+		Engine::ICursor* cursor;
 };

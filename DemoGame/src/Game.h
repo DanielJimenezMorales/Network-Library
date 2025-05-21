@@ -33,7 +33,7 @@ class Game
 		SDL_Renderer* _renderer;
 		bool _isRunning;
 
-		ECS::World _activeScene;
+		Engine::ECS::World _activeScene;
 		// TODO The input handler should also be witin an ECS global component
-		InputHandler _inputHandler;
+		Engine::InputHandler _inputHandler;
 };

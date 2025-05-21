@@ -10,7 +10,7 @@
 static void UpdateLookAt( const InputState& inputs, const PlayerState& current_state, PlayerState& result_state,
                           float32 elapsed_time, const PlayerStateConfiguration& configuration )
 {
-	TransformComponent transform( current_state.position, current_state.rotationAngle );
+	Engine::TransformComponent transform( current_state.position, current_state.rotationAngle );
 	transform.LookAt( inputs.virtualMousePosition );
 	result_state.rotationAngle = transform.GetRotationAngle();
 }

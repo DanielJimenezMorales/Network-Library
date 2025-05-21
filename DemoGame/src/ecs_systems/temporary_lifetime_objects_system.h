@@ -1,18 +1,21 @@
 #pragma once
 #include "ecs/i_simple_system.h"
 
-namespace ECS
+namespace Engine
 {
-	class Prefab;
-	class GameEntity;
+	namespace ECS
+	{
+		class Prefab;
+		class GameEntity;
+	}
 }
 
-class TemporaryLifetimeObjectsSystem : public ECS::ISimpleSystem
+class TemporaryLifetimeObjectsSystem : public Engine::ECS::ISimpleSystem
 {
 	public:
 		TemporaryLifetimeObjectsSystem();
 
-		void Execute( ECS::World& world, float32 elapsed_time ) override;
+		void Execute( Engine::ECS::World& world, float32 elapsed_time ) override;
 
-		void ConfigureTemporaryLifetimeComponent( ECS::GameEntity& entity, const ECS::Prefab& prefab );
+		void ConfigureTemporaryLifetimeComponent( Engine::ECS::GameEntity& entity, const Engine::ECS::Prefab& prefab );
 };

@@ -3,5 +3,5 @@
 
 struct GhostObjectComponent
 {
-	ECS::GameEntity entity;
+		Engine::ECS::GameEntity entity;
 };

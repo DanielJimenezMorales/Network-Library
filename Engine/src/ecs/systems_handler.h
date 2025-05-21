@@ -4,27 +4,30 @@
 #include <unordered_map>
 #include <vector>
 
-namespace ECS
+namespace Engine
 {
-	class World;
-
-	/// <summary>
-	/// <para>The systems handler acts as a storage of all different systems for each execution stage.</para>
-	/// <para>IMPORTANT: The systems handler do NOT owne the different systems and will not be responsible for memory
-	/// deallocation.</para>
-	/// </summary>
-	class SystemsHandler
+	namespace ECS
 	{
-		public:
-			SystemsHandler();
+		class World;
 
-			void AddSystem( SystemCoordinator* system );
+		/// <summary>
+		/// <para>The systems handler acts as a storage of all different systems for each execution stage.</para>
+		/// <para>IMPORTANT: The systems handler do NOT owne the different systems and will not be responsible for
+		/// memory deallocation.</para>
+		/// </summary>
+		class SystemsHandler
+		{
+			public:
+				SystemsHandler();
 
-			void Clear();
+				void AddSystem( SystemCoordinator* system );
 
-			void TickStage( World& world, float elapsed_time, ExecutionStage stage );
+				void Clear();
 
-		private:
-			std::unordered_map< ExecutionStage, std::vector< SystemCoordinator* > > _systems;
-	};
+				void TickStage( World& world, float elapsed_time, ExecutionStage stage );
+
+			private:
+				std::unordered_map< ExecutionStage, std::vector< SystemCoordinator* > > _systems;
+		};
+	}
 }

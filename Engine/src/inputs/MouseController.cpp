@@ -1,123 +1,126 @@
 #include "MouseController.h"
 
-void MouseController::AddButtonMap( const InputButton& inputButton )
+namespace Engine
 {
-	_actionToButtonMap[ inputButton.actionId ] = inputButton;
-	_keyToButtonActionMap[ static_cast< uint8 >( inputButton.code ) ] = inputButton.actionId;
-}
-
-void MouseController::HandleEvent( const SDL_Event& event )
-{
-	if ( event.type != SDL_MOUSEBUTTONDOWN && event.type != SDL_MOUSEBUTTONUP && event.type != SDL_MOUSEMOTION )
+	void MouseController::AddButtonMap( const InputButton& inputButton )
 	{
-		return;
+		_actionToButtonMap[ inputButton.actionId ] = inputButton;
+		_keyToButtonActionMap[ static_cast< uint8 >( inputButton.code ) ] = inputButton.actionId;
 	}
 
-	if ( event.type == SDL_MOUSEMOTION )
+	void MouseController::HandleEvent( const SDL_Event& event )
 	{
-		_mouseDeltaX = event.motion.xrel;
-		_mouseDeltaY = event.motion.yrel;
-		return;
-	}
-
-	HandleButton( event );
-}
-
-void MouseController::ResetEvents()
-{
-	for ( auto& item : _actionToButtonMap )
-	{
-		if ( item.second.currentState == ButtonState::Released )
+		if ( event.type != SDL_MOUSEBUTTONDOWN && event.type != SDL_MOUSEBUTTONUP && event.type != SDL_MOUSEMOTION )
 		{
-			SetInputButtonState( item.second, ButtonState::None );
+			return;
 		}
 
-		item.second.handledThisFrame = false;
+		if ( event.type == SDL_MOUSEMOTION )
+		{
+			_mouseDeltaX = event.motion.xrel;
+			_mouseDeltaY = event.motion.yrel;
+			return;
+		}
+
+		HandleButton( event );
 	}
 
-	_mouseDeltaX = 0;
-	_mouseDeltaY = 0;
-}
-
-void MouseController::UpdateUnhandledButtons()
-{
-	for ( auto& item : _actionToButtonMap )
+	void MouseController::ResetEvents()
 	{
-		if ( !item.second.handledThisFrame )
+		for ( auto& item : _actionToButtonMap )
 		{
-			SetInputButtonState( item.second, item.second.currentState );
+			if ( item.second.currentState == ButtonState::Released )
+			{
+				SetInputButtonState( item.second, ButtonState::None );
+			}
+
+			item.second.handledThisFrame = false;
+		}
+
+		_mouseDeltaX = 0;
+		_mouseDeltaY = 0;
+	}
+
+	void MouseController::UpdateUnhandledButtons()
+	{
+		for ( auto& item : _actionToButtonMap )
+		{
+			if ( !item.second.handledThisFrame )
+			{
+				SetInputButtonState( item.second, item.second.currentState );
+			}
 		}
 	}
-}
 
-bool MouseController::GetButtonDown( int32 actionId ) const
-{
-	auto inputButton = _actionToButtonMap.find( actionId );
-	if ( inputButton == _actionToButtonMap.cend() )
+	bool MouseController::GetButtonDown( int32 actionId ) const
 	{
-		return false;
+		auto inputButton = _actionToButtonMap.find( actionId );
+		if ( inputButton == _actionToButtonMap.cend() )
+		{
+			return false;
+		}
+
+		return ( inputButton->second.currentState == ButtonState::Pressed &&
+		         inputButton->second.previousState != ButtonState::Pressed );
 	}
 
-	return ( inputButton->second.currentState == ButtonState::Pressed &&
-	         inputButton->second.previousState != ButtonState::Pressed );
-}
-
-bool MouseController::GetButtonPressed( int32 actionId ) const
-{
-	auto inputButton = _actionToButtonMap.find( actionId );
-	if ( inputButton == _actionToButtonMap.cend() )
+	bool MouseController::GetButtonPressed( int32 actionId ) const
 	{
-		return false;
+		auto inputButton = _actionToButtonMap.find( actionId );
+		if ( inputButton == _actionToButtonMap.cend() )
+		{
+			return false;
+		}
+
+		return inputButton->second.currentState == ButtonState::Pressed;
 	}
 
-	return inputButton->second.currentState == ButtonState::Pressed;
-}
-
-bool MouseController::GetButtonUp( int32 actionId ) const
-{
-	auto inputButton = _actionToButtonMap.find( actionId );
-	if ( inputButton == _actionToButtonMap.cend() )
+	bool MouseController::GetButtonUp( int32 actionId ) const
 	{
-		return false;
+		auto inputButton = _actionToButtonMap.find( actionId );
+		if ( inputButton == _actionToButtonMap.cend() )
+		{
+			return false;
+		}
+
+		return inputButton->second.currentState == ButtonState::Released;
 	}
 
-	return inputButton->second.currentState == ButtonState::Released;
-}
-
-void MouseController::GetPosition( int32& x, int32& y ) const
-{
-	SDL_GetMouseState( &x, &y );
-}
-
-void MouseController::GetDelta( int32& x, int32& y ) const
-{
-	x = _mouseDeltaX;
-	y = _mouseDeltaY;
-}
-
-void MouseController::HandleButton( const SDL_Event& event )
-{
-	const uint8 code = event.button.button;
-	auto action = _keyToButtonActionMap.find( code );
-	if ( action == _keyToButtonActionMap.cend() )
+	void MouseController::GetPosition( int32& x, int32& y ) const
 	{
-		return;
+		SDL_GetMouseState( &x, &y );
 	}
 
-	if ( event.button.state == SDL_PRESSED )
+	void MouseController::GetDelta( int32& x, int32& y ) const
 	{
-		_actionToButtonMap[ action->second ].handledThisFrame = true;
-		SetInputButtonState( _actionToButtonMap[ action->second ], ButtonState::Pressed );
+		x = _mouseDeltaX;
+		y = _mouseDeltaY;
 	}
-	else if ( event.button.state == SDL_RELEASED )
-	{
-		_actionToButtonMap[ action->second ].handledThisFrame = true;
-		SetInputButtonState( _actionToButtonMap[ action->second ], ButtonState::Released );
-	}
-}
 
-void MouseController::SetInputButtonState( InputButton& button, ButtonState newState )
-{
-	button.previousState = button.currentState;
-	button.currentState = newState;
-}
+	void MouseController::HandleButton( const SDL_Event& event )
+	{
+		const uint8 code = event.button.button;
+		auto action = _keyToButtonActionMap.find( code );
+		if ( action == _keyToButtonActionMap.cend() )
+		{
+			return;
+		}
+
+		if ( event.button.state == SDL_PRESSED )
+		{
+			_actionToButtonMap[ action->second ].handledThisFrame = true;
+			SetInputButtonState( _actionToButtonMap[ action->second ], ButtonState::Pressed );
+		}
+		else if ( event.button.state == SDL_RELEASED )
+		{
+			_actionToButtonMap[ action->second ].handledThisFrame = true;
+			SetInputButtonState( _actionToButtonMap[ action->second ], ButtonState::Released );
+		}
+	}
+
+	void MouseController::SetInputButtonState( InputButton& button, ButtonState newState )
+	{
+		button.previousState = button.currentState;
+		button.currentState = newState;
+	}
+} // namespace Engine

@@ -10,7 +10,7 @@
 #include "Vec2f.h"
 
 InterpolatedPlayerObjectUpdaterSystem::InterpolatedPlayerObjectUpdaterSystem()
-    : ECS::ISimpleSystem()
+    : Engine::ECS::ISimpleSystem()
 {
 }
 
@@ -20,7 +20,7 @@ static float32 GetMinimumDistanceBetweenAngles( float32 a, float32 b )
 	return fabs( delta );
 }
 
-static bool IsSnapToGhostRequired( const TransformComponent& ghost, const TransformComponent& interpolated,
+static bool IsSnapToGhostRequired( const Engine::TransformComponent& ghost, const Engine::TransformComponent& interpolated,
                                    const InterpolatedObjectComponent& interpolation_config )
 {
 	return Vec2f::GetSquareDistance( ghost.GetPosition(), interpolated.GetPosition() ) >=
@@ -54,17 +54,17 @@ static float32 MoveTowardsAngle( float32 initial, float32 target, float32 max_di
 	return initial + ( deltaSign * max_distance_delta );
 }
 
-void InterpolatedPlayerObjectUpdaterSystem::Execute( ECS::World& world, float32 elapsed_time )
+void InterpolatedPlayerObjectUpdaterSystem::Execute(Engine::ECS::World& world, float32 elapsed_time )
 {
-	std::vector< ECS::GameEntity > interpolatedPlayerEntities =
+	std::vector< Engine::ECS::GameEntity > interpolatedPlayerEntities =
 	    world.GetEntitiesOfType< InterpolatedObjectComponent >();
 	for ( auto it = interpolatedPlayerEntities.begin(); it != interpolatedPlayerEntities.end(); ++it )
 	{
 		const InterpolatedObjectComponent& interpolatedObject = it->GetComponent< InterpolatedObjectComponent >();
 		const GhostObjectComponent& ghostObject = it->GetComponent< GhostObjectComponent >();
 
-		const TransformComponent& ghostTransform = ghostObject.entity.GetComponent< TransformComponent >();
-		TransformComponent& interpolatedTransform = it->GetComponent< TransformComponent >();
+		const Engine::TransformComponent& ghostTransform = ghostObject.entity.GetComponent< Engine::TransformComponent >();
+		Engine::TransformComponent& interpolatedTransform = it->GetComponent< Engine::TransformComponent >();
 
 		Vec2f finalPosition;
 		float32 finalRotationAngle;

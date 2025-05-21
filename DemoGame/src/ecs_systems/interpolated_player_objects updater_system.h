@@ -1,10 +1,10 @@
 #pragma once
 #include "ecs/i_simple_system.h"
 
-class InterpolatedPlayerObjectUpdaterSystem : public ECS::ISimpleSystem
+class InterpolatedPlayerObjectUpdaterSystem : public Engine::ECS::ISimpleSystem
 {
-public:
-	InterpolatedPlayerObjectUpdaterSystem();
+	public:
+		InterpolatedPlayerObjectUpdaterSystem();
 
-	void Execute(ECS::World& world, float32 elapsed_time) override;
+		void Execute( Engine::ECS::World& world, float32 elapsed_time ) override;
 };

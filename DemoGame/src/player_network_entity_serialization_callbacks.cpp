@@ -16,23 +16,23 @@
 #include "player_simulation/player_state.h"
 #include "player_simulation/player_state_utils.h"
 
-void SerializeForOwner( const ECS::World& world, const ECS::GameEntity& entity, NetLib::Buffer& buffer )
+void SerializeForOwner( const Engine::ECS::World& world, const Engine::ECS::GameEntity& entity, NetLib::Buffer& buffer )
 {
 	const ServerPlayerStateStorageComponent& serverPlayerStateStorage =
 	    entity.GetComponent< ServerPlayerStateStorageComponent >();
 	SerializePlayerStateToBuffer( serverPlayerStateStorage.lastPlayerStateSimulated, buffer );
 }
 
-void SerializeForNonOwner( const ECS::GameEntity& entity, NetLib::Buffer& buffer )
+void SerializeForNonOwner( const Engine::ECS::GameEntity& entity, NetLib::Buffer& buffer )
 {
-	const TransformComponent& transform = entity.GetComponent< TransformComponent >();
+	const Engine::TransformComponent& transform = entity.GetComponent< Engine::TransformComponent >();
 	const Vec2f position = transform.GetPosition();
 	buffer.WriteFloat( position.X() );
 	buffer.WriteFloat( position.Y() );
 	buffer.WriteFloat( transform.GetRotationAngle() );
 }
 
-void DeserializeForOwner( ECS::GameEntity& entity, NetLib::Buffer& buffer )
+void DeserializeForOwner( Engine::ECS::GameEntity& entity, NetLib::Buffer& buffer )
 {
 	PlayerState playerState = DeserializePlayerStateFromBuffer( buffer );
 	ClientSidePredictionComponent& clientSidePredictionComponent =
@@ -42,9 +42,9 @@ void DeserializeForOwner( ECS::GameEntity& entity, NetLib::Buffer& buffer )
 	clientSidePredictionComponent.isPendingPlayerStateFromServer = true;
 }
 
-void DeserializeForNonOwner( ECS::GameEntity& entity, NetLib::Buffer& buffer )
+void DeserializeForNonOwner( Engine::ECS::GameEntity& entity, NetLib::Buffer& buffer )
 {
-	TransformComponent& transform = entity.GetComponent< TransformComponent >();
+	Engine::TransformComponent& transform = entity.GetComponent< Engine::TransformComponent >();
 	Vec2f position;
 	position.X( buffer.ReadFloat() );
 	position.Y( buffer.ReadFloat() );

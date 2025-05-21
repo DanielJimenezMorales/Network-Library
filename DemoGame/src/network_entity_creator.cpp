@@ -20,7 +20,7 @@ NetworkEntityCreatorSystem::NetworkEntityCreatorSystem()
 {
 }
 
-void NetworkEntityCreatorSystem::SetScene( ECS::World* scene )
+void NetworkEntityCreatorSystem::SetScene( Engine::ECS::World* scene )
 {
 	_scene = scene;
 }
@@ -53,11 +53,12 @@ uint32 NetworkEntityCreatorSystem::OnNetworkEntityCreate( const NetLib::OnNetwor
 		prefab_name.assign( "Player" );
 	}
 
-	const ECS::GameEntity entity = _scene->CreateGameEntity( prefab_name, Vec2f( config.positionX, config.positionY ) );
+	const Engine::ECS::GameEntity entity =
+	    _scene->CreateGameEntity( prefab_name, Vec2f( config.positionX, config.positionY ) );
 
 	if ( prefab_name == "ClientPlayerGhost" )
 	{
-		ECS::GameEntity interpolatedEntity =
+		Engine::ECS::GameEntity interpolatedEntity =
 		    _scene->CreateGameEntity( "ClientPlayerInterpolated", Vec2f( config.positionX, config.positionY ) );
 		GhostObjectComponent& ghostObject = interpolatedEntity.GetComponent< GhostObjectComponent >();
 		ghostObject.entity = entity;
@@ -71,7 +72,8 @@ void NetworkEntityCreatorSystem::OnNetworkEntityDestroy( uint32 in_game_id )
 	_scene->DestroyGameEntity( in_game_id );
 }
 
-void NetworkEntityCreatorSystem::OnNetworkEntityComponentConfigure( ECS::GameEntity& entity, const ECS::Prefab& prefab )
+void NetworkEntityCreatorSystem::OnNetworkEntityComponentConfigure( Engine::ECS::GameEntity& entity,
+                                                                    const Engine::ECS::Prefab& prefab )
 {
 	if ( !entity.HasComponent< NetworkEntityComponent >() )
 	{
@@ -96,7 +98,7 @@ void NetworkEntityCreatorSystem::OnNetworkEntityComponentConfigure( ECS::GameEnt
 	}
 	else if ( _peerType == NetLib::PeerType::SERVER )
 	{
-		const ECS::World& world = *_scene;
+		const Engine::ECS::World& world = *_scene;
 		auto callback_for_owner = [ &world, entity ]( NetLib::Buffer& buffer ) mutable
 		{
 			SerializeForOwner( world, entity, buffer );

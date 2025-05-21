@@ -1,23 +1,26 @@
 #pragma once
 #include <string>
 
-namespace ECS
+namespace Engine
 {
-	struct ComponentConfiguration
+	namespace ECS
 	{
-			ComponentConfiguration( const ComponentConfiguration& other ) = default;
-			ComponentConfiguration( ComponentConfiguration&& other ) noexcept = default;
+		struct ComponentConfiguration
+		{
+				ComponentConfiguration( const ComponentConfiguration& other ) = default;
+				ComponentConfiguration( ComponentConfiguration&& other ) noexcept = default;
 
-			virtual ~ComponentConfiguration() {}
+				virtual ~ComponentConfiguration() {}
 
-			ComponentConfiguration& operator=( const ComponentConfiguration& other ) = default;
-			ComponentConfiguration& operator=( ComponentConfiguration&& other ) noexcept = default;
+				ComponentConfiguration& operator=( const ComponentConfiguration& other ) = default;
+				ComponentConfiguration& operator=( ComponentConfiguration&& other ) noexcept = default;
 
-			virtual ComponentConfiguration* Clone() const = 0;
+				virtual ComponentConfiguration* Clone() const = 0;
 
-			std::string name;
+				std::string name;
 
-		protected:
-			ComponentConfiguration( const std::string& name );
-	};
+			protected:
+				ComponentConfiguration( const std::string& name );
+		};
+	}
 }

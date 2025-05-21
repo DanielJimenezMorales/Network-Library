@@ -6,11 +6,11 @@
 #include "global_components/network_peer_global_component.h"
 
 PreTickNetworkSystem::PreTickNetworkSystem()
-    : ECS::ISimpleSystem()
+    : Engine::ECS::ISimpleSystem()
 {
 }
 
-static void Server_SpawnRemotePeerConnect( ECS::World& world, uint32 remotePeerId )
+static void Server_SpawnRemotePeerConnect( Engine::ECS::World& world, uint32 remotePeerId )
 {
 	// Spawn its local player entity:
 	NetworkPeerGlobalComponent& networkPeerComponent = world.GetGlobalComponent< NetworkPeerGlobalComponent >();
@@ -18,7 +18,7 @@ static void Server_SpawnRemotePeerConnect( ECS::World& world, uint32 remotePeerI
 	serverPeer->CreateNetworkEntity( 10, remotePeerId, 0.f, 0.f );
 }
 
-void PreTickNetworkSystem::Execute( ECS::World& world, float32 elapsed_time )
+void PreTickNetworkSystem::Execute( Engine::ECS::World& world, float32 elapsed_time )
 {
 	NetworkPeerGlobalComponent& networkPeerComponent = world.GetGlobalComponent< NetworkPeerGlobalComponent >();
 

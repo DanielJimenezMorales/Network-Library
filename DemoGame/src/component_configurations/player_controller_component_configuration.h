@@ -3,7 +3,7 @@
 
 #include "ecs/component_configuration.h"
 
-struct PlayerControllerComponentConfiguration : public ECS::ComponentConfiguration
+struct PlayerControllerComponentConfiguration : public Engine::ECS::ComponentConfiguration
 {
 		PlayerControllerComponentConfiguration();
 		PlayerControllerComponentConfiguration( uint32 movement_speed, uint32 fire_rate_per_second );

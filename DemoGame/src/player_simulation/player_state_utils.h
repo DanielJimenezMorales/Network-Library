@@ -1,9 +1,12 @@
 #pragma once
 #include "numeric_types.h"
 
-namespace ECS
+namespace Engine
 {
-	class GameEntity;
+	namespace ECS
+	{
+		class GameEntity;
+	}
 }
 
 namespace NetLib
@@ -13,8 +16,8 @@ namespace NetLib
 
 struct PlayerState;
 
-PlayerState GetPlayerStateFromPlayerEntity( const ECS::GameEntity& player_entity, uint32 current_tick );
-void ApplyPlayerStateToPlayerEntity( ECS::GameEntity& player_entity, const PlayerState& player_state );
+PlayerState GetPlayerStateFromPlayerEntity( const Engine::ECS::GameEntity& player_entity, uint32 current_tick );
+void ApplyPlayerStateToPlayerEntity( Engine::ECS::GameEntity& player_entity, const PlayerState& player_state );
 
 void SerializePlayerStateToBuffer( const PlayerState& player_state, NetLib::Buffer& buffer );
 PlayerState DeserializePlayerStateFromBuffer( NetLib::Buffer& buffer );

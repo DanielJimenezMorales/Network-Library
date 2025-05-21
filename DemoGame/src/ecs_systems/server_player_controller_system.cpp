@@ -21,11 +21,11 @@
 #include "player_simulation/player_state_simulator.h"
 
 ServerPlayerControllerSystem::ServerPlayerControllerSystem()
-    : ECS::ISimpleSystem()
+    : Engine::ECS::ISimpleSystem()
 {
 }
 
-static const InputState* GetInputForPlayer( const ECS::GameEntity& entity, NetLib::Server* server_peer )
+static const InputState* GetInputForPlayer( const Engine::ECS::GameEntity& entity, NetLib::Server* server_peer )
 {
 	assert( entity.HasComponent< NetworkEntityComponent >() );
 
@@ -46,7 +46,8 @@ static const InputState* GetInputForPlayer( const ECS::GameEntity& entity, NetLi
 	return static_cast< const InputState* >( baseInputState );
 }
 
-static void ExecutePlayerSimulation( ECS::GameEntity& entity, const InputState& input_state, float32 elapsed_time )
+static void ExecutePlayerSimulation( Engine::ECS::GameEntity& entity, const InputState& input_state,
+                                     float32 elapsed_time )
 {
 	// Get all data needed for the simulation
 	const PlayerControllerComponent& playerController = entity.GetComponent< PlayerControllerComponent >();
@@ -68,12 +69,12 @@ static void ExecutePlayerSimulation( ECS::GameEntity& entity, const InputState& 
 	serverPlayerStateStorage.lastPlayerStateSimulated = resultPlayerState;
 }
 
-void ServerPlayerControllerSystem::Execute( ECS::World& world, float32 elapsed_time )
+void ServerPlayerControllerSystem::Execute( Engine::ECS::World& world, float32 elapsed_time )
 {
 	NetworkPeerGlobalComponent& networkPeerComponent = world.GetGlobalComponent< NetworkPeerGlobalComponent >();
 	NetLib::Server* serverPeer = networkPeerComponent.GetPeerAsServer();
 
-	std::vector< ECS::GameEntity > entities = world.GetEntitiesOfType< PlayerControllerComponent >();
+	std::vector< Engine::ECS::GameEntity > entities = world.GetEntitiesOfType< PlayerControllerComponent >();
 	for ( auto it = entities.begin(); it != entities.end(); ++it )
 	{
 		// Get the input state for the current player.
@@ -89,8 +90,8 @@ void ServerPlayerControllerSystem::Execute( ECS::World& world, float32 elapsed_t
 	}
 }
 
-void ServerPlayerControllerSystem::ConfigurePlayerControllerComponent( ECS::GameEntity& entity,
-                                                                       const ECS::Prefab& prefab )
+void ServerPlayerControllerSystem::ConfigurePlayerControllerComponent( Engine::ECS::GameEntity& entity,
+                                                                       const Engine::ECS::Prefab& prefab )
 {
 	auto component_config_found = prefab.componentConfigurations.find( "PlayerController" );
 	if ( component_config_found == prefab.componentConfigurations.end() )

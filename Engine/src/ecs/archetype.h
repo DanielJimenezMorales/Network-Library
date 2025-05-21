@@ -2,11 +2,14 @@
 #include <string>
 #include <vector>
 
-namespace ECS
+namespace Engine
 {
-	struct Archetype
+	namespace ECS
 	{
-			std::string name;
-			std::vector< std::string > components;
-	};
+		struct Archetype
+		{
+				std::string name;
+				std::vector< std::string > components;
+		};
+	}
 }

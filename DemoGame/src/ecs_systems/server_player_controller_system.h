@@ -3,17 +3,20 @@
 
 #include "numeric_types.h"
 
-namespace ECS
+namespace Engine
 {
-	class Prefab;
+	namespace ECS
+	{
+		class Prefab;
+	}
 }
 
-class ServerPlayerControllerSystem : public ECS::ISimpleSystem
+class ServerPlayerControllerSystem : public Engine::ECS::ISimpleSystem
 {
 	public:
 		ServerPlayerControllerSystem();
 
-		void Execute( ECS::World& world, float32 elapsed_time ) override;
+		void Execute( Engine::ECS::World& world, float32 elapsed_time ) override;
 
-		void ConfigurePlayerControllerComponent( ECS::GameEntity& entity, const ECS::Prefab& prefab );
+		void ConfigurePlayerControllerComponent( Engine::ECS::GameEntity& entity, const Engine::ECS::Prefab& prefab );
 };

@@ -3,34 +3,37 @@
 
 #include <vector>
 
-namespace ECS
+namespace Engine
 {
-	class ISimpleSystem;
-	class World;
-
-	enum class ExecutionStage : uint8
+	namespace ECS
 	{
-		UPDATE,
-		PRETICK,
-		TICK,
-		POSTICK,
-		RENDER
-	};
+		class ISimpleSystem;
+		class World;
 
-	class SystemCoordinator
-	{
-		public:
-			SystemCoordinator( ExecutionStage stage );
+		enum class ExecutionStage : uint8
+		{
+			UPDATE,
+			PRETICK,
+			TICK,
+			POSTICK,
+			RENDER
+		};
 
-			ExecutionStage GetStage() const;
+		class SystemCoordinator
+		{
+			public:
+				SystemCoordinator( ExecutionStage stage );
 
-			// Adds a system to the tail of the vector. The tail is the lowest priority section
-			void AddSystemToTail( ISimpleSystem* system );
-			// Executes all systems in order, from highest to lowest priority
-			void Execute( World& world, float elapsed_time );
+				ExecutionStage GetStage() const;
 
-		private:
-			ExecutionStage _stage;
-			std::vector< ISimpleSystem* > _systems;
-	};
-} // namespace ECS
+				// Adds a system to the tail of the vector. The tail is the lowest priority section
+				void AddSystemToTail( ISimpleSystem* system );
+				// Executes all systems in order, from highest to lowest priority
+				void Execute( World& world, float elapsed_time );
+
+			private:
+				ExecutionStage _stage;
+				std::vector< ISimpleSystem* > _systems;
+		};
+	} // namespace ECS
+} // namespace Engine

@@ -9,27 +9,30 @@
 
 #include "gizmos/Gizmo.h"
 
-class GizmoRenderer;
-
-class GizmoRendererSystem : public ECS::ISimpleSystem
+namespace Engine
 {
-	public:
-		GizmoRendererSystem( SDL_Renderer* renderer );
-		~GizmoRendererSystem();
+	class GizmoRenderer;
 
-		GizmoResourceHandler& GetGizmoResourceHandler() { return _gizmoResourceHandler; }
+	class GizmoRendererSystem : public ECS::ISimpleSystem
+	{
+		public:
+			GizmoRendererSystem( SDL_Renderer* renderer );
+			~GizmoRendererSystem();
 
-		void Execute( ECS::World& world, float32 elapsed_time ) override;
+			GizmoResourceHandler& GetGizmoResourceHandler() { return _gizmoResourceHandler; }
 
-		void AllocateGizmoRendererComponent( ECS::GameEntity& entity );
-		void DeallocateGizmoRendererComponent( ECS::GameEntity& entity );
+			void Execute( ECS::World& world, float32 elapsed_time ) override;
 
-	private:
-		void InitGizmoRenderers();
-		void DeallocateGizmoRenderers();
+			void AllocateGizmoRendererComponent( ECS::GameEntity& entity );
+			void DeallocateGizmoRendererComponent( ECS::GameEntity& entity );
 
-		SDL_Renderer* _renderer;
-		GizmoResourceHandler _gizmoResourceHandler;
+		private:
+			void InitGizmoRenderers();
+			void DeallocateGizmoRenderers();
 
-		std::unordered_map< GizmoType, GizmoRenderer* > _gizmoRenderers;
-};
+			SDL_Renderer* _renderer;
+			GizmoResourceHandler _gizmoResourceHandler;
+
+			std::unordered_map< GizmoType, GizmoRenderer* > _gizmoRenderers;
+	};
+}

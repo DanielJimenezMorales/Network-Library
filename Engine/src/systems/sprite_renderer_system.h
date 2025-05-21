@@ -5,23 +5,26 @@
 
 #include <SDL_image.h>
 
-namespace ECS
+namespace Engine
 {
-	class Prefab;
+	namespace ECS
+	{
+		class Prefab;
+	}
+
+	class SpriteRendererSystem : public ECS::ISimpleSystem
+	{
+		public:
+			SpriteRendererSystem( SDL_Renderer* renderer );
+
+			void Execute( ECS::World& world, float32 elapsed_time ) override;
+
+			TextureResourceHandler* GetTextureResourceHandler() { return &_textureResourceHandler; }
+
+			void ConfigureSpriteRendererComponent( ECS::GameEntity& entity, const ECS::Prefab& prefab );
+
+		private:
+			SDL_Renderer* _renderer;
+			TextureResourceHandler _textureResourceHandler;
+	};
 }
-
-class SpriteRendererSystem : public ECS::ISimpleSystem
-{
-	public:
-		SpriteRendererSystem( SDL_Renderer* renderer );
-
-		void Execute( ECS::World& world, float32 elapsed_time ) override;
-
-		TextureResourceHandler* GetTextureResourceHandler() { return &_textureResourceHandler; }
-
-		void ConfigureSpriteRendererComponent( ECS::GameEntity& entity, const ECS::Prefab& prefab );
-
-	private:
-		SDL_Renderer* _renderer;
-		TextureResourceHandler _textureResourceHandler;
-};

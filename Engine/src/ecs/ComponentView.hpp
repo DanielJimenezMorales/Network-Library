@@ -2,48 +2,57 @@
 #include <cassert>
 #include "entt.hpp"
 
-template <typename T>
-class ComponentView
+namespace Engine
 {
-public:
-	ComponentView(entt::registry* registry) : registry(registry), view(registry->view<T>()), iterator(view.begin())
+	namespace ECS
 	{
-	}
+		template < typename T >
+		class ComponentView
+		{
+			public:
+				ComponentView( entt::registry* registry )
+				    : registry( registry )
+				    , view( registry->view< T >() )
+				    , iterator( view.begin() )
+				{
+				}
 
-	bool ArePendingComponents() const;
-	T& GetNext();
-	const T& GetNext() const;
+				bool ArePendingComponents() const;
+				T& GetNext();
+				const T& GetNext() const;
 
-private:
-	entt::registry* registry;
-	decltype(registry->view<T>()) view;
-	decltype(view.begin()) iterator;
-};
+			private:
+				entt::registry* registry;
+				decltype( registry->view< T >() ) view;
+				decltype( view.begin() ) iterator;
+		};
 
-template<typename T>
-inline bool ComponentView<T>::ArePendingComponents() const
-{
-	return iterator != view.end();
-}
+		template < typename T >
+		inline bool ComponentView< T >::ArePendingComponents() const
+		{
+			return iterator != view.end();
+		}
 
-template<typename T>
-inline T& ComponentView<T>::GetNext()
-{
-	assert(ArePendingComponents());
+		template < typename T >
+		inline T& ComponentView< T >::GetNext()
+		{
+			assert( ArePendingComponents() );
 
-	T& nextComponent = view.get<T>(*iterator);
-	++iterator;
+			T& nextComponent = view.get< T >( *iterator );
+			++iterator;
 
-	return nextComponent;
-}
+			return nextComponent;
+		}
 
-template<typename T>
-inline const T& ComponentView<T>::GetNext() const
-{
-	assert(ArePendingComponents());
+		template < typename T >
+		inline const T& ComponentView< T >::GetNext() const
+		{
+			assert( ArePendingComponents() );
 
-	T& nextComponent = view.get<T>(*iterator);
-	++iterator;
+			T& nextComponent = view.get< T >( *iterator );
+			++iterator;
 
-	return nextComponent;
-}
+			return nextComponent;
+		}
+	} // namespace ECS
+} // namespace Engine

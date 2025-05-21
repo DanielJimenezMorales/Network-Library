@@ -14,7 +14,7 @@
 #include "logger.h"
 
 ClientLocalPlayerServerReconciliatorSystem::ClientLocalPlayerServerReconciliatorSystem()
-    : ECS::ISimpleSystem()
+    : Engine::ECS::ISimpleSystem()
 {
 }
 
@@ -52,7 +52,8 @@ static bool IsAReconciliationNeeded( const ClientSidePredictionComponent& predic
 	return result;
 }
 
-static void ReconciliateWithServer( ECS::GameEntity& entity, ClientSidePredictionComponent& prediction_component,
+static void ReconciliateWithServer( Engine::ECS::GameEntity& entity,
+                                    ClientSidePredictionComponent& prediction_component,
                                     const PlayerState& state_from_server,
                                     const NetworkPeerGlobalComponent& network_peer )
 {
@@ -107,7 +108,7 @@ static PlayerState GetMostRecentPendingServerPlayerState(
 	return result;
 }
 
-static void EvaluateReconciliation( ECS::GameEntity& entity, const NetworkPeerGlobalComponent& network_peer )
+static void EvaluateReconciliation( Engine::ECS::GameEntity& entity, const NetworkPeerGlobalComponent& network_peer )
 {
 	ClientSidePredictionComponent& clientSidePredictionComponent =
 	    entity.GetComponent< ClientSidePredictionComponent >();
@@ -130,7 +131,7 @@ static void EvaluateReconciliation( ECS::GameEntity& entity, const NetworkPeerGl
 	}
 }
 
-void ClientLocalPlayerServerReconciliatorSystem::Execute( ECS::World& world, float32 elapsed_time )
+void ClientLocalPlayerServerReconciliatorSystem::Execute( Engine::ECS::World& world, float32 elapsed_time )
 {
 	const NetworkPeerGlobalComponent& networkPeerComponent = world.GetGlobalComponent< NetworkPeerGlobalComponent >();
 	if ( networkPeerComponent.peer->GetConnectionState() != NetLib::PCS_Connected )
@@ -138,7 +139,8 @@ void ClientLocalPlayerServerReconciliatorSystem::Execute( ECS::World& world, flo
 		return;
 	}
 
-	std::vector< ECS::GameEntity > localPredictedEntities = world.GetEntitiesOfType< ClientSidePredictionComponent >();
+	std::vector< Engine::ECS::GameEntity > localPredictedEntities =
+	    world.GetEntitiesOfType< ClientSidePredictionComponent >();
 	for ( auto it = localPredictedEntities.begin(); it != localPredictedEntities.end(); ++it )
 	{
 		EvaluateReconciliation( *it, networkPeerComponent );

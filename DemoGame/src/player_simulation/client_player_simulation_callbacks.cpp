@@ -8,22 +8,24 @@
 #include "ecs/world.h"
 #include "ecs/game_entity.hpp"
 
-void OnShotPerformed( ECS::World& world, const ECS::GameEntity& player_entity )
+void OnShotPerformed( Engine::ECS::World& world, const Engine::ECS::GameEntity& player_entity )
 {
-	const TransformComponent& local_player_transform = player_entity.GetComponent< TransformComponent >();
+	const Engine::TransformComponent& local_player_transform =
+	    player_entity.GetComponent< Engine::TransformComponent >();
 
-	Raycaster::Ray ray;
+	Engine::Raycaster::Ray ray;
 	ray.origin = local_player_transform.GetPosition();
 	ray.direction = local_player_transform.ConvertRotationAngleToNormalizedDirection();
 	ray.maxDistance = 100;
 
-	const std::vector< ECS::GameEntity > entities_with_colliders =
-	    world.GetEntitiesOfBothTypes< Collider2DComponent, TransformComponent >();
-	const Raycaster::RaycastResult result = Raycaster::ExecuteRaycast( ray, entities_with_colliders, player_entity );
+	const std::vector< Engine::ECS::GameEntity > entities_with_colliders =
+	    world.GetEntitiesOfBothTypes< Engine::Collider2DComponent, Engine::TransformComponent >();
+	const Engine::Raycaster::RaycastResult result =
+	    Engine::Raycaster::ExecuteRaycast( ray, entities_with_colliders, player_entity );
 	if ( result.entity.IsValid() )
 	{
 		bool r = true;
 	}
 
-	ECS::GameEntity entity = world.CreateGameEntity( "Raycast", ray.origin, ray.direction );
+	Engine::ECS::GameEntity entity = world.CreateGameEntity( "Raycast", ray.origin, ray.direction );
 }
