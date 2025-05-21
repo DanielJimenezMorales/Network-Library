@@ -1,7 +1,7 @@
 #include "collider_2d_component.h"
 
 //TODO remove this
-#include "CircleBounds2D.h"
+#include "collisions/CircleBounds2D.h"
 
 Collider2DComponent::Collider2DComponent()
 //TODO Do not hardcode this

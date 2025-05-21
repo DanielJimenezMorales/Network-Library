@@ -3,10 +3,10 @@
 #include "core/client.h"
 #include "core/server.h"
 #include "core/initializer.h"
-#include "KeyboardController.h"
-#include "MouseController.h"
+#include "inputs/KeyboardController.h"
+#include "inputs/MouseController.h"
+#include "inputs/InputHandler.h"
 #include "InputActionIdsConfiguration.h"
-#include "InputHandler.h"
 #include "ITextureLoader.h"
 #include "InputStateFactory.h"
 
@@ -39,21 +39,20 @@
 #include "component_configurations/camera_component_configuration.h"
 #include "component_configurations/health_component_configuration.h"
 
-#include "CircleBounds2D.h"
-
 #include "global_components/network_peer_global_component.h"
+
+#include "systems/sprite_renderer_system.h"
+#include "systems/gizmo_renderer_system.h"
+#include "systems/collision_detection_system.h"
 
 #include "ecs_systems/server_player_controller_system.h"
 #include "ecs_systems/client_local_player_predictor_system.h"
 #include "ecs_systems/client_local_player_server_reconciliator_system.h"
 #include "ecs_systems/remote_player_controller_system.h"
 #include "ecs_systems/crosshair_follow_mouse_system.h"
-#include "ecs_systems/sprite_renderer_system.h"
-#include "ecs_systems/gizmo_renderer_system.h"
 #include "ecs_systems/virtual_mouse_system.h"
 #include "ecs_systems/pre_tick_network_system.h"
 #include "ecs_systems/pos_tick_network_system.h"
-#include "ecs_systems/collision_detection_system.h"
 #include "ecs_systems/temporary_lifetime_objects_system.h"
 #include "ecs_systems/interpolated_player_objects updater_system.h"
 

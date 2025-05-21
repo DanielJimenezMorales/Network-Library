@@ -2,7 +2,7 @@
 #include "ecs/component_configuration.h"
 
 #include "components/collider_2d_component.h"
-#include "Bounds2D.h"
+#include "collisions/Bounds2D.h"
 
 struct Collider2DComponentConfiguration : ECS::ComponentConfiguration
 {

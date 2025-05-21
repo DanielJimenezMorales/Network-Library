@@ -1,7 +1,7 @@
 #include "client_local_player_predictor_system.h"
 
-#include "IInputController.h"
-#include "ICursor.h"
+#include "inputs/IInputController.h"
+#include "inputs/ICursor.h"
 #include "Vec2f.h"
 #include "InputActionIdsConfiguration.h"
 #include "raycaster.h"

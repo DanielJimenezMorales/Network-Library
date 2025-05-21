@@ -14,7 +14,7 @@
 #include "component_configurations/temporary_lifetime_component_configuration.h"
 #include "component_configurations/health_component_configuration.h"
 
-#include "CircleBounds2D.h"
+#include "collisions/CircleBounds2D.h"
 
 JsonConfigurationLoader::JsonConfigurationLoader()
     : IConfigurationLoader()

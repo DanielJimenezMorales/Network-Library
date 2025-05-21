@@ -1,7 +1,7 @@
 #pragma once
 #include <SDL.h>
 
-#include "InputHandler.h"
+#include "inputs/InputHandler.h"
 
 #include "ecs/world.h"
 

@@ -34,23 +34,9 @@ void EnableVTMode()
 
 #include "raycaster.h"
 #include "components/transform_component.h"
-#include "CircleBounds2D.h"
 
 int main()
 {
-	/*
-	TransformComponent transform;
-	transform.SetPosition( Vec2f( 10, 10 ) );
-	CircleBounds2D circle_radius( 5 );
-	Ray ray;
-	ray.origin = Vec2f( 0, 0 );
-	ray.direction = Vec2f( 1, 1 );
-	ray.direction.Normalize();
-	ray.maxDistance = 10;
-	RaycastResult ray_result;
-	bool result = PerformRaycastAgainstSphere( ray, transform, circle_radius, ray_result );
-	return EXIT_SUCCESS;*/
-
 #ifdef _WIN32
 	EnableVTMode();
 #endif

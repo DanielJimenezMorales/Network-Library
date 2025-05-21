@@ -1,6 +1,5 @@
 #include "MathUtils.h"
 #include <cmath>
-#include <SDL_stdinc.h>
 
 float32 GetNoSquareRootDistance( const Vec2f& v1, const Vec2f& v2 )
 {
@@ -18,6 +17,6 @@ float32 GetDistance( const Vec2f& v1, const Vec2f& v2 )
 
 Vec2f ConvertAngleToNormalizedDirection( float32 angle )
 {
-	const float32 angle_in_radians = angle * M_PI / 180.f;
+	const float32 angle_in_radians = angle * PI / 180.f;
 	return Vec2f( std::cosf( angle_in_radians ), std::sinf( angle_in_radians ) );
 }

@@ -1,6 +1,5 @@
 #include "transform_component.h"
 
-#include <SDL_stdinc.h>
 #include <cmath>
 #include "Logger.h"
 #include "MathUtils.h"
@@ -61,14 +60,14 @@ void TransformComponent::LookAt( const Vec2f& position )
 		angleInRadians = -angleInRadians;
 	}
 
-	const float32 angleInDegrees = angleInRadians * ( 180.f / M_PI );
+	const float32 angleInDegrees = angleInRadians * ( 180.f / PI );
 
 	SetRotationAngle( _rotationAngle + angleInDegrees );
 }
 
 Vec2f TransformComponent::GetForwardVector() const
 {
-	float32 angleInRadians = _rotationAngle * ( M_PI / 180.f );
+	float32 angleInRadians = _rotationAngle * ( PI / 180.f );
 
 	// Since the rotation direction is anti-clockwise, we need to do the sin and cos of negative angle instead of just
 	// the positive angle.
@@ -92,7 +91,7 @@ void TransformComponent::SetRotationLookAt( Vec2f look_at_direction )
 	look_at_direction.Normalize();
 
 	const float32 angle_in_radians = std::atan2f( look_at_direction.X(), look_at_direction.Y() );
-	const float angle_in_degrees = angle_in_radians * 180.f / M_PI;
+	const float angle_in_degrees = angle_in_radians * 180.f / PI;
 
 	//+180 degrees in order to align with Vec2f(0, 1) being assigned to 0 degrees.
 	_rotationAngle = angle_in_degrees + 180.f;

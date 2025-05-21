@@ -105,6 +105,74 @@ project "NetworkLibrary"
 	filter "configurations:Release"
 		optimize "On"
 
+project "Engine"
+	kind "StaticLib"
+	location "Engine"
+	language "C++"
+	targetdir "%{prj.name}/bin"
+	targetname "%{prj.name}_%{cfg.buildcfg}"
+
+	files
+	{
+		"%{prj.name}/src/**.h",
+		"%{prj.name}/src/**.cpp",
+		"%{prj.name}/src/**.hpp"
+	}
+
+	includedirs
+	{
+		"Common/src/",
+		"%{prj.name}/src/",
+		"vendor/entt/include/",
+
+		"vendor/sdl2/SDL2-2.30.1/include/",
+		"vendor/sdl2/SDL2_image-2.8.2/include/",
+		"vendor/sdl2/SDL2_mixer-2.8.0/include/",
+		"vendor/sdl2/SDL2_ttf-2.22.0/include/",
+	}
+
+	dependson
+	{
+		"Common"
+	}
+
+	libdirs
+	{
+		"Common/bin",
+
+		"vendor/sdl2/SDL2-2.30.1/lib/x64",
+		"vendor/sdl2/SDL2_image-2.8.2/lib/x64",
+		"vendor/sdl2/SDL2_mixer-2.8.0/lib/x64",
+		"vendor/sdl2/SDL2_ttf-2.22.0/lib/x64"
+	}
+
+	links
+	{
+		"Common_%{cfg.buildcfg}",
+
+		"vendor/sdl2/SDL2-2.30.1/lib/x64/SDL2",
+		"vendor/sdl2/SDL2-2.30.1/lib/x64/SDL2main",
+		"vendor/sdl2/SDL2_image-2.8.2/lib/x64/SDL2_image",
+		"vendor/sdl2/SDL2_mixer-2.8.0/lib/x64/SDL2_mixer",
+		"vendor/sdl2/SDL2_ttf-2.22.0/lib/x64/SDL2_ttf"
+	}
+
+	filter "system:Windows"
+		links
+		{
+			"Ws2_32"
+		}
+
+	filter "configurations:Debug"
+		defines
+		{
+			"LOG_ENABLED"
+		}
+		symbols "On"
+
+	filter "configurations:Release"
+		optimize "On"
+
 project "DemoGame"
 	kind "ConsoleApp"
 	location "DemoGame"
@@ -122,26 +190,29 @@ project "DemoGame"
 	{
 		"Common/src/",
 		"NetworkLibrary/src/",
+		"Engine/src",
 		"%{prj.name}/src/",
+		"vendor/entt/include/",
 
 		"vendor/sdl2/SDL2-2.30.1/include/",
 		"vendor/sdl2/SDL2_image-2.8.2/include/",
 		"vendor/sdl2/SDL2_mixer-2.8.0/include/",
 		"vendor/sdl2/SDL2_ttf-2.22.0/include/",
-		"vendor/entt/include/",
 		"vendor/json/include/"
 	}
 
 	dependson
 	{
 		"Common",
-		"NetworkLibrary"
+		"NetworkLibrary",
+		"Engine"
 	}
 
 	libdirs
 	{
 		"Common/bin",
 		"NetworkLibrary/bin",
+		"Engine/bin",
 
 		"vendor/sdl2/SDL2-2.30.1/lib/x64",
 		"vendor/sdl2/SDL2_image-2.8.2/lib/x64",
@@ -153,6 +224,7 @@ project "DemoGame"
 	{
 		"Common_%{cfg.buildcfg}",
 		"NetworkLibrary_%{cfg.buildcfg}",
+		"Engine_%{cfg.buildcfg}",
 
 		"vendor/sdl2/SDL2-2.30.1/lib/x64/SDL2",
 		"vendor/sdl2/SDL2-2.30.1/lib/x64/SDL2main",

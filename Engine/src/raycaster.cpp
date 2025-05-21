@@ -3,8 +3,8 @@
 #include "components/transform_component.h"
 #include "components/collider_2d_component.h"
 
-#include "Bounds2D.h"
-#include "CircleBounds2D.h"
+#include "collisions/Bounds2D.h"
+#include "collisions/CircleBounds2D.h"
 
 #include <cassert>
 

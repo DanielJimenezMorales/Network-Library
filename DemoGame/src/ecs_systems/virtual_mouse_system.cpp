@@ -1,6 +1,6 @@
 #include "virtual_mouse_system.h"
 
-#include "ICursor.h"
+#include "inputs/ICursor.h"
 
 #include "ecs/game_entity.hpp"
 #include "ecs/world.h"

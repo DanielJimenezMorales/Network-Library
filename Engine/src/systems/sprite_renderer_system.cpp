@@ -2,7 +2,6 @@
 
 #include "coordinates_conversion_utils.h"
 #include "Texture.h"
-#include "Texture.h"
 #include "Vec2f.h"
 #include "Logger.h"
 
