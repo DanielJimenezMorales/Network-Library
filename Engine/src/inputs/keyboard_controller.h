@@ -1,7 +1,7 @@
 #pragma once
 #include <unordered_map>
 
-#include "IInputController.h"
+#include "i_input_controller.h"
 #include "input_button.h"
 #include "input_axis.h"
 

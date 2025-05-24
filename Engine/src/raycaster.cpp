@@ -3,12 +3,11 @@
 #include "components/transform_component.h"
 #include "components/collider_2d_component.h"
 
-#include "collisions/Bounds2D.h"
-#include "collisions/CircleBounds2D.h"
-
-#include <cassert>
+#include "collisions/circle_bounds_2d.h"
 
 #include "logger.h"
+
+#include <cassert>
 
 namespace Engine
 {

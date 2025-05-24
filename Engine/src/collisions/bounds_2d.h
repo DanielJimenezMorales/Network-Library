@@ -1,8 +1,8 @@
 #pragma once
-#include "Vec2f.h"
+#include "vec2f.h"
 #include "numeric_types.h"
 
-#include "gizmos/Gizmo.h"
+#include "gizmos/gizmo.h"
 
 #include <vector>
 #include <memory>

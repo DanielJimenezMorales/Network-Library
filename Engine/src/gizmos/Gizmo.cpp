@@ -1,4 +1,4 @@
-#include "Gizmo.h"
+#include "gizmo.h"
 
 namespace Engine
 {

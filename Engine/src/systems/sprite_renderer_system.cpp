@@ -1,9 +1,9 @@
 #include "sprite_renderer_system.h"
 
 #include "coordinates_conversion_utils.h"
-#include "Texture.h"
-#include "Vec2f.h"
-#include "Logger.h"
+#include "texture.h"
+#include "vec2f.h"
+#include "logger.h"
 
 #include "ecs/game_entity.hpp"
 #include "ecs/world.h"

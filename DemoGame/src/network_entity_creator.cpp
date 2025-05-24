@@ -1,6 +1,6 @@
 #include "network_entity_creator.h"
 
-#include "Vec2f.h"
+#include "vec2f.h"
 
 #include "ecs/world.h"
 #include "ecs/game_entity.hpp"

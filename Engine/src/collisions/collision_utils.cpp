@@ -1,8 +1,10 @@
-#include "CollisionUtils.h"
-#include "MathUtils.h"
-#include <cassert>
+#include "collision_utils.h"
+
+#include "math_utils.h"
 
 #include "components/transform_component.h"
+
+#include <cassert>
 
 namespace Engine
 {

@@ -4,8 +4,8 @@
 
 #include "global_components/input_handler_global_component.h"
 
-#include "inputs/IInputController.h"
-#include "inputs/ICursor.h"
+#include "inputs/i_input_controller.h"
+#include "inputs/i_cursor.h"
 
 #include "ecs/world.h"
 

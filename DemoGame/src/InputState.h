@@ -3,7 +3,7 @@
 
 #include "numeric_types.h"
 
-#include "Vec2f.h"
+#include "vec2f.h"
 
 class InputState : public NetLib::IInputState
 {

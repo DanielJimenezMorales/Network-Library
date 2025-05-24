@@ -3,8 +3,10 @@
 #include "core/client.h"
 #include "core/server.h"
 #include "core/initializer.h"
-#include "inputs/KeyboardController.h"
-#include "inputs/MouseController.h"
+
+#include "inputs/keyboard_controller.h"
+#include "inputs/mouse_controller.h"
+
 #include "InputActionIdsConfiguration.h"
 #include "ITextureLoader.h"
 #include "InputStateFactory.h"
@@ -54,7 +56,7 @@
 #include "ecs_systems/temporary_lifetime_objects_system.h"
 #include "ecs_systems/interpolated_player_objects updater_system.h"
 
-#include "render/rendering_utils.h"
+#include "render/rendering_inicialization_utils.h"
 
 #include "network_entity_creator.h"
 #include "json_configuration_loader.h"

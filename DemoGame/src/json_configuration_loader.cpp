@@ -1,7 +1,5 @@
 #include "json_configuration_loader.h"
 
-#include <string>
-#include <fstream>
 #include "json.hpp"
 
 #include "ecs/prefab.h"
@@ -14,8 +12,11 @@
 #include "component_configurations/temporary_lifetime_component_configuration.h"
 #include "component_configurations/health_component_configuration.h"
 
-#include "collisions/CircleBounds2D.h"
-#include "collisions/CollisionUtils.h"
+#include "collisions/circle_bounds_2d.h"
+#include "collisions/collision_utils.h"
+
+#include <string>
+#include <fstream>
 
 JsonConfigurationLoader::JsonConfigurationLoader()
     : IConfigurationLoader()

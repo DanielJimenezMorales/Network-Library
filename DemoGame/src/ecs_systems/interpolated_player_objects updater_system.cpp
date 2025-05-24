@@ -7,7 +7,7 @@
 #include "components/ghost_object_component.h"
 #include "components/transform_component.h"
 
-#include "Vec2f.h"
+#include "vec2f.h"
 
 InterpolatedPlayerObjectUpdaterSystem::InterpolatedPlayerObjectUpdaterSystem()
     : Engine::ECS::ISimpleSystem()

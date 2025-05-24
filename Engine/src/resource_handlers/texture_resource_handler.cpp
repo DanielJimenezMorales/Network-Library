@@ -3,7 +3,7 @@
 #include "numeric_types.h"
 #include "logger.h"
 
-#include "Texture.h"
+#include "texture.h"
 
 #include <SDL_image.h>
 #include <cassert>

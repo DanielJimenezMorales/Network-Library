@@ -1,7 +1,8 @@
 #pragma once
 #include "ecs/i_simple_system.h"
 
-#include "Vec2f.h"
+#include "vec2f.h"
+
 #include <vector>
 
 namespace Engine

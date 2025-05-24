@@ -2,7 +2,7 @@
 #include "numeric_types.h"
 #include "logger.h"
 
-#include "gizmos/Gizmo.h"
+#include "gizmos/gizmo.h"
 
 #include <vector>
 

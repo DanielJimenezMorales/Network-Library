@@ -2,7 +2,8 @@
 #include "ecs/component_configuration.h"
 
 #include "components/collider_2d_component.h"
-#include "collisions/Bounds2D.h"
+
+#include "collisions/bounds_2d.h"
 
 namespace Engine
 {

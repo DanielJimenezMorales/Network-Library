@@ -1,7 +1,7 @@
 #pragma once
 #include "numeric_types.h"
 
-#include "ICursor.h"
+#include "i_cursor.h"
 #include "input_button.h"
 
 #include <unordered_map>

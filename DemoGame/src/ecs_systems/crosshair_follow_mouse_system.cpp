@@ -1,6 +1,6 @@
 #include "crosshair_follow_mouse_system.h"
 
-#include "Vec2f.h"
+#include "vec2f.h"
 
 #include "ecs/game_entity.hpp"
 #include "ecs/world.h"

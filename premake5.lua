@@ -306,6 +306,7 @@ project "TestDemoGame"
 		"vendor/googletest/googletest/src/gtest-all.cc",
 		"%{prj.name}/src/**.h",
 		"%{prj.name}/src/**.cpp",
+		"Engine/src/**.cpp",
 		"DemoGame/src/**.cpp"
 	}
 
@@ -328,6 +329,7 @@ project "TestDemoGame"
 		"vendor/googletest/googletest/include",
 		"vendor/googletest/googletest",
 		"DemoGame/src/",
+		"Engine/src/",
 		"Common/src/",
 		"%{prj.name}/src/"
 	}

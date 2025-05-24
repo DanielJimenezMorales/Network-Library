@@ -1,6 +1,6 @@
 #pragma once
 #include "ITextureLoader.h"
-#include "Logger.h"
+#include "logger.h"
 
 class NullTextureLoader : public ITextureLoader
 {

@@ -1,5 +1,5 @@
 #pragma once
-#include "Vec2f.h"
+#include "vec2f.h"
 #include "numeric_types.h"
 
 #include "ecs/game_entity.hpp"

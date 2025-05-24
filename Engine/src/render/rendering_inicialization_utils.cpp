@@ -1,4 +1,4 @@
-#include "rendering_utils.h"
+#include "rendering_inicialization_utils.h"
 
 #include "global_components/render_global_component.h"
 

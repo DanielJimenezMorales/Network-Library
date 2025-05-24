@@ -1,8 +1,9 @@
 #include "transform_component.h"
 
+#include "logger.h"
+#include "math_utils.h"
+
 #include <cmath>
-#include "Logger.h"
-#include "MathUtils.h"
 
 namespace Engine
 {

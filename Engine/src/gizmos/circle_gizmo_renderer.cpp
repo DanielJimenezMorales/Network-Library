@@ -3,7 +3,7 @@
 #include <cassert>
 
 #include "numeric_types.h"
-#include "Vec2f.h"
+#include "vec2f.h"
 #include "coordinates_conversion_utils.h"
 
 #include "components/transform_component.h"

@@ -5,7 +5,7 @@
 
 #include <unordered_map>
 
-#include "gizmos/Gizmo.h"
+#include "gizmos/gizmo.h"
 
 namespace Engine
 {

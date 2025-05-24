@@ -1,13 +1,14 @@
 #include "collision_detection_system.h"
-#include "collisions/CollisionUtils.h"
-#include "Logger.h"
+
+#include "collisions/collision_utils.h"
+#include "collisions/circle_bounds_2d.h"
+
+#include "logger.h"
 
 #include "components/collider_2d_component.h"
 #include "components/transform_component.h"
 
 #include "component_configurations/collider_2d_component_configuration.h"
-
-#include "collisions/CircleBounds2D.h"
 
 #include "ecs/game_entity.hpp"
 #include "ecs/world.h"
