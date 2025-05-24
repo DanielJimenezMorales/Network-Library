@@ -13,7 +13,6 @@
 #include "ecs/world.h"
 
 #include "components/virtual_mouse_component.h"
-#include "components/input_component.h"
 #include "components/transform_component.h"
 #include "components/collider_2d_component.h"
 #include "components/player_controller_component.h"
@@ -21,6 +20,7 @@
 #include "components/client_side_prediction_component.h"
 
 #include "global_components/network_peer_global_component.h"
+#include "global_components/input_handler_global_component.h"
 
 #include "player_simulation/player_state_utils.h"
 #include "player_simulation/client_player_simulation_callbacks.h"
@@ -37,17 +37,20 @@ ClientLocalPlayerPredictorSystem::ClientLocalPlayerPredictorSystem( Engine::ECS:
 
 static void ProcessInputs( Engine::ECS::World& world, InputState& outInputState )
 {
-	const InputComponent& inputComponent = world.GetGlobalComponent< InputComponent >();
+	const Engine::InputHandlerGlobalComponent& inputHandler =
+	    world.GetGlobalComponent< Engine::InputHandlerGlobalComponent >();
 
-	outInputState.movement.X( inputComponent.inputController->GetAxis( HORIZONTAL_AXIS ) );
-	outInputState.movement.Y( inputComponent.inputController->GetAxis( VERTICAL_AXIS ) );
+	outInputState.movement.X( inputHandler.ControllerGetAxis( KEYBOARD_NAME, HORIZONTAL_AXIS ) );
+	outInputState.movement.Y( inputHandler.ControllerGetAxis( KEYBOARD_NAME, VERTICAL_AXIS ) );
 	outInputState.movement.Normalize();
 
-	outInputState.isShooting = inputComponent.cursor->GetButtonPressed( SHOOT_BUTTON );
+	outInputState.isShooting = inputHandler.CursorGetButtonPressed( MOUSE_NAME, SHOOT_BUTTON );
 
 	const Engine::ECS::GameEntity& virtual_mouse_entity = world.GetFirstEntityOfType< VirtualMouseComponent >();
 	const Engine::TransformComponent& virtual_mouse_transform =
 	    virtual_mouse_entity.GetComponent< Engine::TransformComponent >();
+	// TODO instead of sending a position as an input, we should send the delta from the mouse. As the position can be
+	// easily hackable.
 	outInputState.virtualMousePosition = virtual_mouse_transform.GetPosition();
 }
 

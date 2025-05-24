@@ -74,12 +74,13 @@ namespace Engine
 		{
 			if ( ev.type == SDL_QUIT )
 			{
+				// TODO Make something to actually stop the program
+				LOG_INFO( "Received quit event" );
 				_isGameRunning = false;
+				break;
 			}
-			else
-			{
-				HandleEvent( inputHandlerGlobalComponent, ev );
-			}
+
+			HandleEvent( inputHandlerGlobalComponent, ev );
 		}
 
 		PostHandleEvents( inputHandlerGlobalComponent );

@@ -1,6 +1,4 @@
 #pragma once
-#include "inputs/InputHandler.h"
-
 #include "ecs/world.h"
 
 const uint32 FIXED_FRAMES_PER_SECOND = 50;
@@ -27,6 +25,4 @@ class Game
 		bool _isRunning;
 
 		Engine::ECS::World _activeScene;
-		// TODO The input handler should also be witin an ECS global component
-		Engine::InputHandler _inputHandler;
 };

@@ -2,7 +2,8 @@
 #include <unordered_map>
 
 #include "IInputController.h"
-#include "InputHandler.h"
+#include "input_button.h"
+#include "input_axis.h"
 
 namespace Engine
 {

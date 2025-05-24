@@ -4,8 +4,6 @@
 // TODO TEMP
 namespace Engine
 {
-	class InputHandler;
-
 	namespace ECS
 	{
 		class GameEntity;
@@ -17,8 +15,7 @@ namespace Engine
 class SceneInitializer
 {
 	public:
-		void InitializeScene( Engine::ECS::World& scene, NetLib::PeerType networkPeerType,
-		                      Engine::InputHandler& inputHandler ) const;
+		void InitializeScene( Engine::ECS::World& scene, NetLib::PeerType networkPeerType ) const;
 
 		// TODO Temp method. It shouldn't go here
 		void ConfigureCameraComponent( Engine::ECS::GameEntity& entity, const Engine::ECS::Prefab& prefab ) const;

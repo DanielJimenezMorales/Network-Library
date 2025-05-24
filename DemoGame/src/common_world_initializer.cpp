@@ -5,7 +5,6 @@
 #include "core/initializer.h"
 #include "inputs/KeyboardController.h"
 #include "inputs/MouseController.h"
-#include "inputs/InputHandler.h"
 #include "InputActionIdsConfiguration.h"
 #include "ITextureLoader.h"
 #include "InputStateFactory.h"
@@ -19,7 +18,6 @@
 #include "components/sprite_renderer_component.h"
 #include "components/crosshair_component.h"
 #include "components/camera_component.h"
-#include "components/input_component.h"
 #include "components/collider_2d_component.h"
 #include "components/gizmo_renderer_component.h"
 #include "components/network_entity_component.h"
@@ -73,7 +71,6 @@ static void RegisterComponents( Engine::ECS::World& world )
 	world.RegisterComponent< Engine::Collider2DComponent >( "Collider2D" );
 	world.RegisterComponent< Engine::CameraComponent >( "Camera" );
 	world.RegisterComponent< VirtualMouseComponent >( "VirtualMouse" );
-	world.RegisterComponent< InputComponent >( "Input" );
 	world.RegisterComponent< CrosshairComponent >( "Crosshair" );
 	world.RegisterComponent< NetworkEntityComponent >( "NetworkEntity" );
 	world.RegisterComponent< PlayerControllerComponent >( "PlayerController" );

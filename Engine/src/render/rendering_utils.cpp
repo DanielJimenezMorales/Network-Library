@@ -55,6 +55,7 @@ namespace Engine
 	static bool AddRenderingSystems( ECS::World& world, RenderGlobalComponent& render )
 	{
 		ECS::SystemCoordinator* renderSystemCoordinator = new ECS::SystemCoordinator( ECS::ExecutionStage::RENDER );
+
 		Engine::RenderClearSystem* renderClearSystem = new Engine::RenderClearSystem();
 		renderSystemCoordinator->AddSystemToTail( renderClearSystem );
 

@@ -2,7 +2,8 @@
 #include "numeric_types.h"
 
 #include "ICursor.h"
-#include "InputHandler.h"
+#include "input_button.h"
+
 #include <unordered_map>
 
 namespace Engine

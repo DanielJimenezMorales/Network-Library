@@ -1,7 +1,5 @@
 #include "Game.h"
 
-#include <SDL.h>
-
 #include "logger.h"
 
 #include "core/peer.h"
@@ -18,14 +16,12 @@ bool Game::Init()
 	int32 clientOrServer;
 	std::cin >> clientOrServer;
 
-	SDL_InitSubSystem( SDL_INIT_EVENTS );
-
 	_isRunning = true;
 
 	SceneInitializer sceneInitializer;
 
 	NetLib::PeerType peerType = clientOrServer == 0 ? NetLib::PeerType::SERVER : NetLib::PeerType::CLIENT;
-	sceneInitializer.InitializeScene( _activeScene, peerType, _inputHandler );
+	sceneInitializer.InitializeScene( _activeScene, peerType );
 
 	return true;
 }
@@ -58,23 +54,6 @@ void Game::GameLoop()
 
 void Game::HandleEvents( float32 tickElapsedTime )
 {
-	_inputHandler.PreHandleEvents();
-
-	SDL_Event ev;
-	while ( SDL_PollEvent( &ev ) )
-	{
-		if ( ev.type == SDL_QUIT )
-		{
-			_isRunning = false;
-		}
-		else
-		{
-			_inputHandler.HandleEvent( ev );
-		}
-	}
-
-	_inputHandler.PostHandleEvents();
-
 	_activeScene.InputHandling( tickElapsedTime );
 }
 
@@ -111,7 +90,6 @@ void Game::EndOfFrame()
 bool Game::Release()
 {
 	NetLib::Initializer::Finalize();
-	SDL_Quit();
 
 	return true;
 }

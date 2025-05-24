@@ -5,7 +5,6 @@
 #include "core/initializer.h"
 #include "inputs/KeyboardController.h"
 #include "inputs/MouseController.h"
-#include "inputs/InputHandler.h"
 #include "InputActionIdsConfiguration.h"
 #include "ITextureLoader.h"
 #include "InputStateFactory.h"
@@ -19,7 +18,6 @@
 #include "components/sprite_renderer_component.h"
 #include "components/crosshair_component.h"
 #include "components/camera_component.h"
-#include "components/input_component.h"
 #include "components/collider_2d_component.h"
 #include "components/gizmo_renderer_component.h"
 #include "components/network_entity_component.h"
@@ -40,6 +38,7 @@
 #include "component_configurations/health_component_configuration.h"
 
 #include "global_components/network_peer_global_component.h"
+#include "global_components/input_handler_global_component.h"
 
 #include "systems/collision_detection_system.h"
 
@@ -56,6 +55,8 @@
 
 #include "render/rendering_utils.h"
 
+#include "inputs/inputs_initialization_utils.h"
+
 #include "network_entity_creator.h"
 #include "json_configuration_loader.h"
 
@@ -66,7 +67,6 @@ static void RegisterComponents( Engine::ECS::World& scene )
 	scene.RegisterComponent< Engine::Collider2DComponent >( "Collider2D" );
 	scene.RegisterComponent< Engine::CameraComponent >( "Camera" );
 	scene.RegisterComponent< VirtualMouseComponent >( "VirtualMouse" );
-	scene.RegisterComponent< InputComponent >( "Input" );
 	scene.RegisterComponent< CrosshairComponent >( "Crosshair" );
 	scene.RegisterComponent< NetworkEntityComponent >( "NetworkEntity" );
 	scene.RegisterComponent< PlayerControllerComponent >( "PlayerController" );
@@ -110,6 +110,11 @@ static void RegisterSystems( Engine::ECS::World& scene, NetLib::PeerType network
 {
 	// Populate systems
 	// TODO Create a system storage in order to be able to free them at the end
+
+	///////////////////////////
+	// INPUT HANDLING SYSTEMS
+	///////////////////////////
+	Engine::AddInputsToWorld( scene );
 
 	/////////////////////
 	// PRE TICK SYSTEMS
@@ -277,8 +282,7 @@ void SceneInitializer::ConfigureHealthComponent( Engine::ECS::GameEntity& entity
 	health.currentHealth = health_config.currentHealth;
 }
 
-void SceneInitializer::InitializeScene( Engine::ECS::World& scene, NetLib::PeerType networkPeerType,
-                                        Engine::InputHandler& inputHandler ) const
+void SceneInitializer::InitializeScene( Engine::ECS::World& scene, NetLib::PeerType networkPeerType ) const
 {
 	RegisterComponents( scene );
 	RegisterArchetypes( scene );
@@ -292,22 +296,25 @@ void SceneInitializer::InitializeScene( Engine::ECS::World& scene, NetLib::PeerT
 	    std::bind( &SceneInitializer::ConfigureHealthComponent, this, std::placeholders::_1, std::placeholders::_2 ) );
 
 	// Inputs
+	Engine::InputHandlerGlobalComponent& inputHandlerGlobalComponent =
+	    scene.GetGlobalComponent< Engine::InputHandlerGlobalComponent >();
+
 	Engine::KeyboardController* keyboard = new Engine::KeyboardController();
 	Engine::InputAxis axis( HORIZONTAL_AXIS, SDLK_d, SDLK_a );
 	keyboard->AddAxisMap( axis );
 	Engine::InputAxis axis2( VERTICAL_AXIS, SDLK_w, SDLK_s );
 	keyboard->AddAxisMap( axis2 );
-	inputHandler.AddController( keyboard );
+	inputHandlerGlobalComponent.controllers[ KEYBOARD_NAME ] = keyboard;
+	// inputHandler.AddController( keyboard );
 
 	Engine::MouseController* mouse = new Engine::MouseController();
 	const Engine::InputButton mouse_shoot_button( SHOOT_BUTTON, SDL_BUTTON_LEFT );
 	mouse->AddButtonMap( mouse_shoot_button );
-	inputHandler.AddCursor( mouse );
+	inputHandlerGlobalComponent.cursors[ MOUSE_NAME ] = mouse;
+	// inputHandler.AddCursor( mouse );
 
 	// Populate entities
 	scene.CreateGameEntity( "Camera", Vec2f( 0, 0 ) );
-
-	scene.AddGlobalComponent< InputComponent >( keyboard, mouse );
 
 	NetworkPeerGlobalComponent& networkPeerComponent = scene.AddGlobalComponent< NetworkPeerGlobalComponent >();
 	NetLib::Peer* networkPeer;
