@@ -3,8 +3,6 @@
 
 #include "resource_handlers/gizmo_resource_handler.h"
 
-#include "SDL_image.h"
-
 #include <unordered_map>
 
 #include "gizmos/Gizmo.h"
@@ -16,7 +14,7 @@ namespace Engine
 	class GizmoRendererSystem : public ECS::ISimpleSystem
 	{
 		public:
-			GizmoRendererSystem( SDL_Renderer* renderer );
+			GizmoRendererSystem();
 			~GizmoRendererSystem();
 
 			GizmoResourceHandler& GetGizmoResourceHandler() { return _gizmoResourceHandler; }
@@ -30,7 +28,6 @@ namespace Engine
 			void InitGizmoRenderers();
 			void DeallocateGizmoRenderers();
 
-			SDL_Renderer* _renderer;
 			GizmoResourceHandler _gizmoResourceHandler;
 
 			std::unordered_map< GizmoType, GizmoRenderer* > _gizmoRenderers;

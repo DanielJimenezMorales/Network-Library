@@ -45,6 +45,7 @@ namespace Engine
 				// TODO Instead of having all these predefined functions, create one function to to tick the systems.
 				// Instead of pass it a compiled enum, pass it something like a string to add flexibility and create as
 				// many execution stages as you want.
+				void InputHandling( float32 elapsed_time );
 				void Update( float32 elapsed_time );
 				void PreTick( float32 elapsed_time );
 				void Tick( float32 elapsed_time );

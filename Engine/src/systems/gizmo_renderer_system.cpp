@@ -7,6 +7,8 @@
 #include "gizmos/circle_gizmo_renderer.h"
 #include "gizmos/ray_gizmo_renderer.h"
 
+#include "global_components/render_global_component.h"
+
 #include "components/gizmo_renderer_component.h"
 #include "components/transform_component.h"
 #include "components/camera_component.h"
@@ -16,9 +18,8 @@
 
 namespace Engine
 {
-	GizmoRendererSystem::GizmoRendererSystem( SDL_Renderer* renderer )
+	GizmoRendererSystem::GizmoRendererSystem()
 	    : ECS::ISimpleSystem()
-	    , _renderer( renderer )
 	    , _gizmoRenderers()
 	{
 		InitGizmoRenderers();
@@ -31,6 +32,8 @@ namespace Engine
 
 	void GizmoRendererSystem::Execute( ECS::World& world, float32 elapsed_time )
 	{
+		RenderGlobalComponent& render_global_component = world.GetGlobalComponent< RenderGlobalComponent >();
+
 		const ECS::GameEntity& camera_entity = world.GetFirstEntityOfType< CameraComponent >();
 		const CameraComponent& camera = camera_entity.GetComponent< CameraComponent >();
 		const TransformComponent& camera_transform = camera_entity.GetComponent< TransformComponent >();
@@ -53,11 +56,11 @@ namespace Engine
 			{
 				const GizmoRenderer* gizmo_renderer = gizmo_renderer_found->second;
 				assert( gizmo_renderer != nullptr );
-				gizmo_renderer->Render( *gizmo, camera, camera_transform, transform, _renderer );
+				gizmo_renderer->Render( *gizmo, camera, camera_transform, transform, render_global_component.renderer );
 			}
 
 			// TODO cache the color in a variable so I dont need to hardcode it in different places of the code
-			SDL_SetRenderDrawColor( _renderer, 255, 0, 0, 255 );
+			SDL_SetRenderDrawColor( render_global_component.renderer, 255, 0, 0, 255 );
 		}
 	}
 

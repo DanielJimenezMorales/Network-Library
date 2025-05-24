@@ -1,25 +1,23 @@
 #pragma once
-#include "core/peer.h"
+#include "i_world_initializer.h"
 
-// TODO TEMP
 namespace Engine
 {
-	class InputHandler;
-
 	namespace ECS
 	{
 		class GameEntity;
-		class World;
 		class Prefab;
 	}
 }
 
-class SceneInitializer
+class CommonWorldInitializer : public Engine::IWorldInitializer
 {
 	public:
-		void InitializeScene( Engine::ECS::World& scene, NetLib::PeerType networkPeerType,
-		                      Engine::InputHandler& inputHandler ) const;
+		CommonWorldInitializer();
 
+		void SetUpWorld( Engine::ECS::World& world ) override;
+
+	private:
 		// TODO Temp method. It shouldn't go here
 		void ConfigureCameraComponent( Engine::ECS::GameEntity& entity, const Engine::ECS::Prefab& prefab ) const;
 		void ConfigureHealthComponent( Engine::ECS::GameEntity& entity, const Engine::ECS::Prefab& prefab ) const;

@@ -9,6 +9,8 @@
 #include "ecs/world.h"
 #include "ecs/prefab.h"
 
+#include "global_components/render_global_component.h"
+
 #include "components/transform_component.h"
 #include "components/sprite_renderer_component.h"
 #include "components/camera_component.h"
@@ -20,14 +22,14 @@
 namespace Engine
 {
 	SpriteRendererSystem::SpriteRendererSystem( SDL_Renderer* renderer )
-	    : _renderer( renderer )
-	    , _textureResourceHandler( renderer )
+	    : _textureResourceHandler( renderer )
 	{
-		assert( _renderer != nullptr );
 	}
 
 	void SpriteRendererSystem::Execute( ECS::World& world, float32 elapsed_time )
 	{
+		RenderGlobalComponent& render_global_component = world.GetGlobalComponent< RenderGlobalComponent >();
+
 		const ECS::GameEntity camera_entity = world.GetFirstEntityOfType< CameraComponent >();
 		const CameraComponent& camera = camera_entity.GetComponent< CameraComponent >();
 		const TransformComponent& camera_transform = camera_entity.GetComponent< TransformComponent >();
@@ -55,7 +57,7 @@ namespace Engine
 			destRect.h = static_cast< int >( texture->GetDimensions().h * transform.GetScale().Y() );
 
 			// SDL_RenderCopy(renderer, texture->GetRaw(), &texture->GetDimensions(), &destRect);
-			SDL_RenderCopyEx( _renderer, texture->GetRaw(), &texture->GetDimensions(), &destRect,
+			SDL_RenderCopyEx( render_global_component.renderer, texture->GetRaw(), &texture->GetDimensions(), &destRect,
 			                  transform.GetRotationAngle(), nullptr, SDL_RendererFlip::SDL_FLIP_NONE );
 		}
 	}

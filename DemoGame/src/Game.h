@@ -1,6 +1,4 @@
 #pragma once
-#include <SDL.h>
-
 #include "inputs/InputHandler.h"
 
 #include "ecs/world.h"
@@ -18,10 +16,7 @@ class Game
 		bool Release();
 
 	private:
-		int32 InitSDL();
-		int32 CreateWindowAndRenderer();
-
-		void HandleEvents();
+		void HandleEvents( float32 tickElapsedTime );
 		void PreTick( float32 tickElapsedTime );
 		void Tick( float32 tickElapsedTime );
 		void PosTick( float32 tickElapsedTime );
@@ -29,8 +24,6 @@ class Game
 		void Render( float32 elapsed_time );
 		void EndOfFrame();
 
-		SDL_Window* _window;
-		SDL_Renderer* _renderer;
 		bool _isRunning;
 
 		Engine::ECS::World _activeScene;

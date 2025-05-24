@@ -1,5 +1,7 @@
 #include "Game.h"
 
+#include <SDL.h>
+
 #include "logger.h"
 
 #include "core/peer.h"
@@ -16,40 +18,14 @@ bool Game::Init()
 	int32 clientOrServer;
 	std::cin >> clientOrServer;
 
-	int32 result = InitSDL();
-	if ( result != 0 )
-	{
-		LOG_ERROR( "Error while initializing SDL. Error code: %s", SDL_GetError() );
-		return false;
-	}
-
-	result = CreateWindowAndRenderer();
-	if ( result != 0 )
-	{
-		LOG_ERROR( "Error while initializing SDL window. Error code: %s", SDL_GetError() );
-		return false;
-	}
-
-	result = SDL_SetRenderDrawColor( _renderer, 255, 0, 0, 255 );
-	if ( result != 0 )
-	{
-		LOG_ERROR( "Error while setting SDL render draw color. Error code: %s", SDL_GetError() );
-		return false;
-	}
-
-	result = SDL_SetRelativeMouseMode( SDL_TRUE );
-	if ( result != 0 )
-	{
-		LOG_ERROR( "Error while setting SDL mouse to relative mode. Error code: %s", SDL_GetError() );
-		return false;
-	}
+	SDL_InitSubSystem( SDL_INIT_EVENTS );
 
 	_isRunning = true;
 
 	SceneInitializer sceneInitializer;
 
 	NetLib::PeerType peerType = clientOrServer == 0 ? NetLib::PeerType::SERVER : NetLib::PeerType::CLIENT;
-	sceneInitializer.InitializeScene( _activeScene, peerType, _inputHandler, _renderer );
+	sceneInitializer.InitializeScene( _activeScene, peerType, _inputHandler );
 
 	return true;
 }
@@ -64,7 +40,7 @@ void Game::GameLoop()
 		timeClock.UpdateLocalTime();
 		accumulator += timeClock.GetElapsedTimeSeconds();
 
-		HandleEvents();
+		HandleEvents( timeClock.GetElapsedTimeSeconds() );
 
 		while ( accumulator >= FIXED_FRAME_TARGET_DURATION )
 		{
@@ -80,7 +56,7 @@ void Game::GameLoop()
 	}
 }
 
-void Game::HandleEvents()
+void Game::HandleEvents( float32 tickElapsedTime )
 {
 	_inputHandler.PreHandleEvents();
 
@@ -98,6 +74,8 @@ void Game::HandleEvents()
 	}
 
 	_inputHandler.PostHandleEvents();
+
+	_activeScene.InputHandling( tickElapsedTime );
 }
 
 void Game::PreTick( float32 tickElapsedTime )
@@ -122,11 +100,7 @@ void Game::Update( float32 elapsedTime )
 
 void Game::Render( float32 elapsed_time )
 {
-	SDL_RenderClear( _renderer );
-
 	_activeScene.Render( elapsed_time );
-
-	SDL_RenderPresent( _renderer );
 }
 
 void Game::EndOfFrame()
@@ -137,20 +111,7 @@ void Game::EndOfFrame()
 bool Game::Release()
 {
 	NetLib::Initializer::Finalize();
-
-	SDL_DestroyRenderer( _renderer );
-	SDL_DestroyWindow( _window );
 	SDL_Quit();
 
 	return true;
-}
-
-int32 Game::InitSDL()
-{
-	return SDL_Init( SDL_INIT_EVERYTHING );
-}
-
-int32 Game::CreateWindowAndRenderer()
-{
-	return SDL_CreateWindowAndRenderer( 512, 512, SDL_WINDOW_SHOWN, &_window, &_renderer );
 }

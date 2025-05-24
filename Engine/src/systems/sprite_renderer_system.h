@@ -24,7 +24,6 @@ namespace Engine
 			void ConfigureSpriteRendererComponent( ECS::GameEntity& entity, const ECS::Prefab& prefab );
 
 		private:
-			SDL_Renderer* _renderer;
 			TextureResourceHandler _textureResourceHandler;
 	};
-}
+} // namespace Engine

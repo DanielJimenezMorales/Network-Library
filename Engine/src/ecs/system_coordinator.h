@@ -12,6 +12,7 @@ namespace Engine
 
 		enum class ExecutionStage : uint8
 		{
+			INPUT_HANDLING,
 			UPDATE,
 			PRETICK,
 			TICK,

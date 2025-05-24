@@ -38,6 +38,11 @@ namespace Engine
 			_systemsHandler.AddSystem( system );
 		}
 
+		void World::InputHandling( float32 elapsed_time )
+		{
+			_systemsHandler.TickStage( *this, elapsed_time, ExecutionStage::INPUT_HANDLING );
+		}
+
 		void World::Update( float32 elapsed_time )
 		{
 			_systemsHandler.TickStage( *this, elapsed_time, ExecutionStage::UPDATE );

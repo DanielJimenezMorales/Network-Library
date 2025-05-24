@@ -20,6 +20,8 @@ struct Vec2f
 
 		Vec2f( const Vec2f& other ) = default;
 
+		static constexpr Vec2f Zero() { return Vec2f( 0.f, 0.f ); }
+
 		static float32 GetSquareDistance( const Vec2f& v1, const Vec2f& v2 )
 		{
 			const float32 dx = v1.X() - v2.X();
