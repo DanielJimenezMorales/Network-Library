@@ -1,0 +1,12 @@
+{
+	"name": "player",
+	"components": [
+		"Transform",
+		"SpriteRenderer",
+		"Collider2D",
+		"NetworkEntity",
+		"PlayerController",
+		"HealthComponent",
+		"ServerPlayerStateStorage"
+	]
+}

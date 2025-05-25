@@ -1,0 +1,11 @@
+{
+	"name": "client_ghost_player",
+	"components": [
+		"Transform",
+		"Collider2D",
+		"NetworkEntity",
+		"PlayerController",
+		"HealthComponent",
+		"ClientSidePrediction"
+	]
+}

@@ -5,24 +5,13 @@
 #include "core/peer.h"
 #include "core/initializer.h"
 
-#include "SceneInitializer.h"
+#include "i_world_initializer.h"
 
-bool Game::Init()
+bool Game::Init( Engine::IWorldInitializer* world_initializer )
 {
-	LOG_INFO( "Select:" );
-	LOG_INFO( "Server: 0" );
-	LOG_INFO( "Client: 1" );
-
-	int32 clientOrServer;
-	std::cin >> clientOrServer;
+	world_initializer->SetUpWorld(_activeScene);
 
 	_isRunning = true;
-
-	SceneInitializer sceneInitializer;
-
-	NetLib::PeerType peerType = clientOrServer == 0 ? NetLib::PeerType::SERVER : NetLib::PeerType::CLIENT;
-	sceneInitializer.InitializeScene( _activeScene, peerType );
-
 	return true;
 }
 

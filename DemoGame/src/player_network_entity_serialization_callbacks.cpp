@@ -6,15 +6,17 @@
 #include "ecs/world.h"
 
 #include "components/transform_component.h"
-#include "components/client_side_prediction_component.h"
-#include "components/server_player_state_storage_component.h"
+
+#include "server/components/server_player_state_storage_component.h"
+
+#include "client/components/client_side_prediction_component.h"
 
 #include "global_components/network_peer_global_component.h"
 
 #include "core/buffer.h"
 
-#include "player_simulation/player_state.h"
-#include "player_simulation/player_state_utils.h"
+#include "shared/player_simulation/player_state.h"
+#include "shared/player_simulation/player_state_utils.h"
 
 void SerializeForOwner( const Engine::ECS::World& world, const Engine::ECS::GameEntity& entity, NetLib::Buffer& buffer )
 {

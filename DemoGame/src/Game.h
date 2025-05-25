@@ -4,12 +4,17 @@
 const uint32 FIXED_FRAMES_PER_SECOND = 50;
 const float32 FIXED_FRAME_TARGET_DURATION = 1.0f / FIXED_FRAMES_PER_SECOND;
 
+namespace Engine
+{
+	class IWorldInitializer;
+}
+
 class Game
 {
 	public:
 		Game() = default;
 
-		bool Init();
+		bool Init( Engine::IWorldInitializer* world_initializer );
 		void GameLoop();
 		bool Release();
 

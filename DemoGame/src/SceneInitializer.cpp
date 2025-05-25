@@ -16,22 +16,32 @@
 #include "ecs/game_entity.hpp"
 
 #include "components/transform_component.h"
-#include "components/virtual_mouse_component.h"
 #include "components/sprite_renderer_component.h"
-#include "components/crosshair_component.h"
 #include "components/camera_component.h"
 #include "components/collider_2d_component.h"
 #include "components/gizmo_renderer_component.h"
-#include "components/network_entity_component.h"
-#include "components/player_controller_component.h"
-#include "components/remote_player_controller_component.h"
 #include "components/raycast_component.h"
-#include "components/temporary_lifetime_component.h"
-#include "components/health_component.h"
-#include "components/client_side_prediction_component.h"
-#include "components/server_player_state_storage_component.h"
-#include "components/ghost_object_component.h"
-#include "components/interpolated_object_component.h"
+
+#include "shared/components/network_entity_component.h"
+#include "shared/components/player_controller_component.h"
+#include "shared/components/temporary_lifetime_component.h"
+#include "shared/components/health_component.h"
+
+#include "client/components/ghost_object_component.h"
+#include "client/components/remote_player_controller_component.h"
+#include "client/components/virtual_mouse_component.h"
+#include "client/components/crosshair_component.h"
+#include "client/components/client_side_prediction_component.h"
+#include "client/components/interpolated_object_component.h"
+
+#include "client/systems/client_local_player_predictor_system.h"
+#include "client/systems/client_local_player_server_reconciliator_system.h"
+#include "client/systems/remote_player_controller_system.h"
+#include "client/systems/crosshair_follow_mouse_system.h"
+#include "client/systems/interpolated_player_objects updater_system.h"
+#include "client/systems/virtual_mouse_system.h"
+
+#include "server/components/server_player_state_storage_component.h"
 
 #include "component_configurations/sprite_renderer_component_configuration.h"
 #include "component_configurations/player_controller_component_configuration.h"
@@ -44,16 +54,11 @@
 
 #include "systems/collision_detection_system.h"
 
-#include "ecs_systems/server_player_controller_system.h"
-#include "ecs_systems/client_local_player_predictor_system.h"
-#include "ecs_systems/client_local_player_server_reconciliator_system.h"
-#include "ecs_systems/remote_player_controller_system.h"
-#include "ecs_systems/crosshair_follow_mouse_system.h"
-#include "ecs_systems/virtual_mouse_system.h"
-#include "ecs_systems/pre_tick_network_system.h"
-#include "ecs_systems/pos_tick_network_system.h"
-#include "ecs_systems/temporary_lifetime_objects_system.h"
-#include "ecs_systems/interpolated_player_objects updater_system.h"
+#include "shared/systems/pre_tick_network_system.h"
+#include "shared/systems/pos_tick_network_system.h"
+#include "shared/systems/temporary_lifetime_objects_system.h"
+
+#include "server/systems/server_player_controller_system.h"
 
 #include "render/rendering_inicialization_utils.h"
 
@@ -88,7 +93,7 @@ static void RegisterArchetypes( Engine::ECS::World& scene )
 {
 	JsonConfigurationLoader configuration_loader;
 	std::vector< Engine::ECS::Archetype > loaded_archetypes;
-	configuration_loader.LoadArchetypes( loaded_archetypes );
+	configuration_loader.LoadArchetypes( loaded_archetypes, "config_files/entity_archetypes/" );
 
 	for ( auto cit = loaded_archetypes.cbegin(); cit != loaded_archetypes.cend(); ++cit )
 	{

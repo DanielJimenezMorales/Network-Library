@@ -3,7 +3,7 @@
 
 #include "InputState.h"
 
-#include "player_simulation/player_state.h"
+#include "shared/player_simulation/player_state.h"
 
 struct ClientSidePredictionBufferSlot
 {

@@ -5,9 +5,11 @@
 #include "ecs/world.h"
 #include "ecs/game_entity.hpp"
 
-#include "components/network_entity_component.h"
 #include "global_components/network_peer_global_component.h"
-#include "components/ghost_object_component.h"
+
+#include "shared/components/network_entity_component.h"
+
+#include "client/components/ghost_object_component.h"
 
 #include "replication/network_entity_communication_callbacks.h"
 
