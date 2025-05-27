@@ -2,7 +2,7 @@
 
 #include <cassert>
 
-#include "InputState.h"
+#include "shared/InputState.h"
 
 #include "ecs/game_entity.hpp"
 #include "ecs/prefab.h"
@@ -15,7 +15,7 @@
 
 #include "server/components/server_player_state_storage_component.h"
 
-#include "global_components/network_peer_global_component.h"
+#include "shared/global_components/network_peer_global_component.h"
 
 #include "shared/player_simulation/player_state.h"
 #include "shared/player_simulation/player_state_configuration.h"

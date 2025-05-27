@@ -1,6 +1,6 @@
 #include "server_world_initializer.h"
 
-#define SERVER_RENDER
+//#define SERVER_RENDER
 
 // Engine
 #include "components/transform_component.h"
@@ -43,20 +43,20 @@
 #include "server/systems/server_dummy_input_handler_system.h"
 //---
 
-#include "InputActionIdsConfiguration.h"
-#include "ITextureLoader.h"
-#include "InputStateFactory.h"
+#include "shared/InputActionIdsConfiguration.h"
+#include "shared/ITextureLoader.h"
+#include "shared/InputStateFactory.h"
 
+#include "shared/component_configurations/player_controller_component_configuration.h"
+#include "shared/component_configurations/health_component_configuration.h"
 #include "component_configurations/sprite_renderer_component_configuration.h"
-#include "component_configurations/player_controller_component_configuration.h"
 #include "component_configurations/collider_2d_component_configuration.h"
 #include "component_configurations/camera_component_configuration.h"
-#include "component_configurations/health_component_configuration.h"
 
-#include "global_components/network_peer_global_component.h"
+#include "shared/global_components/network_peer_global_component.h"
 
-#include "network_entity_creator.h"
-#include "json_configuration_loader.h"
+#include "shared/network_entity_creator.h"
+#include "shared/json_configuration_loader.h"
 
 #include <SDL.h>
 

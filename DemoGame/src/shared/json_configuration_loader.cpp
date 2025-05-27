@@ -8,9 +8,10 @@
 #include "component_configurations/sprite_renderer_component_configuration.h"
 #include "component_configurations/camera_component_configuration.h"
 #include "component_configurations/collider_2d_component_configuration.h"
-#include "component_configurations/player_controller_component_configuration.h"
-#include "component_configurations/temporary_lifetime_component_configuration.h"
-#include "component_configurations/health_component_configuration.h"
+
+#include "shared/component_configurations/player_controller_component_configuration.h"
+#include "shared/component_configurations/temporary_lifetime_component_configuration.h"
+#include "shared/component_configurations/health_component_configuration.h"
 
 #include "collisions/circle_bounds_2d.h"
 #include "collisions/collision_utils.h"

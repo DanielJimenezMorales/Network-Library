@@ -5,7 +5,7 @@
 
 #include "shared/components/temporary_lifetime_component.h"
 
-#include "component_configurations/temporary_lifetime_component_configuration.h"
+#include "shared/component_configurations/temporary_lifetime_component_configuration.h"
 
 #include <vector>
 

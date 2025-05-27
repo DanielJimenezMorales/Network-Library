@@ -1,7 +1,7 @@
 #define SDL_MAIN_HANDLED
 #include <iostream>
 
-#include "Game.h"
+#include "shared/Game.h"
 
 #ifdef _WIN32
 	#include <windows.h>

@@ -2,8 +2,8 @@
 
 #include "core/Buffer.h"
 
-#include "player_simulation/player_state.h"
-#include "player_simulation/player_state_utils.h"
+#include "shared/player_simulation/player_state.h"
+#include "shared/player_simulation/player_state_utils.h"
 
 namespace
 {

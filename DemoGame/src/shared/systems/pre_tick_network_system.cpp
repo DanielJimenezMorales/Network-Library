@@ -3,7 +3,7 @@
 #include "ecs/game_entity.hpp"
 #include "ecs/world.h"
 
-#include "global_components/network_peer_global_component.h"
+#include "shared/global_components/network_peer_global_component.h"
 
 PreTickNetworkSystem::PreTickNetworkSystem()
     : Engine::ECS::ISimpleSystem()

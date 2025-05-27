@@ -2,7 +2,7 @@
 
 #include "ecs/world.h"
 
-#include "InputState.h"
+#include "shared/InputState.h"
 
 #include "shared/player_simulation/player_state.h"
 

@@ -1,6 +1,6 @@
 #include "player_rotation_controller.h"
 
-#include "InputState.h"
+#include "shared/InputState.h"
 
 #include "components/transform_component.h"
 

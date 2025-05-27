@@ -12,7 +12,7 @@
 
 #include "global_components/input_handler_global_component.h"
 
-#include "InputActionIdsConfiguration.h"
+#include "shared/InputActionIdsConfiguration.h"
 
 void VirtualMouseSystem::Execute( Engine::ECS::World& world, float32 elapsed_time )
 {

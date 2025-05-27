@@ -4,10 +4,9 @@
 #include "inputs/i_cursor.h"
 
 #include "vec2f.h"
-#include "InputActionIdsConfiguration.h"
 #include "raycaster.h"
-#include "client_side_prediction_buffer_slot.h"
-#include "InputState.h"
+#include "shared/InputActionIdsConfiguration.h"
+#include "shared/InputState.h"
 
 #include "ecs/game_entity.hpp"
 #include "ecs/prefab.h"
@@ -22,7 +21,7 @@
 #include "client/components/virtual_mouse_component.h"
 #include "client/components/client_side_prediction_component.h"
 
-#include "global_components/network_peer_global_component.h"
+#include "shared/global_components/network_peer_global_component.h"
 #include "global_components/input_handler_global_component.h"
 
 #include "shared/player_simulation/player_state_utils.h"

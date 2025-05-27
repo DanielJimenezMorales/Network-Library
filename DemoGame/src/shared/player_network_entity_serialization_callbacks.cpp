@@ -11,7 +11,7 @@
 
 #include "client/components/client_side_prediction_component.h"
 
-#include "global_components/network_peer_global_component.h"
+#include "shared/global_components/network_peer_global_component.h"
 
 #include "core/buffer.h"
 

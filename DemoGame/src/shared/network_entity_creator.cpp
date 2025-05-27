@@ -5,7 +5,7 @@
 #include "ecs/world.h"
 #include "ecs/game_entity.hpp"
 
-#include "global_components/network_peer_global_component.h"
+#include "shared/global_components/network_peer_global_component.h"
 
 #include "shared/components/network_entity_component.h"
 

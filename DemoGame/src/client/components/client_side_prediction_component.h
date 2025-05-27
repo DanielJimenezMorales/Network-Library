@@ -1,7 +1,8 @@
 #pragma once
 #include "numeric_types.h"
 
-#include "client_side_prediction_buffer_slot.h"
+#include "shared/InputState.h"
+#include "shared/player_simulation/player_state.h"
 
 #include <vector>
 

@@ -1,9 +1,9 @@
 #include "player_movement_controller.h"
 
-#include "InputState.h"
+#include "shared/InputState.h"
 
-#include "player_simulation/player_state.h"
-#include "player_simulation/player_state_configuration.h"
+#include "shared/player_simulation/player_state.h"
+#include "shared/player_simulation/player_state_configuration.h"
 
 PlayerMovementController::PlayerMovementController()
 {

@@ -1,6 +1,6 @@
 #include "player_state_utils.h"
 
-#include "player_simulation/player_state.h"
+#include "shared/player_simulation/player_state.h"
 
 #include "ecs/game_entity.hpp"
 
