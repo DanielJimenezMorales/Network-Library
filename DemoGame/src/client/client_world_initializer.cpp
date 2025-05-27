@@ -65,13 +65,6 @@
 #include "network_entity_creator.h"
 #include "json_configuration_loader.h"
 
-// TODO Remove later
-#include "server/components/server_player_state_storage_component.h"
-
-#include "server/systems/server_player_controller_system.h"
-#include "server/systems/server_dummy_input_handler_system.h"
-#include "systems/collision_detection_system.h"
-
 ClientWorldInitializer::ClientWorldInitializer()
 {
 }
@@ -200,20 +193,11 @@ static bool AddNetworkToWorld( Engine::ECS::World& world )
 
 static bool AddGameplayToWorld( Engine::ECS::World& world )
 {
-	// Add dummy collider entity
-	world.CreateGameEntity( "Dummy", Vec2f( 10.f, 10.f ) );
-
-	// Add virtual mouse entity
-	world.CreateGameEntity( "VirtualMouse", Vec2f( 0, 0 ) );
-
 	// Add virtual mouse system
 	Engine::ECS::SystemCoordinator* virtual_mouse_system_coordinator =
 	    new Engine::ECS::SystemCoordinator( Engine::ECS::ExecutionStage::UPDATE );
 	virtual_mouse_system_coordinator->AddSystemToTail( new VirtualMouseSystem() );
 	world.AddSystem( virtual_mouse_system_coordinator );
-
-	// Add crosshair entity
-	world.CreateGameEntity( "Crosshair", Vec2f( 0, 0 ) );
 
 	// Add crosshair follow mouse system
 	Engine::ECS::SystemCoordinator* crosshair_follow_mouse_system_coordinator =
@@ -273,216 +257,68 @@ static bool AddGameplayToWorld( Engine::ECS::World& world )
 	return true;
 }
 
-void ClientWorldInitializer::SetUpWorld( Engine::ECS::World& world )
+static bool CreateSystemsAndGlobalEntities( Engine::ECS::World& world )
 {
-	RegisterComponents( world );
-	RegisterArchetypes( world );
-	RegisterPrefabs( world );
-
-	/*NetLib::PeerType networkPeerType = NetLib::PeerType::CLIENT;
-
-	///////////////////////////
-	// INPUT HANDLING SYSTEMS
-	///////////////////////////
-	Engine::AddInputsToWorld( world );
-
-	/////////////////////
-	// PRE TICK SYSTEMS
-	/////////////////////
-
-	// Add temporary lifetime objects system
-	Engine::ECS::SystemCoordinator* temporary_lifetime_objects_system_coordinator =
-	    new Engine::ECS::SystemCoordinator( Engine::ECS::ExecutionStage::UPDATE );
-	TemporaryLifetimeObjectsSystem* temporary_lifetime_objects_system = new TemporaryLifetimeObjectsSystem();
-	auto on_configure_temporary_lifetime_callback =
-	    std::bind( &TemporaryLifetimeObjectsSystem::ConfigureTemporaryLifetimeComponent,
-	               temporary_lifetime_objects_system, std::placeholders::_1, std::placeholders::_2 );
-	world.SubscribeToOnEntityConfigure( on_configure_temporary_lifetime_callback );
-	temporary_lifetime_objects_system_coordinator->AddSystemToTail( temporary_lifetime_objects_system );
-	world.AddSystem( temporary_lifetime_objects_system_coordinator );
-
-	if ( networkPeerType == NetLib::PeerType::SERVER )
+	///////////////////
+	// INPUT HANDLING
+	///////////////////
+	bool result = AddInputsToWorld( world );
+	if ( !result )
 	{
-		/////////////////////
-		// PRE TICK SYSTEMS
-		/////////////////////
-
-		// Add Server-side collision detection system
-		Engine::ECS::SystemCoordinator* collision_detection_system_coordinator =
-		    new Engine::ECS::SystemCoordinator( Engine::ECS::ExecutionStage::PRETICK );
-		Engine::CollisionDetectionSystem* collision_detection_system = new Engine::CollisionDetectionSystem();
-		auto on_configure_collider_2d_callback =
-		    std::bind( &Engine::CollisionDetectionSystem::ConfigureCollider2DComponent, collision_detection_system,
-		               std::placeholders::_1, std::placeholders::_2 );
-		world.SubscribeToOnEntityConfigure( on_configure_collider_2d_callback );
-		collision_detection_system_coordinator->AddSystemToTail( collision_detection_system );
-		world.AddSystem( collision_detection_system_coordinator );
-
-		//////////////////
-		// TICK SYSTEMS
-		//////////////////
-
-		// Add Server-side player controller system
-		Engine::ECS::SystemCoordinator* server_player_controller_system_coordinator =
-		    new Engine::ECS::SystemCoordinator( Engine::ECS::ExecutionStage::TICK );
-		ServerPlayerControllerSystem* server_player_controller_system = new ServerPlayerControllerSystem();
-		server_player_controller_system_coordinator->AddSystemToTail( server_player_controller_system );
-		auto on_configure_player_controller_callback =
-		    std::bind( &ServerPlayerControllerSystem::ConfigurePlayerControllerComponent,
-		               server_player_controller_system, std::placeholders::_1, std::placeholders::_2 );
-		world.SubscribeToOnEntityConfigure( on_configure_player_controller_callback );
-		world.AddSystem( server_player_controller_system_coordinator );
-	}
-	else if ( networkPeerType == NetLib::PeerType::CLIENT )
-	{
-		//////////////////
-		// UPDATE SYSTEMS
-		//////////////////
-
-		// Add interpolated player objects system
-		Engine::ECS::SystemCoordinator* interpolated_player_objects_system_coordinator =
-		    new Engine::ECS::SystemCoordinator( Engine::ECS::ExecutionStage::UPDATE );
-		InterpolatedPlayerObjectUpdaterSystem* interpolated_player_objects_system =
-		    new InterpolatedPlayerObjectUpdaterSystem();
-		interpolated_player_objects_system_coordinator->AddSystemToTail( interpolated_player_objects_system );
-		world.AddSystem( interpolated_player_objects_system_coordinator );
-
-		//////////////////
-		// TICK SYSTEMS
-		//////////////////
-
-		// Add Client-side player controller system
-		Engine::ECS::SystemCoordinator* client_player_controller_system_coordinator =
-		    new Engine::ECS::SystemCoordinator( Engine::ECS::ExecutionStage::TICK );
-
-		ClientLocalPlayerServerReconciliatorSystem* client_local_player_server_reconciliator_system =
-		    new ClientLocalPlayerServerReconciliatorSystem();
-		client_player_controller_system_coordinator->AddSystemToTail( client_local_player_server_reconciliator_system );
-
-		ClientLocalPlayerPredictorSystem* client_local_player_predictor_system =
-		    new ClientLocalPlayerPredictorSystem( &world );
-		client_player_controller_system_coordinator->AddSystemToTail( client_local_player_predictor_system );
-		auto on_configure_player_controller_callback =
-		    std::bind( &ClientLocalPlayerPredictorSystem::ConfigurePlayerControllerComponent,
-		               client_local_player_predictor_system, std::placeholders::_1, std::placeholders::_2 );
-		world.SubscribeToOnEntityConfigure( on_configure_player_controller_callback );
-		auto on_configure_client_side_predictor_callback =
-		    std::bind( &ClientLocalPlayerPredictorSystem::ConfigureClientSidePredictorComponent,
-		               client_local_player_predictor_system, std::placeholders::_1, std::placeholders::_2 );
-		world.SubscribeToOnEntityConfigure( on_configure_client_side_predictor_callback );
-
-		world.AddSystem( client_player_controller_system_coordinator );
-
-		// Add Client-side remote player controller system
-		Engine::ECS::SystemCoordinator* client_remote_player_controller_system_coordinator =
-		    new Engine::ECS::SystemCoordinator( Engine::ECS::ExecutionStage::TICK );
-		client_player_controller_system_coordinator->AddSystemToTail( new RemotePlayerControllerSystem() );
-		world.AddSystem( client_remote_player_controller_system_coordinator );
+		LOG_ERROR( "Can't initialize input handling" );
 	}
 
-	/////////////////////
-	// PRE TICK SYSTEMS
-	/////////////////////
-
-	// Add pre-tick network system
-	Engine::ECS::SystemCoordinator* pre_tick_network_system_coordinator =
-	    new Engine::ECS::SystemCoordinator( Engine::ECS::ExecutionStage::PRETICK );
-	pre_tick_network_system_coordinator->AddSystemToTail( new PreTickNetworkSystem() );
-	world.AddSystem( pre_tick_network_system_coordinator );
-
-	/////////////////////
-	// POS TICK SYSTEMS
-	/////////////////////
-
-	// Add pos-tick network system
-	Engine::ECS::SystemCoordinator* pos_tick_network_system_coordinator =
-	    new Engine::ECS::SystemCoordinator( Engine::ECS::ExecutionStage::POSTICK );
-	pos_tick_network_system_coordinator->AddSystemToTail( new PosTickNetworkSystem() );
-	world.AddSystem( pos_tick_network_system_coordinator );
-
-	//////////////////
-	// RENDER SYSTEMS
-	//////////////////
-	bool result = Engine::AddRenderingToWorld( world );
+	//////////////
+	// RENDERING
+	//////////////
+	result = AddRenderingToWorld( world );
 	if ( !result )
 	{
 		LOG_ERROR( "Can't initialize rendering" );
 	}
 
-	// These subscriptions are also temp until I find a better place for them
-	world.SubscribeToOnEntityConfigure( std::bind( &ClientWorldInitializer::ConfigureCameraComponent, this,
-	                                               std::placeholders::_1, std::placeholders::_2 ) );
-	world.SubscribeToOnEntityConfigure( std::bind( &ClientWorldInitializer::ConfigureHealthComponent, this,
-	                                               std::placeholders::_1, std::placeholders::_2 ) );
+	////////////
+	// NETWORK
+	////////////
+	result = AddNetworkToWorld( world );
+	if ( !result )
+	{
+		LOG_ERROR( "Can't initialize network" );
+	}
 
-	// Populate entities
+	/////////////////////////
+	// CLIENT-SIDE GAMEPLAY
+	/////////////////////////
+	result = AddGameplayToWorld( world );
+	if ( !result )
+	{
+		LOG_ERROR( "Can't initialize client-side gameplay" );
+	}
+
+	return true;
+}
+
+static bool CreateGameEntities( Engine::ECS::World& world )
+{
 	world.CreateGameEntity( "Camera", Vec2f( 0, 0 ) );
 
-	NetworkPeerGlobalComponent& networkPeerComponent = world.AddGlobalComponent< NetworkPeerGlobalComponent >();
-	NetLib::Peer* networkPeer;
-	if ( networkPeerType == NetLib::PeerType::SERVER )
-	{
-		networkPeer = new NetLib::Server( 2 );
-	}
-	else if ( networkPeerType == NetLib::PeerType::CLIENT )
-	{
-		networkPeer = new NetLib::Client( 5 );
-	}
-
-	// TODO Make this initializer internal when calling to start
-	NetLib::Initializer::Initialize();
-	networkPeerComponent.peer = networkPeer;
-
-	NetworkEntityCreatorSystem* network_entity_creator = new NetworkEntityCreatorSystem();
-	network_entity_creator->SetScene( &world );
-	network_entity_creator->SetPeerType( networkPeerType );
-	world.SubscribeToOnEntityConfigure( std::bind( &NetworkEntityCreatorSystem::OnNetworkEntityComponentConfigure,
-	                                               network_entity_creator, std::placeholders::_1,
-	                                               std::placeholders::_2 ) );
+	// Add crosshair entity
+	world.CreateGameEntity( "Crosshair", Vec2f( 0, 0 ) );
 
 	// Add dummy collider entity
 	world.CreateGameEntity( "Dummy", Vec2f( 10.f, 10.f ) );
 
-	if ( networkPeer->GetPeerType() == NetLib::PeerType::SERVER )
-	{
-		NetLib::Server* server_peer = networkPeerComponent.GetPeerAsServer();
-		server_peer->SubscribeToOnNetworkEntityCreate( std::bind( &NetworkEntityCreatorSystem::OnNetworkEntityCreate,
-		                                                          network_entity_creator, std::placeholders::_1 ) );
-		server_peer->SubscribeToOnNetworkEntityDestroy( std::bind( &NetworkEntityCreatorSystem::OnNetworkEntityDestroy,
-		                                                           network_entity_creator, std::placeholders::_1 ) );
+	// Add virtual mouse entity
+	world.CreateGameEntity( "VirtualMouse", Vec2f( 0, 0 ) );
 
-		InputStateFactory* inputStateFactory = new InputStateFactory();
-		networkPeerComponent.GetPeerAsServer()->RegisterInputStateFactory( inputStateFactory );
-		networkPeerComponent.inputStateFactory = inputStateFactory;
-		networkPeerComponent.TrackOnRemotePeerConnect();
-	}
+	return true;
+}
 
-	if ( networkPeer->GetPeerType() == NetLib::PeerType::CLIENT )
-	{
-		NetLib::Client* client_peer = networkPeerComponent.GetPeerAsClient();
-		client_peer->SubscribeToOnNetworkEntityCreate( std::bind( &NetworkEntityCreatorSystem::OnNetworkEntityCreate,
-		                                                          network_entity_creator, std::placeholders::_1 ) );
-		client_peer->SubscribeToOnNetworkEntityDestroy( std::bind( &NetworkEntityCreatorSystem::OnNetworkEntityDestroy,
-		                                                           network_entity_creator, std::placeholders::_1 ) );
-
-		// Add virtual mouse
-		world.CreateGameEntity( "VirtualMouse", Vec2f( 0, 0 ) );
-
-		// Add virtual mouse system
-		Engine::ECS::SystemCoordinator* virtual_mouse_system_coordinator =
-		    new Engine::ECS::SystemCoordinator( Engine::ECS::ExecutionStage::UPDATE );
-		virtual_mouse_system_coordinator->AddSystemToTail( new VirtualMouseSystem() );
-		world.AddSystem( virtual_mouse_system_coordinator );
-
-		// Add crosshair if being a client
-		world.CreateGameEntity( "Crosshair", Vec2f( 0, 0 ) );
-
-		// Add crosshair follow mouse system
-		Engine::ECS::SystemCoordinator* crosshair_follow_mouse_system_coordinator =
-		    new Engine::ECS::SystemCoordinator( Engine::ECS::ExecutionStage::UPDATE );
-		crosshair_follow_mouse_system_coordinator->AddSystemToTail( new CrosshairFollowMouseSystem() );
-		world.AddSystem( crosshair_follow_mouse_system_coordinator );
-	}*/
+void ClientWorldInitializer::SetUpWorld( Engine::ECS::World& world )
+{
+	RegisterComponents( world );
+	RegisterArchetypes( world );
+	RegisterPrefabs( world );
 
 	// Populate systems
 	// TODO Create a system storage in order to be able to free them at the end
@@ -493,43 +329,8 @@ void ClientWorldInitializer::SetUpWorld( Engine::ECS::World& world )
 	world.SubscribeToOnEntityConfigure( std::bind( &ClientWorldInitializer::ConfigureHealthComponent, this,
 	                                               std::placeholders::_1, std::placeholders::_2 ) );
 
-	///////////////////
-	// INPUT HANDLING
-	///////////////////
-	bool result = AddInputsToWorld( world );
-	if ( !result )
-	{
-	    LOG_ERROR( "Can't initialize input handling" );
-	}
-
-	world.CreateGameEntity( "Camera", Vec2f( 0, 0 ) );
-
-	//////////////
-	// RENDERING
-	//////////////
-	result = AddRenderingToWorld( world );
-	if ( !result )
-	{
-	    LOG_ERROR( "Can't initialize rendering" );
-	}
-
-	////////////
-	// NETWORK
-	////////////
-	result = AddNetworkToWorld( world );
-	if ( !result )
-	{
-	    LOG_ERROR( "Can't initialize network" );
-	}
-
-	/////////////////////////
-	// CLIENT-SIDE GAMEPLAY
-	/////////////////////////
-	result = AddGameplayToWorld( world );
-	if ( !result )
-	{
-	    LOG_ERROR( "Can't initialize client-side gameplay" );
-	}
+	CreateSystemsAndGlobalEntities( world );
+	CreateGameEntities( world );
 }
 
 void ClientWorldInitializer::ConfigureCameraComponent( Engine::ECS::GameEntity& entity,

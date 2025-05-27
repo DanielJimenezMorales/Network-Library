@@ -179,6 +179,22 @@ static bool AddNetworkToWorld( Engine::ECS::World& world )
 	return true;
 }
 
+static bool AddCollisionsToWorld( Engine::ECS::World& world )
+{
+	// Add Server-side collision detection system
+	Engine::ECS::SystemCoordinator* collision_detection_system_coordinator =
+	    new Engine::ECS::SystemCoordinator( Engine::ECS::ExecutionStage::PRETICK );
+	Engine::CollisionDetectionSystem* collision_detection_system = new Engine::CollisionDetectionSystem();
+	auto on_configure_collider_2d_callback =
+	    std::bind( &Engine::CollisionDetectionSystem::ConfigureCollider2DComponent, collision_detection_system,
+	               std::placeholders::_1, std::placeholders::_2 );
+	world.SubscribeToOnEntityConfigure( on_configure_collider_2d_callback );
+	collision_detection_system_coordinator->AddSystemToTail( collision_detection_system );
+	world.AddSystem( collision_detection_system_coordinator );
+
+	return true;
+}
+
 static bool AddGameplayToWorld( Engine::ECS::World& world )
 {
 	// Add temporary lifetime objects system
@@ -192,17 +208,6 @@ static bool AddGameplayToWorld( Engine::ECS::World& world )
 	temporary_lifetime_objects_system_coordinator->AddSystemToTail( temporary_lifetime_objects_system );
 	world.AddSystem( temporary_lifetime_objects_system_coordinator );
 
-	// Add Server-side collision detection system
-	Engine::ECS::SystemCoordinator* collision_detection_system_coordinator =
-	    new Engine::ECS::SystemCoordinator( Engine::ECS::ExecutionStage::PRETICK );
-	Engine::CollisionDetectionSystem* collision_detection_system = new Engine::CollisionDetectionSystem();
-	auto on_configure_collider_2d_callback =
-	    std::bind( &Engine::CollisionDetectionSystem::ConfigureCollider2DComponent, collision_detection_system,
-	               std::placeholders::_1, std::placeholders::_2 );
-	world.SubscribeToOnEntityConfigure( on_configure_collider_2d_callback );
-	collision_detection_system_coordinator->AddSystemToTail( collision_detection_system );
-	world.AddSystem( collision_detection_system_coordinator );
-
 	// Add Server-side player controller system
 	Engine::ECS::SystemCoordinator* server_player_controller_system_coordinator =
 	    new Engine::ECS::SystemCoordinator( Engine::ECS::ExecutionStage::TICK );
@@ -214,28 +219,13 @@ static bool AddGameplayToWorld( Engine::ECS::World& world )
 	world.SubscribeToOnEntityConfigure( on_configure_player_controller_callback );
 	world.AddSystem( server_player_controller_system_coordinator );
 
-	// Add dummy collider entity
-	world.CreateGameEntity( "Dummy", Vec2f( 10.f, 10.f ) );
-
 	return true;
 }
 
-void ServerWorldInitializer::SetUpWorld( Engine::ECS::World& world )
+static bool CreateSystemsAndGlobalEntities( Engine::ECS::World& world )
 {
-	RegisterComponents( world );
-	RegisterArchetypes( world );
-	RegisterPrefabs( world );
-
 	// Populate systems
 	// TODO Create a system storage in order to be able to free them at the end
-
-	// These subscriptions are also temp until I find a better place for them
-	world.SubscribeToOnEntityConfigure( std::bind( &ServerWorldInitializer::ConfigureCameraComponent, this,
-	                                               std::placeholders::_1, std::placeholders::_2 ) );
-	world.SubscribeToOnEntityConfigure( std::bind( &ServerWorldInitializer::ConfigureHealthComponent, this,
-	                                               std::placeholders::_1, std::placeholders::_2 ) );
-
-	world.CreateGameEntity( "Camera", Vec2f( 0, 0 ) );
 
 	bool result = false;
 #ifdef SERVER_RENDER;
@@ -258,6 +248,15 @@ void ServerWorldInitializer::SetUpWorld( Engine::ECS::World& world )
 		LOG_ERROR( "Can't initialize network" );
 	}
 
+	////////////////
+	// COLLISIONS
+	///////////////
+	result = AddCollisionsToWorld( world );
+	if ( !result )
+	{
+		LOG_ERROR( "Can't initialize collisions" );
+	}
+
 	/////////////////////////
 	// SERVER-SIDE GAMEPLAY
 	/////////////////////////
@@ -266,6 +265,33 @@ void ServerWorldInitializer::SetUpWorld( Engine::ECS::World& world )
 	{
 		LOG_ERROR( "Can't initialize server-side gameplay" );
 	}
+	return true;
+}
+
+static bool CreateGameEntities( Engine::ECS::World& world )
+{
+	world.CreateGameEntity( "Camera", Vec2f( 0, 0 ) );
+
+	// Add dummy collider entity
+	world.CreateGameEntity( "Dummy", Vec2f( 10.f, 10.f ) );
+
+	return true;
+}
+
+void ServerWorldInitializer::SetUpWorld( Engine::ECS::World& world )
+{
+	RegisterComponents( world );
+	RegisterArchetypes( world );
+	RegisterPrefabs( world );
+
+	// These subscriptions are also temp until I find a better place for them
+	world.SubscribeToOnEntityConfigure( std::bind( &ServerWorldInitializer::ConfigureCameraComponent, this,
+	                                               std::placeholders::_1, std::placeholders::_2 ) );
+	world.SubscribeToOnEntityConfigure( std::bind( &ServerWorldInitializer::ConfigureHealthComponent, this,
+	                                               std::placeholders::_1, std::placeholders::_2 ) );
+
+	CreateSystemsAndGlobalEntities( world );
+	CreateGameEntities( world );
 }
 
 void ServerWorldInitializer::ConfigureCameraComponent( Engine::ECS::GameEntity& entity,
