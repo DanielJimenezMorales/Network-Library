@@ -7,7 +7,7 @@
 #include "components/transform_component.h"
 #include "components/collider_2d_component.h"
 
-#include "CircleBounds2D.h"
+#include "collisions/circle_bounds_2d.h"
 
 namespace
 {
@@ -23,38 +23,38 @@ namespace
 		Vec2f circle_origin;
 		std::tie( ray_origin, ray_direction, circle_origin ) = GetParam();
 
-		using namespace Raycaster;
+		using namespace Engine::Raycaster;
 
 		// Arrange
 		const Ray ray{ ray_origin, ray_direction, 100 };
 		RaycastResult result;
 
-		ECS::World world;
-		world.RegisterComponent< TransformComponent >( "Transform" );
-		world.RegisterComponent< Collider2DComponent >( "Collider2D" );
+		Engine::ECS::World world;
+		world.RegisterComponent< Engine::TransformComponent >( "Transform" );
+		world.RegisterComponent< Engine::Collider2DComponent >( "Collider2D" );
 
-		ECS::Archetype archetype;
+		Engine::ECS::Archetype archetype;
 		archetype.name = "entity_with_collider";
 		archetype.components.push_back( "Transform" );
 		archetype.components.push_back( "Collider2D" );
 		world.RegisterArchetype( archetype );
 
-		ECS::Prefab prefab;
+		Engine::ECS::Prefab prefab;
 		prefab.archetype = archetype.name;
 		prefab.name = "EntityWithCollider";
 		world.RegisterPrefab( std::move( prefab ) );
 
-		ECS::GameEntity entity_with_collider = world.CreateGameEntity( "EntityWithCollider", circle_origin );
-		Collider2DComponent& collider = entity_with_collider.GetComponent< Collider2DComponent >();
+		Engine::ECS::GameEntity entity_with_collider = world.CreateGameEntity( "EntityWithCollider", circle_origin );
+		Engine::Collider2DComponent& collider = entity_with_collider.GetComponent< Engine::Collider2DComponent >();
 		collider.SetIsTrigger( true );
-		CircleBounds2D* bounds = new CircleBounds2D( 1.f );
+		Engine::CircleBounds2D* bounds = new Engine::CircleBounds2D( 1.f );
 		collider.SetBounds( bounds );
 
-		std::vector< ECS::GameEntity > entities_with_colliders;
+		std::vector< Engine::ECS::GameEntity > entities_with_colliders;
 		entities_with_colliders.push_back( entity_with_collider );
 
 		// Act
-		result = ExecuteRaycast( ray, entities_with_colliders, ECS::GameEntity() );
+		result = ExecuteRaycast( ray, entities_with_colliders, Engine::ECS::GameEntity() );
 
 		// Assert
 		EXPECT_TRUE( result.entity.IsValid() );
@@ -73,38 +73,38 @@ namespace
 		Vec2f circle_origin;
 		std::tie( ray_origin, ray_direction, circle_origin ) = GetParam();
 
-		using namespace Raycaster;
+		using namespace Engine::Raycaster;
 
 		// Arrange
 		const Ray ray{ ray_origin, ray_direction, 100 };
 		RaycastResult result;
 
-		ECS::World world;
-		world.RegisterComponent< TransformComponent >( "Transform" );
-		world.RegisterComponent< Collider2DComponent >( "Collider2D" );
+		Engine::ECS::World world;
+		world.RegisterComponent< Engine::TransformComponent >( "Transform" );
+		world.RegisterComponent< Engine::Collider2DComponent >( "Collider2D" );
 
-		ECS::Archetype archetype;
+		Engine::ECS::Archetype archetype;
 		archetype.name = "entity_with_collider";
 		archetype.components.push_back( "Transform" );
 		archetype.components.push_back( "Collider2D" );
 		world.RegisterArchetype( archetype );
 
-		ECS::Prefab prefab;
+		Engine::ECS::Prefab prefab;
 		prefab.archetype = archetype.name;
 		prefab.name = "EntityWithCollider";
 		world.RegisterPrefab( std::move( prefab ) );
 
-		ECS::GameEntity entity_with_collider = world.CreateGameEntity( "EntityWithCollider", circle_origin );
-		Collider2DComponent& collider = entity_with_collider.GetComponent< Collider2DComponent >();
+		Engine::ECS::GameEntity entity_with_collider = world.CreateGameEntity( "EntityWithCollider", circle_origin );
+		Engine::Collider2DComponent& collider = entity_with_collider.GetComponent< Engine::Collider2DComponent >();
 		collider.SetIsTrigger( true );
-		CircleBounds2D* bounds = new CircleBounds2D( 1.f );
+		Engine::CircleBounds2D* bounds = new Engine::CircleBounds2D( 1.f );
 		collider.SetBounds( bounds );
 
-		std::vector< ECS::GameEntity > entities_with_colliders;
+		std::vector< Engine::ECS::GameEntity > entities_with_colliders;
 		entities_with_colliders.push_back( entity_with_collider );
 
 		// Act
-		result = ExecuteRaycast( ray, entities_with_colliders, ECS::GameEntity() );
+		result = ExecuteRaycast( ray, entities_with_colliders, Engine::ECS::GameEntity() );
 
 		// Assert
 		EXPECT_FALSE( result.entity.IsValid() );

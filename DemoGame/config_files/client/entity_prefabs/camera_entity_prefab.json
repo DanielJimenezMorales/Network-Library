@@ -1,0 +1,11 @@
+{
+	"name": "Camera",
+	"archetype": "camera",
+	"component_configs": [
+		{
+			"name": "Camera",
+			"width": 512,
+			"height": 512
+		}
+	]
+}

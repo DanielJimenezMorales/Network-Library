@@ -1,7 +1,67 @@
-workspace "NetworkLibrary"
+-- Makes a path relative to the folder containing this script file.
+ROOT_PATH = function(path)
+    return string.format("%s/%s", _MAIN_SCRIPT_DIR, path)
+end
+
+-- Global project variables
+PROJECT_DATA = 
+{
+	COMMON =
+	{
+		NAME = "Common",
+		PATH = ROOT_PATH "common/",
+		PREMAKE_PATH = ROOT_PATH "common/common_premake5.lua"
+	},
+	ENGINE =
+	{
+		NAME = "Engine",
+		PATH = ROOT_PATH "Engine/",
+		PREMAKE_PATH = ROOT_PATH "Engine/engine_premake5.lua"
+	},
+	NETWORK_LIBRARY =
+	{
+		NAME = "NetworkLibrary",
+		PATH = ROOT_PATH "NetworkLibrary/",
+		PREMAKE_PATH = ROOT_PATH "NetworkLibrary/network_library_premake5.lua"
+	},
+	CLIENT_GAME =
+	{
+		NAME = "ClientGame",
+		PATH = ROOT_PATH "DemoGame/",
+		PREMAKE_PATH = ROOT_PATH "DemoGame/client_game_premake5.lua"
+	},
+	SERVER_GAME =
+	{
+		NAME = "ServerGame",
+		PATH = ROOT_PATH "DemoGame/",
+		PREMAKE_PATH = ROOT_PATH "DemoGame/server_game_premake5.lua"
+	},
+	LAUNCHER_GAME =
+	{
+		NAME = "Launcher",
+		PATH = ROOT_PATH "DemoGame/",
+		PREMAKE_PATH = ROOT_PATH "DemoGame/launcher_game_premake5.lua"
+	},
+	TEST_GAME =
+	{
+		NAME = "TestDemoGame",
+		PATH = ROOT_PATH "TestDemoGame/",
+		PREMAKE_PATH = ROOT_PATH "TestDemoGame/test_game_premake5.lua"
+	}
+}
+
+-- Global workspace variables
+WORKSPACE_DATA = 
+{
+	NAME = "NetworkLibrary",
+	STARTUP_PROJECT = PROJECT_DATA.LAUNCHER_GAME.NAME
+}
+
+workspace (WORKSPACE_DATA.NAME)
 	architecture "x64"
 	-- Entt requires C++ to be version 17
 	cppdialect "C++17"
+	startproject(WORKSPACE_DATA.STARTUP_PROJECT)
 
 	configurations
 	{
@@ -25,25 +85,6 @@ workspace "NetworkLibrary"
 		"_HAS_EXCEPTIONS=0"
 	}
 
-project "Common"
-	kind "StaticLib"
-	location "Common"
-	language "C++"
-	targetdir "%{prj.name}/bin"
-	targetname "%{prj.name}_%{cfg.buildcfg}"
-
-	files
-	{
-		"%{prj.name}/src/**.h",
-		"%{prj.name}/src/**.cpp",
-		"%{prj.name}/src/**.hpp"
-	}
-
-	includedirs
-	{
-		"%{prj.name}/src/"
-	}
-
 	filter "configurations:Debug"
 		defines
 		{
@@ -54,244 +95,14 @@ project "Common"
 	filter "configurations:Release"
 		optimize "On"
 
-project "NetworkLibrary"
-	kind "StaticLib"
-	location "NetworkLibrary"
-	language "C++"
-	targetdir "%{prj.name}/bin"
-	targetname "%{prj.name}_%{cfg.buildcfg}"
+include (PROJECT_DATA.COMMON.PREMAKE_PATH)
+include (PROJECT_DATA.ENGINE.PREMAKE_PATH)
+include (PROJECT_DATA.NETWORK_LIBRARY.PREMAKE_PATH)
 
-	files
-	{
-		"%{prj.name}/src/**.h",
-		"%{prj.name}/src/**.cpp",
-		"%{prj.name}/src/**.hpp"
-	}
-
-	includedirs
-	{
-		"Common/src/",
-		"%{prj.name}/src/"
-	}
-
-	dependson
-	{
-		"Common"
-	}
-
-	libdirs
-	{
-		"Common/bin"
-	}
-
-	links
-	{
-		"Common_%{cfg.buildcfg}"
-	}
-
-	filter "system:Windows"
-		links
-		{
-			"Ws2_32"
-		}
-
-	filter "configurations:Debug"
-		defines
-		{
-			"LOG_ENABLED"
-		}
-		symbols "On"
-
-	filter "configurations:Release"
-		optimize "On"
-
-project "DemoGame"
-	kind "ConsoleApp"
-	location "DemoGame"
-	language "C++"
-	targetdir "%{prj.name}/bin"
-	targetname "%{prj.name}_%{cfg.buildcfg}"
-
-	files
-	{
-		"%{prj.name}/src/**.h",
-		"%{prj.name}/src/**.cpp",
-	}
-
-	includedirs
-	{
-		"Common/src/",
-		"NetworkLibrary/src/",
-		"%{prj.name}/src/",
-
-		"vendor/sdl2/SDL2-2.30.1/include/",
-		"vendor/sdl2/SDL2_image-2.8.2/include/",
-		"vendor/sdl2/SDL2_mixer-2.8.0/include/",
-		"vendor/sdl2/SDL2_ttf-2.22.0/include/",
-		"vendor/entt/include/",
-		"vendor/json/include/"
-	}
-
-	dependson
-	{
-		"Common",
-		"NetworkLibrary"
-	}
-
-	libdirs
-	{
-		"Common/bin",
-		"NetworkLibrary/bin",
-
-		"vendor/sdl2/SDL2-2.30.1/lib/x64",
-		"vendor/sdl2/SDL2_image-2.8.2/lib/x64",
-		"vendor/sdl2/SDL2_mixer-2.8.0/lib/x64",
-		"vendor/sdl2/SDL2_ttf-2.22.0/lib/x64"
-	}
-
-	links
-	{
-		"Common_%{cfg.buildcfg}",
-		"NetworkLibrary_%{cfg.buildcfg}",
-
-		"vendor/sdl2/SDL2-2.30.1/lib/x64/SDL2",
-		"vendor/sdl2/SDL2-2.30.1/lib/x64/SDL2main",
-		"vendor/sdl2/SDL2_image-2.8.2/lib/x64/SDL2_image",
-		"vendor/sdl2/SDL2_mixer-2.8.0/lib/x64/SDL2_mixer",
-		"vendor/sdl2/SDL2_ttf-2.22.0/lib/x64/SDL2_ttf"
-	}
-
-	filter "configurations:Debug"
-		defines
-		{
-			"LOG_ENABLED"
-		}
-		symbols "On"
-
-	filter "configurations:Release"
-		optimize "On"
-
-project "Tests"
-	kind "ConsoleApp"
-	location "Tests"
-	language "C++"
-	targetdir "%{prj.name}/bin"
-	targetname "%{prj.name}_%{cfg.buildcfg}"
-
-	files
-	{
-		"%{prj.name}/src/**.h",
-		"%{prj.name}/src/**.cpp"
-	}
-
-	includedirs
-	{
-		"Common/src/",
-		"NetworkLibrary/src/Core/",
-		"NetworkLibrary/src/Utils/",
-		"NetworkLibrary/src/replication/",
-		"%{prj.name}/src/"
-	}
-
-	dependson
-	{
-		"Common",
-		"NetworkLibrary"
-	}
-
-	libdirs
-	{
-		"Common/bin",
-		"NetworkLibrary/bin"
-	}
-
-	links
-	{
-		"Common_%{cfg.buildcfg}",
-		"NetworkLibrary_%{cfg.buildcfg}"
-	}
-
-	filter "configurations:Debug"
-		defines
-		{
-			"LOG_ENABLED"
-		}
-		symbols "On"
-
-	filter "configurations:Release"
-		optimize "On"
+group "DemoGame"
+include (PROJECT_DATA.CLIENT_GAME.PREMAKE_PATH)
+include (PROJECT_DATA.SERVER_GAME.PREMAKE_PATH)
+include (PROJECT_DATA.LAUNCHER_GAME.PREMAKE_PATH)
 
 group "Tests"
-project "TestDemoGame"
-	kind "ConsoleApp"
-	location "TestDemoGame"
-	language "C++"
-	targetdir "%{prj.name}/bin"
-	targetname "%{prj.name}_%{cfg.buildcfg}"
-
-	files
-	{
-		"vendor/googletest/googletest/src/gtest-all.cc",
-		"%{prj.name}/src/**.h",
-		"%{prj.name}/src/**.cpp",
-		"DemoGame/src/**.cpp"
-	}
-
-	removefiles
-	{
-		"DemoGame/src/main.cpp"
-	}
-
-	includedirs
-	{
-		--Delete later
-		"vendor/json/include/",
-		"NetworkLibrary/src/",
-		"vendor/sdl2/SDL2-2.30.1/include/",
-		"vendor/sdl2/SDL2_image-2.8.2/include/",
-		"vendor/sdl2/SDL2_mixer-2.8.0/include/",
-		"vendor/sdl2/SDL2_ttf-2.22.0/include/",
-
-		"vendor/entt/include/",
-		"vendor/googletest/googletest/include",
-		"vendor/googletest/googletest",
-		"DemoGame/src/",
-		"Common/src/",
-		"%{prj.name}/src/"
-	}
-
-	libdirs
-	{
-		--Delete later
-		"NetworkLibrary/bin",
-		"vendor/sdl2/SDL2-2.30.1/lib/x64",
-		"vendor/sdl2/SDL2_image-2.8.2/lib/x64",
-		"vendor/sdl2/SDL2_mixer-2.8.0/lib/x64",
-		"vendor/sdl2/SDL2_ttf-2.22.0/lib/x64"
-	}
-
-	links
-	{
-		--Delete later
-		"NetworkLibrary_%{cfg.buildcfg}",
-		"vendor/sdl2/SDL2-2.30.1/lib/x64/SDL2",
-		"vendor/sdl2/SDL2-2.30.1/lib/x64/SDL2main",
-		"vendor/sdl2/SDL2_image-2.8.2/lib/x64/SDL2_image",
-		"vendor/sdl2/SDL2_mixer-2.8.0/lib/x64/SDL2_mixer",
-		"vendor/sdl2/SDL2_ttf-2.22.0/lib/x64/SDL2_ttf"
-	}
-
-	dependson
-	{
-		"DemoGame"
-	}
-
-	filter "configurations:Debug"
-		defines
-		{
-			"LOG_ENABLED"
-		}
-		symbols "On"
-
-	filter "configurations:Release"
-		optimize "On"
+include (PROJECT_DATA.TEST_GAME.PREMAKE_PATH)

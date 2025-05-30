@@ -1,0 +1,7 @@
+{
+	"name": "virtual_mouse",
+	"components": [
+		"Transform",
+		"VirtualMouse"
+	]
+}

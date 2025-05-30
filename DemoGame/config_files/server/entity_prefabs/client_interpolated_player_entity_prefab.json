@@ -1,0 +1,10 @@
+{
+	"name": "ClientPlayerInterpolated",
+	"archetype": "client_interpolated_player",
+	"component_configs": [
+		{
+			"name": "SpriteRenderer",
+			"texture_path": "sprites/PlayerSprites/playerHead.png"
+		}
+	]
+}
