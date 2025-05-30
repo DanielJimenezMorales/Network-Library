@@ -20,11 +20,6 @@ project (project_data.NAME)
 		project_data.PATH .. "src/**.cpp"
 	}
 
-	removefiles
-	{
-		ROOT_PATH "DemoGame/src/launcher/main.cpp"
-	}
-
 	includedirs
 	{
 		project_data.PATH .. "src",
