@@ -99,7 +99,8 @@ namespace NetLib
 		return 0;
 	}
 
-	void UnreliableUnorderedTransmissionChannel::ProcessACKs( uint32 acks, uint16 lastAckedMessageSequenceNumber )
+	void UnreliableUnorderedTransmissionChannel::ProcessACKs( uint32 acks, uint16 lastAckedMessageSequenceNumber,
+	                                                          Metrics::MetricsHandler* metrics_handler )
 	{
 	}
 

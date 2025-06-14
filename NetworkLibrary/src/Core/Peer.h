@@ -20,7 +20,6 @@ namespace NetLib
 	class NetworkPacket;
 	class RemotePeer;
 	class Buffer;
-	class NetworkEntityFactory;
 
 	enum ConnectionFailedReasonType : uint8
 	{

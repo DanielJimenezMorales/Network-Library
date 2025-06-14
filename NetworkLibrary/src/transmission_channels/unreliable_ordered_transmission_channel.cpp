@@ -115,7 +115,8 @@ namespace NetLib
 		return 0;
 	}
 
-	void UnreliableOrderedTransmissionChannel::ProcessACKs( uint32 acks, uint16 lastAckedMessageSequenceNumber )
+	void UnreliableOrderedTransmissionChannel::ProcessACKs( uint32 acks, uint16 lastAckedMessageSequenceNumber,
+	                                                        Metrics::MetricsHandler* metrics_handler )
 	{
 		// This channel is not supporting ACKs since it is unreliable. So do nothing
 	}

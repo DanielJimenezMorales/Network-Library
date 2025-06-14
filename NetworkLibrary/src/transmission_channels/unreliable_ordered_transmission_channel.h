@@ -27,7 +27,8 @@ namespace NetLib
 			void SeUnsentACKsToFalse() override;
 			bool AreUnsentACKs() const override;
 			uint32 GenerateACKs() const override;
-			void ProcessACKs( uint32 acks, uint16 lastAckedMessageSequenceNumber ) override;
+			void ProcessACKs( uint32 acks, uint16 lastAckedMessageSequenceNumber,
+			                  Metrics::MetricsHandler* metrics_handler ) override;
 			bool IsMessageDuplicated( uint16 messageSequenceNumber ) const override;
 
 			void Update( float32 deltaTime ) override;

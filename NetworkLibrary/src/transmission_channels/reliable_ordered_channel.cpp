@@ -9,6 +9,8 @@
 
 #include "core/time_clock.h"
 
+#include "metrics/metrics_handler.h"
+
 #include "logger.h"
 #include "AlgorithmUtils.h"
 
@@ -338,7 +340,8 @@ namespace NetLib
 		return found;
 	}
 
-	bool ReliableOrderedChannel::TryRemoveUnackedReliableMessageFromSequence( uint16 sequence )
+	bool ReliableOrderedChannel::TryRemoveUnackedReliableMessageFromSequence( uint16 sequence,
+	                                                                          Metrics::MetricsHandler* metrics_handler )
 	{
 		bool result = false;
 
@@ -347,13 +350,19 @@ namespace NetLib
 		{
 			std::unique_ptr< Message > message = DeleteUnackedReliableMessageAtIndex( index );
 
+			std::unordered_map< uint16, uint16 >::iterator it = _unackedMessagesSendTimes.find( sequence );
+			_unackedMessagesSendTimes.erase( it );
+
 			// Calculate RTT of acked message
 			const TimeClock& timeClock = TimeClock::GetInstance();
 			uint64 currentElapsedTime = timeClock.GetLocalTimeMilliseconds();
 			uint16 messageRTT = currentElapsedTime - _unackedMessagesSendTimes[ sequence ];
-			std::unordered_map< uint16, uint16 >::iterator it = _unackedMessagesSendTimes.find( sequence );
-			_unackedMessagesSendTimes.erase( it );
 			AddMessageRTTValueToProcess( messageRTT );
+
+			if ( metrics_handler != nullptr )
+			{
+				metrics_handler->AddValue( "LATENCY", messageRTT / 2 );
+			}
 
 			// Release acked message since we no longer need it
 			MessageFactory& messageFactory = MessageFactory::GetInstance();
@@ -499,12 +508,13 @@ namespace NetLib
 		return acks;
 	}
 
-	void ReliableOrderedChannel::ProcessACKs( uint32 acks, uint16 lastAckedMessageSequenceNumber )
+	void ReliableOrderedChannel::ProcessACKs( uint32 acks, uint16 lastAckedMessageSequenceNumber,
+	                                          Metrics::MetricsHandler* metrics_handler )
 	{
 		LOG_INFO( "Last acked from client = %hu", lastAckedMessageSequenceNumber );
 
 		// Check if the last acked is in reliable messages lists
-		TryRemoveUnackedReliableMessageFromSequence( lastAckedMessageSequenceNumber );
+		TryRemoveUnackedReliableMessageFromSequence( lastAckedMessageSequenceNumber, metrics_handler );
 
 		// Check for the rest of acked bits
 		uint16 firstAckSequence = lastAckedMessageSequenceNumber - 1;
@@ -512,7 +522,7 @@ namespace NetLib
 		{
 			if ( BitwiseUtils::GetBitAtIndex( acks, i ) )
 			{
-				TryRemoveUnackedReliableMessageFromSequence( firstAckSequence - i );
+				TryRemoveUnackedReliableMessageFromSequence( firstAckSequence - i, metrics_handler );
 			}
 		}
 	}

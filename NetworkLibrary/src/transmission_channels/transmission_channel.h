@@ -10,6 +10,11 @@ namespace NetLib
 	class Message;
 	class MessageFactory;
 
+	namespace Metrics
+	{
+		class MetricsHandler;
+	}
+
 	enum TransmissionChannelType : uint8
 	{
 		UnreliableOrdered = 0,
@@ -45,7 +50,8 @@ namespace NetLib
 			                                        // I have not found how so for now, we do it manually.
 			virtual bool AreUnsentACKs() const = 0;
 			virtual uint32 GenerateACKs() const = 0;
-			virtual void ProcessACKs( uint32 acks, uint16 lastAckedMessageSequenceNumber ) = 0;
+			virtual void ProcessACKs( uint32 acks, uint16 lastAckedMessageSequenceNumber,
+			                          Metrics::MetricsHandler* metrics_handler ) = 0;
 			virtual bool IsMessageDuplicated( uint16 messageSequenceNumber ) const = 0;
 
 			virtual void Update( float32 deltaTime ) = 0;

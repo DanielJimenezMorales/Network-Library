@@ -5,7 +5,11 @@
 #include "numeric_types.h"
 #include "logger.h"
 
+#include "communication/network_packet.h"
+
 #include "core/address.h"
+
+#include "metrics/metrics_handler.h"
 
 #include "transmission_channels/transmission_channel.h"
 
@@ -37,6 +41,9 @@ namespace NetLib
 
 			std::vector< TransmissionChannel* > _transmissionChannels;
 
+			bool _metricsEnabled;
+			Metrics::MetricsHandler _metricsHandler;
+
 			void InitTransmissionChannels();
 			TransmissionChannel* GetTransmissionChannelFromType( TransmissionChannelType channelType );
 			const TransmissionChannel* GetTransmissionChannelFromType( TransmissionChannelType channelType ) const;
@@ -54,6 +61,9 @@ namespace NetLib
 			~RemotePeer();
 
 			uint16 GetLastMessageSequenceNumberAcked( TransmissionChannelType channelType ) const;
+
+			void ActivateNetworkStatistics();
+			void DeactivateNetworkStatistics();
 
 			/// <summary>
 			/// Initializes all the internal systems. You must call this method before performing any other operation.
@@ -95,6 +105,7 @@ namespace NetLib
 			void SeUnsentACKsToFalse( TransmissionChannelType channelType );
 			bool AreUnsentACKs( TransmissionChannelType channelType ) const;
 			uint32 GenerateACKs( TransmissionChannelType channelType ) const;
+			void ProcessPacket( NetworkPacket& packet );
 			void ProcessACKs( uint32 acks, uint16 lastAckedMessageSequenceNumber, TransmissionChannelType channelType );
 			bool AddReceivedMessage( std::unique_ptr< Message > message );
 

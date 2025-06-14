@@ -272,28 +272,17 @@ namespace NetLib
 
 		RemotePeer* remotePeer = _remotePeersHandler.GetRemotePeerFromAddress( address );
 		bool isPacketFromRemotePeer = ( remotePeer != nullptr );
-
-		// Process packet ACKs
 		if ( isPacketFromRemotePeer )
 		{
-			uint32 acks = packet.GetHeader().ackBits;
-			uint16 lastAckedMessageSequenceNumber = packet.GetHeader().lastAckedSequenceNumber;
-			TransmissionChannelType channelType =
-			    static_cast< TransmissionChannelType >( packet.GetHeader().channelType );
-			remotePeer->ProcessACKs( acks, lastAckedMessageSequenceNumber, channelType );
+			remotePeer->ProcessPacket( packet );
 		}
-
-		// Process packet messages one by one
-		MessageFactory& messageFactory = MessageFactory::GetInstance();
-		while ( packet.GetNumberOfMessages() > 0 )
+		else
 		{
-			std::unique_ptr< Message > message = packet.GetMessages();
-			if ( isPacketFromRemotePeer )
+			MessageFactory& messageFactory = MessageFactory::GetInstance();
+			while ( packet.GetNumberOfMessages() > 0 )
 			{
-				remotePeer->AddReceivedMessage( std::move( message ) );
-			}
-			else
-			{
+				std::unique_ptr< Message > message = packet.GetMessages();
+
 				ProcessMessageFromUnknownPeer( *message, address );
 				messageFactory.ReleaseMessage( std::move( message ) );
 			}

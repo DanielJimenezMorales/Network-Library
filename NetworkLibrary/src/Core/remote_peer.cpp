@@ -4,6 +4,7 @@
 #include <memory>
 
 #include "communication/message.h"
+#include "communication/message_factory.h"
 
 #include "transmission_channels/unreliable_ordered_transmission_channel.h"
 #include "transmission_channels/unreliable_unordered_transmission_channel.h"
@@ -63,6 +64,7 @@ namespace NetLib
 	    , _nextPacketSequenceNumber( 0 )
 	    , _currentState( RemotePeerState::Disconnected )
 	    , _transmissionChannels()
+	    , _metricsEnabled( false )
 	{
 		InitTransmissionChannels();
 	}
@@ -72,6 +74,7 @@ namespace NetLib
 	    : _address( Address::GetInvalid() )
 	    , _nextPacketSequenceNumber( 0 )
 	    , _currentState( RemotePeerState::Disconnected )
+	    , _metricsEnabled( false )
 	{
 		InitTransmissionChannels();
 		Connect( address, id, maxInactivityTime, clientSalt, serverSalt );
@@ -104,6 +107,17 @@ namespace NetLib
 		return lastMessageSequenceNumberAcked;
 	}
 
+	void RemotePeer::ActivateNetworkStatistics()
+	{
+		_metricsEnabled = true;
+		_metricsHandler.Configure( 1.f );
+	}
+
+	void RemotePeer::DeactivateNetworkStatistics()
+	{
+		_metricsEnabled = false;
+	}
+
 	void RemotePeer::Connect( const Address& address, uint16 id, float32 maxInactivityTime, uint64 clientSalt,
 	                          uint64 serverSalt )
 	{
@@ -129,6 +143,11 @@ namespace NetLib
 		for ( uint32 i = 0; i < GetNumberOfTransmissionChannels(); ++i )
 		{
 			_transmissionChannels[ i ]->Update( elapsedTime );
+		}
+
+		if ( _metricsEnabled )
+		{
+			_metricsHandler.Update( elapsedTime );
 		}
 	}
 
@@ -268,32 +287,59 @@ namespace NetLib
 		return acks;
 	}
 
+	void RemotePeer::ProcessPacket( NetworkPacket& packet )
+	{
+		const uint32 packet_size = packet.Size();
+
+		// Process packet ACKs
+		uint32 acks = packet.GetHeader().ackBits;
+		uint16 lastAckedMessageSequenceNumber = packet.GetHeader().lastAckedSequenceNumber;
+		TransmissionChannelType channelType = static_cast< TransmissionChannelType >( packet.GetHeader().channelType );
+		ProcessACKs( acks, lastAckedMessageSequenceNumber, channelType );
+
+		// Process packet messages one by one
+		MessageFactory& messageFactory = MessageFactory::GetInstance();
+		while ( packet.GetNumberOfMessages() > 0 )
+		{
+			std::unique_ptr< Message > message = packet.GetMessages();
+			AddReceivedMessage( std::move( message ) );
+		}
+
+		if ( _metricsEnabled )
+		{
+			_metricsHandler.AddValue( "UPLOAD_BANDWIDTH", packet_size );
+		}
+	}
+
 	void RemotePeer::ProcessACKs( uint32 acks, uint16 lastAckedMessageSequenceNumber,
 	                              TransmissionChannelType channelType )
 	{
 		TransmissionChannel* transmissionChannel = GetTransmissionChannelFromType( channelType );
 		if ( transmissionChannel != nullptr )
 		{
-			transmissionChannel->ProcessACKs( acks, lastAckedMessageSequenceNumber );
+			Metrics::MetricsHandler* metricsHandler = _metricsEnabled ? &_metricsHandler : nullptr;
+			transmissionChannel->ProcessACKs( acks, lastAckedMessageSequenceNumber, metricsHandler );
 		}
 	}
 
 	bool RemotePeer::AddReceivedMessage( std::unique_ptr< Message > message )
 	{
+		bool result = false;
 		TransmissionChannelType channelType = GetTransmissionChannelTypeFromHeader( message->GetHeader() );
+		const uint32 messageSize = message->Size();
 
 		TransmissionChannel* transmissionChannel = GetTransmissionChannelFromType( channelType );
 		if ( transmissionChannel != nullptr )
 		{
 			transmissionChannel->AddReceivedMessage( std::move( message ) );
 			_inactivityTimeLeft = _maxInactivityTime;
-			return true;
 		}
 		else
 		{
 			// TODO En este caso ver qué hacer con el mensaje que nos pasan por parámetro
-			return false;
 		}
+
+		return result;
 	}
 
 	bool RemotePeer::ArePendingReadyToProcessMessages() const
@@ -382,5 +428,7 @@ namespace NetLib
 		_address = Address::GetInvalid();
 
 		_currentState = RemotePeerState::Disconnected;
+
+		DeactivateNetworkStatistics();
 	}
 } // namespace NetLib

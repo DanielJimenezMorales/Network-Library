@@ -48,7 +48,8 @@ namespace NetLib
 			void SeUnsentACKsToFalse() override;
 			bool AreUnsentACKs() const override;
 			uint32 GenerateACKs() const override;
-			void ProcessACKs( uint32 acks, uint16 lastAckedMessageSequenceNumber ) override;
+			void ProcessACKs( uint32 acks, uint16 lastAckedMessageSequenceNumber,
+			                  Metrics::MetricsHandler* metrics_handler ) override;
 			bool IsMessageDuplicated( uint16 messageSequenceNumber ) const override;
 
 			void Update( float32 deltaTime ) override;
@@ -102,7 +103,8 @@ namespace NetLib
 			void AckReliableMessage( uint16 messageSequenceNumber );
 			bool DoesUnorderedMessagesContainsSequence( uint16 sequence, uint32& index ) const;
 			bool AddOrderedMessage( std::unique_ptr< Message > message );
-			bool TryRemoveUnackedReliableMessageFromSequence( uint16 sequence );
+			bool TryRemoveUnackedReliableMessageFromSequence( uint16 sequence,
+			                                                  Metrics::MetricsHandler* metrics_handler );
 			int32 GetPendingUnackedReliableMessageIndexFromSequence( uint16 sequence ) const;
 			std::unique_ptr< Message > DeleteUnackedReliableMessageAtIndex( uint32 index );
 
