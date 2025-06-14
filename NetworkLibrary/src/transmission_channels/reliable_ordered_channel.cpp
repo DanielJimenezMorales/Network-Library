@@ -355,8 +355,10 @@ namespace NetLib
 
 			// Calculate RTT of acked message
 			const TimeClock& timeClock = TimeClock::GetInstance();
-			uint64 currentElapsedTime = timeClock.GetLocalTimeMilliseconds();
-			uint16 messageRTT = currentElapsedTime - _unackedMessagesSendTimes[ sequence ];
+			const uint64 currentElapsedTime = timeClock.GetLocalTimeMilliseconds();
+			const uint16 messageRTT = currentElapsedTime - _unackedMessagesSendTimes[ sequence ];
+			LOG_WARNING( "###### RTT: %u, CURRENT: %u, SEND TIME: %u", messageRTT, currentElapsedTime,
+			             _unackedMessagesSendTimes[ sequence ] );
 			AddMessageRTTValueToProcess( messageRTT );
 
 			if ( metrics_handler != nullptr )
