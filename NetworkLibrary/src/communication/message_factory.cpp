@@ -132,6 +132,9 @@ namespace NetLib
 
 		_messagePools[ MessageType::Inputs ] = std::queue< std::unique_ptr< Message > >();
 		InitializePool( _messagePools[ MessageType::Inputs ], MessageType::Inputs );
+
+		_messagePools[ MessageType::PingPong ] = std::queue< std::unique_ptr< Message > >();
+		InitializePool( _messagePools[ MessageType::PingPong ], MessageType::PingPong );
 	}
 
 	void MessageFactory::InitializePool( std::queue< std::unique_ptr< Message > >& pool, MessageType messageType )
@@ -195,6 +198,9 @@ namespace NetLib
 				break;
 			case MessageType::Inputs:
 				resultMessage = std::make_unique< InputStateMessage >();
+				break;
+			case MessageType::PingPong:
+				resultMessage = std::make_unique< PingPongMessage >();
 				break;
 			default:
 				LOG_ERROR( "Can't create a new message. Invalid message type" );

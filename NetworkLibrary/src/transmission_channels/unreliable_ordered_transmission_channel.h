@@ -1,8 +1,6 @@
 #pragma once
 #include "transmission_channels/transmission_channel.h"
 
-#define UINT32_HALF 2147483647
-
 namespace NetLib
 {
 	class UnreliableOrderedTransmissionChannel : public TransmissionChannel
@@ -17,7 +15,7 @@ namespace NetLib
 
 			void AddMessageToSend( std::unique_ptr< Message > message ) override;
 			bool ArePendingMessagesToSend() const override;
-			std::unique_ptr< Message > GetMessageToSend() override;
+			std::unique_ptr< Message > GetMessageToSend( Metrics::MetricsHandler* metrics_handler ) override;
 			uint32 GetSizeOfNextUnsentMessage() const override;
 
 			void AddReceivedMessage( std::unique_ptr< Message > message ) override;
@@ -29,7 +27,7 @@ namespace NetLib
 			uint32 GenerateACKs() const override;
 			void ProcessACKs( uint32 acks, uint16 lastAckedMessageSequenceNumber,
 			                  Metrics::MetricsHandler* metrics_handler ) override;
-			bool IsMessageDuplicated( uint16 messageSequenceNumber ) const override;
+			bool IsMessageDuplicated(uint16 messageSequenceNumber ) const override;
 
 			void Update( float32 deltaTime ) override;
 
@@ -45,8 +43,8 @@ namespace NetLib
 			void FreeSentMessage( MessageFactory& messageFactory, std::unique_ptr< Message > message ) override;
 
 		private:
-			uint32 _lastMessageSequenceNumberReceived;
+			uint16 _lastMessageSequenceNumberReceived;
 
-			bool IsSequenceNumberNewerThanLastReceived( uint32 sequenceNumber ) const;
+			bool IsSequenceNumberNewerThanLastReceived(uint16 sequenceNumber ) const;
 	};
 } // namespace NetLib

@@ -32,7 +32,8 @@ namespace NetLib
 		return ( !_unsentMessages.empty() );
 	}
 
-	std::unique_ptr< Message > UnreliableUnorderedTransmissionChannel::GetMessageToSend()
+	std::unique_ptr< Message > UnreliableUnorderedTransmissionChannel::GetMessageToSend(
+	    Metrics::MetricsHandler* metrics_handler )
 	{
 		if ( !ArePendingMessagesToSend() )
 		{

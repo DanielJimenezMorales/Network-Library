@@ -397,7 +397,7 @@ namespace NetLib
 		uint32 acks = remotePeer.GenerateACKs( type );
 		packet.SetHeaderACKs( acks );
 
-		uint16 lastAckedMessageSequenceNumber = remotePeer.GetLastMessageSequenceNumberAcked( type );
+		const uint16 lastAckedMessageSequenceNumber = remotePeer.GetLastMessageSequenceNumberAcked( type );
 		packet.SetHeaderLastAcked( lastAckedMessageSequenceNumber );
 
 		packet.SetHeaderChannelType( type );

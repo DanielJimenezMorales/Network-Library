@@ -127,11 +127,15 @@ namespace NetLib
 					break;
 				}
 			case MessageType::Inputs:
-				{
-					const InputStateMessage& inputsMessage = static_cast< const InputStateMessage& >( message );
-					ProcessInputs( inputsMessage, remotePeer );
-					break;
-				}
+			{
+				const InputStateMessage& inputsMessage = static_cast<const InputStateMessage&>(message);
+				ProcessInputs(inputsMessage, remotePeer);
+				break;
+			}
+			case MessageType::PingPong:
+			{
+				break;
+			}
 			default:
 				LOG_WARNING( "Invalid Message type, ignoring it..." );
 				break;

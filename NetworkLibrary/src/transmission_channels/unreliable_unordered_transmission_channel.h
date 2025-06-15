@@ -22,7 +22,7 @@ namespace NetLib
 
 			void AddMessageToSend( std::unique_ptr< Message > message ) override;
 			bool ArePendingMessagesToSend() const override;
-			std::unique_ptr< Message > GetMessageToSend() override;
+			std::unique_ptr< Message > GetMessageToSend( Metrics::MetricsHandler* metrics_handler ) override;
 			uint32 GetSizeOfNextUnsentMessage() const override;
 
 			void AddReceivedMessage( std::unique_ptr< Message > message ) override;

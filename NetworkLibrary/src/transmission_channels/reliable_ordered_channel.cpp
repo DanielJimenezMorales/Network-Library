@@ -87,7 +87,7 @@ namespace NetLib
 		return ( !_unsentMessages.empty() || AreUnackedMessagesToResend() );
 	}
 
-	std::unique_ptr< Message > ReliableOrderedChannel::GetMessageToSend()
+	std::unique_ptr< Message > ReliableOrderedChannel::GetMessageToSend( Metrics::MetricsHandler* metrics_handler )
 	{
 		std::unique_ptr< Message > message = nullptr;
 		if ( !_unsentMessages.empty() )
@@ -95,14 +95,19 @@ namespace NetLib
 			message = std::move( _unsentMessages[ 0 ] );
 			_unsentMessages.erase( _unsentMessages.begin() );
 
-			uint16 sequenceNumber = GetNextMessageSequenceNumber();
+			const uint16 sequenceNumber = GetNextMessageSequenceNumber();
 			IncreaseMessageSequenceNumber();
 
 			message->SetHeaderPacketSequenceNumber( sequenceNumber );
+			SetUnackedMessageSendTime( sequenceNumber );
 		}
 		else
 		{
 			message = GetUnackedMessageToResend();
+			if ( message != nullptr && metrics_handler != nullptr )
+			{
+				metrics_handler->AddValue( "RETRANSMISSION", 1 );
+			}
 		}
 
 		// TODO Check that this is not called when message == nullptr. GetUnackedMessageToResend could return a nullptr
@@ -136,7 +141,7 @@ namespace NetLib
 
 	void ReliableOrderedChannel::AddReceivedMessage( std::unique_ptr< Message > message )
 	{
-		uint16 messageSequenceNumber = message->GetHeader().messageSequenceNumber;
+		const uint16 messageSequenceNumber = message->GetHeader().messageSequenceNumber;
 		if ( IsMessageDuplicated( messageSequenceNumber ) )
 		{
 			LOG_INFO( "The message with ID = %hu is duplicated. Ignoring it...", messageSequenceNumber );
@@ -267,15 +272,19 @@ namespace NetLib
 
 	void ReliableOrderedChannel::AddUnackedReliableMessage( std::unique_ptr< Message > message )
 	{
-		const TimeClock& timeClock = TimeClock::GetInstance();
-		_unackedMessagesSendTimes[ message->GetHeader().messageSequenceNumber ] = timeClock.GetLocalTimeMilliseconds();
+		// const TimeClock& timeClock = TimeClock::GetInstance();
+		//_unackedMessagesSendTimes[ message->GetHeader().messageSequenceNumber ] =
+		// timeClock.GetLocalTimeMilliseconds();
+		LOG_WARNING( "SAVE UNACKED SEND: %u, MESSAGE SEQUENCE: %u",
+		             _unackedMessagesSendTimes[ message->GetHeader().messageSequenceNumber ],
+		             message->GetHeader().messageSequenceNumber );
 
 		_unackedReliableMessages.push_back( std::move( message ) );
 		LOG_INFO( "Retransmission Timeout: %f", GetRetransmissionTimeout() );
 		_unackedReliableMessageTimeouts.push_back( GetRetransmissionTimeout() );
 	}
 
-	void ReliableOrderedChannel::AckReliableMessage( uint16 messageSequenceNumber )
+	void ReliableOrderedChannel::AckReliableMessage(uint16 messageSequenceNumber )
 	{
 		uint32 index = GetRollingBufferIndex( messageSequenceNumber );
 		_reliableMessageEntries[ index ].sequenceNumber = messageSequenceNumber;
@@ -288,7 +297,7 @@ namespace NetLib
 		_areUnsentACKs = true;
 	}
 
-	bool ReliableOrderedChannel::DoesUnorderedMessagesContainsSequence( uint16 sequence, uint32& index ) const
+	bool ReliableOrderedChannel::DoesUnorderedMessagesContainsSequence(uint16 sequence, uint32& index ) const
 	{
 		const Message* message = nullptr;
 		uint32 idx = 0;
@@ -345,26 +354,27 @@ namespace NetLib
 	{
 		bool result = false;
 
+		LOG_WARNING( "ME LLEGA SECUENCIA: %u", sequence );
 		int32 index = GetPendingUnackedReliableMessageIndexFromSequence( sequence );
 		if ( index != -1 )
 		{
-			std::unique_ptr< Message > message = DeleteUnackedReliableMessageAtIndex( index );
-
-			std::unordered_map< uint16, uint16 >::iterator it = _unackedMessagesSendTimes.find( sequence );
-			_unackedMessagesSendTimes.erase( it );
-
 			// Calculate RTT of acked message
 			const TimeClock& timeClock = TimeClock::GetInstance();
 			const uint64 currentElapsedTime = timeClock.GetLocalTimeMilliseconds();
-			const uint16 messageRTT = currentElapsedTime - _unackedMessagesSendTimes[ sequence ];
-			LOG_WARNING( "###### RTT: %u, CURRENT: %u, SEND TIME: %u", messageRTT, currentElapsedTime,
-			             _unackedMessagesSendTimes[ sequence ] );
+			const uint32 messageRTT = currentElapsedTime - _unackedMessagesSendTimes[ sequence ];
+			LOG_WARNING( "###### RTT: %u, CURRENT: %u, SEND TIME: %u, MESSAGE SEQUENCE: %u", messageRTT,
+			             currentElapsedTime, _unackedMessagesSendTimes[ sequence ], sequence );
 			AddMessageRTTValueToProcess( messageRTT );
 
 			if ( metrics_handler != nullptr )
 			{
 				metrics_handler->AddValue( "LATENCY", messageRTT / 2 );
 			}
+
+			std::unique_ptr< Message > message = DeleteUnackedReliableMessageAtIndex( index );
+
+			std::unordered_map< uint16, uint32 >::iterator it = _unackedMessagesSendTimes.find( sequence );
+			_unackedMessagesSendTimes.erase( it );
 
 			// Release acked message since we no longer need it
 			MessageFactory& messageFactory = MessageFactory::GetInstance();
@@ -417,7 +427,7 @@ namespace NetLib
 		return _reliableMessageEntries[ index ];
 	}
 
-	void ReliableOrderedChannel::AddMessageRTTValueToProcess( uint16 messageRTT )
+	void ReliableOrderedChannel::AddMessageRTTValueToProcess( uint32 messageRTT )
 	{
 		_messagesRTTToProcess.push( messageRTT );
 	}
@@ -426,7 +436,7 @@ namespace NetLib
 	{
 		while ( !_messagesRTTToProcess.empty() )
 		{
-			uint16 messageRTTValue = _messagesRTTToProcess.front();
+			const uint32 messageRTTValue = _messagesRTTToProcess.front();
 			_messagesRTTToProcess.pop();
 
 			if ( _rttMilliseconds == 0 )
@@ -440,7 +450,7 @@ namespace NetLib
 			}
 		}
 
-		LOG_INFO( "RTT: %hu", _rttMilliseconds );
+		LOG_INFO( "RTT: %u", _rttMilliseconds );
 	}
 
 	float32 ReliableOrderedChannel::GetRetransmissionTimeout() const
@@ -451,6 +461,12 @@ namespace NetLib
 		}
 
 		return ( float32 ) _rttMilliseconds / 1000 * 2;
+	}
+
+	void ReliableOrderedChannel::SetUnackedMessageSendTime( uint16 sequence )
+	{
+		const TimeClock& timeClock = TimeClock::GetInstance();
+		_unackedMessagesSendTimes[ sequence ] = timeClock.GetLocalTimeMilliseconds();
 	}
 
 	void ReliableOrderedChannel::ClearMessages()

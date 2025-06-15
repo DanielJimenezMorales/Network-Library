@@ -16,25 +16,38 @@ namespace NetLib
 		TimeRequest = 6,
 		TimeResponse = 7,
 		Replication = 8,
-		Inputs = 9
+		Inputs = 9,
+		PingPong = 10
 	};
 
 	struct MessageHeader
 	{
-		MessageHeader(MessageType messageType, uint16 packetSequenceNumber, bool isReliable, bool isOrdered) : type(messageType), messageSequenceNumber(packetSequenceNumber), isReliable(isReliable), isOrdered(isOrdered) {}
+			MessageHeader( MessageType messageType, uint16 packetSequenceNumber, bool isReliable, bool isOrdered )
+			    : type( messageType )
+			    , messageSequenceNumber( packetSequenceNumber )
+			    , isReliable( isReliable )
+			    , isOrdered( isOrdered )
+			{
+			}
 
-		MessageHeader(const MessageHeader& other) : type(other.type), messageSequenceNumber(other.messageSequenceNumber), isReliable(other.isReliable), isOrdered(other.isOrdered) {}
+			MessageHeader( const MessageHeader& other )
+			    : type( other.type )
+			    , messageSequenceNumber( other.messageSequenceNumber )
+			    , isReliable( other.isReliable )
+			    , isOrdered( other.isOrdered )
+			{
+			}
 
-		void Write(Buffer& buffer) const;
-		void Read(Buffer& buffer);
-		void ReadWithoutHeader(Buffer& buffer);
-		static uint32 Size() { return sizeof(MessageType) + sizeof(uint16) + sizeof(uint8); }
+			void Write( Buffer& buffer ) const;
+			void Read( Buffer& buffer );
+			void ReadWithoutHeader( Buffer& buffer );
+			static uint32 Size() { return sizeof( MessageType ) + sizeof( uint16 ) + sizeof( uint8 ); }
 
-		~MessageHeader() {}
+			~MessageHeader() {}
 
-		MessageType type;
-		uint16 messageSequenceNumber;
-		bool isReliable;
-		bool isOrdered;
+			MessageType type;
+			uint16 messageSequenceNumber;
+			bool isReliable;
+			bool isOrdered;
 	};
-}
+} // namespace NetLib

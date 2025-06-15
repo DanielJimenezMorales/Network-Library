@@ -148,6 +148,7 @@ namespace NetLib
 		if ( _metricsEnabled )
 		{
 			_metricsHandler.Update( elapsedTime );
+			_pingPongMessagesSender.Update( elapsedTime, *this );
 		}
 	}
 
@@ -208,7 +209,8 @@ namespace NetLib
 		TransmissionChannel* transmissionChannel = GetTransmissionChannelFromType( channelType );
 		if ( transmissionChannel != nullptr )
 		{
-			message = transmissionChannel->GetMessageToSend();
+			Metrics::MetricsHandler* metricsHandler = _metricsEnabled ? &_metricsHandler : nullptr;
+			message = transmissionChannel->GetMessageToSend( metricsHandler );
 		}
 
 		return std::move( message );
@@ -292,8 +294,8 @@ namespace NetLib
 		const uint32 packet_size = packet.Size();
 
 		// Process packet ACKs
-		uint32 acks = packet.GetHeader().ackBits;
-		uint16 lastAckedMessageSequenceNumber = packet.GetHeader().lastAckedSequenceNumber;
+		const uint32 acks = packet.GetHeader().ackBits;
+		const uint16 lastAckedMessageSequenceNumber = packet.GetHeader().lastAckedSequenceNumber;
 		TransmissionChannelType channelType = static_cast< TransmissionChannelType >( packet.GetHeader().channelType );
 		ProcessACKs( acks, lastAckedMessageSequenceNumber, channelType );
 

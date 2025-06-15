@@ -152,6 +152,10 @@ namespace NetLib
 					ProcessReplicationAction( replicationMessage );
 				}
 				break;
+			case MessageType::PingPong:
+				{
+					break;
+				}
 			default:
 				LOG_WARNING( "Invalid Message type, ignoring it..." );
 				break;

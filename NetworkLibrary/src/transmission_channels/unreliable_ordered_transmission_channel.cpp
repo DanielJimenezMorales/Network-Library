@@ -39,7 +39,8 @@ namespace NetLib
 		return ( !_unsentMessages.empty() );
 	}
 
-	std::unique_ptr< Message > UnreliableOrderedTransmissionChannel::GetMessageToSend()
+	std::unique_ptr< Message > UnreliableOrderedTransmissionChannel::GetMessageToSend(
+	    Metrics::MetricsHandler* metrics_handler )
 	{
 		if ( !ArePendingMessagesToSend() )
 		{
@@ -49,7 +50,7 @@ namespace NetLib
 		std::unique_ptr< Message > message( std::move( _unsentMessages[ 0 ] ) );
 		_unsentMessages.erase( _unsentMessages.begin() );
 
-		uint16 sequenceNumber = GetNextMessageSequenceNumber();
+		const uint16 sequenceNumber = GetNextMessageSequenceNumber();
 		IncreaseMessageSequenceNumber();
 
 		message->SetHeaderPacketSequenceNumber( sequenceNumber );
@@ -156,12 +157,12 @@ namespace NetLib
 		messageFactory.ReleaseMessage( std::move( message ) );
 	}
 
-	bool UnreliableOrderedTransmissionChannel::IsSequenceNumberNewerThanLastReceived( uint32 sequenceNumber ) const
+	bool UnreliableOrderedTransmissionChannel::IsSequenceNumberNewerThanLastReceived( uint16 sequenceNumber ) const
 	{
 		// The second part of the if is to support the case when sequence number reaches its limit value and wraps
 		// around
 		if ( sequenceNumber > _lastMessageSequenceNumberReceived ||
-		     ( _lastMessageSequenceNumberReceived - sequenceNumber ) >= UINT32_HALF )
+		     ( _lastMessageSequenceNumberReceived - sequenceNumber ) >= HALF_UINT16 )
 		{
 			return true;
 		}

@@ -5,6 +5,7 @@
 
 #include "metrics/latency_metric.h"
 #include "metrics/upload_bandwidth_metric.h"
+#include "metrics/retransmission_metric.h"
 
 #include <cassert>
 
@@ -17,6 +18,7 @@ namespace NetLib
 		{
 			AddEntry( std::make_unique< LatencyMetric >() );
 			AddEntry( std::make_unique< UploadBandwidthMetric >() );
+			AddEntry( std::make_unique< RetransmissionMetric >() );
 		}
 
 		void MetricsHandler::Configure( float32 update_rate )
@@ -36,9 +38,11 @@ namespace NetLib
 				it->second->Update( elapsed_time );
 			}
 
-			LOG_INFO( "LATENCY: Average: %u, Max: %u, UPLOAD BANDWIDTH: Current: %u, Max: %u",
-			          GetValue( "LATENCY", "CURRENT" ), GetValue( "LATENCY", "MAX" ),
-			          GetValue( "UPLOAD_BANDWIDTH", "CURRENT" ), GetValue( "UPLOAD_BANDWIDTH", "MAX" ) );
+			LOG_INFO(
+			    "LATENCY: Average: %u, Max: %u, UPLOAD BANDWIDTH: Current: %u, Max: %u, RETRANSMISSIONS: Current: %u",
+			    GetValue( "LATENCY", "CURRENT" ), GetValue( "LATENCY", "MAX" ),
+			    GetValue( "UPLOAD_BANDWIDTH", "CURRENT" ), GetValue( "UPLOAD_BANDWIDTH", "MAX" ),
+			    GetValue( "RETRANSMISSION", "CURRENT" ) );
 		}
 
 		bool MetricsHandler::AddEntry( std::unique_ptr< IMetric > entry )

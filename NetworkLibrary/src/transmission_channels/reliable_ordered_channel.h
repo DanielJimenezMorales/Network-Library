@@ -38,7 +38,7 @@ namespace NetLib
 
 			void AddMessageToSend( std::unique_ptr< Message > message ) override;
 			bool ArePendingMessagesToSend() const override;
-			std::unique_ptr< Message > GetMessageToSend() override;
+			std::unique_ptr< Message > GetMessageToSend( Metrics::MetricsHandler* metrics_handler ) override;
 			uint32 GetSizeOfNextUnsentMessage() const override;
 
 			void AddReceivedMessage( std::unique_ptr< Message > message ) override;
@@ -81,13 +81,13 @@ namespace NetLib
 			std::vector< ReliableMessageEntry > _reliableMessageEntries;
 			uint32 _reliableMessageEntriesBufferSize;
 			// Elapsed time since start of the program that each reliable message was sent (For RTT purposes)
-			std::unordered_map< uint16, uint16 > _unackedMessagesSendTimes;
+			std::unordered_map< uint16, uint32 > _unackedMessagesSendTimes;
 
 			// RTT RELATED
 			// Message RTT values waiting to be added to the current RTT value
-			std::queue< uint16 > _messagesRTTToProcess;
+			std::queue< uint32 > _messagesRTTToProcess;
 			// Current RTT value in milliseconds
-			uint16 _rttMilliseconds;
+			uint32 _rttMilliseconds;
 
 			// ORDERED RELATED
 			// Collection of messages waiting for a previous message in order to guarantee ordered delivery
@@ -111,9 +111,11 @@ namespace NetLib
 			const ReliableMessageEntry& GetReliableMessageEntry( uint16 sequenceNumber ) const;
 			uint32 GetRollingBufferIndex( uint16 index ) const { return index % _reliableMessageEntriesBufferSize; };
 
-			void AddMessageRTTValueToProcess( uint16 messageRTT );
+			void AddMessageRTTValueToProcess( uint32 messageRTT );
 			void UpdateRTT();
 			float32 GetRetransmissionTimeout() const;
+
+			void SetUnackedMessageSendTime( uint16 sequence );
 
 			void ClearMessages();
 	};

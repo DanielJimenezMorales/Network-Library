@@ -8,6 +8,7 @@
 #include "communication/network_packet.h"
 
 #include "core/address.h"
+#include "core/ping_pong_messages_sender.h"
 
 #include "metrics/metrics_handler.h"
 
@@ -43,6 +44,8 @@ namespace NetLib
 
 			bool _metricsEnabled;
 			Metrics::MetricsHandler _metricsHandler;
+
+			PingPongMessagesSender _pingPongMessagesSender;
 
 			void InitTransmissionChannels();
 			TransmissionChannel* GetTransmissionChannelFromType( TransmissionChannelType channelType );

@@ -36,7 +36,7 @@ namespace NetLib
 
 			virtual void AddMessageToSend( std::unique_ptr< Message > message ) = 0;
 			virtual bool ArePendingMessagesToSend() const = 0;
-			virtual std::unique_ptr< Message > GetMessageToSend() = 0;
+			virtual std::unique_ptr< Message > GetMessageToSend( Metrics::MetricsHandler* metrics_handler ) = 0;
 			virtual uint32 GetSizeOfNextUnsentMessage() const = 0;
 			void AddSentMessage( std::unique_ptr< Message > message );
 			void FreeSentMessages();
