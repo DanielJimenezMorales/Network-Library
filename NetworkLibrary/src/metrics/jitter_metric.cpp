@@ -3,6 +3,8 @@
 #include "logger.h"
 #include "AlgorithmUtils.h"
 
+#include "metrics/metric_names.h"
+
 namespace NetLib
 {
 	namespace Metrics
@@ -18,7 +20,7 @@ namespace NetLib
 
 		void JitterMetric::GetName( std::string& out_name_buffer ) const
 		{
-			out_name_buffer.assign( "JITTER" );
+			out_name_buffer.assign( JITTER_METRIC );
 		}
 
 		uint32 JitterMetric::GetValue( const std::string& value_type ) const

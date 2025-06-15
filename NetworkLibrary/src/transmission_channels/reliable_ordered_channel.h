@@ -41,7 +41,8 @@ namespace NetLib
 			std::unique_ptr< Message > GetMessageToSend( Metrics::MetricsHandler* metrics_handler ) override;
 			uint32 GetSizeOfNextUnsentMessage() const override;
 
-			void AddReceivedMessage( std::unique_ptr< Message > message ) override;
+			void AddReceivedMessage( std::unique_ptr< Message > message,
+			                         Metrics::MetricsHandler* metrics_handler ) override;
 			bool ArePendingReadyToProcessMessages() const override;
 			const Message* GetReadyToProcessMessage() override;
 

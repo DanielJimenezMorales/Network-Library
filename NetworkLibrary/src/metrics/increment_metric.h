@@ -5,10 +5,10 @@ namespace NetLib
 {
 	namespace Metrics
 	{
-		class RetransmissionMetric : public IMetric
+		class IncrementMetric : public IMetric
 		{
 			public:
-				RetransmissionMetric();
+				IncrementMetric( const std::string& name );
 
 				void GetName( std::string& out_name_buffer ) const override;
 				uint32 GetValue( const std::string& value_type ) const override;
@@ -19,6 +19,7 @@ namespace NetLib
 
 			private:
 				uint32 _currentValue;
+				const std::string _name;
 		};
 	}
 }

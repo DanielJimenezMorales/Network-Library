@@ -68,7 +68,8 @@ namespace NetLib
 		return _unsentMessages.front()->Size();
 	}
 
-	void UnreliableOrderedTransmissionChannel::AddReceivedMessage( std::unique_ptr< Message > message )
+	void UnreliableOrderedTransmissionChannel::AddReceivedMessage( std::unique_ptr< Message > message,
+	                                                               Metrics::MetricsHandler* metrics_handler )
 	{
 		if ( !IsSequenceNumberNewerThanLastReceived( message->GetHeader().messageSequenceNumber ) )
 		{

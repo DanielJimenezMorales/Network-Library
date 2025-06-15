@@ -18,7 +18,8 @@ namespace NetLib
 			std::unique_ptr< Message > GetMessageToSend( Metrics::MetricsHandler* metrics_handler ) override;
 			uint32 GetSizeOfNextUnsentMessage() const override;
 
-			void AddReceivedMessage( std::unique_ptr< Message > message ) override;
+			void AddReceivedMessage( std::unique_ptr< Message > message,
+			                         Metrics::MetricsHandler* metrics_handler ) override;
 			bool ArePendingReadyToProcessMessages() const override;
 			const Message* GetReadyToProcessMessage() override;
 
@@ -27,7 +28,7 @@ namespace NetLib
 			uint32 GenerateACKs() const override;
 			void ProcessACKs( uint32 acks, uint16 lastAckedMessageSequenceNumber,
 			                  Metrics::MetricsHandler* metrics_handler ) override;
-			bool IsMessageDuplicated(uint16 messageSequenceNumber ) const override;
+			bool IsMessageDuplicated( uint16 messageSequenceNumber ) const override;
 
 			void Update( float32 deltaTime ) override;
 
@@ -45,6 +46,6 @@ namespace NetLib
 		private:
 			uint16 _lastMessageSequenceNumberReceived;
 
-			bool IsSequenceNumberNewerThanLastReceived(uint16 sequenceNumber ) const;
+			bool IsSequenceNumberNewerThanLastReceived( uint16 sequenceNumber ) const;
 	};
 } // namespace NetLib

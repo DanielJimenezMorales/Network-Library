@@ -3,10 +3,11 @@
 #include "AlgorithmUtils.h"
 #include "logger.h"
 
+#include "metrics/metric_names.h"
 #include "metrics/latency_metric.h"
 #include "metrics/jitter_metric.h"
 #include "metrics/upload_bandwidth_metric.h"
-#include "metrics/retransmission_metric.h"
+#include "metrics/increment_metric.h"
 
 #include <cassert>
 
@@ -20,7 +21,9 @@ namespace NetLib
 			AddEntry( std::make_unique< LatencyMetric >() );
 			AddEntry( std::make_unique< JitterMetric >() );
 			AddEntry( std::make_unique< UploadBandwidthMetric >() );
-			AddEntry( std::make_unique< RetransmissionMetric >() );
+			AddEntry( std::make_unique< IncrementMetric >( DUPLICATE_METRIC ) );
+			AddEntry( std::make_unique< IncrementMetric >( OUT_OF_ORDER_METRIC ) );
+			AddEntry( std::make_unique< IncrementMetric >( RETRANSMISSION_METRIC ) );
 		}
 
 		void MetricsHandler::Configure( float32 update_rate )
@@ -41,10 +44,12 @@ namespace NetLib
 			}
 
 			LOG_INFO( "LATENCY: Average: %u, Max: %u\nJITTER: Average: %u, Max: %u\nUPLOAD BANDWIDTH: Current: %u, "
-			          "Max: %u\nRETRANSMISSIONS: Current: %u",
-			          GetValue( "LATENCY", "CURRENT" ), GetValue( "LATENCY", "MAX" ), GetValue( "JITTER", "CURRENT" ),
-			          GetValue( "JITTER", "MAX" ), GetValue( "UPLOAD_BANDWIDTH", "CURRENT" ),
-			          GetValue( "UPLOAD_BANDWIDTH", "MAX" ), GetValue( "RETRANSMISSION", "CURRENT" ) );
+			          "Max: %u\nRETRANSMISSIONS: Current: %u\nOUT OF ORDER: Current: %u\nDUPLICATE: Current: %u",
+			          GetValue( LATENCY_METRIC, "CURRENT" ), GetValue( LATENCY_METRIC, "MAX" ),
+			          GetValue( JITTER_METRIC, "CURRENT" ), GetValue( JITTER_METRIC, "MAX" ),
+			          GetValue( UPLOAD_BANDWIDTH_METRIC, "CURRENT" ), GetValue( UPLOAD_BANDWIDTH_METRIC, "MAX" ),
+			          GetValue( RETRANSMISSION_METRIC, "CURRENT" ), GetValue( OUT_OF_ORDER_METRIC, "CURRENT" ),
+			          GetValue( DUPLICATE_METRIC, "CURRENT" ) );
 		}
 
 		bool MetricsHandler::AddEntry( std::unique_ptr< IMetric > entry )
@@ -80,7 +85,7 @@ namespace NetLib
 			}
 			else
 			{
-				LOG_WARNING( "Network statistic entry with name '%s' not found", entry_name.c_str() );
+				LOG_WARNING( "Can't get a value from a metric that doesn't exist. Name: '%s'", entry_name.c_str() );
 			}
 
 			return result;
@@ -98,7 +103,7 @@ namespace NetLib
 			}
 			else
 			{
-				LOG_WARNING( "Network statistic entry with name '%s' not found", entry_name.c_str() );
+				LOG_WARNING( "Can't add a value to a metric that doesn't exist. Name: '%s'", entry_name.c_str() );
 			}
 
 			return result;

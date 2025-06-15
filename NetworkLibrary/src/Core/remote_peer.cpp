@@ -10,6 +10,8 @@
 #include "transmission_channels/unreliable_unordered_transmission_channel.h"
 #include "transmission_channels/reliable_ordered_channel.h"
 
+#include "metrics/metric_names.h"
+
 namespace NetLib
 {
 	void RemotePeer::InitTransmissionChannels()
@@ -296,7 +298,8 @@ namespace NetLib
 		// Process packet ACKs
 		const uint32 acks = packet.GetHeader().ackBits;
 		const uint16 lastAckedMessageSequenceNumber = packet.GetHeader().lastAckedSequenceNumber;
-		TransmissionChannelType channelType = static_cast< TransmissionChannelType >( packet.GetHeader().channelType );
+		const TransmissionChannelType channelType =
+		    static_cast< TransmissionChannelType >( packet.GetHeader().channelType );
 		ProcessACKs( acks, lastAckedMessageSequenceNumber, channelType );
 
 		// Process packet messages one by one
@@ -309,7 +312,7 @@ namespace NetLib
 
 		if ( _metricsEnabled )
 		{
-			_metricsHandler.AddValue( "UPLOAD_BANDWIDTH", packet_size );
+			_metricsHandler.AddValue( Metrics::UPLOAD_BANDWIDTH_METRIC, packet_size );
 		}
 	}
 
@@ -333,7 +336,8 @@ namespace NetLib
 		TransmissionChannel* transmissionChannel = GetTransmissionChannelFromType( channelType );
 		if ( transmissionChannel != nullptr )
 		{
-			transmissionChannel->AddReceivedMessage( std::move( message ) );
+			Metrics::MetricsHandler* metricsHandler = _metricsEnabled ? &_metricsHandler : nullptr;
+			transmissionChannel->AddReceivedMessage( std::move( message ), metricsHandler );
 			_inactivityTimeLeft = _maxInactivityTime;
 		}
 		else
@@ -402,7 +406,7 @@ namespace NetLib
 
 		for ( uint32 i = 0; i < numberOfTransmissionChannels; ++i )
 		{
-			uint32 transmissionChannelRTT = _transmissionChannels[ i ]->GetRTTMilliseconds();
+			const uint32 transmissionChannelRTT = _transmissionChannels[ i ]->GetRTTMilliseconds();
 			if ( transmissionChannelRTT > 0 )
 			{
 				rtt += transmissionChannelRTT;

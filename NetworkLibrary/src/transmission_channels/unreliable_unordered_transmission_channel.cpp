@@ -60,7 +60,8 @@ namespace NetLib
 		return _unsentMessages.front()->Size();
 	}
 
-	void UnreliableUnorderedTransmissionChannel::AddReceivedMessage( std::unique_ptr< Message > message )
+	void UnreliableUnorderedTransmissionChannel::AddReceivedMessage( std::unique_ptr< Message > message,
+	                                                                 Metrics::MetricsHandler* metrics_handler )
 	{
 		_readyToProcessMessages.push( std::move( message ) );
 	}

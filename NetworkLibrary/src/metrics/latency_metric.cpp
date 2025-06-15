@@ -3,6 +3,8 @@
 #include "logger.h"
 #include "AlgorithmUtils.h"
 
+#include "metrics/metric_names.h"
+
 namespace NetLib
 {
 	namespace Metrics
@@ -17,7 +19,7 @@ namespace NetLib
 
 		void LatencyMetric::GetName( std::string& out_name_buffer ) const
 		{
-			out_name_buffer.assign( "LATENCY" );
+			out_name_buffer.assign( LATENCY_METRIC );
 		}
 
 		uint32 LatencyMetric::GetValue( const std::string& value_type ) const

@@ -9,6 +9,7 @@
 
 #include "core/time_clock.h"
 
+#include "metrics/metric_names.h"
 #include "metrics/metrics_handler.h"
 
 #include "logger.h"
@@ -106,7 +107,7 @@ namespace NetLib
 			message = GetUnackedMessageToResend();
 			if ( message != nullptr && metrics_handler != nullptr )
 			{
-				metrics_handler->AddValue( "RETRANSMISSION", 1 );
+				metrics_handler->AddValue( Metrics::RETRANSMISSION_METRIC, 1 );
 			}
 		}
 
@@ -139,7 +140,8 @@ namespace NetLib
 		}
 	}
 
-	void ReliableOrderedChannel::AddReceivedMessage( std::unique_ptr< Message > message )
+	void ReliableOrderedChannel::AddReceivedMessage( std::unique_ptr< Message > message,
+	                                                 Metrics::MetricsHandler* metrics_handler )
 	{
 		const uint16 messageSequenceNumber = message->GetHeader().messageSequenceNumber;
 		if ( IsMessageDuplicated( messageSequenceNumber ) )
@@ -148,6 +150,10 @@ namespace NetLib
 
 			MessageFactory& messageFactory = MessageFactory::GetInstance();
 			messageFactory.ReleaseMessage( std::move( message ) );
+			if ( metrics_handler != nullptr )
+			{
+				metrics_handler->AddValue( Metrics::DUPLICATE_METRIC, 1 );
+			}
 			return;
 		}
 		else
@@ -187,6 +193,10 @@ namespace NetLib
 			else
 			{
 				AddOrderedMessage( std::move( message ) );
+				if ( metrics_handler != nullptr )
+				{
+					metrics_handler->AddValue( Metrics::OUT_OF_ORDER_METRIC, 1 );
+				}
 			}
 		}
 	}
@@ -272,13 +282,6 @@ namespace NetLib
 
 	void ReliableOrderedChannel::AddUnackedReliableMessage( std::unique_ptr< Message > message )
 	{
-		// const TimeClock& timeClock = TimeClock::GetInstance();
-		//_unackedMessagesSendTimes[ message->GetHeader().messageSequenceNumber ] =
-		// timeClock.GetLocalTimeMilliseconds();
-		LOG_WARNING( "SAVE UNACKED SEND: %u, MESSAGE SEQUENCE: %u",
-		             _unackedMessagesSendTimes[ message->GetHeader().messageSequenceNumber ],
-		             message->GetHeader().messageSequenceNumber );
-
 		_unackedReliableMessages.push_back( std::move( message ) );
 		LOG_INFO( "Retransmission Timeout: %f", GetRetransmissionTimeout() );
 		_unackedReliableMessageTimeouts.push_back( GetRetransmissionTimeout() );
@@ -354,7 +357,6 @@ namespace NetLib
 	{
 		bool result = false;
 
-		LOG_WARNING( "ME LLEGA SECUENCIA: %u", sequence );
 		int32 index = GetPendingUnackedReliableMessageIndexFromSequence( sequence );
 		if ( index != -1 )
 		{
@@ -362,15 +364,13 @@ namespace NetLib
 			const TimeClock& timeClock = TimeClock::GetInstance();
 			const uint64 currentElapsedTime = timeClock.GetLocalTimeMilliseconds();
 			const uint32 messageRTT = currentElapsedTime - _unackedMessagesSendTimes[ sequence ];
-			LOG_WARNING( "###### RTT: %u, CURRENT: %u, SEND TIME: %u, MESSAGE SEQUENCE: %u", messageRTT,
-			             currentElapsedTime, _unackedMessagesSendTimes[ sequence ], sequence );
 			AddMessageRTTValueToProcess( messageRTT );
 
 			if ( metrics_handler != nullptr )
 			{
 				const uint32 latency = messageRTT / 2;
-				metrics_handler->AddValue( "LATENCY", latency );
-				metrics_handler->AddValue( "JITTER", latency );
+				metrics_handler->AddValue( Metrics::LATENCY_METRIC, latency );
+				metrics_handler->AddValue( Metrics::JITTER_METRIC, latency );
 			}
 
 			std::unique_ptr< Message > message = DeleteUnackedReliableMessageAtIndex( index );

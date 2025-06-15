@@ -2,6 +2,8 @@
 
 #include "logger.h"
 
+#include "metrics/metric_names.h"
+
 namespace NetLib
 {
 	namespace Metrics
@@ -17,7 +19,7 @@ namespace NetLib
 
 		void UploadBandwidthMetric::GetName( std::string& out_name_buffer ) const
 		{
-			out_name_buffer.assign( "UPLOAD_BANDWIDTH" );
+			out_name_buffer.assign(UPLOAD_BANDWIDTH_METRIC);
 		}
 
 		uint32 UploadBandwidthMetric::GetValue( const std::string& value_type ) const

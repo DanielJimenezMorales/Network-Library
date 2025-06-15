@@ -41,7 +41,8 @@ namespace NetLib
 			void AddSentMessage( std::unique_ptr< Message > message );
 			void FreeSentMessages();
 
-			virtual void AddReceivedMessage( std::unique_ptr< Message > message ) = 0;
+			virtual void AddReceivedMessage( std::unique_ptr< Message > message,
+			                                 Metrics::MetricsHandler* metrics_handler ) = 0;
 			virtual bool ArePendingReadyToProcessMessages() const = 0;
 			virtual const Message* GetReadyToProcessMessage() = 0;
 			void FreeProcessedMessages();
