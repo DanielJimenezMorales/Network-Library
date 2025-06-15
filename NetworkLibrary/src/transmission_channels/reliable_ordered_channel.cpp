@@ -284,7 +284,7 @@ namespace NetLib
 		_unackedReliableMessageTimeouts.push_back( GetRetransmissionTimeout() );
 	}
 
-	void ReliableOrderedChannel::AckReliableMessage(uint16 messageSequenceNumber )
+	void ReliableOrderedChannel::AckReliableMessage( uint16 messageSequenceNumber )
 	{
 		uint32 index = GetRollingBufferIndex( messageSequenceNumber );
 		_reliableMessageEntries[ index ].sequenceNumber = messageSequenceNumber;
@@ -297,7 +297,7 @@ namespace NetLib
 		_areUnsentACKs = true;
 	}
 
-	bool ReliableOrderedChannel::DoesUnorderedMessagesContainsSequence(uint16 sequence, uint32& index ) const
+	bool ReliableOrderedChannel::DoesUnorderedMessagesContainsSequence( uint16 sequence, uint32& index ) const
 	{
 		const Message* message = nullptr;
 		uint32 idx = 0;
@@ -368,7 +368,9 @@ namespace NetLib
 
 			if ( metrics_handler != nullptr )
 			{
-				metrics_handler->AddValue( "LATENCY", messageRTT / 2 );
+				const uint32 latency = messageRTT / 2;
+				metrics_handler->AddValue( "LATENCY", latency );
+				metrics_handler->AddValue( "JITTER", latency );
 			}
 
 			std::unique_ptr< Message > message = DeleteUnackedReliableMessageAtIndex( index );

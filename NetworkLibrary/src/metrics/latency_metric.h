@@ -11,6 +11,7 @@ namespace NetLib
 		{
 			public:
 				static const uint32 MAX_BUFFER_SIZE = 100;
+				static const uint32 LATENCY_SMOOTHIN_FACTOR = 10;
 
 				LatencyMetric();
 
@@ -22,9 +23,6 @@ namespace NetLib
 				void Reset() override;
 
 			private:
-				float32 _timeUntilNextUpdate;
-				float32 _updateRate;
-
 				std::vector< uint32 > _samples;
 				uint32 _currentValue;
 				uint32 _maxValue;

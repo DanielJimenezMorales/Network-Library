@@ -4,6 +4,7 @@
 #include "logger.h"
 
 #include "metrics/latency_metric.h"
+#include "metrics/jitter_metric.h"
 #include "metrics/upload_bandwidth_metric.h"
 #include "metrics/retransmission_metric.h"
 
@@ -17,6 +18,7 @@ namespace NetLib
 		    : _entries()
 		{
 			AddEntry( std::make_unique< LatencyMetric >() );
+			AddEntry( std::make_unique< JitterMetric >() );
 			AddEntry( std::make_unique< UploadBandwidthMetric >() );
 			AddEntry( std::make_unique< RetransmissionMetric >() );
 		}
@@ -38,11 +40,11 @@ namespace NetLib
 				it->second->Update( elapsed_time );
 			}
 
-			LOG_INFO(
-			    "LATENCY: Average: %u, Max: %u, UPLOAD BANDWIDTH: Current: %u, Max: %u, RETRANSMISSIONS: Current: %u",
-			    GetValue( "LATENCY", "CURRENT" ), GetValue( "LATENCY", "MAX" ),
-			    GetValue( "UPLOAD_BANDWIDTH", "CURRENT" ), GetValue( "UPLOAD_BANDWIDTH", "MAX" ),
-			    GetValue( "RETRANSMISSION", "CURRENT" ) );
+			LOG_INFO( "LATENCY: Average: %u, Max: %u\nJITTER: Average: %u, Max: %u\nUPLOAD BANDWIDTH: Current: %u, "
+			          "Max: %u\nRETRANSMISSIONS: Current: %u",
+			          GetValue( "LATENCY", "CURRENT" ), GetValue( "LATENCY", "MAX" ), GetValue( "JITTER", "CURRENT" ),
+			          GetValue( "JITTER", "MAX" ), GetValue( "UPLOAD_BANDWIDTH", "CURRENT" ),
+			          GetValue( "UPLOAD_BANDWIDTH", "MAX" ), GetValue( "RETRANSMISSION", "CURRENT" ) );
 		}
 
 		bool MetricsHandler::AddEntry( std::unique_ptr< IMetric > entry )
