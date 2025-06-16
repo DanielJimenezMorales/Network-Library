@@ -128,6 +128,26 @@ namespace NetLib
 		return result;
 	}
 
+	const RemotePeer* RemotePeersHandler::GetRemotePeerFromId( uint32 id ) const
+	{
+		const RemotePeer* result = nullptr;
+		for ( uint32 i = 0; i < _maxConnections; ++i )
+		{
+			if ( !_remotePeerSlots[ i ] )
+			{
+				continue;
+			}
+
+			if ( _remotePeers[ i ].GetClientIndex() == id )
+			{
+				result = &_remotePeers[ i ];
+				break;
+			}
+		}
+
+		return result;
+	}
+
 	bool RemotePeersHandler::IsRemotePeerAlreadyConnected( const Address& address ) const
 	{
 		bool found = false;

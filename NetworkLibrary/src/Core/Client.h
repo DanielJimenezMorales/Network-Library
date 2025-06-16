@@ -42,6 +42,8 @@ namespace NetLib
 
 			~Client() override;
 
+			bool StartClient( const std::string& server_ip, uint32 server_port );
+
 			void SendInputs( const IInputState& inputState );
 			uint32 GetLocalClientId() const;
 
@@ -52,7 +54,7 @@ namespace NetLib
 			uint32 SubscribeToOnNetworkEntityDestroy( Functor&& functor );
 
 		protected:
-			bool StartConcrete() override;
+			bool StartConcrete( const std::string& ip, uint32 port ) override;
 			void ProcessMessageFromPeer( const Message& message, RemotePeer& remotePeer ) override;
 			void ProcessMessageFromUnknownPeer( const Message& message, const Address& address ) override;
 			void TickConcrete( float32 elapsedTime ) override;

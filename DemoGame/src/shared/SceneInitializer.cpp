@@ -224,7 +224,7 @@ static void RegisterSystems( Engine::ECS::World& scene, NetLib::PeerType network
 	// Add pre-tick network system
 	Engine::ECS::SystemCoordinator* pre_tick_network_system_coordinator =
 	    new Engine::ECS::SystemCoordinator( Engine::ECS::ExecutionStage::PRETICK );
-	pre_tick_network_system_coordinator->AddSystemToTail( new PreTickNetworkSystem() );
+	pre_tick_network_system_coordinator->AddSystemToTail( new PreTickNetworkSystem( "0.0.0.0", 54000 ) );
 	scene.AddSystem( pre_tick_network_system_coordinator );
 
 	/////////////////////

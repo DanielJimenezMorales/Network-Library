@@ -14,7 +14,7 @@
 
 namespace NetLib
 {
-	bool Peer::Start()
+	bool Peer::Start( const std::string& ip, uint32 port )
 	{
 		if ( _connectionState != PeerConnectionState::PCS_Disconnected )
 		{
@@ -31,7 +31,7 @@ namespace NetLib
 			return false;
 		}
 
-		if ( !StartConcrete() )
+		if ( !StartConcrete( ip, port ) )
 		{
 			LOG_ERROR( "Error while starting peer, aborting operation..." );
 			SetConnectionState( PeerConnectionState::PCS_Disconnected );
@@ -87,6 +87,23 @@ namespace NetLib
 		StopInternal();
 
 		return true;
+	}
+
+	uint32 Peer::GetMetric( uint32 remote_peer_id, const std::string& metric_name, const std::string& value_type ) const
+	{
+		uint32 result = 0;
+		const RemotePeer* remotePeer = _remotePeersHandler.GetRemotePeerFromId( remote_peer_id );
+		if ( remotePeer != nullptr )
+		{
+			result = remotePeer->GetMetric( metric_name, value_type );
+		}
+		else
+		{
+			LOG_WARNING( "You are trying to get a metric from a remote peer that doesn't exist. ID: %u",
+			             remote_peer_id );
+		}
+
+		return result;
 	}
 
 	void Peer::UnsubscribeToOnRemotePeerDisconnect( uint32 id )

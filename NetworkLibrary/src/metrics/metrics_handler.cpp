@@ -43,13 +43,16 @@ namespace NetLib
 				it->second->Update( elapsed_time );
 			}
 
-			LOG_INFO( "LATENCY: Average: %u, Max: %u\nJITTER: Average: %u, Max: %u\nUPLOAD BANDWIDTH: Current: %u, "
+			LOG_INFO( "NETWORK METRICS:\nLATENCY: Average: %u, Max: %u\nJITTER: Average: %u, Max: %u\nUPLOAD "
+			          "BANDWIDTH: Current: %u, "
 			          "Max: %u\nRETRANSMISSIONS: Current: %u\nOUT OF ORDER: Current: %u\nDUPLICATE: Current: %u",
-			          GetValue( LATENCY_METRIC, "CURRENT" ), GetValue( LATENCY_METRIC, "MAX" ),
-			          GetValue( JITTER_METRIC, "CURRENT" ), GetValue( JITTER_METRIC, "MAX" ),
-			          GetValue( UPLOAD_BANDWIDTH_METRIC, "CURRENT" ), GetValue( UPLOAD_BANDWIDTH_METRIC, "MAX" ),
-			          GetValue( RETRANSMISSION_METRIC, "CURRENT" ), GetValue( OUT_OF_ORDER_METRIC, "CURRENT" ),
-			          GetValue( DUPLICATE_METRIC, "CURRENT" ) );
+			          GetValue( LATENCY_METRIC, CURRENT_VALUE_TYPE ), GetValue( LATENCY_METRIC, MAX_VALUE_TYPE ),
+			          GetValue( JITTER_METRIC, CURRENT_VALUE_TYPE ), GetValue( JITTER_METRIC, MAX_VALUE_TYPE ),
+			          GetValue( UPLOAD_BANDWIDTH_METRIC, CURRENT_VALUE_TYPE ),
+			          GetValue( UPLOAD_BANDWIDTH_METRIC, MAX_VALUE_TYPE ),
+			          GetValue( RETRANSMISSION_METRIC, CURRENT_VALUE_TYPE ),
+			          GetValue( OUT_OF_ORDER_METRIC, CURRENT_VALUE_TYPE ),
+			          GetValue( DUPLICATE_METRIC, CURRENT_VALUE_TYPE ) );
 		}
 
 		bool MetricsHandler::AddEntry( std::unique_ptr< IMetric > entry )

@@ -120,6 +120,8 @@ namespace NetLib
 			std::vector< TransmissionChannelType > GetAvailableTransmissionChannelTypes() const;
 			uint32 GetNumberOfTransmissionChannels() const;
 
+			uint32 GetMetric( const std::string& metric_name, const std::string& value_type ) const;
+
 			/// <summary>
 			/// Disconnect and reset the remote client
 			/// </summary>

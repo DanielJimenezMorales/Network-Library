@@ -399,6 +399,21 @@ namespace NetLib
 		return _transmissionChannels.size();
 	}
 
+	uint32 RemotePeer::GetMetric( const std::string& metric_name, const std::string& value_type ) const
+	{
+		uint32 result = 0;
+		if ( _metricsEnabled )
+		{
+			result = _metricsHandler.GetValue( metric_name, value_type );
+		}
+		else
+		{
+			LOG_WARNING( "You are trying to get a metric value from a RemotePeer that doesn't have metrics enabled" );
+		}
+
+		return result;
+	}
+
 	uint32 RemotePeer::GetRTTMilliseconds() const
 	{
 		uint32 rtt = 0;

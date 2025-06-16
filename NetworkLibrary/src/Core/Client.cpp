@@ -30,6 +30,11 @@ namespace NetLib
 	{
 	}
 
+	bool Client::StartClient( const std::string& server_ip, uint32 server_port )
+	{
+		return Start( server_ip, 0 ); // Port is zero so the system picks up a random port number
+	}
+
 	void Client::SendInputs( const IInputState& inputState )
 	{
 		RemotePeer* serverPeer = _remotePeersHandler.GetRemotePeerFromAddress( _serverAddress );
@@ -68,7 +73,7 @@ namespace NetLib
 		return _clientIndex;
 	}
 
-	bool Client::StartConcrete()
+	bool Client::StartConcrete( const std::string& ip, uint32 port )
 	{
 		BindSocket( Address( "127.0.0.1", 0 ) ); // Port is zero so the system picks up a random port number
 

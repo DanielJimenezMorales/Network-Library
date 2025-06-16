@@ -179,7 +179,7 @@ static bool AddNetworkToWorld( Engine::ECS::World& world )
 	// Pre tick network system
 	Engine::ECS::SystemCoordinator* preTickNetworkSystemCoordinator =
 	    new Engine::ECS::SystemCoordinator( Engine::ECS::ExecutionStage::PRETICK );
-	preTickNetworkSystemCoordinator->AddSystemToTail( new PreTickNetworkSystem() );
+	preTickNetworkSystemCoordinator->AddSystemToTail( new PreTickNetworkSystem( "127.0.0.1", 0 ) );
 	world.AddSystem( preTickNetworkSystemCoordinator );
 
 	// Post tick network system

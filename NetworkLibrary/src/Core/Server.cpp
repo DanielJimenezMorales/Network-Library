@@ -27,6 +27,11 @@ namespace NetLib
 	{
 	}
 
+	bool Server::StartServer( uint32 port )
+	{
+		return Start( "0.0.0.0", port );
+	}
+
 	uint32 Server::CreateNetworkEntity( uint32 entityType, uint32 controlledByPeerId, float32 posX, float32 posY )
 	{
 		if ( GetConnectionState() != PeerConnectionState::PCS_Connected )
@@ -67,7 +72,7 @@ namespace NetLib
 	{
 	}
 
-	bool Server::StartConcrete()
+	bool Server::StartConcrete( const std::string& ip, uint32 port )
 	{
 		BindSocket( Address( IPV4_ANY, SERVER_PORT ) );
 		LOG_INFO( "Server started succesfully!" );
@@ -127,15 +132,15 @@ namespace NetLib
 					break;
 				}
 			case MessageType::Inputs:
-			{
-				const InputStateMessage& inputsMessage = static_cast<const InputStateMessage&>(message);
-				ProcessInputs(inputsMessage, remotePeer);
-				break;
-			}
+				{
+					const InputStateMessage& inputsMessage = static_cast< const InputStateMessage& >( message );
+					ProcessInputs( inputsMessage, remotePeer );
+					break;
+				}
 			case MessageType::PingPong:
-			{
-				break;
-			}
+				{
+					break;
+				}
 			default:
 				LOG_WARNING( "Invalid Message type, ignoring it..." );
 				break;
