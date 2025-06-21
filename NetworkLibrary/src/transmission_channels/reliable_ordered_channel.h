@@ -36,9 +36,12 @@ namespace NetLib
 			ReliableOrderedChannel& operator=( const ReliableOrderedChannel& ) = delete;
 			ReliableOrderedChannel& operator=( ReliableOrderedChannel&& other ) noexcept;
 
+			bool GenerateAndSerializePacket( Socket& socket, const Address& address,
+			                                 Metrics::MetricsHandler* metrics_handler ) override;
+
 			void AddMessageToSend( std::unique_ptr< Message > message ) override;
-			bool ArePendingMessagesToSend() const override;
-			std::unique_ptr< Message > GetMessageToSend( Metrics::MetricsHandler* metrics_handler ) override;
+			bool ArePendingMessagesToSend() const;
+			std::unique_ptr< Message > GetMessageToSend( Metrics::MetricsHandler* metrics_handler );
 			uint32 GetSizeOfNextUnsentMessage() const override;
 
 			void AddReceivedMessage( std::unique_ptr< Message > message,
@@ -46,25 +49,23 @@ namespace NetLib
 			bool ArePendingReadyToProcessMessages() const override;
 			const Message* GetReadyToProcessMessage() override;
 
-			void SeUnsentACKsToFalse() override;
-			bool AreUnsentACKs() const override;
-			uint32 GenerateACKs() const override;
+			void SeUnsentACKsToFalse(); // This method should not exists and be done automatically. However,
+			                            // I have not found how so for now, we do it manually.
+			bool AreUnsentACKs() const;
+			uint32 GenerateACKs() const;
 			void ProcessACKs( uint32 acks, uint16 lastAckedMessageSequenceNumber,
 			                  Metrics::MetricsHandler* metrics_handler ) override;
 			bool IsMessageDuplicated( uint16 messageSequenceNumber ) const override;
 
 			void Update( float32 deltaTime ) override;
 
-			uint16 GetLastMessageSequenceNumberAcked() const override;
+			uint16 GetLastMessageSequenceNumberAcked() const;
 
 			void Reset() override;
 
-			uint32 GetRTTMilliseconds() const override;
+			uint32 GetRTTMilliseconds() const;
 
 			~ReliableOrderedChannel();
-
-		protected:
-			void FreeSentMessage( MessageFactory& messageFactory, std::unique_ptr< Message > message ) override;
 
 		private:
 			// RELIABLE RELATED

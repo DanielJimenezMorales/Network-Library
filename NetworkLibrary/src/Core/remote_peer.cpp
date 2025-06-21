@@ -12,6 +12,8 @@
 
 #include "metrics/metric_names.h"
 
+#include "core/Socket.h"
+
 namespace NetLib
 {
 	void RemotePeer::InitTransmissionChannels()
@@ -96,19 +98,6 @@ namespace NetLib
 		_transmissionChannels.clear();
 	}
 
-	uint16 RemotePeer::GetLastMessageSequenceNumberAcked( TransmissionChannelType channelType ) const
-	{
-		uint16 lastMessageSequenceNumberAcked = 0;
-
-		const TransmissionChannel* transmissionChannel = GetTransmissionChannelFromType( channelType );
-		if ( transmissionChannel != nullptr )
-		{
-			lastMessageSequenceNumberAcked = transmissionChannel->GetLastMessageSequenceNumberAcked();
-		}
-
-		return lastMessageSequenceNumberAcked;
-	}
-
 	void RemotePeer::ActivateNetworkStatistics()
 	{
 		_metricsEnabled = true;
@@ -191,60 +180,14 @@ namespace NetLib
 		return result;
 	}
 
-	bool RemotePeer::ArePendingMessages( TransmissionChannelType channelType ) const
+	void RemotePeer::SendData( Socket& socket )
 	{
-		bool arePendingMessages = false;
-
-		const TransmissionChannel* transmissionChannel = GetTransmissionChannelFromType( channelType );
-		if ( transmissionChannel != nullptr )
+		std::vector< TransmissionChannel* >::iterator it = _transmissionChannels.begin();
+		for ( ; it < _transmissionChannels.end(); ++it )
 		{
-			arePendingMessages = transmissionChannel->ArePendingMessagesToSend();
-		}
-
-		return arePendingMessages;
-	}
-
-	std::unique_ptr< Message > RemotePeer::GetPendingMessage( TransmissionChannelType channelType )
-	{
-		std::unique_ptr< Message > message = nullptr;
-
-		TransmissionChannel* transmissionChannel = GetTransmissionChannelFromType( channelType );
-		if ( transmissionChannel != nullptr )
-		{
+			TransmissionChannel* channel = *it;
 			Metrics::MetricsHandler* metricsHandler = _metricsEnabled ? &_metricsHandler : nullptr;
-			message = transmissionChannel->GetMessageToSend( metricsHandler );
-		}
-
-		return std::move( message );
-	}
-
-	uint32 RemotePeer::GetSizeOfNextUnsentMessage( TransmissionChannelType channelType ) const
-	{
-		uint32 size = 0;
-
-		const TransmissionChannel* transmissionChannel = GetTransmissionChannelFromType( channelType );
-		if ( transmissionChannel != nullptr )
-		{
-			size = transmissionChannel->GetSizeOfNextUnsentMessage();
-		}
-
-		return size;
-	}
-
-	void RemotePeer::FreeSentMessages()
-	{
-		for ( uint32 i = 0; i < GetNumberOfTransmissionChannels(); ++i )
-		{
-			_transmissionChannels[ i ]->FreeSentMessages();
-		}
-	}
-
-	void RemotePeer::AddSentMessage( std::unique_ptr< Message > message, TransmissionChannelType channelType )
-	{
-		TransmissionChannel* transmissionChannel = GetTransmissionChannelFromType( channelType );
-		if ( transmissionChannel != nullptr )
-		{
-			transmissionChannel->AddSentMessage( std::move( message ) );
+			channel->GenerateAndSerializePacket( socket, _address, metricsHandler );
 		}
 	}
 
@@ -254,41 +197,6 @@ namespace NetLib
 		{
 			_transmissionChannels[ i ]->FreeProcessedMessages();
 		}
-	}
-
-	void RemotePeer::SeUnsentACKsToFalse( TransmissionChannelType channelType )
-	{
-		TransmissionChannel* transmissionChannel = GetTransmissionChannelFromType( channelType );
-		if ( transmissionChannel != nullptr )
-		{
-			transmissionChannel->SeUnsentACKsToFalse();
-		}
-	}
-
-	bool RemotePeer::AreUnsentACKs( TransmissionChannelType channelType ) const
-	{
-		bool areUnsentACKs = false;
-
-		const TransmissionChannel* transmissionChannel = GetTransmissionChannelFromType( channelType );
-		if ( transmissionChannel != nullptr )
-		{
-			areUnsentACKs = transmissionChannel->AreUnsentACKs();
-		}
-
-		return areUnsentACKs;
-	}
-
-	uint32 RemotePeer::GenerateACKs( TransmissionChannelType channelType ) const
-	{
-		uint32 acks = 0;
-
-		const TransmissionChannel* transmissionChannel = GetTransmissionChannelFromType( channelType );
-		if ( transmissionChannel != nullptr )
-		{
-			acks = transmissionChannel->GenerateACKs();
-		}
-
-		return acks;
 	}
 
 	void RemotePeer::ProcessPacket( NetworkPacket& packet )
@@ -312,7 +220,7 @@ namespace NetLib
 
 		if ( _metricsEnabled )
 		{
-			_metricsHandler.AddValue( Metrics::UPLOAD_BANDWIDTH_METRIC, packet_size );
+			_metricsHandler.AddValue( Metrics::DOWNLOAD_BANDWIDTH_METRIC, packet_size );
 		}
 	}
 
@@ -412,29 +320,6 @@ namespace NetLib
 		}
 
 		return result;
-	}
-
-	uint32 RemotePeer::GetRTTMilliseconds() const
-	{
-		uint32 rtt = 0;
-		uint32 numberOfTransmissionChannels = 0;
-
-		for ( uint32 i = 0; i < numberOfTransmissionChannels; ++i )
-		{
-			const uint32 transmissionChannelRTT = _transmissionChannels[ i ]->GetRTTMilliseconds();
-			if ( transmissionChannelRTT > 0 )
-			{
-				rtt += transmissionChannelRTT;
-				++numberOfTransmissionChannels;
-			}
-		}
-
-		if ( numberOfTransmissionChannels > 0 )
-		{
-			rtt /= numberOfTransmissionChannels;
-		}
-
-		return rtt;
 	}
 
 	void RemotePeer::Disconnect()

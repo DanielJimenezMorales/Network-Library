@@ -2,7 +2,14 @@
 #include <memory>
 
 #include "communication/message_factory.h"
+#include "communication/network_packet.h"
 
+#include "core/buffer.h"
+#include "core/socket.h"
+#include "core/address.h"
+
+#include "metrics/metric_names.h"
+#include "metrics/metrics_handler.h"
 namespace NetLib
 {
 	UnreliableOrderedTransmissionChannel::UnreliableOrderedTransmissionChannel()
@@ -27,6 +34,70 @@ namespace NetLib
 
 		TransmissionChannel::operator=( std::move( other ) );
 		return *this;
+	}
+
+	bool UnreliableOrderedTransmissionChannel::GenerateAndSerializePacket( Socket& socket, const Address& address,
+	                                                                       Metrics::MetricsHandler* metrics_handler )
+	{
+		bool result = false;
+
+		if ( !ArePendingMessagesToSend() )
+		{
+			return result;
+		}
+
+		NetworkPacket packet;
+
+		// TODO Check somewhere if there is a message larger than the maximum packet size. Log a warning saying that the
+		// message will never get sent and delete it.
+		// TODO Include data prefix in packet's header and check if the data prefix is correct when receiving a packet
+
+		// Check if we should include a message to the packet
+		bool arePendingMessages = true;
+		bool isThereCapacityLeft = packet.CanMessageFit( GetSizeOfNextUnsentMessage() );
+
+		while ( arePendingMessages && isThereCapacityLeft )
+		{
+			// Add message to packet
+			std::unique_ptr< Message > message = GetMessageToSend( metrics_handler );
+			packet.AddMessage( std::move( message ) );
+
+			// Check if we should include another message to the packet
+			arePendingMessages = ArePendingMessagesToSend();
+			isThereCapacityLeft = packet.CanMessageFit( GetSizeOfNextUnsentMessage() );
+		}
+
+		// Set packet header fields
+		packet.SetHeaderACKs( 0 );
+		packet.SetHeaderLastAcked( 0 );
+		packet.SetHeaderChannelType( GetType() );
+
+		// Serialize packet
+		uint8* bufferData = new uint8[ packet.Size() ];
+		Buffer buffer( bufferData, packet.Size() );
+		packet.Write( buffer );
+
+		// Sends packet
+		socket.SendTo( buffer.GetData(), buffer.GetSize(), address );
+
+		// TODO See what happens when the socket couldn't send the packet
+		if ( metrics_handler != nullptr )
+		{
+			metrics_handler->AddValue( Metrics::UPLOAD_BANDWIDTH_METRIC, packet.Size() );
+		}
+
+		// Clean messages
+		MessageFactory& messageFactory = MessageFactory::GetInstance();
+		while ( packet.GetNumberOfMessages() > 0 )
+		{
+			std::unique_ptr< Message > message = packet.GetMessages();
+			messageFactory.ReleaseMessage( std::move( message ) );
+		}
+
+		delete[] bufferData;
+
+		result = true;
+		return result;
 	}
 
 	void UnreliableOrderedTransmissionChannel::AddMessageToSend( std::unique_ptr< Message > message )
@@ -103,20 +174,6 @@ namespace NetLib
 		return messageToReturn;
 	}
 
-	void UnreliableOrderedTransmissionChannel::SeUnsentACKsToFalse()
-	{
-	}
-
-	bool UnreliableOrderedTransmissionChannel::AreUnsentACKs() const
-	{
-		return false;
-	}
-
-	uint32 UnreliableOrderedTransmissionChannel::GenerateACKs() const
-	{
-		return 0;
-	}
-
 	void UnreliableOrderedTransmissionChannel::ProcessACKs( uint32 acks, uint16 lastAckedMessageSequenceNumber,
 	                                                        Metrics::MetricsHandler* metrics_handler )
 	{
@@ -132,30 +189,10 @@ namespace NetLib
 	{
 	}
 
-	uint16 UnreliableOrderedTransmissionChannel::GetLastMessageSequenceNumberAcked() const
-	{
-		return 0;
-	}
-
-	uint32 UnreliableOrderedTransmissionChannel::GetRTTMilliseconds() const
-	{
-		return 0;
-	}
-
 	void UnreliableOrderedTransmissionChannel::Reset()
 	{
 		TransmissionChannel::Reset();
 		_lastMessageSequenceNumberReceived = 0;
-	}
-
-	UnreliableOrderedTransmissionChannel::~UnreliableOrderedTransmissionChannel()
-	{
-	}
-
-	void UnreliableOrderedTransmissionChannel::FreeSentMessage( MessageFactory& messageFactory,
-	                                                            std::unique_ptr< Message > message )
-	{
-		messageFactory.ReleaseMessage( std::move( message ) );
 	}
 
 	bool UnreliableOrderedTransmissionChannel::IsSequenceNumberNewerThanLastReceived( uint16 sequenceNumber ) const

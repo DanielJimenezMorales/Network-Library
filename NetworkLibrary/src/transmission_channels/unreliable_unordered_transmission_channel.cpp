@@ -1,6 +1,14 @@
 #include "unreliable_unordered_transmission_channel.h"
 
 #include "communication/message_factory.h"
+#include "communication/network_packet.h"
+
+#include "core/buffer.h"
+#include "core/socket.h"
+#include "core/address.h"
+
+#include "metrics/metric_names.h"
+#include "metrics/metrics_handler.h"
 
 namespace NetLib
 {
@@ -20,6 +28,68 @@ namespace NetLib
 	{
 		TransmissionChannel::operator=( std::move( other ) );
 		return *this;
+	}
+
+	bool UnreliableUnorderedTransmissionChannel::GenerateAndSerializePacket( Socket& socket, const Address& address,
+	                                                                         Metrics::MetricsHandler* metrics_handler )
+	{
+		bool result = false;
+
+		if ( !ArePendingMessagesToSend() )
+		{
+			return result;
+		}
+
+		NetworkPacket packet;
+
+		// TODO Check somewhere if there is a message larger than the maximum packet size. Log a warning saying that the
+		// message will never get sent and delete it.
+		// TODO Include data prefix in packet's header and check if the data prefix is correct when receiving a packet
+
+		// Check if we should include a message to the packet
+		bool arePendingMessages = ArePendingMessagesToSend();
+		bool isThereCapacityLeft = packet.CanMessageFit( GetSizeOfNextUnsentMessage() );
+
+		while ( arePendingMessages && isThereCapacityLeft )
+		{
+			// Configure and add message to packet
+			std::unique_ptr< Message > message = GetMessageToSend( metrics_handler );
+
+			packet.AddMessage( std::move( message ) );
+
+			// Check if we should include another message to the packet
+			arePendingMessages = ArePendingMessagesToSend();
+			isThereCapacityLeft = packet.CanMessageFit( GetSizeOfNextUnsentMessage() );
+		}
+
+		// Set packet header
+		packet.SetHeaderACKs( 0 );
+		packet.SetHeaderLastAcked( 0 );
+		packet.SetHeaderChannelType( GetType() );
+
+		uint8* bufferData = new uint8[ packet.Size() ];
+		Buffer buffer( bufferData, packet.Size() );
+		packet.Write( buffer );
+		socket.SendTo( buffer.GetData(), buffer.GetSize(), address );
+
+		// TODO See what happens when the socket couldn't send the packet
+		if (metrics_handler != nullptr)
+		{
+			metrics_handler->AddValue(Metrics::UPLOAD_BANDWIDTH_METRIC, packet.Size());
+		}
+
+		// Send messages ownership back to remote peer
+		MessageFactory& messageFactory = MessageFactory::GetInstance();
+		while ( packet.GetNumberOfMessages() > 0 )
+		{
+			std::unique_ptr< Message > message = packet.GetMessages();
+			messageFactory.ReleaseMessage( std::move( message ) );
+		}
+
+		delete[] bufferData;
+
+		result = true;
+		return result;
 	}
 
 	void UnreliableUnorderedTransmissionChannel::AddMessageToSend( std::unique_ptr< Message > message )
@@ -87,20 +157,6 @@ namespace NetLib
 		return messageToReturn;
 	}
 
-	void UnreliableUnorderedTransmissionChannel::SeUnsentACKsToFalse()
-	{
-	}
-
-	bool UnreliableUnorderedTransmissionChannel::AreUnsentACKs() const
-	{
-		return false;
-	}
-
-	uint32 UnreliableUnorderedTransmissionChannel::GenerateACKs() const
-	{
-		return 0;
-	}
-
 	void UnreliableUnorderedTransmissionChannel::ProcessACKs( uint32 acks, uint16 lastAckedMessageSequenceNumber,
 	                                                          Metrics::MetricsHandler* metrics_handler )
 	{
@@ -113,25 +169,5 @@ namespace NetLib
 
 	void UnreliableUnorderedTransmissionChannel::Update( float32 deltaTime )
 	{
-	}
-
-	uint16 UnreliableUnorderedTransmissionChannel::GetLastMessageSequenceNumberAcked() const
-	{
-		return 0;
-	}
-
-	uint32 UnreliableUnorderedTransmissionChannel::GetRTTMilliseconds() const
-	{
-		return 0;
-	}
-
-	UnreliableUnorderedTransmissionChannel::~UnreliableUnorderedTransmissionChannel()
-	{
-	}
-
-	void UnreliableUnorderedTransmissionChannel::FreeSentMessage( MessageFactory& messageFactory,
-	                                                              std::unique_ptr< Message > message )
-	{
-		messageFactory.ReleaseMessage( std::move( message ) );
 	}
 } // namespace NetLib

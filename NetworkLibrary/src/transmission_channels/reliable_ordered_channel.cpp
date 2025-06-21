@@ -4,10 +4,14 @@
 
 #include "communication/message.h"
 #include "communication/message_factory.h"
+#include "communication/network_packet.h"
 
 #include "utils/bitwise_utils.h"
 
 #include "core/time_clock.h"
+#include "core/Buffer.h"
+#include "core/socket.h"
+#include "core/address.h"
 
 #include "metrics/metric_names.h"
 #include "metrics/metrics_handler.h"
@@ -76,6 +80,80 @@ namespace NetLib
 
 		TransmissionChannel::operator=( std::move( other ) );
 		return *this;
+	}
+
+	bool ReliableOrderedChannel::GenerateAndSerializePacket( Socket& socket, const Address& address,
+	                                                         Metrics::MetricsHandler* metrics_handler )
+	{
+		bool result = false;
+
+		if ( !ArePendingMessagesToSend() && !AreUnsentACKs() )
+		{
+			return result;
+		}
+
+		NetworkPacket packet;
+
+		// TODO Check somewhere if there is a message larger than the maximum packet size. Log a warning saying that the
+		// message will never get sent and delete it.
+		// TODO Include data prefix in packet's header and check if the data prefix is correct when receiving a packet
+
+		// Check if we should include a message to the packet
+		bool arePendingMessages = ArePendingMessagesToSend();
+		bool isThereCapacityLeft = packet.CanMessageFit( GetSizeOfNextUnsentMessage() );
+
+		while ( arePendingMessages && isThereCapacityLeft )
+		{
+			// Configure and add message to packet
+			std::unique_ptr< Message > message = GetMessageToSend( metrics_handler );
+
+			if ( message->GetHeader().isReliable )
+			{
+				LOG_INFO( "Reliable message sequence number: %hu, Message type: %hhu",
+				          message->GetHeader().messageSequenceNumber, message->GetHeader().type );
+			}
+
+			packet.AddMessage( std::move( message ) );
+
+			// Check if we should include another message to the packet
+			arePendingMessages = ArePendingMessagesToSend();
+			isThereCapacityLeft = packet.CanMessageFit( GetSizeOfNextUnsentMessage() );
+		}
+
+		// Set packet header
+		const uint32 acks = GenerateACKs();
+		packet.SetHeaderACKs( acks );
+		const uint16 lastAckedMessageSequenceNumber = GetLastMessageSequenceNumberAcked();
+		packet.SetHeaderLastAcked( lastAckedMessageSequenceNumber );
+		packet.SetHeaderChannelType( GetType() );
+
+		// Serialize packet
+		uint8* bufferData = new uint8[ packet.Size() ];
+		Buffer buffer( bufferData, packet.Size() );
+		packet.Write( buffer );
+
+		// Send packet
+		socket.SendTo( buffer.GetData(), buffer.GetSize(), address );
+
+		// TODO See what happens when the socket couldn't send the packet
+		if ( metrics_handler != nullptr )
+		{
+			metrics_handler->AddValue( Metrics::UPLOAD_BANDWIDTH_METRIC, packet.Size() );
+		}
+
+		SeUnsentACKsToFalse();
+
+		// Send messages ownership back to remote peer
+		while ( packet.GetNumberOfMessages() > 0 )
+		{
+			std::unique_ptr< Message > message = packet.GetMessages();
+			AddUnackedReliableMessage( std::move( message ) );
+		}
+
+		delete[] bufferData;
+
+		result = true;
+		return result;
 	}
 
 	void ReliableOrderedChannel::AddMessageToSend( std::unique_ptr< Message > message )
@@ -617,10 +695,5 @@ namespace NetLib
 	ReliableOrderedChannel::~ReliableOrderedChannel()
 	{
 		ClearMessages();
-	}
-
-	void ReliableOrderedChannel::FreeSentMessage( MessageFactory& messageFactory, std::unique_ptr< Message > message )
-	{
-		AddUnackedReliableMessage( std::move( message ) );
 	}
 } // namespace NetLib

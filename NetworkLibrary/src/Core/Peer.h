@@ -150,13 +150,10 @@ namespace NetLib
 
 			void CreateDisconnectionPacket( const RemotePeer& remotePeer, ConnectionFailedReasonType reason );
 
-			void SendData();
 			/// <summary>
 			/// Sends pending data to all the connected remote peers
 			/// </summary>
 			void SendDataToRemotePeers();
-			void SendDataToRemotePeer( RemotePeer& remotePeer );
-			void SendPacketToRemotePeer( RemotePeer& remotePeer, TransmissionChannelType type );
 
 			void SendDataToAddress( const Buffer& buffer, const Address& address ) const;
 

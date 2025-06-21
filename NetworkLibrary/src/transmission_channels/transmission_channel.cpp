@@ -19,7 +19,6 @@ namespace NetLib
 	    _nextMessageSequenceNumber( std::move( other._nextMessageSequenceNumber ) )
 	    , // unnecessary move, just in case I change that type
 	    _unsentMessages( std::move( other._unsentMessages ) )
-	    , _sentMessages( std::move( other._sentMessages ) )
 	    , _readyToProcessMessages( std::move( other._readyToProcessMessages ) )
 	    , _processedMessages( std::move( other._processedMessages ) )
 	{
@@ -35,28 +34,9 @@ namespace NetLib
 		_nextMessageSequenceNumber =
 		    std::move( other._nextMessageSequenceNumber ); // unnecessary move, just in case I change that type
 		_unsentMessages = std::move( other._unsentMessages );
-		_sentMessages = std::move( other._sentMessages );
 		_readyToProcessMessages = std::move( other._readyToProcessMessages );
 		_processedMessages = std::move( other._processedMessages );
 		return *this;
-	}
-
-	void TransmissionChannel::AddSentMessage( std::unique_ptr< Message > message )
-	{
-		_sentMessages.push( std::move( message ) );
-	}
-
-	void TransmissionChannel::FreeSentMessages()
-	{
-		MessageFactory& messageFactory = MessageFactory::GetInstance();
-
-		while ( !_sentMessages.empty() )
-		{
-			std::unique_ptr< Message > message( std::move( _sentMessages.front() ) );
-			_sentMessages.pop();
-
-			FreeSentMessage( messageFactory, std::move( message ) );
-		}
 	}
 
 	void TransmissionChannel::FreeProcessedMessages()
@@ -86,14 +66,6 @@ namespace NetLib
 	void TransmissionChannel::ClearMessages()
 	{
 		MessageFactory& messageFactory = MessageFactory::GetInstance();
-
-		while ( !_sentMessages.empty() )
-		{
-			std::unique_ptr< Message > message( std::move( _sentMessages.front() ) );
-			_sentMessages.pop();
-
-			messageFactory.ReleaseMessage( std::move( message ) );
-		}
 
 		while ( !_readyToProcessMessages.empty() )
 		{

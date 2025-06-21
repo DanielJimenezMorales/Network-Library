@@ -18,6 +18,7 @@ namespace NetLib
 {
 	class Message;
 	struct MessageHeader;
+	class Socket;
 
 	enum RemotePeerState : uint8
 	{
@@ -63,8 +64,6 @@ namespace NetLib
 			RemotePeer& operator=( const RemotePeer& ) = delete;
 			~RemotePeer();
 
-			uint16 GetLastMessageSequenceNumberAcked( TransmissionChannelType channelType ) const;
-
 			void ActivateNetworkStatistics();
 			void DeactivateNetworkStatistics();
 
@@ -84,6 +83,8 @@ namespace NetLib
 
 			void Tick( float32 elapsedTime );
 
+			void SendData( Socket& socket );
+
 			const Address& GetAddress() const { return _address; }
 			uint16 GetClientIndex() const { return _id; }
 			uint64 GetDataPrefix() const
@@ -99,23 +100,13 @@ namespace NetLib
 			bool IsAddressEqual( const Address& other ) const { return other == _address; }
 			bool IsInactive() const { return _inactivityTimeLeft == 0.f; }
 			bool AddMessage( std::unique_ptr< Message > message );
-			bool ArePendingMessages( TransmissionChannelType channelType ) const;
-			std::unique_ptr< Message > GetPendingMessage( TransmissionChannelType channelType );
-			uint32 GetSizeOfNextUnsentMessage( TransmissionChannelType channelType ) const;
-			void AddSentMessage( std::unique_ptr< Message > message, TransmissionChannelType channelType );
-			void FreeSentMessages();
 			void FreeProcessedMessages();
-			void SeUnsentACKsToFalse( TransmissionChannelType channelType );
-			bool AreUnsentACKs( TransmissionChannelType channelType ) const;
-			uint32 GenerateACKs( TransmissionChannelType channelType ) const;
 			void ProcessPacket( NetworkPacket& packet );
 			void ProcessACKs( uint32 acks, uint16 lastAckedMessageSequenceNumber, TransmissionChannelType channelType );
 			bool AddReceivedMessage( std::unique_ptr< Message > message );
 
 			bool ArePendingReadyToProcessMessages() const;
 			const Message* GetPendingReadyToProcessMessage();
-
-			uint32 GetRTTMilliseconds() const;
 
 			std::vector< TransmissionChannelType > GetAvailableTransmissionChannelTypes() const;
 			uint32 GetNumberOfTransmissionChannels() const;

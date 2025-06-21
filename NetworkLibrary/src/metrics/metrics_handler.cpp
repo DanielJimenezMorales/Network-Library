@@ -7,6 +7,7 @@
 #include "metrics/latency_metric.h"
 #include "metrics/jitter_metric.h"
 #include "metrics/upload_bandwidth_metric.h"
+#include "metrics/download_bandwidth_metric.h"
 #include "metrics/increment_metric.h"
 
 #include <cassert>
@@ -21,6 +22,7 @@ namespace NetLib
 			AddEntry( std::make_unique< LatencyMetric >() );
 			AddEntry( std::make_unique< JitterMetric >() );
 			AddEntry( std::make_unique< UploadBandwidthMetric >() );
+			AddEntry( std::make_unique< DownloadBandwidthMetric >() );
 			AddEntry( std::make_unique< IncrementMetric >( DUPLICATE_METRIC ) );
 			AddEntry( std::make_unique< IncrementMetric >( OUT_OF_ORDER_METRIC ) );
 			AddEntry( std::make_unique< IncrementMetric >( RETRANSMISSION_METRIC ) );
@@ -45,11 +47,14 @@ namespace NetLib
 
 			LOG_INFO( "NETWORK METRICS:\nLATENCY: Average: %u, Max: %u\nJITTER: Average: %u, Max: %u\nUPLOAD "
 			          "BANDWIDTH: Current: %u, "
-			          "Max: %u\nRETRANSMISSIONS: Current: %u\nOUT OF ORDER: Current: %u\nDUPLICATE: Current: %u",
+			          "Max: %u\nDOWNLOAD BANDWIDTH: Current: %u, Max: %u\nRETRANSMISSIONS: Current: %u\nOUT OF ORDER: "
+			          "Current: %u\nDUPLICATE: Current: %u",
 			          GetValue( LATENCY_METRIC, CURRENT_VALUE_TYPE ), GetValue( LATENCY_METRIC, MAX_VALUE_TYPE ),
 			          GetValue( JITTER_METRIC, CURRENT_VALUE_TYPE ), GetValue( JITTER_METRIC, MAX_VALUE_TYPE ),
 			          GetValue( UPLOAD_BANDWIDTH_METRIC, CURRENT_VALUE_TYPE ),
 			          GetValue( UPLOAD_BANDWIDTH_METRIC, MAX_VALUE_TYPE ),
+			          GetValue( DOWNLOAD_BANDWIDTH_METRIC, CURRENT_VALUE_TYPE ),
+			          GetValue( DOWNLOAD_BANDWIDTH_METRIC, MAX_VALUE_TYPE ),
 			          GetValue( RETRANSMISSION_METRIC, CURRENT_VALUE_TYPE ),
 			          GetValue( OUT_OF_ORDER_METRIC, CURRENT_VALUE_TYPE ),
 			          GetValue( DUPLICATE_METRIC, CURRENT_VALUE_TYPE ) );

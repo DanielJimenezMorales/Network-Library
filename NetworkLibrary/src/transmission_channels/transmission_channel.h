@@ -9,6 +9,8 @@ namespace NetLib
 {
 	class Message;
 	class MessageFactory;
+	class Socket;
+	class Address;
 
 	namespace Metrics
 	{
@@ -34,12 +36,14 @@ namespace NetLib
 
 			TransmissionChannelType GetType() { return _type; }
 
+			/// <summary>
+			/// Creates a packet with pending data and sends it through the socket to the specified address.
+			/// </summary>
+			virtual bool GenerateAndSerializePacket( Socket& socket, const Address& address,
+			                                         Metrics::MetricsHandler* metrics_handler ) = 0;
+
 			virtual void AddMessageToSend( std::unique_ptr< Message > message ) = 0;
-			virtual bool ArePendingMessagesToSend() const = 0;
-			virtual std::unique_ptr< Message > GetMessageToSend( Metrics::MetricsHandler* metrics_handler ) = 0;
 			virtual uint32 GetSizeOfNextUnsentMessage() const = 0;
-			void AddSentMessage( std::unique_ptr< Message > message );
-			void FreeSentMessages();
 
 			virtual void AddReceivedMessage( std::unique_ptr< Message > message,
 			                                 Metrics::MetricsHandler* metrics_handler ) = 0;
@@ -47,37 +51,24 @@ namespace NetLib
 			virtual const Message* GetReadyToProcessMessage() = 0;
 			void FreeProcessedMessages();
 
-			virtual void SeUnsentACKsToFalse() = 0; // This method should not exists and be done automatically. However,
-			                                        // I have not found how so for now, we do it manually.
-			virtual bool AreUnsentACKs() const = 0;
-			virtual uint32 GenerateACKs() const = 0;
 			virtual void ProcessACKs( uint32 acks, uint16 lastAckedMessageSequenceNumber,
 			                          Metrics::MetricsHandler* metrics_handler ) = 0;
 			virtual bool IsMessageDuplicated( uint16 messageSequenceNumber ) const = 0;
 
 			virtual void Update( float32 deltaTime ) = 0;
 
-			virtual uint16 GetLastMessageSequenceNumberAcked() const = 0;
-
 			virtual void Reset();
-
-			virtual uint32 GetRTTMilliseconds() const = 0;
 
 			virtual ~TransmissionChannel();
 
 		protected:
 			// Collection of messages that are waiting to be sent.
 			std::vector< std::unique_ptr< Message > > _unsentMessages;
-			// Collection of messages that have been sent and are waiting to be released (Used for memory management
-			// purposes)
-			std::queue< std::unique_ptr< Message > > _sentMessages;
 			// Collection of received messages ready to be processed
 			std::queue< std::unique_ptr< Message > > _readyToProcessMessages;
 			// Collection of messages that have been processed and are waiting to be released (Used for memory
 			// management purposes)
 			std::queue< std::unique_ptr< Message > > _processedMessages;
-
-			virtual void FreeSentMessage( MessageFactory& messageFactory, std::unique_ptr< Message > message ) = 0;
 
 			uint16 GetNextMessageSequenceNumber() const { return _nextMessageSequenceNumber; }
 			void IncreaseMessageSequenceNumber() { ++_nextMessageSequenceNumber; };
