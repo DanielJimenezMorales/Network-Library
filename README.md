@@ -43,6 +43,8 @@ Implementation Legend:
 - ✅ Retransmissions Count
 - ✅ Duplicates Count
 
+>_**NOTE:** Beginning January 1st, 2026, no further updates will be publicly released for this project in order to comply with my employer’s policies. I apologize for any inconvenience this may cause._
+
 ## How to get it working:
 1. Download the project locally (Fork, clone, copy & paste...)
 2. Generate project files using premake5. In my case, I use Visual Studio 2022, so I will open CMD, navigate to the repository folder, and type "vendor/premake5/premake5 vs2022". However, you will need to replace vs2022 with your preferred option.
