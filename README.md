@@ -7,27 +7,41 @@ This repository contains four different projects:
 3. Common (Shared files between Demo game and Network Library projects)
 4. Tests
 
-## Network library features:
-1. Supported protocols:
-   - UDP
-   - RUDP
-2. Connection pipeline
-3. Transmission channels support
-   - Unreliable unordered transmission support
-   - Unreliable ordered transmission support
-   - Reliable ordered transmission support
-4. Reliability:
-   - Message level ACKs
-   - Dynamic retransmission timeout based on connection's RTT
-5. Time sync
-6. World replication
-   - Network variables
-   - Automatic network change tracking
-   - ECS friendly
-7. Server-side inputs buffer (Naive version so far)
+## Network library Features:
+Implementation Legend: 
+🔲 Not Yet 🔰 Partially ✅ Done ❌ Won't do
 
+### Main
+- ✅ UDP protocol
+- ✅ RUDP protocol
+- 🔰 Connection pipeline (It's not customizable)
+- ✅ Time Synchronization
+- ✅ World Replication
+- 🔰 Server-Side Inputs Buffer (Naive version)
+- 🔲 RPCs
+- 🔲 Delta Snapshots
 
-## Demo game features: (IN PROGRESS)
+### Transmission channels support
+- ✅ Reliable Ordered
+- ✅ Unreliable Unordered
+- 🔰 Reliable Unordered
+- 🔲/❌ Unreliable Ordered
+
+### Reliability
+- ✅ Message Level ACKs
+- ✅ Dynamic Message Retransmission Timeout (based on connection's RTT)
+
+### Network Metrics
+- ✅ Latency
+- ✅ Jitter
+- ✅ Packet Loss
+- ✅ Upload Bandwidth
+- ✅ Download Bandwidth
+- 🔲 Upload Bandwidth per Channel
+- 🔲 Download Bandwidth per Channel
+- ✅ Out Of Order Count
+- ✅ Retransmissions Count
+- ✅ Duplicates Count
 
 ## How to get it working:
 1. Download the project locally (Fork, clone, copy & paste...)
