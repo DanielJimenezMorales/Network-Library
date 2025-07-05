@@ -1,5 +1,9 @@
 #include "unreliable_unordered_transmission_channel.h"
 
+#include <cassert>
+
+#include "logger.h"
+
 #include "communication/message_factory.h"
 #include "communication/network_packet.h"
 
@@ -30,8 +34,8 @@ namespace NetLib
 		return *this;
 	}
 
-	bool UnreliableUnorderedTransmissionChannel::GenerateAndSerializePacket( Socket& socket, const Address& address,
-	                                                                         Metrics::MetricsHandler* metrics_handler )
+	bool UnreliableUnorderedTransmissionChannel::CreateAndSendPacket( Socket& socket, const Address& address,
+	                                                                  Metrics::MetricsHandler* metrics_handler )
 	{
 		bool result = false;
 
@@ -92,9 +96,17 @@ namespace NetLib
 		return result;
 	}
 
-	void UnreliableUnorderedTransmissionChannel::AddMessageToSend( std::unique_ptr< Message > message )
+	bool UnreliableUnorderedTransmissionChannel::AddMessageToSend( std::unique_ptr< Message > message )
 	{
+		assert( message != nullptr );
+
+		if ( !IsMessageSuitable( message->GetHeader() ) )
+		{
+			return false;
+		}
+
 		_unsentMessages.push_back( std::move( message ) );
+		return true;
 	}
 
 	bool UnreliableUnorderedTransmissionChannel::ArePendingMessagesToSend() const
@@ -130,10 +142,18 @@ namespace NetLib
 		return _unsentMessages.front()->Size();
 	}
 
-	void UnreliableUnorderedTransmissionChannel::AddReceivedMessage( std::unique_ptr< Message > message,
+	bool UnreliableUnorderedTransmissionChannel::AddReceivedMessage( std::unique_ptr< Message > message,
 	                                                                 Metrics::MetricsHandler* metrics_handler )
 	{
+		assert( message != nullptr );
+
+		if ( !IsMessageSuitable( message->GetHeader() ) )
+		{
+			return false;
+		}
+
 		_readyToProcessMessages.push( std::move( message ) );
+		return true;
 	}
 
 	bool UnreliableUnorderedTransmissionChannel::ArePendingReadyToProcessMessages() const
@@ -169,5 +189,19 @@ namespace NetLib
 
 	void UnreliableUnorderedTransmissionChannel::Update( float32 deltaTime, Metrics::MetricsHandler* metrics_handler )
 	{
+	}
+
+	bool UnreliableUnorderedTransmissionChannel::IsMessageSuitable( const MessageHeader& header ) const
+	{
+		bool result = true;
+		if ( header.isReliable || header.isOrdered )
+		{
+			LOG_WARNING( "Trying to add a message to an unreliable unordered channel that is not suitable for it. "
+			             "Message type: %hhu, isReliable: %u, isOrdered: %u",
+			             header.type, header.isReliable, header.isOrdered );
+			result = false;
+		}
+
+		return result;
 	}
 } // namespace NetLib

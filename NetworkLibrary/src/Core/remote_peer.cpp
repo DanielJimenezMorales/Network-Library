@@ -188,7 +188,7 @@ namespace NetLib
 		{
 			TransmissionChannel* channel = *it;
 			Metrics::MetricsHandler* metricsHandler = _metricsEnabled ? &_metricsHandler : nullptr;
-			channel->GenerateAndSerializePacket( socket, _address, metricsHandler );
+			channel->CreateAndSendPacket( socket, _address, metricsHandler );
 		}
 	}
 

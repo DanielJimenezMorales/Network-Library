@@ -1,5 +1,8 @@
 #include "unreliable_ordered_transmission_channel.h"
 #include <memory>
+#include <cassert>
+
+#include "logger.h"
 
 #include "communication/message_factory.h"
 #include "communication/network_packet.h"
@@ -10,6 +13,7 @@
 
 #include "metrics/metric_names.h"
 #include "metrics/metrics_handler.h"
+
 namespace NetLib
 {
 	UnreliableOrderedTransmissionChannel::UnreliableOrderedTransmissionChannel()
@@ -36,8 +40,8 @@ namespace NetLib
 		return *this;
 	}
 
-	bool UnreliableOrderedTransmissionChannel::GenerateAndSerializePacket( Socket& socket, const Address& address,
-	                                                                       Metrics::MetricsHandler* metrics_handler )
+	bool UnreliableOrderedTransmissionChannel::CreateAndSendPacket( Socket& socket, const Address& address,
+	                                                                Metrics::MetricsHandler* metrics_handler )
 	{
 		bool result = false;
 
@@ -100,9 +104,17 @@ namespace NetLib
 		return result;
 	}
 
-	void UnreliableOrderedTransmissionChannel::AddMessageToSend( std::unique_ptr< Message > message )
+	bool UnreliableOrderedTransmissionChannel::AddMessageToSend( std::unique_ptr< Message > message )
 	{
+		assert( message != nullptr );
+
+		if ( !IsMessageSuitable( message->GetHeader() ) )
+		{
+			return false;
+		}
+
 		_unsentMessages.push_back( std::move( message ) );
+		return true;
 	}
 
 	bool UnreliableOrderedTransmissionChannel::ArePendingMessagesToSend() const
@@ -139,18 +151,28 @@ namespace NetLib
 		return _unsentMessages.front()->Size();
 	}
 
-	void UnreliableOrderedTransmissionChannel::AddReceivedMessage( std::unique_ptr< Message > message,
+	bool UnreliableOrderedTransmissionChannel::AddReceivedMessage( std::unique_ptr< Message > message,
 	                                                               Metrics::MetricsHandler* metrics_handler )
 	{
-		if ( !IsSequenceNumberNewerThanLastReceived( message->GetHeader().messageSequenceNumber ) )
+		assert( message != nullptr );
+
+		if ( !IsMessageSuitable( message->GetHeader() ) )
+		{
+			return false;
+		}
+
+		if ( IsSequenceNumberNewerThanLastReceived( message->GetHeader().messageSequenceNumber ) )
+		{
+			_lastMessageSequenceNumberReceived = message->GetHeader().messageSequenceNumber;
+			_readyToProcessMessages.push( std::move( message ) );
+		}
+		else
 		{
 			MessageFactory& messageFactory = MessageFactory::GetInstance();
 			messageFactory.ReleaseMessage( std::move( message ) );
-			return;
 		}
 
-		_lastMessageSequenceNumberReceived = message->GetHeader().messageSequenceNumber;
-		_readyToProcessMessages.push( std::move( message ) );
+		return true;
 	}
 
 	bool UnreliableOrderedTransmissionChannel::ArePendingReadyToProcessMessages() const
@@ -208,5 +230,19 @@ namespace NetLib
 		{
 			return false;
 		}
+	}
+
+	bool UnreliableOrderedTransmissionChannel::IsMessageSuitable( const MessageHeader& header ) const
+	{
+		bool result = true;
+		if ( header.isReliable || !header.isOrdered )
+		{
+			LOG_WARNING( "Trying to add a message to an unreliable ordered channel that is not suitable for it. "
+			             "Message type: %hhu, isReliable: %u, isOrdered: %u",
+			             header.type, header.isReliable, header.isOrdered );
+			return false;
+		}
+
+		return result;
 	}
 } // namespace NetLib

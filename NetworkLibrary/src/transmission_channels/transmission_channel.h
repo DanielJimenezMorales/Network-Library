@@ -39,22 +39,42 @@ namespace NetLib
 			/// <summary>
 			/// Creates a packet with pending data and sends it through the socket to the specified address.
 			/// </summary>
-			virtual bool GenerateAndSerializePacket( Socket& socket, const Address& address,
-			                                         Metrics::MetricsHandler* metrics_handler ) = 0;
+			/// <param name="socket">The socket to send the packet through.</param>
+			/// <param name="address">The targed address where the packet is going to be sent to.</param>
+			/// <param name="metrics_handler">A pointer to the metrics handler to submit any metrics such as
+			/// bandwidth.</param>
+			/// <returns>True if the packet was created and sent, False otherwise.</returns>
+			virtual bool CreateAndSendPacket( Socket& socket, const Address& address,
+			                                  Metrics::MetricsHandler* metrics_handler ) = 0;
 
-			virtual void AddMessageToSend( std::unique_ptr< Message > message ) = 0;
-			virtual uint32 GetSizeOfNextUnsentMessage() const = 0;
+			/// <summary>
+			/// Adds to the channel a message pending to be sent through the network. The header of the message must be
+			/// suitable with the channel.
+			/// </summary>
+			/// <param name="message">The message pending to be sent.</param>
+			/// <returns>True if the message was stored correclt, False otherwise.</returns>
+			virtual bool AddMessageToSend( std::unique_ptr< Message > message ) = 0;
 
-			virtual void AddReceivedMessage( std::unique_ptr< Message > message,
+			/// <summary>
+			/// Checks if there are any messages pending to be sent through the network.
+			/// </summary>
+			/// <returns>True if there are pending messages, False otherwise.</returns>
+			virtual bool ArePendingMessagesToSend() const = 0;
+
+			/// <summary>
+			/// Adds to the channel a message received to be processed. The header of the message must be
+			/// suitable with the channel.
+			/// </summary>
+			/// <param name="message">The message received to be processed.</param>
+			/// <returns>True if the message was stored correclt, False otherwise.</returns>
+			virtual bool AddReceivedMessage( std::unique_ptr< Message > message,
 			                                 Metrics::MetricsHandler* metrics_handler ) = 0;
 			virtual bool ArePendingReadyToProcessMessages() const = 0;
-			virtual bool ArePendingMessagesToSend() const = 0;
 			virtual const Message* GetReadyToProcessMessage() = 0;
 			void FreeProcessedMessages();
 
 			virtual void ProcessACKs( uint32 acks, uint16 lastAckedMessageSequenceNumber,
 			                          Metrics::MetricsHandler* metrics_handler ) = 0;
-			virtual bool IsMessageDuplicated( uint16 messageSequenceNumber ) const = 0;
 
 			virtual void Update( float32 deltaTime, Metrics::MetricsHandler* metrics_handler ) = 0;
 

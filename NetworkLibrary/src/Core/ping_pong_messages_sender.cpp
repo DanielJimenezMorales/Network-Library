@@ -7,8 +7,6 @@
 namespace NetLib
 {
 	PingPongMessagesSender::PingPongMessagesSender()
-	    : _timeLeftUntilNextPingPongMessage( DEFAULT_PING_PONG_MESSAGE_FREQUENCY_SECONDS )
-	    , _pingPongMessageFrequencySeconds( DEFAULT_PING_PONG_MESSAGE_FREQUENCY_SECONDS )
 	{
 	}
 
