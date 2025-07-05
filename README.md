@@ -1,6 +1,8 @@
 # Network-Library
 A Network Library for competitive realtime multiplayer games.
 
+>_**NOTE:** Beginning January 1st, 2026, no further updates will be publicly released for this project in order to comply with my employer’s policies. I apologize for any inconvenience this may cause._
+
 This repository contains four different projects:
 1. Network library
 2. Demo game. [Docs](docs/demo_game/demo_game_index.md)
@@ -42,8 +44,6 @@ Implementation Legend:
 - ✅ Out Of Order Count
 - ✅ Retransmissions Count
 - ✅ Duplicates Count
-
->_**NOTE:** Beginning January 1st, 2026, no further updates will be publicly released for this project in order to comply with my employer’s policies. I apologize for any inconvenience this may cause._
 
 ## How to get it working:
 1. Download the project locally (Fork, clone, copy & paste...)
