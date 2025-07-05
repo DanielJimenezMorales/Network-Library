@@ -73,9 +73,9 @@ namespace NetLib
 		socket.SendTo( buffer.GetData(), buffer.GetSize(), address );
 
 		// TODO See what happens when the socket couldn't send the packet
-		if (metrics_handler != nullptr)
+		if ( metrics_handler != nullptr )
 		{
-			metrics_handler->AddValue(Metrics::UPLOAD_BANDWIDTH_METRIC, packet.Size());
+			metrics_handler->AddValue( Metrics::UPLOAD_BANDWIDTH_METRIC, packet.Size() );
 		}
 
 		// Send messages ownership back to remote peer
@@ -167,7 +167,7 @@ namespace NetLib
 		return false;
 	}
 
-	void UnreliableUnorderedTransmissionChannel::Update( float32 deltaTime )
+	void UnreliableUnorderedTransmissionChannel::Update( float32 deltaTime, Metrics::MetricsHandler* metrics_handler )
 	{
 	}
 } // namespace NetLib

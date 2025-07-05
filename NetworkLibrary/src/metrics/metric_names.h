@@ -7,6 +7,7 @@ namespace NetLib
 		// Metric names
 		static constexpr char* LATENCY_METRIC = "LATENCY";
 		static constexpr char* JITTER_METRIC = "JITTER";
+		static constexpr char* PACKET_LOSS_METRIC = "PACKET_LOSS";
 		static constexpr char* UPLOAD_BANDWIDTH_METRIC = "UPLOAD_BANDWIDTH";
 		static constexpr char* DOWNLOAD_BANDWIDTH_METRIC = "DOWNLOAD_BANDWIDTH";
 		static constexpr char* OUT_OF_ORDER_METRIC = "OUT_OF_ORDER";

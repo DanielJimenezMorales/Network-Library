@@ -19,7 +19,7 @@ namespace NetLib
 
 		void UploadBandwidthMetric::GetName( std::string& out_name_buffer ) const
 		{
-			out_name_buffer.assign(UPLOAD_BANDWIDTH_METRIC);
+			out_name_buffer.assign( UPLOAD_BANDWIDTH_METRIC );
 		}
 
 		uint32 UploadBandwidthMetric::GetValue( const std::string& value_type ) const
@@ -70,7 +70,7 @@ namespace NetLib
 			}
 		}
 
-		void UploadBandwidthMetric::AddValueSample( uint32 value )
+		void UploadBandwidthMetric::AddValueSample( uint32 value, const std::string& sample_type )
 		{
 			_inProgressValue += value;
 		}

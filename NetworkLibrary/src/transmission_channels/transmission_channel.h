@@ -48,6 +48,7 @@ namespace NetLib
 			virtual void AddReceivedMessage( std::unique_ptr< Message > message,
 			                                 Metrics::MetricsHandler* metrics_handler ) = 0;
 			virtual bool ArePendingReadyToProcessMessages() const = 0;
+			virtual bool ArePendingMessagesToSend() const = 0;
 			virtual const Message* GetReadyToProcessMessage() = 0;
 			void FreeProcessedMessages();
 
@@ -55,7 +56,7 @@ namespace NetLib
 			                          Metrics::MetricsHandler* metrics_handler ) = 0;
 			virtual bool IsMessageDuplicated( uint16 messageSequenceNumber ) const = 0;
 
-			virtual void Update( float32 deltaTime ) = 0;
+			virtual void Update( float32 deltaTime, Metrics::MetricsHandler* metrics_handler ) = 0;
 
 			virtual void Reset();
 

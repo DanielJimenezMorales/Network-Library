@@ -1,14 +1,16 @@
 #pragma once
 #include "metrics/i_metric.h"
 
+#include <vector>
+
 namespace NetLib
 {
 	namespace Metrics
 	{
-		class DownloadBandwidthMetric : public IMetric
+		class PacketLossMetric : public IMetric
 		{
 			public:
-				DownloadBandwidthMetric();
+				PacketLossMetric();
 
 				void GetName( std::string& out_name_buffer ) const override;
 				uint32 GetValue( const std::string& value_type ) const override;
@@ -21,9 +23,10 @@ namespace NetLib
 				float32 _timeUntilNextUpdate;
 				float32 _updateRate;
 
-				uint32 _inProgressValue;
+				uint32 _sentMessages;
+				uint32 _lostMessages;
 				uint32 _currentValue;
 				uint32 _maxValue;
 		};
 	}
-}
+} // namespace NetLib

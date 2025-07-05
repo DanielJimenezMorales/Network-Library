@@ -40,7 +40,7 @@ namespace NetLib
 		{
 		}
 
-		void IncrementMetric::AddValueSample( uint32 value )
+		void IncrementMetric::AddValueSample( uint32 value, const std::string& sample_type )
 		{
 			_currentValue += value;
 		}

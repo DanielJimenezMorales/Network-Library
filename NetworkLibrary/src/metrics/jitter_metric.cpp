@@ -75,7 +75,7 @@ namespace NetLib
 			}
 		}
 
-		void JitterMetric::AddValueSample( uint32 value )
+		void JitterMetric::AddValueSample( uint32 value, const std::string& sample_type )
 		{
 			_latencySamples.push_back( value );
 		}

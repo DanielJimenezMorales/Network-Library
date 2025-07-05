@@ -130,10 +130,11 @@ namespace NetLib
 			_inactivityTimeLeft = 0.f;
 		}
 
+		Metrics::MetricsHandler* metricsHandler = _metricsEnabled ? &_metricsHandler : nullptr;
 		// Update transmission channels
 		for ( uint32 i = 0; i < GetNumberOfTransmissionChannels(); ++i )
 		{
-			_transmissionChannels[ i ]->Update( elapsedTime );
+			_transmissionChannels[ i ]->Update( elapsedTime, metricsHandler );
 		}
 
 		if ( _metricsEnabled )

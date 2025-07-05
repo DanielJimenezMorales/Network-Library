@@ -17,7 +17,7 @@ namespace NetLib
 			                                 Metrics::MetricsHandler* metrics_handler ) override;
 
 			void AddMessageToSend( std::unique_ptr< Message > message ) override;
-			bool ArePendingMessagesToSend() const;
+			bool ArePendingMessagesToSend() const override;
 			std::unique_ptr< Message > GetMessageToSend( Metrics::MetricsHandler* metrics_handler );
 			uint32 GetSizeOfNextUnsentMessage() const override;
 
@@ -30,7 +30,7 @@ namespace NetLib
 			                  Metrics::MetricsHandler* metrics_handler ) override;
 			bool IsMessageDuplicated( uint16 messageSequenceNumber ) const override;
 
-			void Update( float32 deltaTime ) override;
+			void Update( float32 deltaTime, Metrics::MetricsHandler* metrics_handler ) override;
 
 			void Reset() override;
 

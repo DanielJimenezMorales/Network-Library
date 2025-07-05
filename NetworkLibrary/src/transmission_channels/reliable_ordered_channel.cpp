@@ -148,6 +148,11 @@ namespace NetLib
 		{
 			std::unique_ptr< Message > message = packet.GetMessages();
 			AddUnackedReliableMessage( std::move( message ) );
+
+			if ( metrics_handler != nullptr )
+			{
+				metrics_handler->AddValue( Metrics::PACKET_LOSS_METRIC, 1, "SENT" );
+			}
 		}
 
 		delete[] bufferData;
@@ -306,7 +311,7 @@ namespace NetLib
 		bool found = false;
 		while ( cit != _unackedReliableMessageTimeouts.cend() && !found )
 		{
-			float32 timeout = *cit;
+			const float32 timeout = *cit;
 			if ( timeout <= 0 )
 			{
 				found = true;
@@ -639,7 +644,7 @@ namespace NetLib
 		return result;
 	}
 
-	void ReliableOrderedChannel::Update( float32 deltaTime )
+	void ReliableOrderedChannel::Update( float32 deltaTime, Metrics::MetricsHandler* metrics_handler )
 	{
 		// Update unacked message timeouts
 		std::list< float32 >::iterator it = _unackedReliableMessageTimeouts.begin();
@@ -648,8 +653,12 @@ namespace NetLib
 			float32 timeout = *it;
 			timeout -= deltaTime;
 
-			if ( timeout < 0 )
+			if ( timeout <= 0 )
 			{
+				if ( metrics_handler != nullptr )
+				{
+					metrics_handler->AddValue( Metrics::PACKET_LOSS_METRIC, 1, "LOST" );
+				}
 				timeout = 0;
 			}
 

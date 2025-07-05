@@ -28,11 +28,12 @@ namespace NetLib
 
 	void PingPongMessagesSender::Update( float32 elapsed_time, RemotePeer& remote_peer )
 	{
-		_timeLeftUntilNextPingPongMessage -= elapsed_time;
-		if ( _timeLeftUntilNextPingPongMessage <= 0.f )
-		{
-			_timeLeftUntilNextPingPongMessage = _pingPongMessageFrequencySeconds;
+		const TransmissionChannel* reliableOrderedChannel =
+		    static_cast< const RemotePeer& >( remote_peer )
+		        .GetTransmissionChannelFromType( TransmissionChannelType::ReliableOrdered );
 
+		if ( !reliableOrderedChannel->ArePendingMessagesToSend() )
+		{
 			std::unique_ptr< PingPongMessage > pingPongMessage = CreatePingPongMessage();
 			remote_peer.AddMessage( std::move( pingPongMessage ) );
 		}

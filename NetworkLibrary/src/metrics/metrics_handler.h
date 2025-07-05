@@ -36,7 +36,7 @@ namespace NetLib
 				/// Adds a value to the entry with name entry_name. If the entry doesn't exists it does nothing and
 				/// returns false.
 				/// </summary>
-				bool AddValue( const std::string& entry_name, uint32 value );
+				bool AddValue( const std::string& entry_name, uint32 value, const std::string& sample_type = "NONE" );
 
 			private:
 				void Reset();

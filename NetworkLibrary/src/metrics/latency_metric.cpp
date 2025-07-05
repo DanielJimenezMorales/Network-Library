@@ -69,7 +69,7 @@ namespace NetLib
 			_samples.clear();
 		}
 
-		void LatencyMetric::AddValueSample( uint32 value )
+		void LatencyMetric::AddValueSample( uint32 value, const std::string& sample_type )
 		{
 			if ( _samples.capacity() == _samples.size() )
 			{

@@ -50,7 +50,6 @@ namespace NetLib
 
 			void InitTransmissionChannels();
 			TransmissionChannel* GetTransmissionChannelFromType( TransmissionChannelType channelType );
-			const TransmissionChannel* GetTransmissionChannelFromType( TransmissionChannelType channelType ) const;
 			TransmissionChannelType GetTransmissionChannelTypeFromHeader( const MessageHeader& messageHeader ) const;
 
 		public:
@@ -94,6 +93,8 @@ namespace NetLib
 			uint64 GetClientSalt() const { return _clientSalt; }
 			uint64 GetServerSalt() const { return _serverSalt; }
 			RemotePeerState GeturrentState() const { return _currentState; }
+
+			const TransmissionChannel* GetTransmissionChannelFromType(TransmissionChannelType channelType) const;
 
 			void SetServerSalt( uint64 newValue ) { _serverSalt = newValue; }
 

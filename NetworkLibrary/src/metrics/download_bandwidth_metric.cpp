@@ -70,7 +70,7 @@ namespace NetLib
 			}
 		}
 
-		void DownloadBandwidthMetric::AddValueSample( uint32 value )
+		void DownloadBandwidthMetric::AddValueSample( uint32 value, const std::string& sample_type )
 		{
 			_inProgressValue += value;
 		}

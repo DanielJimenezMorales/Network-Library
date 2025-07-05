@@ -185,7 +185,7 @@ namespace NetLib
 		return false;
 	}
 
-	void UnreliableOrderedTransmissionChannel::Update( float32 deltaTime )
+	void UnreliableOrderedTransmissionChannel::Update( float32 deltaTime, Metrics::MetricsHandler* metrics_handler )
 	{
 	}
 

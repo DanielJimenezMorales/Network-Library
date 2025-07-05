@@ -5,7 +5,7 @@ namespace NetLib
 {
 	class RemotePeer;
 
-	static const float32 DEFAULT_PING_PONG_MESSAGE_FREQUENCY_SECONDS = 0.2f;
+	static const float32 DEFAULT_PING_PONG_MESSAGE_FREQUENCY_SECONDS = 0.f;
 
 	class PingPongMessagesSender
 	{
