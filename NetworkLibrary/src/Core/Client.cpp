@@ -19,16 +19,20 @@ namespace NetLib
 	    : Peer( PeerType::CLIENT, 1, 1024, 1024 )
 	    , _serverAddress( "127.0.0.1", 54000 )
 	    , inGameMessageID( 0 )
-	    , _timeSinceLastTimeRequest( 0.0f )
-	    , _numberOfInitialTimeRequestBurstLeft( NUMBER_OF_INITIAL_TIME_REQUESTS_BURST )
 	    , _currentState( ClientState::CS_Disconnected )
 	    , _replicationMessagesProcessor()
 	    , _clientIndex( 0 )
+	    , _timeSyncer()
 	{
 	}
 
 	Client::~Client()
 	{
+	}
+
+	bool Client::StartClient( const std::string& server_ip, uint32 server_port )
+	{
+		return Start( server_ip, 0 ); // Port is zero so the system picks up a random port number
 	}
 
 	void Client::SendInputs( const IInputState& inputState )
@@ -69,7 +73,7 @@ namespace NetLib
 		return _clientIndex;
 	}
 
-	bool Client::StartConcrete()
+	bool Client::StartConcrete( const std::string& ip, uint32 port )
 	{
 		BindSocket( Address( "127.0.0.1", 0 ) ); // Port is zero so the system picks up a random port number
 
@@ -153,6 +157,10 @@ namespace NetLib
 					ProcessReplicationAction( replicationMessage );
 				}
 				break;
+			case MessageType::PingPong:
+				{
+					break;
+				}
 			default:
 				LOG_WARNING( "Invalid Message type, ignoring it..." );
 				break;
@@ -183,13 +191,14 @@ namespace NetLib
 
 		if ( _currentState == ClientState::CS_Connected )
 		{
-			UpdateTimeRequestsElapsedTime( elapsedTime );
-
-			RemotePeer* remotePeer = _remotePeersHandler.GetRemotePeerFromAddress( _serverAddress );
-			if ( remotePeer == nullptr )
+			RemotePeer* serverRemotePeer = _remotePeersHandler.GetRemotePeerFromAddress( _serverAddress );
+			if ( serverRemotePeer == nullptr )
 			{
 				LOG_ERROR( "There is no Remote peer corresponding to IP: %s", _serverAddress.GetIP() );
-				return;
+			}
+			else
+			{
+				_timeSyncer.Update( elapsedTime, *serverRemotePeer );
 			}
 		}
 	}
@@ -275,55 +284,7 @@ namespace NetLib
 	void Client::ProcessTimeResponse( const TimeResponseMessage& message )
 	{
 		LOG_INFO( "PROCESSING TIME RESPONSE" );
-
-		// Add new RTT to buffer
-		TimeClock& timeClock = TimeClock::GetInstance();
-		uint32 rtt = timeClock.GetLocalTimeMilliseconds() - message.remoteTime;
-		_timeRequestRTTs.push_back( rtt );
-
-		if ( _timeRequestRTTs.size() == TIME_REQUEST_RTT_BUFFER_SIZE + 1 )
-		{
-			_timeRequestRTTs.pop_front();
-		}
-
-		// Get RTT to adjust server's clock elapsed time
-		uint32 meanRTT = 0;
-		if ( _timeRequestRTTs.size() == TIME_REQUEST_RTT_BUFFER_SIZE )
-		{
-			// Sort RTTs and remove the smallest and biggest values (They are considered outliers!)
-			std::list< uint32 > sortedTimeRequestRTTs = _timeRequestRTTs;
-			sortedTimeRequestRTTs.sort();
-
-			// Remove potential outliers
-			for ( uint32 i = 0; i < NUMBER_OF_RTTS_CONSIDERED_OUTLIERS_PER_SIDE; ++i )
-			{
-				sortedTimeRequestRTTs.pop_back();
-				sortedTimeRequestRTTs.pop_front();
-			}
-
-			std::list< uint32 >::const_iterator cit = sortedTimeRequestRTTs.cbegin();
-			for ( ; cit != sortedTimeRequestRTTs.cend(); ++cit )
-			{
-				meanRTT += *cit;
-			}
-
-			const uint32 NUMBER_OF_VALID_RTT_TO_AVERAGE =
-			    TIME_REQUEST_RTT_BUFFER_SIZE - ( 2 * NUMBER_OF_RTTS_CONSIDERED_OUTLIERS_PER_SIDE );
-
-			meanRTT /= NUMBER_OF_VALID_RTT_TO_AVERAGE;
-		}
-		else
-		{
-			meanRTT = rtt;
-		}
-
-		// Calculate server clock delta time
-		uint32 serverClockElapsedTimeMilliseconds = message.serverTime - message.remoteTime - ( meanRTT / 2 );
-		float64 serverClockElapsedTimeSeconds = static_cast< float64 >( serverClockElapsedTimeMilliseconds ) / 1000;
-		timeClock.SetServerClockTimeDelta( serverClockElapsedTimeSeconds );
-
-		LOG_INFO( "SERVER TIME UPDATED. Local time: %f sec, Server time: %f sec", timeClock.GetLocalTimeSeconds(),
-		          timeClock.GetServerTimeSeconds() );
+		_timeSyncer.ProcessTimeResponse( message );
 	}
 
 	void Client::ProcessReplicationAction( const ReplicationMessage& message )
@@ -376,53 +337,6 @@ namespace NetLib
 
 		// Store message in server's pending connection in order to send it
 		remotePeer.AddMessage( std::move( connectionChallengeResponseMessage ) );
-	}
-
-	void Client::CreateTimeRequestMessage( RemotePeer& remotePeer )
-	{
-		LOG_INFO( "TIME REQUEST CREATED" );
-		MessageFactory& messageFactory = MessageFactory::GetInstance();
-		std::unique_ptr< Message > lendMessage( messageFactory.LendMessage( MessageType::TimeRequest ) );
-
-		std::unique_ptr< TimeRequestMessage > timeRequestMessage(
-		    static_cast< TimeRequestMessage* >( lendMessage.release() ) );
-
-		timeRequestMessage->SetOrdered( true );
-		TimeClock& timeClock = TimeClock::GetInstance();
-		timeRequestMessage->remoteTime = timeClock.GetLocalTimeMilliseconds();
-
-		remotePeer.AddMessage( std::move( timeRequestMessage ) );
-	}
-
-	void Client::UpdateTimeRequestsElapsedTime( float32 elapsedTime )
-	{
-		if ( _numberOfInitialTimeRequestBurstLeft > 0 )
-		{
-			RemotePeer* remotePeer = _remotePeersHandler.GetRemotePeerFromAddress( _serverAddress );
-			if ( remotePeer == nullptr )
-			{
-				LOG_ERROR( "There is no Remote peer corresponding to IP: %s", _serverAddress.GetIP().c_str() );
-				return;
-			}
-
-			--_numberOfInitialTimeRequestBurstLeft;
-			CreateTimeRequestMessage( *remotePeer );
-			return;
-		}
-
-		_timeSinceLastTimeRequest += elapsedTime;
-		if ( _timeSinceLastTimeRequest >= TIME_REQUESTS_FREQUENCY_SECONDS )
-		{
-			RemotePeer* remotePeer = _remotePeersHandler.GetRemotePeerFromAddress( _serverAddress );
-			if ( remotePeer == nullptr )
-			{
-				LOG_ERROR( "There is no Remote peer corresponding to IP: %s", _serverAddress.GetIP().c_str() );
-				return;
-			}
-
-			_timeSinceLastTimeRequest = 0;
-			CreateTimeRequestMessage( *remotePeer );
-		}
 	}
 
 	void Client::OnServerDisconnect()

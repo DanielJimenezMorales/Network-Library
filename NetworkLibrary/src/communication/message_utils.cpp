@@ -47,6 +47,9 @@ namespace NetLib
 			case MessageType::Inputs:
 				message = messageFactory.LendMessage( MessageType::Inputs );
 				break;
+			case MessageType::PingPong:
+				message = messageFactory.LendMessage( MessageType::PingPong );
+				break;
 			default:
 				LOG_WARNING( "Can't read message of type MessageType = %hhu. Ignoring it...", type );
 		}

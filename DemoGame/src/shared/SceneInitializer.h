@@ -1,7 +1,7 @@
 #pragma once
 #include "core/peer.h"
 
-// TODO TEMP
+// TODO REMOVE THIS FILE
 namespace Engine
 {
 	namespace ECS

@@ -3,6 +3,7 @@
 
 #include <vector>
 #include <list>
+#include <string>
 
 #include "Delegate.h"
 
@@ -20,7 +21,6 @@ namespace NetLib
 	class NetworkPacket;
 	class RemotePeer;
 	class Buffer;
-	class NetworkEntityFactory;
 
 	enum ConnectionFailedReasonType : uint8
 	{
@@ -57,14 +57,40 @@ namespace NetLib
 	class Peer
 	{
 		public:
-			bool Start();
+			/// <summary>
+			/// Connects the Peer to the specified IP and port. For a server, the user will need to pass an ip of
+			/// "0.0.0.0" to listen for all connections. The server's connection pipeline will happen inmediately. For a
+			/// client, the user will need to specify a valid IP where the server is at and the port will be 0 so the
+			/// system picks a random one. The client's connection pipeline will not be inmediate as it needs to get
+			/// approval from server
+			/// </summary>
+			/// <param name="ip">The IP to connect at. For client = server IP. For server = "0.0.0.0"</param>
+			/// <param name="port">The port to listen at. For client = 0. For server = a non-zero port</param>
+			/// <returns></returns>
+			bool Start( const std::string& ip, uint32 port );
 			bool PreTick();
 			bool Tick( float32 elapsedTime );
 			bool Stop();
 
 			PeerConnectionState GetConnectionState() const { return _connectionState; }
+
+			/// <summary>
+			/// Returns the type of this peer. It can be either a client or a server.
+			/// </summary>
 			PeerType GetPeerType() const { return _type; }
 			uint32 GetCurrentTick() const { return _currentTick; }
+
+			/// <summary>
+			/// Get the metric value from a remote peer. If the remote peer doesn't exist or the metric is not found, a
+			/// value of 0 is returned.
+			/// </summary>
+			/// <param name="remote_peer_id">The remote peer id</param>
+			/// <param name="metric_name">The name of the metric. See metrics/metric_names.h for more info</param>
+			/// <param name="value_type">The type of value you want to get. See metrics/metric_names.h for more
+			/// info</param>
+			/// <returns>The metric value on success or 0 on failure</returns>
+			uint32 GetMetric( uint32 remote_peer_id, const std::string& metric_name,
+			                  const std::string& value_type ) const;
 
 			// Delegates related
 			template < typename Functor >
@@ -88,7 +114,7 @@ namespace NetLib
 
 			Peer& operator=( const Peer& ) = delete;
 
-			virtual bool StartConcrete() = 0;
+			virtual bool StartConcrete( const std::string& ip, uint32 port ) = 0;
 			virtual void ProcessMessageFromPeer( const Message& message, RemotePeer& remotePeer ) = 0;
 			virtual void ProcessMessageFromUnknownPeer( const Message& message, const Address& address ) = 0;
 			virtual void TickConcrete( float32 elapsedTime ) = 0;
@@ -124,13 +150,10 @@ namespace NetLib
 
 			void CreateDisconnectionPacket( const RemotePeer& remotePeer, ConnectionFailedReasonType reason );
 
-			void SendData();
 			/// <summary>
 			/// Sends pending data to all the connected remote peers
 			/// </summary>
 			void SendDataToRemotePeers();
-			void SendDataToRemotePeer( RemotePeer& remotePeer );
-			void SendPacketToRemotePeer( RemotePeer& remotePeer, TransmissionChannelType type );
 
 			void SendDataToAddress( const Buffer& buffer, const Address& address ) const;
 

@@ -5,7 +5,12 @@
 #include "numeric_types.h"
 #include "logger.h"
 
+#include "communication/network_packet.h"
+
 #include "core/address.h"
+#include "core/ping_pong_messages_sender.h"
+
+#include "metrics/metrics_handler.h"
 
 #include "transmission_channels/transmission_channel.h"
 
@@ -13,6 +18,7 @@ namespace NetLib
 {
 	class Message;
 	struct MessageHeader;
+	class Socket;
 
 	enum RemotePeerState : uint8
 	{
@@ -37,9 +43,13 @@ namespace NetLib
 
 			std::vector< TransmissionChannel* > _transmissionChannels;
 
+			bool _metricsEnabled;
+			Metrics::MetricsHandler _metricsHandler;
+
+			PingPongMessagesSender _pingPongMessagesSender;
+
 			void InitTransmissionChannels();
 			TransmissionChannel* GetTransmissionChannelFromType( TransmissionChannelType channelType );
-			const TransmissionChannel* GetTransmissionChannelFromType( TransmissionChannelType channelType ) const;
 			TransmissionChannelType GetTransmissionChannelTypeFromHeader( const MessageHeader& messageHeader ) const;
 
 		public:
@@ -53,7 +63,8 @@ namespace NetLib
 			RemotePeer& operator=( const RemotePeer& ) = delete;
 			~RemotePeer();
 
-			uint16 GetLastMessageSequenceNumberAcked( TransmissionChannelType channelType ) const;
+			void ActivateNetworkStatistics();
+			void DeactivateNetworkStatistics();
 
 			/// <summary>
 			/// Initializes all the internal systems. You must call this method before performing any other operation.
@@ -71,6 +82,8 @@ namespace NetLib
 
 			void Tick( float32 elapsedTime );
 
+			void SendData( Socket& socket );
+
 			const Address& GetAddress() const { return _address; }
 			uint16 GetClientIndex() const { return _id; }
 			uint64 GetDataPrefix() const
@@ -81,30 +94,25 @@ namespace NetLib
 			uint64 GetServerSalt() const { return _serverSalt; }
 			RemotePeerState GeturrentState() const { return _currentState; }
 
+			const TransmissionChannel* GetTransmissionChannelFromType(TransmissionChannelType channelType) const;
+
 			void SetServerSalt( uint64 newValue ) { _serverSalt = newValue; }
 
 			bool IsAddressEqual( const Address& other ) const { return other == _address; }
 			bool IsInactive() const { return _inactivityTimeLeft == 0.f; }
 			bool AddMessage( std::unique_ptr< Message > message );
-			bool ArePendingMessages( TransmissionChannelType channelType ) const;
-			std::unique_ptr< Message > GetPendingMessage( TransmissionChannelType channelType );
-			uint32 GetSizeOfNextUnsentMessage( TransmissionChannelType channelType ) const;
-			void AddSentMessage( std::unique_ptr< Message > message, TransmissionChannelType channelType );
-			void FreeSentMessages();
 			void FreeProcessedMessages();
-			void SeUnsentACKsToFalse( TransmissionChannelType channelType );
-			bool AreUnsentACKs( TransmissionChannelType channelType ) const;
-			uint32 GenerateACKs( TransmissionChannelType channelType ) const;
+			void ProcessPacket( NetworkPacket& packet );
 			void ProcessACKs( uint32 acks, uint16 lastAckedMessageSequenceNumber, TransmissionChannelType channelType );
 			bool AddReceivedMessage( std::unique_ptr< Message > message );
 
 			bool ArePendingReadyToProcessMessages() const;
 			const Message* GetPendingReadyToProcessMessage();
 
-			uint32 GetRTTMilliseconds() const;
-
 			std::vector< TransmissionChannelType > GetAvailableTransmissionChannelTypes() const;
 			uint32 GetNumberOfTransmissionChannels() const;
+
+			uint32 GetMetric( const std::string& metric_name, const std::string& value_type ) const;
 
 			/// <summary>
 			/// Disconnect and reset the remote client

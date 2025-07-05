@@ -51,6 +51,7 @@ namespace NetLib
 
 		_remotePeerSlots[ slotIndex ] = true;
 		_remotePeers[ slotIndex ].Connect( addressInfo, id, REMOTE_PEER_INACTIVITY_TIME, clientSalt, serverSalt );
+		_remotePeers[ slotIndex ].ActivateNetworkStatistics();
 
 		auto it = _validRemotePeers.insert( &( _remotePeers[ slotIndex ] ) );
 		assert( it.second ); // If the element was already there it means that we are trying to add it again. ERROR!!
@@ -110,6 +111,26 @@ namespace NetLib
 	RemotePeer* RemotePeersHandler::GetRemotePeerFromId( uint32 id )
 	{
 		RemotePeer* result = nullptr;
+		for ( uint32 i = 0; i < _maxConnections; ++i )
+		{
+			if ( !_remotePeerSlots[ i ] )
+			{
+				continue;
+			}
+
+			if ( _remotePeers[ i ].GetClientIndex() == id )
+			{
+				result = &_remotePeers[ i ];
+				break;
+			}
+		}
+
+		return result;
+	}
+
+	const RemotePeer* RemotePeersHandler::GetRemotePeerFromId( uint32 id ) const
+	{
+		const RemotePeer* result = nullptr;
 		for ( uint32 i = 0; i < _maxConnections; ++i )
 		{
 			if ( !_remotePeerSlots[ i ] )

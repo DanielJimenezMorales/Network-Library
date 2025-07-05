@@ -269,4 +269,24 @@ namespace NetLib
 			data = nullptr;
 		}
 	}
+
+	void PingPongMessage::Write( Buffer& buffer ) const
+	{
+		_header.Write( buffer );
+	}
+
+	void PingPongMessage::Read( Buffer& buffer )
+	{
+		_header.type = MessageType::PingPong;
+		_header.ReadWithoutHeader( buffer );
+	}
+
+	uint32 PingPongMessage::Size() const
+	{
+		return MessageHeader::Size();
+	}
+
+	void PingPongMessage::Reset()
+	{
+	}
 } // namespace NetLib

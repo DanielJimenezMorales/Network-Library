@@ -14,7 +14,7 @@
 
 namespace NetLib
 {
-	bool Peer::Start()
+	bool Peer::Start( const std::string& ip, uint32 port )
 	{
 		if ( _connectionState != PeerConnectionState::PCS_Disconnected )
 		{
@@ -31,7 +31,7 @@ namespace NetLib
 			return false;
 		}
 
-		if ( !StartConcrete() )
+		if ( !StartConcrete( ip, port ) )
 		{
 			LOG_ERROR( "Error while starting peer, aborting operation..." );
 			SetConnectionState( PeerConnectionState::PCS_Disconnected );
@@ -68,7 +68,7 @@ namespace NetLib
 		TickConcrete( elapsedTime );
 		FinishRemotePeersDisconnection();
 
-		SendData();
+		SendDataToRemotePeers();
 
 		if ( _isStopRequested )
 		{
@@ -87,6 +87,23 @@ namespace NetLib
 		StopInternal();
 
 		return true;
+	}
+
+	uint32 Peer::GetMetric( uint32 remote_peer_id, const std::string& metric_name, const std::string& value_type ) const
+	{
+		uint32 result = 0;
+		const RemotePeer* remotePeer = _remotePeersHandler.GetRemotePeerFromId( remote_peer_id );
+		if ( remotePeer != nullptr )
+		{
+			result = remotePeer->GetMetric( metric_name, value_type );
+		}
+		else
+		{
+			LOG_WARNING( "You are trying to get a metric from a remote peer that doesn't exist. ID: %u",
+			             remote_peer_id );
+		}
+
+		return result;
 	}
 
 	void Peer::UnsubscribeToOnRemotePeerDisconnect( uint32 id )
@@ -272,28 +289,17 @@ namespace NetLib
 
 		RemotePeer* remotePeer = _remotePeersHandler.GetRemotePeerFromAddress( address );
 		bool isPacketFromRemotePeer = ( remotePeer != nullptr );
-
-		// Process packet ACKs
 		if ( isPacketFromRemotePeer )
 		{
-			uint32 acks = packet.GetHeader().ackBits;
-			uint16 lastAckedMessageSequenceNumber = packet.GetHeader().lastAckedSequenceNumber;
-			TransmissionChannelType channelType =
-			    static_cast< TransmissionChannelType >( packet.GetHeader().channelType );
-			remotePeer->ProcessACKs( acks, lastAckedMessageSequenceNumber, channelType );
+			remotePeer->ProcessPacket( packet );
 		}
-
-		// Process packet messages one by one
-		MessageFactory& messageFactory = MessageFactory::GetInstance();
-		while ( packet.GetNumberOfMessages() > 0 )
+		else
 		{
-			std::unique_ptr< Message > message = packet.GetMessages();
-			if ( isPacketFromRemotePeer )
+			MessageFactory& messageFactory = MessageFactory::GetInstance();
+			while ( packet.GetNumberOfMessages() > 0 )
 			{
-				remotePeer->AddReceivedMessage( std::move( message ) );
-			}
-			else
-			{
+				std::unique_ptr< Message > message = packet.GetMessages();
+
 				ProcessMessageFromUnknownPeer( *message, address );
 				messageFactory.ReleaseMessage( std::move( message ) );
 			}
@@ -339,11 +345,6 @@ namespace NetLib
 		}
 	}
 
-	void Peer::SendData()
-	{
-		SendDataToRemotePeers();
-	}
-
 	void Peer::SendDataToRemotePeers()
 	{
 		auto validRemotePeersIt = _remotePeersHandler.GetValidRemotePeersIterator();
@@ -351,76 +352,7 @@ namespace NetLib
 
 		for ( ; validRemotePeersIt != pastTheEndIt; ++validRemotePeersIt )
 		{
-			SendDataToRemotePeer( **validRemotePeersIt );
-		}
-	}
-
-	void Peer::SendDataToRemotePeer( RemotePeer& remotePeer )
-	{
-		// Send one packet per Remote peer transmission channel
-		std::vector< TransmissionChannelType > channelTypes = remotePeer.GetAvailableTransmissionChannelTypes();
-		std::vector< TransmissionChannelType >::const_iterator cit = channelTypes.cbegin();
-		for ( cit; cit != channelTypes.cend(); ++cit )
-		{
-			TransmissionChannelType channelType = *cit;
-			SendPacketToRemotePeer( remotePeer, channelType );
-		}
-
-		remotePeer.FreeSentMessages();
-	}
-
-	void Peer::SendPacketToRemotePeer( RemotePeer& remotePeer, TransmissionChannelType type )
-	{
-		if ( !remotePeer.ArePendingMessages( type ) && !remotePeer.AreUnsentACKs( type ) )
-		{
-			return;
-		}
-
-		NetworkPacket packet = NetworkPacket();
-
-		// TODO Check somewhere if there is a message larger than the maximum packet size. Log a warning saying that the
-		// message will never get sent and delete it.
-		// TODO Include data prefix in packet's header and check if the data prefix is correct when receiving a packet
-
-		// Check if we should include a message to the packet
-		bool arePendingMessages = remotePeer.ArePendingMessages( type );
-		bool isThereCapacityLeft = packet.CanMessageFit( remotePeer.GetSizeOfNextUnsentMessage( type ) );
-
-		while ( arePendingMessages && isThereCapacityLeft )
-		{
-			// Configure and add message to packet
-			std::unique_ptr< Message > message = remotePeer.GetPendingMessage( type );
-
-			if ( message->GetHeader().isReliable )
-			{
-				LOG_INFO( "Reliable message sequence number: %hu, Message type: %hhu",
-				          message->GetHeader().messageSequenceNumber, message->GetHeader().type );
-			}
-
-			packet.AddMessage( std::move( message ) );
-
-			// Check if we should include another message to the packet
-			arePendingMessages = remotePeer.ArePendingMessages( type );
-			isThereCapacityLeft = packet.CanMessageFit( remotePeer.GetSizeOfNextUnsentMessage( type ) );
-		}
-
-		// Set packet header fields
-		uint32 acks = remotePeer.GenerateACKs( type );
-		packet.SetHeaderACKs( acks );
-
-		uint16 lastAckedMessageSequenceNumber = remotePeer.GetLastMessageSequenceNumberAcked( type );
-		packet.SetHeaderLastAcked( lastAckedMessageSequenceNumber );
-
-		packet.SetHeaderChannelType( type );
-
-		SendPacketToAddress( packet, remotePeer.GetAddress() );
-		remotePeer.SeUnsentACKsToFalse( type );
-
-		// Send messages ownership back to remote peer
-		while ( packet.GetNumberOfMessages() > 0 )
-		{
-			std::unique_ptr< Message > message = packet.GetMessages();
-			remotePeer.AddSentMessage( std::move( message ), type );
+			( *validRemotePeersIt )->SendData( _socket );
 		}
 	}
 

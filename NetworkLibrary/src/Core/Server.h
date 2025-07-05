@@ -26,6 +26,8 @@ namespace NetLib
 
 			Server& operator=( const Server& ) = delete;
 
+			bool StartServer( uint32 port );
+
 			uint32 CreateNetworkEntity( uint32 entityType, uint32 controlledByPeerId, float32 posX, float32 posY );
 			void DestroyNetworkEntity( uint32 entityId );
 			// TODO Create a method for destroying all network entities controlled by a remote peer
@@ -41,7 +43,7 @@ namespace NetLib
 			~Server() override;
 
 		protected:
-			bool StartConcrete() override;
+			bool StartConcrete( const std::string& ip, uint32 port ) override;
 			void ProcessMessageFromPeer( const Message& message, RemotePeer& remotePeer ) override;
 			void ProcessMessageFromUnknownPeer( const Message& message, const Address& address ) override;
 			void TickConcrete( float32 elapsedTime ) override;

@@ -34,6 +34,7 @@ namespace NetLib
 			int32 FindFreeRemotePeerSlot() const;
 			RemotePeer* GetRemotePeerFromAddress( const Address& address );
 			RemotePeer* GetRemotePeerFromId( uint32 id );
+			const RemotePeer* GetRemotePeerFromId( uint32 id ) const;
 			bool IsRemotePeerAlreadyConnected( const Address& address ) const;
 			bool DoesRemotePeerIdExist( uint32 id ) const;
 			RemotePeersHandlerResult IsRemotePeerAbleToConnect( const Address& address ) const;

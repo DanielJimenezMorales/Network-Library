@@ -8,6 +8,8 @@
 #include "core/peer.h"
 #include "core/address.h"
 
+#include "time/time_syncer.h"
+
 #include "replication/replication_messages_processor.h"
 
 namespace NetLib
@@ -30,19 +32,6 @@ namespace NetLib
 		CS_SendingConnectionChallengeResponse = 3,
 	};
 
-	// TIME SYNC CONSTANTS
-	// Number of RTT to calculate an average RTT for adjusting Server's clock delta time
-	const uint32 TIME_REQUEST_RTT_BUFFER_SIZE = 10;
-	// In order to get an accurate clock sync within the first ticks, the client will send a burst of time requests to
-	// calculate a Server's clock delta time rapidly. Note: In this case, the '+ 1' is in case one of the burst messages
-	// get lost
-	const uint32 NUMBER_OF_INITIAL_TIME_REQUESTS_BURST = TIME_REQUEST_RTT_BUFFER_SIZE + 1;
-	// This will discard the X biggest and smallest RTTs from the Adjusted RTT in order to get rid of possible outliers.
-	// This value must be smaller than half TIME_REQUEST_RTT_BUFFER_SIZE
-	const uint32 NUMBER_OF_RTTS_CONSIDERED_OUTLIERS_PER_SIDE = 1;
-	// How often the client will send a time request message to adjust Server's clock delta time
-	const float32 TIME_REQUESTS_FREQUENCY_SECONDS = 1.0f;
-
 	class Client : public Peer
 	{
 		public:
@@ -52,6 +41,8 @@ namespace NetLib
 			Client& operator=( const Client& ) = delete;
 
 			~Client() override;
+
+			bool StartClient( const std::string& server_ip, uint32 server_port );
 
 			void SendInputs( const IInputState& inputState );
 			uint32 GetLocalClientId() const;
@@ -63,7 +54,7 @@ namespace NetLib
 			uint32 SubscribeToOnNetworkEntityDestroy( Functor&& functor );
 
 		protected:
-			bool StartConcrete() override;
+			bool StartConcrete( const std::string& ip, uint32 port ) override;
 			void ProcessMessageFromPeer( const Message& message, RemotePeer& remotePeer ) override;
 			void ProcessMessageFromUnknownPeer( const Message& message, const Address& address ) override;
 			void TickConcrete( float32 elapsedTime ) override;
@@ -80,9 +71,6 @@ namespace NetLib
 
 			void CreateConnectionRequestMessage( RemotePeer& remotePeer );
 			void CreateConnectionChallengeResponse( RemotePeer& remotePeer );
-			void CreateTimeRequestMessage( RemotePeer& remotePeer );
-
-			void UpdateTimeRequestsElapsedTime( float32 elapsedTime );
 
 			void OnServerDisconnect();
 
@@ -94,9 +82,7 @@ namespace NetLib
 			uint32 inGameMessageID; // Only for RUDP testing purposes. Delete later!
 
 			// Time requests related
-			float32 _timeSinceLastTimeRequest;
-			uint32 _numberOfInitialTimeRequestBurstLeft;
-			std::list< uint32 > _timeRequestRTTs;
+			TimeSyncer _timeSyncer;
 
 			ReplicationMessagesProcessor _replicationMessagesProcessor;
 	};

@@ -5,8 +5,10 @@
 
 #include "shared/global_components/network_peer_global_component.h"
 
-PreTickNetworkSystem::PreTickNetworkSystem()
+PreTickNetworkSystem::PreTickNetworkSystem( const std::string& ip, uint32 port )
     : Engine::ECS::ISimpleSystem()
+    , _ip( ip )
+    , _port( port )
 {
 }
 
@@ -24,7 +26,7 @@ void PreTickNetworkSystem::Execute( Engine::ECS::World& world, float32 elapsed_t
 
 	if ( networkPeerComponent.peer->GetConnectionState() == NetLib::PCS_Disconnected )
 	{
-		networkPeerComponent.peer->Start();
+		networkPeerComponent.peer->Start( _ip, _port );
 	}
 	else
 	{

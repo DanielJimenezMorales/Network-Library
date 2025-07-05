@@ -1,6 +1,6 @@
 #include "server_world_initializer.h"
 
-//#define SERVER_RENDER
+#define SERVER_RENDER
 
 // Engine
 #include "components/transform_component.h"
@@ -167,7 +167,7 @@ static bool AddNetworkToWorld( Engine::ECS::World& world )
 	// Pre tick network system
 	Engine::ECS::SystemCoordinator* preTickNetworkSystemCoordinator =
 	    new Engine::ECS::SystemCoordinator( Engine::ECS::ExecutionStage::PRETICK );
-	preTickNetworkSystemCoordinator->AddSystemToTail( new PreTickNetworkSystem() );
+	preTickNetworkSystemCoordinator->AddSystemToTail( new PreTickNetworkSystem( "0.0.0.0", 54000 ) );
 	world.AddSystem( preTickNetworkSystemCoordinator );
 
 	// Post tick network system
