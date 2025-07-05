@@ -1,5 +1,5 @@
 # Network-Library
-Network library for realtime multiplayer games written in C++
+A Network Library for competitive realtime multiplayer games.
 
 This repository contains four different projects:
 1. Network library
