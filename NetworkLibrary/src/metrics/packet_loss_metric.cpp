@@ -57,7 +57,7 @@ namespace NetLib
 				    ( _sentMessages == 0 )
 				        ? 0
 				        : ( static_cast< float32 >( _lostMessages ) / static_cast< float32 >( _sentMessages ) ) * 100.f;
-				_currentValue = lostMessagesPercentage;
+				_currentValue = static_cast< uint32 >( ( lostMessagesPercentage ) );
 
 				if ( _currentValue > _maxValue )
 				{

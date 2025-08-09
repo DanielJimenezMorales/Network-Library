@@ -36,7 +36,9 @@ namespace Engine
 		    ConvertFromWorldPositionToScreenPosition( end_position, camera, camera_transform );
 
 		SDL_SetRenderDrawColor( renderer, ray_gizmo.GetR(), ray_gizmo.GetG(), ray_gizmo.GetB(), ray_gizmo.GetA() );
-		SDL_RenderDrawLine( renderer, screen_start_position.X(), screen_start_position.Y(), screen_end_position.X(),
-		                    screen_end_position.Y() );
+		SDL_RenderDrawLine( renderer, static_cast< int32 >( screen_start_position.X() ),
+		                    static_cast< int32 >( screen_start_position.Y() ),
+		                    static_cast< int32 >( screen_end_position.X() ),
+		                    static_cast< int32 >( screen_end_position.Y() ) );
 	}
 }

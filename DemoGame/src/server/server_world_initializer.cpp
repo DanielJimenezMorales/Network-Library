@@ -228,7 +228,7 @@ static bool CreateSystemsAndGlobalEntities( Engine::ECS::World& world )
 	// TODO Create a system storage in order to be able to free them at the end
 
 	bool result = false;
-#ifdef SERVER_RENDER;
+#ifdef SERVER_RENDER
 	//////////////
 	// RENDERING
 	//////////////

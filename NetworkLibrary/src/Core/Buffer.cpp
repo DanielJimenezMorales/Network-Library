@@ -6,7 +6,7 @@
 
 namespace NetLib
 {
-	Buffer::Buffer( uint8* data, int32 size )
+	Buffer::Buffer( uint8* data, uint32 size )
 	    : _data( data )
 	    , _size( size )
 	{

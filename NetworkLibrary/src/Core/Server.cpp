@@ -92,7 +92,7 @@ namespace NetLib
 	uint64 Server::GenerateServerSalt() const
 	{
 		// TODO Change this in order to get another random generator that generates 64bit numbers
-		srand( time( NULL ) + 3589 );
+		srand( static_cast< uint32 >( time( NULL ) ) + 3589 );
 		uint64 serverSalt = rand();
 		return serverSalt;
 	}
@@ -240,7 +240,7 @@ namespace NetLib
 		timeResponseMessage->remoteTime = timeRequest.remoteTime;
 
 		TimeClock& timeClock = TimeClock::GetInstance();
-		timeResponseMessage->serverTime = timeClock.GetLocalTimeMilliseconds();
+		timeResponseMessage->serverTime = static_cast< uint32 >( timeClock.GetLocalTimeMilliseconds() );
 
 		// Find remote client
 		remotePeer.AddMessage( std::move( timeResponseMessage ) );

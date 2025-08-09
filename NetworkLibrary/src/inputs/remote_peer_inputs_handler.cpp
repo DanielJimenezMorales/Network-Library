@@ -23,7 +23,7 @@ namespace NetLib
 
 	uint32 RemotePeerInputsBuffer::GetNumberOfInputsBuffered() const
 	{
-		return _inputsBuffered.size();
+		return static_cast< uint32 >( _inputsBuffered.size() );
 	}
 
 	void RemotePeerInputsHandler::AddInputState( IInputState* input, uint32 remotePeerId )

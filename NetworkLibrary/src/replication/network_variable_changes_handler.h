@@ -20,7 +20,8 @@ namespace NetLib
 
 			uint32 Size() const
 			{
-				return ( sizeof( uint32 ) + sizeof( float32 ) + sizeof( uint32 ) ) * floatChanges.size();
+				return ( sizeof( uint32 ) + sizeof( float32 ) + sizeof( uint32 ) ) *
+				       static_cast< uint32 >( floatChanges.size() );
 			}
 	};
 
@@ -62,7 +63,7 @@ namespace NetLib
 	{
 		public:
 			NetworkVariableChangesHandler()
-			    : _nextNetworkVariableId( INVALID_NETWORK_VARIABLE_ID + 1 ){};
+			    : _nextNetworkVariableId( INVALID_NETWORK_VARIABLE_ID + 1 ) {};
 			void RegisterNetworkVariable( NetworkVariable< float32 >* networkVariable );
 			void UnregisterNetworkVariable( const NetworkVariable< float32 >& networkVariable );
 			void AddChange( NetworkVariableChangeData< float32 > variableChange );

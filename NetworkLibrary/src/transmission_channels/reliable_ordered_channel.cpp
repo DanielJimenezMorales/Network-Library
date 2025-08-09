@@ -450,7 +450,7 @@ namespace NetLib
 		{
 			// Calculate RTT of acked message
 			const TimeClock& timeClock = TimeClock::GetInstance();
-			const uint64 currentElapsedTime = timeClock.GetLocalTimeMilliseconds();
+			const uint32 currentElapsedTime = static_cast< uint32 >( timeClock.GetLocalTimeMilliseconds() );
 			const uint32 messageRTT = currentElapsedTime - _unackedMessagesSendTimes[ sequence_number ];
 			UpdateRTT( messageRTT );
 
@@ -547,7 +547,7 @@ namespace NetLib
 	void ReliableOrderedChannel::SetUnackedMessageSendTime( uint16 sequence_number )
 	{
 		const TimeClock& timeClock = TimeClock::GetInstance();
-		_unackedMessagesSendTimes[ sequence_number ] = timeClock.GetLocalTimeMilliseconds();
+		_unackedMessagesSendTimes[ sequence_number ] = static_cast< uint32 >( timeClock.GetLocalTimeMilliseconds() );
 	}
 
 	void ReliableOrderedChannel::ClearMessages()

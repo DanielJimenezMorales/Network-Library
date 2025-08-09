@@ -42,24 +42,3 @@ project (project_data.NAME)
 		ROOT_PATH "vendor/sdl2/SDL2_mixer-2.8.0/include/",
 		ROOT_PATH "vendor/sdl2/SDL2_ttf-2.22.0/include/"
 	}
-
-	libdirs
-	{
-		ROOT_PATH "vendor/sdl2/SDL2-2.30.1/lib/x64",
-		ROOT_PATH "vendor/sdl2/SDL2_image-2.8.2/lib/x64",
-		ROOT_PATH "vendor/sdl2/SDL2_mixer-2.8.0/lib/x64",
-		ROOT_PATH "vendor/sdl2/SDL2_ttf-2.22.0/lib/x64"
-	}
-
-	links
-	{
-		common_project_data.NAME,
-		engine_project_data.NAME,
-		network_library_project_data.NAME,
-
-		ROOT_PATH "vendor/sdl2/SDL2-2.30.1/lib/x64/SDL2",
-		ROOT_PATH "vendor/sdl2/SDL2-2.30.1/lib/x64/SDL2main",
-		ROOT_PATH "vendor/sdl2/SDL2_image-2.8.2/lib/x64/SDL2_image",
-		ROOT_PATH "vendor/sdl2/SDL2_mixer-2.8.0/lib/x64/SDL2_mixer",
-		ROOT_PATH "vendor/sdl2/SDL2_ttf-2.22.0/lib/x64/SDL2_ttf"
-	}

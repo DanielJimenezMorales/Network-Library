@@ -98,7 +98,7 @@ namespace NetLib
 		// TODO Change this for a better generator. rand is not generating a full 64bit integer since its maximum is
 		// roughly 32767. I have tried to use mt19937_64 but I think I get a conflict with winsocks and
 		// std::uniform_int_distribution
-		srand( time( NULL ) );
+		srand( static_cast< uint32 >( time( NULL ) ) );
 		return rand();
 	}
 

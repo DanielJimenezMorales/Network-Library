@@ -6,12 +6,12 @@ namespace NetLib
 	class Buffer
 	{
 		public:
-			Buffer( uint8* data, int32 size );
+			Buffer( uint8* data, uint32 size );
 			Buffer( const Buffer& ) = delete;
 
 			~Buffer() {}
 
-			int32 GetSize() const { return _size; }
+			uint32 GetSize() const { return _size; }
 			uint8* GetData() const { return _data; }
 			uint32 GetAccessIndex() const { return _index; }
 			void Clear();
@@ -34,7 +34,7 @@ namespace NetLib
 
 		private:
 			uint8* _data;
-			int32 _size;
-			int32 _index;
+			uint32 _size;
+			uint32 _index;
 	};
 } // namespace NetLib

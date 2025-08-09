@@ -14,7 +14,7 @@ namespace Engine
 		{
 				Vec2f origin;
 				Vec2f direction;
-				uint32 maxDistance;
+				float32 maxDistance;
 		};
 
 		struct RaycastResult
@@ -30,7 +30,7 @@ namespace Engine
 				ECS::GameEntity entity;
 				Vec2f position;
 				Vec2f normal;
-				uint32 squaredDistance;
+				float32 squaredDistance;
 		};
 
 		RaycastResult ExecuteRaycast( const Ray& ray, const std::vector< ECS::GameEntity >& entities_with_colliders,

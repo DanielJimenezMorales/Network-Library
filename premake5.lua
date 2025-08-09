@@ -59,9 +59,9 @@ WORKSPACE_DATA =
 
 workspace (WORKSPACE_DATA.NAME)
 	architecture "x64"
-	-- Entt requires C++ to be version 17
-	cppdialect "C++17"
+	cppdialect "C++17" -- Entt requires C++ to be at least in version 17
 	startproject(WORKSPACE_DATA.STARTUP_PROJECT)
+	editandcontinue "Off" -- Disable Edit code while debugging
 
 	configurations
 	{
@@ -72,7 +72,6 @@ workspace (WORKSPACE_DATA.NAME)
 	flags
 	{
 		"MultiProcessorCompile",
-		-- "FatalWarnings",
 		"NoImplicitLink",
 		"NoIncrementalLink",
 		"NoManifest",
@@ -90,10 +89,18 @@ workspace (WORKSPACE_DATA.NAME)
 		{
 			"LOG_ENABLED"
 		}
-		symbols "On"
+		symbols "On" -- Enable symbols for more debugging info
+		--optimize "Off"
 
 	filter "configurations:Release"
+		symbols "Off" -- Disable symbols for no debugging info
 		optimize "On"
+
+	filter "files:not vendor/**"
+    	flags
+    	{
+    		"FatalWarnings" -- Treat certain Warnings as Errors in our own code, and not third party code
+		}
 
 include (PROJECT_DATA.COMMON.PREMAKE_PATH)
 include (PROJECT_DATA.ENGINE.PREMAKE_PATH)

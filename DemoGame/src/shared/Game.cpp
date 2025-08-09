@@ -9,7 +9,7 @@
 
 bool Game::Init( Engine::IWorldInitializer* world_initializer )
 {
-	world_initializer->SetUpWorld(_activeScene);
+	world_initializer->SetUpWorld( _activeScene );
 
 	_isRunning = true;
 	return true;
@@ -25,7 +25,7 @@ void Game::GameLoop()
 		timeClock.UpdateLocalTime();
 		accumulator += timeClock.GetElapsedTimeSeconds();
 
-		HandleEvents( timeClock.GetElapsedTimeSeconds() );
+		HandleEvents( static_cast< float32 >( timeClock.GetElapsedTimeSeconds() ) );
 
 		while ( accumulator >= FIXED_FRAME_TARGET_DURATION )
 		{
@@ -35,8 +35,8 @@ void Game::GameLoop()
 			accumulator -= FIXED_FRAME_TARGET_DURATION;
 		}
 
-		Update( timeClock.GetElapsedTimeSeconds() );
-		Render( timeClock.GetElapsedTimeSeconds() );
+		Update( static_cast< float32 >( timeClock.GetElapsedTimeSeconds() ) );
+		Render( static_cast< float32 >( timeClock.GetElapsedTimeSeconds() ) );
 		EndOfFrame();
 	}
 }

@@ -305,7 +305,7 @@ namespace NetLib
 
 	uint32 RemotePeer::GetNumberOfTransmissionChannels() const
 	{
-		return _transmissionChannels.size();
+		return static_cast< uint32 >( _transmissionChannels.size() );
 	}
 
 	uint32 RemotePeer::GetMetric( const std::string& metric_name, const std::string& value_type ) const

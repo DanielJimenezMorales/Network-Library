@@ -18,6 +18,12 @@ struct Vec2f
 		{
 		}
 
+		constexpr Vec2f( int32 x, int32 y )
+		    : _x( static_cast< float32 >( x ) )
+		    , _y( static_cast< float32 >( y ) )
+		{
+		}
+
 		Vec2f( const Vec2f& other ) = default;
 
 		static constexpr Vec2f Zero() { return Vec2f( 0.f, 0.f ); }
@@ -103,7 +109,7 @@ struct Vec2f
 
 		float32 Dot( const Vec2f& other ) const { return ( _x * other._x ) + ( _y * other._y ); }
 
-		float32 Magnitude() const { return sqrt( SqMagnitude() ); }
+		float32 Magnitude() const { return sqrtf( SqMagnitude() ); }
 
 		float32 SqMagnitude() const { return ( _x * _x ) + ( _y * _y ); }
 

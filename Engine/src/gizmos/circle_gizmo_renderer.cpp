@@ -5,6 +5,7 @@
 #include "numeric_types.h"
 #include "vec2f.h"
 #include "coordinates_conversion_utils.h"
+#include "math_utils.h"
 
 #include "components/transform_component.h"
 #include "components/camera_component.h"
@@ -44,28 +45,28 @@ namespace Engine
 			// Draw the points in all 8 octants
 			Vec2f renderPosition =
 			    ConvertFromWorldPositionToScreenPosition( position + Vec2f( x, y ), camera, camera_transform );
-			SDL_RenderDrawPoint( renderer, renderPosition.X(), renderPosition.Y() );
+			SDL_RenderDrawPoint( renderer, round_to_int32( renderPosition.X() ), round_to_int32( renderPosition.Y() ) );
 			renderPosition =
 			    ConvertFromWorldPositionToScreenPosition( position + Vec2f( -x, y ), camera, camera_transform );
-			SDL_RenderDrawPoint( renderer, renderPosition.X(), renderPosition.Y() );
+			SDL_RenderDrawPoint( renderer, round_to_int32( renderPosition.X() ), round_to_int32( renderPosition.Y() ) );
 			renderPosition =
 			    ConvertFromWorldPositionToScreenPosition( position + Vec2f( x, -y ), camera, camera_transform );
-			SDL_RenderDrawPoint( renderer, renderPosition.X(), renderPosition.Y() );
+			SDL_RenderDrawPoint( renderer, round_to_int32( renderPosition.X() ), round_to_int32( renderPosition.Y() ) );
 			renderPosition =
 			    ConvertFromWorldPositionToScreenPosition( position + Vec2f( -x, -y ), camera, camera_transform );
-			SDL_RenderDrawPoint( renderer, renderPosition.X(), renderPosition.Y() );
+			SDL_RenderDrawPoint( renderer, round_to_int32( renderPosition.X() ), round_to_int32( renderPosition.Y() ) );
 			renderPosition =
 			    ConvertFromWorldPositionToScreenPosition( position + Vec2f( y, x ), camera, camera_transform );
-			SDL_RenderDrawPoint( renderer, renderPosition.X(), renderPosition.Y() );
+			SDL_RenderDrawPoint( renderer, round_to_int32( renderPosition.X() ), round_to_int32( renderPosition.Y() ) );
 			renderPosition =
 			    ConvertFromWorldPositionToScreenPosition( position + Vec2f( -y, x ), camera, camera_transform );
-			SDL_RenderDrawPoint( renderer, renderPosition.X(), renderPosition.Y() );
+			SDL_RenderDrawPoint( renderer, round_to_int32( renderPosition.X() ), round_to_int32( renderPosition.Y() ) );
 			renderPosition =
 			    ConvertFromWorldPositionToScreenPosition( position + Vec2f( y, -x ), camera, camera_transform );
-			SDL_RenderDrawPoint( renderer, renderPosition.X(), renderPosition.Y() );
+			SDL_RenderDrawPoint( renderer, round_to_int32( renderPosition.X() ), round_to_int32( renderPosition.Y() ) );
 			renderPosition =
 			    ConvertFromWorldPositionToScreenPosition( position + Vec2f( -y, -x ), camera, camera_transform );
-			SDL_RenderDrawPoint( renderer, renderPosition.X(), renderPosition.Y() );
+			SDL_RenderDrawPoint( renderer, round_to_int32( renderPosition.X() ), round_to_int32( renderPosition.Y() ) );
 
 			// Move to the next pixel vertically
 			y++;

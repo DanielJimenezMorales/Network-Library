@@ -21,11 +21,6 @@ project (project_data.NAME)
 		common_project_data.PATH .. "src/",
 	}
 
-	links
-	{
-		common_project_data.NAME,
-	}
-
 	filter "system:Windows"
 		links
 		{

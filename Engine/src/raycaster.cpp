@@ -87,7 +87,7 @@ namespace Engine
 		                              const ECS::GameEntity& entity_to_exclude )
 		{
 			RaycastResult result;
-			result.squaredDistance = MAX_UINT32;
+			result.squaredDistance = MAX_FLOAT32;
 
 			for ( auto cit = entities_with_colliders.cbegin(); cit != entities_with_colliders.cend(); ++cit )
 			{

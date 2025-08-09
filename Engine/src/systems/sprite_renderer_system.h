@@ -3,7 +3,7 @@
 
 #include "resource_handlers/texture_resource_handler.h"
 
-#include <SDL_image.h>
+#include "SDL_image.h"
 
 namespace Engine
 {

@@ -28,7 +28,7 @@ namespace NetLib
 
 		timeRequestMessage->SetOrdered( true );
 		TimeClock& timeClock = TimeClock::GetInstance();
-		timeRequestMessage->remoteTime = timeClock.GetLocalTimeMilliseconds();
+		timeRequestMessage->remoteTime = static_cast< uint32 >( timeClock.GetLocalTimeMilliseconds() );
 
 		LOG_INFO( "TIME REQUEST CREATED" );
 		return std::move( timeRequestMessage );
@@ -56,18 +56,18 @@ namespace NetLib
 
 		// Add new RTT to buffer
 		TimeClock& timeClock = TimeClock::GetInstance();
-		const uint32 rtt = timeClock.GetLocalTimeMilliseconds() - message.remoteTime;
+		const uint32 rtt = static_cast< uint32 >( timeClock.GetLocalTimeMilliseconds() ) - message.remoteTime;
 		_timeRequestRTTs.push_back( rtt );
 
 		// If the buffer is full, remove the oldest RTT
-		if ( _timeRequestRTTs.size() == TIME_REQUEST_RTT_BUFFER_SIZE + 1 )
+		if ( static_cast< uint32 >( _timeRequestRTTs.size() ) == TIME_REQUEST_RTT_BUFFER_SIZE + 1 )
 		{
 			_timeRequestRTTs.pop_front();
 		}
 
 		// Get RTT to adjust server's clock elapsed time
 		uint32 meanRTT = 0;
-		if ( _timeRequestRTTs.size() == TIME_REQUEST_RTT_BUFFER_SIZE )
+		if ( static_cast<uint32>(_timeRequestRTTs.size()) == TIME_REQUEST_RTT_BUFFER_SIZE )
 		{
 			// Sort RTTs and remove the smallest and biggest values (They are considered outliers!)
 			std::list< uint32 > sortedTimeRequestRTTs = _timeRequestRTTs;

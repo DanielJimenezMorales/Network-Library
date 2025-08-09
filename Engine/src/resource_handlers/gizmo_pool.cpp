@@ -117,7 +117,7 @@ namespace Engine
 
 	void GizmoPool::Reallocate()
 	{
-		const uint32 new_size = gizmoPool.size() * 2;
+		//const uint32 new_size = gizmoPool.size() * 2;
 	}
 
 	void GizmoPool::Free()

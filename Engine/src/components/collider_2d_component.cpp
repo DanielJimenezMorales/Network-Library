@@ -70,6 +70,7 @@ namespace Engine
 		_bounds = std::exchange( other._bounds, nullptr );
 		_isTrigger = other._isTrigger;
 		_collisionResponseType = other._collisionResponseType;
+		return *this;
 	}
 
 	void Collider2DComponent::GetAxes( const TransformComponent& transform, std::vector< Vec2f >& outAxes ) const
