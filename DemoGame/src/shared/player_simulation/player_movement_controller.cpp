@@ -28,7 +28,8 @@ static void UpdatePosition( const InputState& inputs, const PlayerState& current
 
 bool PlayerMovementController::Simulate( const InputState& inputs, const PlayerState& current_state,
                                          PlayerState& result_state, float32 elapsed_time,
-                                         const PlayerStateConfiguration& configuration ) const
+                                         const PlayerStateConfiguration& configuration,
+                                         std::vector< PlayerSimulation::EventType >& events_generated ) const
 {
 	if ( IsMoving( inputs ) )
 	{

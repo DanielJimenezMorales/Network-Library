@@ -65,7 +65,7 @@ static void ReconciliateWithServer( Engine::ECS::GameEntity& entity,
 	// Get all necessary data for passing it to the state simulator
 	const PlayerControllerComponent& playerControllerComponent = entity.GetComponent< PlayerControllerComponent >();
 	const PlayerStateConfiguration& playerStateConfiguration = playerControllerComponent.stateConfiguration;
-	PlayerStateSimulator playerStateSimulator;
+	PlayerSimulation::PlayerStateSimulator playerStateSimulator;
 
 	PlayerState currentPlayerState = state_from_server;
 	uint32 currentTick = state_from_server.tick + 1;

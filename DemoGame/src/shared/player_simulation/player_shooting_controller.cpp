@@ -14,7 +14,8 @@ PlayerShootingController::PlayerShootingController()
 
 bool PlayerShootingController::Simulate( const InputState& inputs, const PlayerState& current_state,
                                          PlayerState& result_state, float32 elapsed_time,
-                                         const PlayerStateConfiguration& configuration )
+                                         const PlayerStateConfiguration& configuration,
+                                         std::vector< PlayerSimulation::EventType >& events_generated )
 {
 	// Update time left until next shot
 	float32 newTimeLeftUntilNextShot = ( current_state.timeLeftUntilNextShot > elapsed_time )
@@ -24,8 +25,7 @@ bool PlayerShootingController::Simulate( const InputState& inputs, const PlayerS
 	if ( inputs.isShooting && newTimeLeftUntilNextShot == 0.f )
 	{
 		newTimeLeftUntilNextShot = configuration.GetFireRate();
-
-		OnShotPerformed.Execute();
+		events_generated.push_back( PlayerSimulation::ON_SHOT_PERFORMED );
 	}
 
 	result_state.timeLeftUntilNextShot = newTimeLeftUntilNextShot;

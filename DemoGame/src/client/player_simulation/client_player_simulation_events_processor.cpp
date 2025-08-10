@@ -1,4 +1,4 @@
-#include "client_player_simulation_callbacks.h"
+#include "client_player_simulation_events_processor.h"
 
 #include "raycaster.h"
 
@@ -8,7 +8,7 @@
 #include "ecs/world.h"
 #include "ecs/game_entity.hpp"
 
-void OnShotPerformed( Engine::ECS::World& world, const Engine::ECS::GameEntity& player_entity )
+static void OnShotPerformed( Engine::ECS::World& world, const Engine::ECS::GameEntity& player_entity )
 {
 	const Engine::TransformComponent& local_player_transform =
 	    player_entity.GetComponent< Engine::TransformComponent >();
@@ -28,4 +28,21 @@ void OnShotPerformed( Engine::ECS::World& world, const Engine::ECS::GameEntity& 
 	}
 
 	Engine::ECS::GameEntity entity = world.CreateGameEntity( "Raycast", ray.origin, ray.direction );
+}
+
+bool ClientPlayerSimulationEventsProcessor::ProcessEvent( Engine::ECS::World& world, Engine::ECS::GameEntity& entity,
+                                                          PlayerSimulation::EventType type )
+{
+	bool result = true;
+
+	if ( type == PlayerSimulation::ON_SHOT_PERFORMED )
+	{
+		OnShotPerformed( world, entity );
+	}
+	else
+	{
+		result = false;
+	}
+
+	return result;
 }

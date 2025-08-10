@@ -1,40 +1,47 @@
 #pragma once
 #include "numeric_types.h"
 
+#include "shared/player_simulation/player_simulation_events.h"
 #include "shared/player_simulation/player_movement_controller.h"
 #include "shared/player_simulation/player_rotation_controller.h"
 #include "shared/player_simulation/player_shooting_controller.h"
 
-namespace ECS
+#include <vector>
+
+namespace Engine
 {
-	class World;
-	class GameEntity;
+	namespace ECS
+	{
+		class World;
+		class GameEntity;
+	}
 }
 
 class InputState;
 struct PlayerState;
 struct PlayerStateConfiguration;
 
-class PlayerStateSimulator
+namespace PlayerSimulation
 {
-	public:
-		PlayerStateSimulator();
+	class IPlayerSimulationEventsProcessor;
 
-		PlayerState Simulate( const InputState& inputs, const PlayerState& current_state,
-		                      const PlayerStateConfiguration& configuration, float32 elapsed_time );
+	class PlayerStateSimulator
+	{
+		public:
+			PlayerStateSimulator();
 
-		template < typename Functor >
-		Common::Delegate<>::SubscriptionHandler SubscribeToOnShotPerformed( Functor&& functor );
-		bool UnsubscribeFromOnShotPerformed( const Common::Delegate<>::SubscriptionHandler& handler );
+			PlayerState Simulate( const InputState& inputs, const PlayerState& current_state,
+			                      const PlayerStateConfiguration& configuration, float32 elapsed_time );
 
-	private:
-		PlayerMovementController _movementController;
-		PlayerRotationController _rotationController;
-		PlayerShootingController _shootingController;
-};
+			void ProcessLastSimulationEvents( Engine::ECS::World& world, Engine::ECS::GameEntity& entity,
+			                                  IPlayerSimulationEventsProcessor* events_processor );
 
-template < typename Functor >
-inline Common::Delegate<>::SubscriptionHandler PlayerStateSimulator::SubscribeToOnShotPerformed( Functor&& functor )
-{
-	return _shootingController.OnShotPerformed.AddSubscriber( std::forward< Functor >( functor ) );
+		private:
+			PlayerMovementController _movementController;
+			PlayerRotationController _rotationController;
+			PlayerShootingController _shootingController;
+
+			// TODO Encapsulate this under a class
+			std::vector< EventType > _lastSimulationEvents;
+	};
 }

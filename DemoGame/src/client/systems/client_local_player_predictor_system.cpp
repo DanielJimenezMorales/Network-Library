@@ -25,7 +25,8 @@
 #include "global_components/input_handler_global_component.h"
 
 #include "shared/player_simulation/player_state_utils.h"
-#include "client/player_simulation/client_player_simulation_callbacks.h"
+
+#include "client/player_simulation/client_player_simulation_events_processor.h"
 
 #include "core/client.h"
 
@@ -33,14 +34,18 @@ ClientLocalPlayerPredictorSystem::ClientLocalPlayerPredictorSystem( Engine::ECS:
     : Engine::ECS::ISimpleSystem()
     , _world( world )
     , _nextInputStateId( 0 )
-    , _onShotPerformedSubscriptionHandler( Common::Delegate<>::SubscriptionHandler::Invalid() )
+    , _playerStateSimulator()
+    , _simulationEventsProcessor( new ClientPlayerSimulationEventsProcessor() )
 {
-	SubscribeToSimulationCallbacks();
 }
 
 ClientLocalPlayerPredictorSystem::~ClientLocalPlayerPredictorSystem()
 {
-	UnsubscribeFromSimulationCallbacks();
+	if ( _simulationEventsProcessor != nullptr )
+	{
+		delete _simulationEventsProcessor;
+		_simulationEventsProcessor = nullptr;
+	}
 }
 
 static void ProcessInputs( Engine::ECS::World& world, InputState& outInputState )
@@ -70,22 +75,6 @@ static InputState GetInputState( Engine::ECS::World& world, uint32 current_tick,
 	return inputState;
 }
 
-void ClientLocalPlayerPredictorSystem::OnShotPerformedCallback()
-{
-	OnShotPerformed( *_world, _currentPlayerEntityBeingProcessed );
-}
-
-void ClientLocalPlayerPredictorSystem::SubscribeToSimulationCallbacks()
-{
-	auto onShotPerformedCallback = std::bind( &ClientLocalPlayerPredictorSystem::OnShotPerformedCallback, this );
-	_onShotPerformedSubscriptionHandler = _playerStateSimulator.SubscribeToOnShotPerformed( onShotPerformedCallback );
-}
-
-void ClientLocalPlayerPredictorSystem::UnsubscribeFromSimulationCallbacks()
-{
-	_playerStateSimulator.UnsubscribeFromOnShotPerformed( _onShotPerformedSubscriptionHandler );
-}
-
 static void SavePlayerStateInBuffer( ClientSidePredictionComponent& client_side_prediction_component,
                                      const InputState& input_state, const PlayerState& resulted_player_state,
                                      float32 elapsed_time )
@@ -107,8 +96,6 @@ static void SendInputsToServer( Engine::ECS::World& world, const InputState& inp
 void ClientLocalPlayerPredictorSystem::ExecuteLocalPrediction( Engine::ECS::GameEntity& entity,
                                                                const InputState& input_state, float32 elapsed_time )
 {
-	_currentPlayerEntityBeingProcessed = entity;
-
 	// Get the current state and the configuration for the predicted entity
 	const PlayerState currentState = GetPlayerStateFromPlayerEntity( entity, input_state.tick );
 
@@ -118,7 +105,6 @@ void ClientLocalPlayerPredictorSystem::ExecuteLocalPrediction( Engine::ECS::Game
 	// Simulate the player logic locally and get the resulted simulation state
 	const PlayerState resultPlayerState =
 	    _playerStateSimulator.Simulate( input_state, currentState, playerStateConfiguration, elapsed_time );
-	_currentPlayerEntityBeingProcessed = Engine::ECS::GameEntity();
 
 	// Store the data in the prediction buffer in case we need to reconcile with the server later.
 	ClientSidePredictionComponent& clientSidePredictionComponent =
@@ -127,6 +113,9 @@ void ClientLocalPlayerPredictorSystem::ExecuteLocalPrediction( Engine::ECS::Game
 
 	// Apply the resulted simulation state to the entity
 	ApplyPlayerStateToPlayerEntity( entity, resultPlayerState );
+
+	// Fire simulation events
+	_playerStateSimulator.ProcessLastSimulationEvents( *_world, entity, _simulationEventsProcessor );
 }
 
 void ClientLocalPlayerPredictorSystem::Execute( Engine::ECS::World& world, float32 elapsed_time )

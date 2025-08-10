@@ -17,7 +17,8 @@ static void UpdateLookAt( const InputState& inputs, const PlayerState& current_s
 
 bool PlayerRotationController::Simulate( const InputState& inputs, const PlayerState& current_state,
                                          PlayerState& result_state, float32 elapsed_time,
-                                         const PlayerStateConfiguration& configuration ) const
+                                         const PlayerStateConfiguration& configuration,
+                                         std::vector< PlayerSimulation::EventType >& events_generated ) const
 {
 	UpdateLookAt( inputs, current_state, result_state, elapsed_time, configuration );
 	return true;

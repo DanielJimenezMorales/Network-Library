@@ -55,7 +55,7 @@ static void ExecutePlayerSimulation( Engine::ECS::GameEntity& entity, const Inpu
 	const PlayerControllerComponent& playerController = entity.GetComponent< PlayerControllerComponent >();
 	const PlayerStateConfiguration& playerStateConfiguration = playerController.stateConfiguration;
 	const PlayerState currentPlayerState = GetPlayerStateFromPlayerEntity( entity, input_state.tick );
-	PlayerStateSimulator playerStateSimulator;
+	PlayerSimulation::PlayerStateSimulator playerStateSimulator;
 
 	// Simulate the player logic and get the resulted simulation state
 	const PlayerState resultPlayerState =

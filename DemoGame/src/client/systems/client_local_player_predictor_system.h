@@ -18,6 +18,8 @@ namespace Engine
 	}
 }
 
+class ClientPlayerSimulationEventsProcessor;
+
 class InputState;
 struct ClientSidePredictionComponent;
 
@@ -39,20 +41,14 @@ class ClientLocalPlayerPredictorSystem : public Engine::ECS::ISimpleSystem
 		                                            const Engine::ECS::Prefab& prefab );
 
 	private:
-		void OnShotPerformedCallback();
-		void SubscribeToSimulationCallbacks();
-		void UnsubscribeFromSimulationCallbacks();
 		void ExecuteLocalPrediction( Engine::ECS::GameEntity& entity, const InputState& input_state,
 		                             float32 elapsed_time );
 
 		// TODO Remove this world dependency asap
 		Engine::ECS::World* _world;
-		// TODO Remove this variable asap
-		Engine::ECS::GameEntity _currentPlayerEntityBeingProcessed;
 
 		uint64 _nextInputStateId;
 
-		PlayerStateSimulator _playerStateSimulator;
-
-		Common::Delegate<>::SubscriptionHandler _onShotPerformedSubscriptionHandler;
+		PlayerSimulation::PlayerStateSimulator _playerStateSimulator;
+		ClientPlayerSimulationEventsProcessor* _simulationEventsProcessor;
 };
