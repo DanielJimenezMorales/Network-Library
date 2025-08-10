@@ -17,7 +17,7 @@ struct NetworkPeerGlobalComponent
 		    , inputStateFactory( nullptr )
 		    , unprocessedConnectedRemotePeers()
 		    , isTrackingRemotePeerConnect( false )
-		    , remotePeerConnectSubscriptionId( 0 )
+		    , remotePeerConnectSubscriptionHandler( Common::Delegate< uint32 >::SubscriptionHandler::Invalid() )
 		{
 		}
 
@@ -29,7 +29,7 @@ struct NetworkPeerGlobalComponent
 
 		std::queue< uint32 > unprocessedConnectedRemotePeers;
 		bool isTrackingRemotePeerConnect;
-		uint32 remotePeerConnectSubscriptionId;
+		Common::Delegate< uint32 >::SubscriptionHandler remotePeerConnectSubscriptionHandler;
 
 		void TrackOnRemotePeerConnect()
 		{
@@ -37,7 +37,7 @@ struct NetworkPeerGlobalComponent
 			{
 				this->AddUnprocessedConnectedRemotePeer( remotePeerId );
 			};
-			remotePeerConnectSubscriptionId = peer->SubscribeToOnRemotePeerConnect( callback );
+			remotePeerConnectSubscriptionHandler = peer->SubscribeToOnRemotePeerConnect( callback );
 			isTrackingRemotePeerConnect = true;
 		}
 

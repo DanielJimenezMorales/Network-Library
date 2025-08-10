@@ -1,6 +1,5 @@
 #pragma once
 #include "numeric_types.h"
-#include "Delegate.h"
 
 #include <memory>
 #include <functional>

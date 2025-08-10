@@ -101,19 +101,21 @@ namespace Engine
 			return _entityContainer.GetEntityFromId( id );
 		}
 
-		void World::UnsubscribeFromOnEntityCreate( uint32 id )
+		bool World::UnsubscribeFromOnEntityCreate( const Common::Delegate< GameEntity& >::SubscriptionHandler& handler )
 		{
-			_onEntityCreate.DeleteSubscriber( id );
+			return _onEntityCreate.DeleteSubscriber( handler );
 		}
 
-		void World::UnsubscribeFromOnEntityConfigure( uint32 id )
+		bool World::UnsubscribeFromOnEntityConfigure(
+		    const Common::Delegate< GameEntity&, const Prefab& >::SubscriptionHandler& handler )
 		{
-			_onEntityConfigure.DeleteSubscriber( id );
+			return _onEntityConfigure.DeleteSubscriber( handler );
 		}
 
-		void World::UnsubscribeFromOnEntityDestroy( uint32 id )
+		bool World::UnsubscribeFromOnEntityDestroy(
+		    const Common::Delegate< GameEntity& >::SubscriptionHandler& handler )
 		{
-			_onEntityDestroy.DeleteSubscriber( id );
+			return _onEntityDestroy.DeleteSubscriber( handler );
 		}
 
 		void World::CreatePendingEntities()

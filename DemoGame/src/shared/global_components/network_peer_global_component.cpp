@@ -6,7 +6,7 @@ NetworkPeerGlobalComponent::~NetworkPeerGlobalComponent()
 {
 	if ( isTrackingRemotePeerConnect )
 	{
-		peer->UnsubscribeToOnPeerConnected( remotePeerConnectSubscriptionId );
+		peer->UnsubscribeToOnRemotePeerConnect( remotePeerConnectSubscriptionHandler );
 	}
 
 	delete peer;

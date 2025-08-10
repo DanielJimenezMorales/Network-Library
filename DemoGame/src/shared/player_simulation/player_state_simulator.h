@@ -24,8 +24,8 @@ class PlayerStateSimulator
 		                      const PlayerStateConfiguration& configuration, float32 elapsed_time );
 
 		template < typename Functor >
-		uint32 SubscribeToOnShotPerformed( Functor&& functor );
-		void UnsubscribeFromOnShotPerformed( uint32 id );
+		Common::Delegate<>::SubscriptionHandler SubscribeToOnShotPerformed( Functor&& functor );
+		bool UnsubscribeFromOnShotPerformed( const Common::Delegate<>::SubscriptionHandler& handler );
 
 	private:
 		PlayerMovementController _movementController;
@@ -34,7 +34,7 @@ class PlayerStateSimulator
 };
 
 template < typename Functor >
-inline uint32 PlayerStateSimulator::SubscribeToOnShotPerformed( Functor&& functor )
+inline Common::Delegate<>::SubscriptionHandler PlayerStateSimulator::SubscribeToOnShotPerformed( Functor&& functor )
 {
 	return _shootingController.OnShotPerformed.AddSubscriber( std::forward< Functor >( functor ) );
 }

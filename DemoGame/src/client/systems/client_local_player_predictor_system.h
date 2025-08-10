@@ -30,6 +30,7 @@ class ClientLocalPlayerPredictorSystem : public Engine::ECS::ISimpleSystem
 {
 	public:
 		ClientLocalPlayerPredictorSystem( Engine::ECS::World* world );
+		~ClientLocalPlayerPredictorSystem();
 
 		void Execute( Engine::ECS::World& world, float32 elapsed_time ) override;
 
@@ -40,6 +41,7 @@ class ClientLocalPlayerPredictorSystem : public Engine::ECS::ISimpleSystem
 	private:
 		void OnShotPerformedCallback();
 		void SubscribeToSimulationCallbacks();
+		void UnsubscribeFromSimulationCallbacks();
 		void ExecuteLocalPrediction( Engine::ECS::GameEntity& entity, const InputState& input_state,
 		                             float32 elapsed_time );
 
@@ -51,4 +53,6 @@ class ClientLocalPlayerPredictorSystem : public Engine::ECS::ISimpleSystem
 		uint64 _nextInputStateId;
 
 		PlayerStateSimulator _playerStateSimulator;
+
+		Common::Delegate<>::SubscriptionHandler _onShotPerformedSubscriptionHandler;
 };

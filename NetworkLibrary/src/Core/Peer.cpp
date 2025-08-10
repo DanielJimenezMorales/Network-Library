@@ -106,14 +106,14 @@ namespace NetLib
 		return result;
 	}
 
-	void Peer::UnsubscribeToOnRemotePeerDisconnect( uint32 id )
+	bool Peer::UnsubscribeToOnRemotePeerDisconnect( const Common::Delegate< uint32 >::SubscriptionHandler& handler )
 	{
-		_onRemotePeerDisconnect.DeleteSubscriber( id );
+		return _onRemotePeerDisconnect.DeleteSubscriber( handler );
 	}
 
-	void Peer::UnsubscribeToOnRemotePeerConnect( uint32 id )
+	bool Peer::UnsubscribeToOnRemotePeerConnect( const Common::Delegate< uint32 >::SubscriptionHandler& handler )
 	{
-		_onRemotePeerConnect.DeleteSubscriber( id );
+		return _onRemotePeerConnect.DeleteSubscriber( handler );
 	}
 
 	Peer::~Peer()
@@ -234,14 +234,15 @@ namespace NetLib
 		_onLocalPeerDisconnect.Execute( reason );
 	}
 
-	void Peer::UnsubscribeToOnPeerConnected( uint32 id )
+	bool Peer::UnsubscribeToOnPeerConnected( const Common::Delegate<>::SubscriptionHandler& handler )
 	{
-		_onLocalPeerConnect.DeleteSubscriber( id );
+		return _onLocalPeerConnect.DeleteSubscriber( handler );
 	}
 
-	void Peer::UnsubscribeToOnPeerDisconnected( uint32 id )
+	bool Peer::UnsubscribeToOnPeerDisconnected(
+	    const Common::Delegate< ConnectionFailedReasonType >::SubscriptionHandler& handler )
 	{
-		_onLocalPeerDisconnect.DeleteSubscriber( id );
+		return _onLocalPeerDisconnect.DeleteSubscriber( handler );
 	}
 
 	void Peer::ProcessReceivedData()

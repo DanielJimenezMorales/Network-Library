@@ -31,8 +31,8 @@ namespace NetLib
 			return false;
 		}
 
-		_networkEntityIdToDataMap[ networkEntityId ] =
-		    NetworkEntityData( entityType, networkEntityId, gameEntityId, controlledByPeerId );
+		_networkEntityIdToDataMap.emplace(
+		    networkEntityId, NetworkEntityData( entityType, networkEntityId, gameEntityId, controlledByPeerId ) );
 		return true;
 	}
 
@@ -41,8 +41,8 @@ namespace NetLib
 	{
 		assert( _networkEntityIdToDataMap.find( networkEntityId ) == _networkEntityIdToDataMap.cend() );
 
-		_networkEntityIdToDataMap[ networkEntityId ] =
-		    NetworkEntityData( entityType, networkEntityId, controlledByPeerId );
+		_networkEntityIdToDataMap.emplace( networkEntityId,
+		                                   NetworkEntityData( entityType, networkEntityId, controlledByPeerId ) );
 
 		return _networkEntityIdToDataMap[ networkEntityId ];
 	}

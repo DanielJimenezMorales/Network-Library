@@ -5,7 +5,7 @@
 #include <list>
 #include <string>
 
-#include "Delegate.h"
+#include "delegate.hpp"
 
 #include "core/address.h"
 #include "core/socket.h"
@@ -94,17 +94,22 @@ namespace NetLib
 
 			// Delegates related
 			template < typename Functor >
-			uint32 SubscribeToOnLocalPeerConnect( Functor&& functor );
-			void UnsubscribeToOnPeerConnected( uint32 id );
+			Common::Delegate<>::SubscriptionHandler SubscribeToOnLocalPeerConnect( Functor&& functor );
+			bool UnsubscribeToOnPeerConnected( const Common::Delegate<>::SubscriptionHandler& handler );
+
 			template < typename Functor >
-			uint32 SubscribeToOnLocalPeerDisconnect( Functor&& functor );
-			void UnsubscribeToOnPeerDisconnected( uint32 id );
+			Common::Delegate< ConnectionFailedReasonType >::SubscriptionHandler SubscribeToOnLocalPeerDisconnect(
+			    Functor&& functor );
+			bool UnsubscribeToOnPeerDisconnected(
+			    const Common::Delegate< ConnectionFailedReasonType >::SubscriptionHandler& handler );
+
 			template < typename Functor >
-			uint32 SubscribeToOnRemotePeerDisconnect( Functor&& functor );
-			void UnsubscribeToOnRemotePeerDisconnect( uint32 id );
+			Common::Delegate< uint32 >::SubscriptionHandler SubscribeToOnRemotePeerDisconnect( Functor&& functor );
+			bool UnsubscribeToOnRemotePeerDisconnect( const Common::Delegate< uint32 >::SubscriptionHandler& handler );
+
 			template < typename Functor >
-			uint32 SubscribeToOnRemotePeerConnect( Functor&& functor );
-			void UnsubscribeToOnRemotePeerConnect( uint32 id );
+			Common::Delegate< uint32 >::SubscriptionHandler SubscribeToOnRemotePeerConnect( Functor&& functor );
+			bool UnsubscribeToOnRemotePeerConnect( const Common::Delegate< uint32 >::SubscriptionHandler& handler );
 
 			virtual ~Peer();
 
@@ -192,24 +197,25 @@ namespace NetLib
 	};
 
 	template < typename Functor >
-	inline uint32 Peer::SubscribeToOnLocalPeerConnect( Functor&& functor )
+	inline Common::Delegate<>::SubscriptionHandler Peer::SubscribeToOnLocalPeerConnect( Functor&& functor )
 	{
 		return _onLocalPeerConnect.AddSubscriber( std::forward< Functor >( functor ) );
 	}
 
 	template < typename Functor >
-	inline uint32 Peer::SubscribeToOnLocalPeerDisconnect( Functor&& functor )
+	inline Common::Delegate< ConnectionFailedReasonType >::SubscriptionHandler Peer::SubscribeToOnLocalPeerDisconnect(
+	    Functor&& functor )
 	{
 		return _onLocalPeerDisconnect.AddSubscriber( std::forward< Functor >( functor ) );
 	}
 
 	template < typename Functor >
-	inline uint32 Peer::SubscribeToOnRemotePeerDisconnect( Functor&& functor )
+	inline Common::Delegate< uint32 >::SubscriptionHandler Peer::SubscribeToOnRemotePeerDisconnect( Functor&& functor )
 	{
 		return _onRemotePeerDisconnect.AddSubscriber( std::forward< Functor >( functor ) );
 	}
 	template < typename Functor >
-	inline uint32 Peer::SubscribeToOnRemotePeerConnect( Functor&& functor )
+	inline Common::Delegate< uint32 >::SubscriptionHandler Peer::SubscribeToOnRemotePeerConnect( Functor&& functor )
 	{
 		return _onRemotePeerConnect.AddSubscriber( std::forward< Functor >( functor ) );
 	}

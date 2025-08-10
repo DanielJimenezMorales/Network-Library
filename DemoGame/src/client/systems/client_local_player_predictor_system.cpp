@@ -33,8 +33,14 @@ ClientLocalPlayerPredictorSystem::ClientLocalPlayerPredictorSystem( Engine::ECS:
     : Engine::ECS::ISimpleSystem()
     , _world( world )
     , _nextInputStateId( 0 )
+    , _onShotPerformedSubscriptionHandler( Common::Delegate<>::SubscriptionHandler::Invalid() )
 {
 	SubscribeToSimulationCallbacks();
+}
+
+ClientLocalPlayerPredictorSystem::~ClientLocalPlayerPredictorSystem()
+{
+	UnsubscribeFromSimulationCallbacks();
 }
 
 static void ProcessInputs( Engine::ECS::World& world, InputState& outInputState )
@@ -72,7 +78,12 @@ void ClientLocalPlayerPredictorSystem::OnShotPerformedCallback()
 void ClientLocalPlayerPredictorSystem::SubscribeToSimulationCallbacks()
 {
 	auto onShotPerformedCallback = std::bind( &ClientLocalPlayerPredictorSystem::OnShotPerformedCallback, this );
-	_playerStateSimulator.SubscribeToOnShotPerformed( onShotPerformedCallback );
+	_onShotPerformedSubscriptionHandler = _playerStateSimulator.SubscribeToOnShotPerformed( onShotPerformedCallback );
+}
+
+void ClientLocalPlayerPredictorSystem::UnsubscribeFromSimulationCallbacks()
+{
+	_playerStateSimulator.UnsubscribeFromOnShotPerformed( _onShotPerformedSubscriptionHandler );
 }
 
 static void SavePlayerStateInBuffer( ClientSidePredictionComponent& client_side_prediction_component,

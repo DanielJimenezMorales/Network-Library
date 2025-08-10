@@ -1,6 +1,6 @@
 #pragma once
 #include "numeric_types.h"
-#include "delegate.h"
+#include "delegate.hpp"
 
 #include <vector>
 #include <queue>
@@ -24,6 +24,12 @@ namespace Engine
 		{
 			public:
 				World();
+
+				World( const World& ) = delete;
+				World( World&& other ) noexcept = default;
+
+				World& operator=( const World& ) = delete;
+				World& operator=( World&& other ) noexcept = default;
 
 				bool RegisterArchetype( const Archetype& archetype );
 
@@ -77,16 +83,20 @@ namespace Engine
 				const T& GetFirstComponentOfType() const;
 
 				template < typename Functor >
-				uint32 SubscribeToOnEntityCreate( Functor&& functor );
-				void UnsubscribeFromOnEntityCreate( uint32 id );
+				Common::Delegate< GameEntity& >::SubscriptionHandler SubscribeToOnEntityCreate( Functor&& functor );
+				bool UnsubscribeFromOnEntityCreate(
+				    const Common::Delegate< GameEntity& >::SubscriptionHandler& handler );
 
 				template < typename Functor >
-				uint32 SubscribeToOnEntityConfigure( Functor&& functor );
-				void UnsubscribeFromOnEntityConfigure( uint32 id );
+				Common::Delegate< GameEntity&, const Prefab& >::SubscriptionHandler SubscribeToOnEntityConfigure(
+				    Functor&& functor );
+				bool UnsubscribeFromOnEntityConfigure(
+				    const Common::Delegate< GameEntity&, const Prefab& >::SubscriptionHandler& handler );
 
 				template < typename Functor >
-				uint32 SubscribeToOnEntityDestroy( Functor&& functor );
-				void UnsubscribeFromOnEntityDestroy( uint32 id );
+				Common::Delegate< GameEntity& >::SubscriptionHandler SubscribeToOnEntityDestroy( Functor&& functor );
+				bool UnsubscribeFromOnEntityDestroy(
+				    const Common::Delegate< GameEntity& >::SubscriptionHandler& handler );
 
 			private:
 				void CreatePendingEntities();
@@ -171,19 +181,22 @@ namespace Engine
 		}
 
 		template < typename Functor >
-		inline uint32 World::SubscribeToOnEntityCreate( Functor&& functor )
+		inline Common::Delegate< GameEntity& >::SubscriptionHandler World::SubscribeToOnEntityCreate(
+		    Functor&& functor )
 		{
 			return _onEntityCreate.AddSubscriber( std::forward< Functor >( functor ) );
 		}
 
 		template < typename Functor >
-		inline uint32 World::SubscribeToOnEntityConfigure( Functor&& functor )
+		inline Common::Delegate< GameEntity&, const Prefab& >::SubscriptionHandler World::SubscribeToOnEntityConfigure(
+		    Functor&& functor )
 		{
 			return _onEntityConfigure.AddSubscriber( std::forward< Functor >( functor ) );
 		}
 
 		template < typename Functor >
-		inline uint32 World::SubscribeToOnEntityDestroy( Functor&& functor )
+		inline Common::Delegate< GameEntity& >::SubscriptionHandler World::SubscribeToOnEntityDestroy(
+		    Functor&& functor )
 		{
 			return _onEntityDestroy.AddSubscriber( std::forward< Functor >( functor ) );
 		}

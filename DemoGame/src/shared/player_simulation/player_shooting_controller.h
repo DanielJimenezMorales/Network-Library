@@ -1,7 +1,6 @@
 #pragma once
 #include "numeric_types.h"
-
-#include "Delegate.h"
+#include "delegate.hpp"
 
 class InputState;
 struct PlayerState;
