@@ -6,20 +6,25 @@
 
 #include "shared/player_simulation/player_state.h"
 #include "shared/player_simulation/player_state_configuration.h"
+#include "shared/player_simulation/simulation_events_handler.h"
+#include "shared/player_simulation/player_simulation_events.h"
 
-static void UpdateLookAt( const InputState& inputs, const PlayerState& current_state, PlayerState& result_state,
-                          float32 elapsed_time, const PlayerStateConfiguration& configuration )
+namespace PlayerSimulation
 {
-	Engine::TransformComponent transform( current_state.position, current_state.rotationAngle );
-	transform.LookAt( inputs.virtualMousePosition );
-	result_state.rotationAngle = transform.GetRotationAngle();
-}
+	static void UpdateLookAt( const InputState& inputs, const PlayerState& current_state, PlayerState& result_state,
+	                          float32 elapsed_time, const PlayerStateConfiguration& configuration )
+	{
+		Engine::TransformComponent transform( current_state.position, current_state.rotationAngle );
+		transform.LookAt( inputs.virtualMousePosition );
+		result_state.rotationAngle = transform.GetRotationAngle();
+	}
 
-bool PlayerRotationController::Simulate( const InputState& inputs, const PlayerState& current_state,
-                                         PlayerState& result_state, float32 elapsed_time,
-                                         const PlayerStateConfiguration& configuration,
-                                         std::vector< PlayerSimulation::EventType >& events_generated ) const
-{
-	UpdateLookAt( inputs, current_state, result_state, elapsed_time, configuration );
-	return true;
+	bool PlayerRotationController::Simulate( const InputState& inputs, const PlayerState& current_state,
+	                                         PlayerState& result_state, float32 elapsed_time,
+	                                         const PlayerStateConfiguration& configuration,
+	                                         SimulationEventsHandler& simulation_events_handler ) const
+	{
+		UpdateLookAt( inputs, current_state, result_state, elapsed_time, configuration );
+		return true;
+	}
 }

@@ -1,7 +1,7 @@
 #pragma once
 #include "numeric_types.h"
 
-#include "shared/player_simulation/player_simulation_events.h"
+#include "shared/player_simulation/simulation_events_handler.h"
 #include "shared/player_simulation/player_movement_controller.h"
 #include "shared/player_simulation/player_rotation_controller.h"
 #include "shared/player_simulation/player_shooting_controller.h"
@@ -41,7 +41,6 @@ namespace PlayerSimulation
 			PlayerRotationController _rotationController;
 			PlayerShootingController _shootingController;
 
-			// TODO Encapsulate this under a class
-			std::vector< EventType > _lastSimulationEvents;
+			SimulationEventsHandler _simulationEventsHandler;
 	};
 }

@@ -7,27 +7,28 @@
 
 #include "shared/player_simulation/player_state.h"
 #include "shared/player_simulation/player_state_configuration.h"
+#include "shared/player_simulation/simulation_events_handler.h"
+#include "shared/player_simulation/player_simulation_events.h"
 
-PlayerShootingController::PlayerShootingController()
+namespace PlayerSimulation
 {
-}
-
-bool PlayerShootingController::Simulate( const InputState& inputs, const PlayerState& current_state,
-                                         PlayerState& result_state, float32 elapsed_time,
-                                         const PlayerStateConfiguration& configuration,
-                                         std::vector< PlayerSimulation::EventType >& events_generated )
-{
-	// Update time left until next shot
-	float32 newTimeLeftUntilNextShot = ( current_state.timeLeftUntilNextShot > elapsed_time )
-	                                       ? current_state.timeLeftUntilNextShot - elapsed_time
-	                                       : 0.f;
-
-	if ( inputs.isShooting && newTimeLeftUntilNextShot == 0.f )
+	bool PlayerShootingController::Simulate( const InputState& inputs, const PlayerState& current_state,
+	                                         PlayerState& result_state, float32 elapsed_time,
+	                                         const PlayerStateConfiguration& configuration,
+	                                         SimulationEventsHandler& simulation_events_handler )
 	{
-		newTimeLeftUntilNextShot = configuration.GetFireRate();
-		events_generated.push_back( PlayerSimulation::ON_SHOT_PERFORMED );
-	}
+		// Update time left until next shot
+		float32 newTimeLeftUntilNextShot = ( current_state.timeLeftUntilNextShot > elapsed_time )
+		                                       ? current_state.timeLeftUntilNextShot - elapsed_time
+		                                       : 0.f;
 
-	result_state.timeLeftUntilNextShot = newTimeLeftUntilNextShot;
-	return true;
+		if ( inputs.isShooting && newTimeLeftUntilNextShot == 0.f )
+		{
+			newTimeLeftUntilNextShot = configuration.GetFireRate();
+			simulation_events_handler.AddEvent( PlayerSimulation::ON_SHOT_PERFORMED );
+		}
+
+		result_state.timeLeftUntilNextShot = newTimeLeftUntilNextShot;
+		return true;
+	}
 }

@@ -4,6 +4,7 @@
 #include <ctime>
 
 #ifdef LOG_ENABLED
+#define THIS_FUNCTION_NAME __func__
 
 //For some reason I need to create two macros in order to make it work
 #define STRINGIFY2(x) #x
