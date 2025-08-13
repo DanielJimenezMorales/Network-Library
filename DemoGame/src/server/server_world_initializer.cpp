@@ -39,8 +39,11 @@
 // Server game
 #include "server/components/server_player_state_storage_component.h"
 
+#include "server/global_components/hit_registration_global_component.h"
+
 #include "server/systems/server_player_controller_system.h"
 #include "server/systems/server_dummy_input_handler_system.h"
+#include "server/systems/server_hit_registration_system.h"
 //---
 
 #include "shared/InputActionIdsConfiguration.h"
@@ -208,16 +211,24 @@ static bool AddGameplayToWorld( Engine::ECS::World& world )
 	temporary_lifetime_objects_system_coordinator->AddSystemToTail( temporary_lifetime_objects_system );
 	world.AddSystem( temporary_lifetime_objects_system_coordinator );
 
-	// Add Server-side player controller system
-	Engine::ECS::SystemCoordinator* server_player_controller_system_coordinator =
+	// Add Server-side player controller system and Hit registration system
+	world.AddGlobalComponent< HitRegistrationGlobalComponent >();
+
+	Engine::ECS::SystemCoordinator* server_player_controller_and_hit_registration_system_coordinator =
 	    new Engine::ECS::SystemCoordinator( Engine::ECS::ExecutionStage::TICK );
 	ServerPlayerControllerSystem* server_player_controller_system = new ServerPlayerControllerSystem();
-	server_player_controller_system_coordinator->AddSystemToTail( server_player_controller_system );
+	server_player_controller_and_hit_registration_system_coordinator->AddSystemToTail(
+	    server_player_controller_system );
 	auto on_configure_player_controller_callback =
 	    std::bind( &ServerPlayerControllerSystem::ConfigurePlayerControllerComponent, server_player_controller_system,
 	               std::placeholders::_1, std::placeholders::_2 );
 	world.SubscribeToOnEntityConfigure( on_configure_player_controller_callback );
-	world.AddSystem( server_player_controller_system_coordinator );
+
+	// Add Server-side hit registration system
+	server_player_controller_and_hit_registration_system_coordinator->AddSystemToTail(
+	    new ServerHitRegistrationSystem() );
+
+	world.AddSystem( server_player_controller_and_hit_registration_system_coordinator );
 
 	return true;
 }

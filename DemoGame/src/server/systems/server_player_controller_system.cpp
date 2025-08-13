@@ -20,10 +20,11 @@
 #include "shared/player_simulation/player_state.h"
 #include "shared/player_simulation/player_state_configuration.h"
 #include "shared/player_simulation/player_state_utils.h"
-#include "shared/player_simulation/player_state_simulator.h"
 
 ServerPlayerControllerSystem::ServerPlayerControllerSystem()
     : Engine::ECS::ISimpleSystem()
+    , _playerStateSimulator()
+    , _eventsProcessor()
 {
 }
 
@@ -48,22 +49,24 @@ static const InputState* GetInputForPlayer( const Engine::ECS::GameEntity& entit
 	return static_cast< const InputState* >( baseInputState );
 }
 
-static void ExecutePlayerSimulation( Engine::ECS::GameEntity& entity, const InputState& input_state,
-                                     float32 elapsed_time )
+void ServerPlayerControllerSystem::ExecutePlayerSimulation( Engine::ECS::World& world, Engine::ECS::GameEntity& entity,
+                                                            const InputState& input_state, float32 elapsed_time )
 {
 	// Get all data needed for the simulation
 	const PlayerControllerComponent& playerController = entity.GetComponent< PlayerControllerComponent >();
 	const PlayerSimulation::PlayerStateConfiguration& playerStateConfiguration = playerController.stateConfiguration;
 	const PlayerSimulation::PlayerState currentPlayerState =
 	    PlayerSimulation::GetPlayerStateFromPlayerEntity( entity, input_state.tick );
-	PlayerSimulation::PlayerStateSimulator playerStateSimulator;
 
 	// Simulate the player logic and get the resulted simulation state
 	const PlayerSimulation::PlayerState resultPlayerState =
-	    playerStateSimulator.Simulate( input_state, currentPlayerState, playerStateConfiguration, elapsed_time );
+	    _playerStateSimulator.Simulate( input_state, currentPlayerState, playerStateConfiguration, elapsed_time );
 
 	// Apply the resulted simulation state to the entity
 	ApplyPlayerStateToPlayerEntity( entity, resultPlayerState );
+
+	// Fire simulation events
+	_playerStateSimulator.ProcessLastSimulationEvents( world, entity, &_eventsProcessor );
 
 	// Save resulted simulation state in order to recover all its info when serializing it to send it to the target
 	// client
@@ -89,7 +92,7 @@ void ServerPlayerControllerSystem::Execute( Engine::ECS::World& world, float32 e
 		}
 
 		// Execute player simulation based on inputs
-		ExecutePlayerSimulation( *it, *inputState, elapsed_time );
+		ExecutePlayerSimulation( world, *it, *inputState, elapsed_time );
 	}
 }
 

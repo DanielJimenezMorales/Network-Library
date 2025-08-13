@@ -8,6 +8,8 @@
 #include "shared/player_simulation/player_state_simulator.h"
 #include "shared/player_simulation/player_state.h"
 
+#include "client/player_simulation/client_player_simulation_events_processor.h"
+
 #include <vector>
 
 namespace Engine
@@ -17,8 +19,6 @@ namespace Engine
 		class Prefab;
 	}
 }
-
-class ClientPlayerSimulationEventsProcessor;
 
 class InputState;
 struct ClientSidePredictionComponent;
@@ -32,7 +32,6 @@ class ClientLocalPlayerPredictorSystem : public Engine::ECS::ISimpleSystem
 {
 	public:
 		ClientLocalPlayerPredictorSystem( Engine::ECS::World* world );
-		~ClientLocalPlayerPredictorSystem();
 
 		void Execute( Engine::ECS::World& world, float32 elapsed_time ) override;
 
@@ -50,5 +49,5 @@ class ClientLocalPlayerPredictorSystem : public Engine::ECS::ISimpleSystem
 		uint64 _nextInputStateId;
 
 		PlayerSimulation::PlayerStateSimulator _playerStateSimulator;
-		ClientPlayerSimulationEventsProcessor* _simulationEventsProcessor;
+		ClientPlayerSimulationEventsProcessor _simulationEventsProcessor;
 };

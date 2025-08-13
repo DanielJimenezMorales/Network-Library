@@ -26,8 +26,6 @@
 
 #include "shared/player_simulation/player_state_utils.h"
 
-#include "client/player_simulation/client_player_simulation_events_processor.h"
-
 #include "core/client.h"
 
 ClientLocalPlayerPredictorSystem::ClientLocalPlayerPredictorSystem( Engine::ECS::World* world )
@@ -35,17 +33,8 @@ ClientLocalPlayerPredictorSystem::ClientLocalPlayerPredictorSystem( Engine::ECS:
     , _world( world )
     , _nextInputStateId( 0 )
     , _playerStateSimulator()
-    , _simulationEventsProcessor( new ClientPlayerSimulationEventsProcessor() )
+    , _simulationEventsProcessor()
 {
-}
-
-ClientLocalPlayerPredictorSystem::~ClientLocalPlayerPredictorSystem()
-{
-	if ( _simulationEventsProcessor != nullptr )
-	{
-		delete _simulationEventsProcessor;
-		_simulationEventsProcessor = nullptr;
-	}
 }
 
 static void ProcessInputs( Engine::ECS::World& world, InputState& outInputState )
@@ -117,7 +106,7 @@ void ClientLocalPlayerPredictorSystem::ExecuteLocalPrediction( Engine::ECS::Game
 	PlayerSimulation::ApplyPlayerStateToPlayerEntity( entity, resultPlayerState );
 
 	// Fire simulation events
-	_playerStateSimulator.ProcessLastSimulationEvents( *_world, entity, _simulationEventsProcessor );
+	_playerStateSimulator.ProcessLastSimulationEvents( *_world, entity, &_simulationEventsProcessor );
 }
 
 void ClientLocalPlayerPredictorSystem::Execute( Engine::ECS::World& world, float32 elapsed_time )
