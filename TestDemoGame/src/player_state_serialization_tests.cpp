@@ -9,7 +9,7 @@ namespace
 {
 	TEST( PlayerStateSerialization, SerializeAndDeserializeEqualPlayerState )
 	{
-		PlayerState playerState;
+		PlayerSimulation::PlayerState playerState;
 		playerState.tick = 11;
 		playerState.position = Vec2f( 2.45f, -1.4f );
 		playerState.rotationAngle = 99.f;
@@ -19,7 +19,7 @@ namespace
 
 		SerializePlayerStateToBuffer( playerState, buffer );
 		buffer.ResetAccessIndex();
-		PlayerState resultPlayerState = DeserializePlayerStateFromBuffer( buffer );
+		PlayerSimulation::PlayerState resultPlayerState = PlayerSimulation::DeserializePlayerStateFromBuffer( buffer );
 
 		EXPECT_EQ( playerState.tick, resultPlayerState.tick );
 		EXPECT_FLOAT_EQ( playerState.position.X(), resultPlayerState.position.X() );

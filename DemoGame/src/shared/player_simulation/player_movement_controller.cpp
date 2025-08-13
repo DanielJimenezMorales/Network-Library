@@ -5,7 +5,7 @@
 #include "shared/player_simulation/player_state.h"
 #include "shared/player_simulation/player_state_configuration.h"
 #include "shared/player_simulation/simulation_events_handler.h"
-#include "shared/player_simulation/player_simulation_events.h"
+#include "shared/player_simulation/simulation_events.h"
 
 namespace PlayerSimulation
 {

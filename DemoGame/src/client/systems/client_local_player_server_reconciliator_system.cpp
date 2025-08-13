@@ -20,7 +20,7 @@ ClientLocalPlayerServerReconciliatorSystem::ClientLocalPlayerServerReconciliator
 }
 
 static bool IsAReconciliationNeeded( const ClientSidePredictionComponent& prediction_component,
-                                     const PlayerState& state_from_server )
+                                     const PlayerSimulation::PlayerState& state_from_server )
 {
 	bool result = false;
 
@@ -35,7 +35,8 @@ static bool IsAReconciliationNeeded( const ClientSidePredictionComponent& predic
 		{
 			// Check if state received from server is different from the one predicted locally. In that case we
 			// need to reconciliate.
-			const PlayerState& predictedState = prediction_component.resultedPlayerStatesBuffer[ slotIndex ];
+			const PlayerSimulation::PlayerState& predictedState =
+			    prediction_component.resultedPlayerStatesBuffer[ slotIndex ];
 			if ( predictedState != state_from_server )
 			{
 				result = true;
@@ -55,7 +56,7 @@ static bool IsAReconciliationNeeded( const ClientSidePredictionComponent& predic
 
 static void ReconciliateWithServer( Engine::ECS::GameEntity& entity,
                                     ClientSidePredictionComponent& prediction_component,
-                                    const PlayerState& state_from_server,
+                                    const PlayerSimulation::PlayerState& state_from_server,
                                     const NetworkPeerGlobalComponent& network_peer )
 {
 	// Overwrite the predicted state with the one received from server
@@ -64,10 +65,11 @@ static void ReconciliateWithServer( Engine::ECS::GameEntity& entity,
 
 	// Get all necessary data for passing it to the state simulator
 	const PlayerControllerComponent& playerControllerComponent = entity.GetComponent< PlayerControllerComponent >();
-	const PlayerStateConfiguration& playerStateConfiguration = playerControllerComponent.stateConfiguration;
+	const PlayerSimulation::PlayerStateConfiguration& playerStateConfiguration =
+	    playerControllerComponent.stateConfiguration;
 	PlayerSimulation::PlayerStateSimulator playerStateSimulator;
 
-	PlayerState currentPlayerState = state_from_server;
+	PlayerSimulation::PlayerState currentPlayerState = state_from_server;
 	uint32 currentTick = state_from_server.tick + 1;
 	const uint32 lastTick = network_peer.peer->GetCurrentTick();
 
@@ -78,7 +80,7 @@ static void ReconciliateWithServer( Engine::ECS::GameEntity& entity,
 
 		const InputState& inputState = prediction_component.inputStatesBuffer[ currentSlotIndex ];
 		const float32 elapsedTime = prediction_component.elapsedTimeBuffer[ currentSlotIndex ];
-		const PlayerState resultedPlayerState =
+		const PlayerSimulation::PlayerState resultedPlayerState =
 		    playerStateSimulator.Simulate( inputState, currentPlayerState, playerStateConfiguration, elapsedTime );
 
 		prediction_component.resultedPlayerStatesBuffer[ currentSlotIndex ] = resultedPlayerState;
@@ -91,10 +93,10 @@ static void ReconciliateWithServer( Engine::ECS::GameEntity& entity,
 	ApplyPlayerStateToPlayerEntity( entity, currentPlayerState );
 }
 
-static PlayerState GetMostRecentPendingServerPlayerState(
+static PlayerSimulation::PlayerState GetMostRecentPendingServerPlayerState(
     const ClientSidePredictionComponent& client_side_prediction_component )
 {
-	PlayerState result;
+	PlayerSimulation::PlayerState result;
 	result.ZeroOut();
 
 	auto cit = client_side_prediction_component.playerStatesReceivedFromServer.cbegin();
@@ -118,7 +120,7 @@ static void EvaluateReconciliation( Engine::ECS::GameEntity& entity, const Netwo
 	if ( clientSidePredictionComponent.isPendingPlayerStateFromServer )
 	{
 		// Get the state received from server (in case we have more than one we'll only care about the most recent)
-		const PlayerState& playerStateFromServer =
+		const PlayerSimulation::PlayerState& playerStateFromServer =
 		    GetMostRecentPendingServerPlayerState( clientSidePredictionComponent );
 
 		if ( IsAReconciliationNeeded( clientSidePredictionComponent, playerStateFromServer ) )

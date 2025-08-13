@@ -11,7 +11,7 @@ struct PlayerControllerComponent
 		{
 		}
 
-		PlayerStateConfiguration stateConfiguration;
+		PlayerSimulation::PlayerStateConfiguration stateConfiguration;
 
 		float32 timeLeftUntilNextShot;
 };

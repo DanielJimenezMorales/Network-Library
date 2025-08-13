@@ -32,6 +32,8 @@ namespace Common
 	void LogError(const char* filePath, const char* line, const char* format, ...);
 }
 #else
+#define THIS_FUNCTION_NAME "N/A"
+
 #define LOG_INFO(message, ...)
 #define LOG_WARNING(message, ...)
 #define LOG_ERROR(message, ...)

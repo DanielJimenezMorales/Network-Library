@@ -11,5 +11,5 @@ struct ServerPlayerStateStorageComponent
 {
 		ServerPlayerStateStorageComponent() {}
 
-		PlayerState lastPlayerStateSimulated;
+		PlayerSimulation::PlayerState lastPlayerStateSimulated;
 };

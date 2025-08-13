@@ -23,9 +23,9 @@ struct ClientSidePredictionComponent
 		const uint32 MAX_PREDICTION_BUFFER_SIZE = 256;
 		std::vector< InputState > inputStatesBuffer;
 		std::vector< float32 > elapsedTimeBuffer;
-		std::vector< PlayerState > resultedPlayerStatesBuffer;
+		std::vector< PlayerSimulation::PlayerState > resultedPlayerStatesBuffer;
 
 		uint32 lastTickProcessedFromServer;
-		std::vector< PlayerState > playerStatesReceivedFromServer;
+		std::vector< PlayerSimulation::PlayerState > playerStatesReceivedFromServer;
 		bool isPendingPlayerStateFromServer;
 };

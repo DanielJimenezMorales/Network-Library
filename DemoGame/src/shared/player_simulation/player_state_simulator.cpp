@@ -10,7 +10,7 @@
 #include "shared/InputState.h"
 
 #include "shared/player_simulation/player_state.h"
-#include "shared/player_simulation/i_player_simulation_events_processor.h"
+#include "shared/player_simulation/i_simulation_events_processor.h"
 
 namespace PlayerSimulation
 {
@@ -41,7 +41,7 @@ namespace PlayerSimulation
 	}
 
 	void PlayerStateSimulator::ProcessLastSimulationEvents( Engine::ECS::World& world, Engine::ECS::GameEntity& entity,
-	                                                        IPlayerSimulationEventsProcessor* events_processor )
+	                                                        ISimulationEventsProcessor* events_processor )
 	{
 		_simulationEventsHandler.ProcessEvents( world, entity, events_processor );
 	}

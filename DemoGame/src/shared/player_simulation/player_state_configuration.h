@@ -1,12 +1,14 @@
 #pragma once
 #include "numeric_types.h"
 
-struct PlayerStateConfiguration
+namespace PlayerSimulation
 {
-		PlayerStateConfiguration( uint32 movement_speed, uint32 fire_rate_per_second )
-		    : _movementSpeed( movement_speed )
-		    , _fireRatePerSecond( fire_rate_per_second )
-		    , _fireRate( 1.f / fire_rate_per_second )
+	struct PlayerStateConfiguration
+	{
+		PlayerStateConfiguration(uint32 movement_speed, uint32 fire_rate_per_second)
+			: _movementSpeed(movement_speed)
+			, _fireRatePerSecond(fire_rate_per_second)
+			, _fireRate(1.f / fire_rate_per_second)
 		{
 		}
 
@@ -19,4 +21,5 @@ struct PlayerStateConfiguration
 		// This value can't be higher than the game Tick Rate
 		uint32 _fireRatePerSecond;
 		float32 _fireRate;
-};
+	};
+}

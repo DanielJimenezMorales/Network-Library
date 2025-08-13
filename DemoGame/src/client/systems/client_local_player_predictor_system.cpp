@@ -76,8 +76,8 @@ static InputState GetInputState( Engine::ECS::World& world, uint32 current_tick,
 }
 
 static void SavePlayerStateInBuffer( ClientSidePredictionComponent& client_side_prediction_component,
-                                     const InputState& input_state, const PlayerState& resulted_player_state,
-                                     float32 elapsed_time )
+                                     const InputState& input_state,
+                                     const PlayerSimulation::PlayerState& resulted_player_state, float32 elapsed_time )
 {
 	const uint32 slotIndex = client_side_prediction_component.ConvertTickToBufferSlotIndex( input_state.tick );
 	client_side_prediction_component.inputStatesBuffer[ slotIndex ] = input_state;
@@ -97,13 +97,15 @@ void ClientLocalPlayerPredictorSystem::ExecuteLocalPrediction( Engine::ECS::Game
                                                                const InputState& input_state, float32 elapsed_time )
 {
 	// Get the current state and the configuration for the predicted entity
-	const PlayerState currentState = GetPlayerStateFromPlayerEntity( entity, input_state.tick );
+	const PlayerSimulation::PlayerState currentState =
+	    PlayerSimulation::GetPlayerStateFromPlayerEntity( entity, input_state.tick );
 
 	PlayerControllerComponent& localPlayerController = entity.GetComponent< PlayerControllerComponent >();
-	const PlayerStateConfiguration& playerStateConfiguration = localPlayerController.stateConfiguration;
+	const PlayerSimulation::PlayerStateConfiguration& playerStateConfiguration =
+	    localPlayerController.stateConfiguration;
 
 	// Simulate the player logic locally and get the resulted simulation state
-	const PlayerState resultPlayerState =
+	const PlayerSimulation::PlayerState resultPlayerState =
 	    _playerStateSimulator.Simulate( input_state, currentState, playerStateConfiguration, elapsed_time );
 
 	// Store the data in the prediction buffer in case we need to reconcile with the server later.
@@ -112,7 +114,7 @@ void ClientLocalPlayerPredictorSystem::ExecuteLocalPrediction( Engine::ECS::Game
 	SavePlayerStateInBuffer( clientSidePredictionComponent, input_state, resultPlayerState, elapsed_time );
 
 	// Apply the resulted simulation state to the entity
-	ApplyPlayerStateToPlayerEntity( entity, resultPlayerState );
+	PlayerSimulation::ApplyPlayerStateToPlayerEntity( entity, resultPlayerState );
 
 	// Fire simulation events
 	_playerStateSimulator.ProcessLastSimulationEvents( *_world, entity, _simulationEventsProcessor );
@@ -159,8 +161,8 @@ void ClientLocalPlayerPredictorSystem::ConfigurePlayerControllerComponent( Engin
 	const PlayerControllerComponentConfiguration& player_controller_config =
 	    static_cast< const PlayerControllerComponentConfiguration& >( *component_config_found->second );
 
-	const PlayerStateConfiguration playerStateConfig( player_controller_config.movementSpeed,
-	                                                  player_controller_config.fireRatePerSecond );
+	const PlayerSimulation::PlayerStateConfiguration playerStateConfig( player_controller_config.movementSpeed,
+	                                                                    player_controller_config.fireRatePerSecond );
 
 	PlayerControllerComponent& player_controller = entity.GetComponent< PlayerControllerComponent >();
 	player_controller.stateConfiguration = playerStateConfig;

@@ -4,12 +4,12 @@
 #include <vector>
 
 class InputState;
-struct PlayerState;
-struct PlayerStateConfiguration;
 
 namespace PlayerSimulation
 {
 	class SimulationEventsHandler;
+	struct PlayerState;
+	struct PlayerStateConfiguration;
 
 	class PlayerRotationController
 	{

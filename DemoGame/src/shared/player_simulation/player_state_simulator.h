@@ -18,12 +18,12 @@ namespace Engine
 }
 
 class InputState;
-struct PlayerState;
-struct PlayerStateConfiguration;
 
 namespace PlayerSimulation
 {
-	class IPlayerSimulationEventsProcessor;
+	class ISimulationEventsProcessor;
+	struct PlayerState;
+	struct PlayerStateConfiguration;
 
 	class PlayerStateSimulator
 	{
@@ -34,7 +34,7 @@ namespace PlayerSimulation
 			                      const PlayerStateConfiguration& configuration, float32 elapsed_time );
 
 			void ProcessLastSimulationEvents( Engine::ECS::World& world, Engine::ECS::GameEntity& entity,
-			                                  IPlayerSimulationEventsProcessor* events_processor );
+			                                  ISimulationEventsProcessor* events_processor );
 
 		private:
 			PlayerMovementController _movementController;

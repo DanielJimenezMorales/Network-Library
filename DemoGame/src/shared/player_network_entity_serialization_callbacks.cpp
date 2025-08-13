@@ -36,7 +36,7 @@ void SerializeForNonOwner( const Engine::ECS::GameEntity& entity, NetLib::Buffer
 
 void DeserializeForOwner( Engine::ECS::GameEntity& entity, NetLib::Buffer& buffer )
 {
-	PlayerState playerState = DeserializePlayerStateFromBuffer( buffer );
+	PlayerSimulation::PlayerState playerState = PlayerSimulation::DeserializePlayerStateFromBuffer( buffer );
 	ClientSidePredictionComponent& clientSidePredictionComponent =
 	    entity.GetComponent< ClientSidePredictionComponent >();
 

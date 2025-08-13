@@ -1,7 +1,7 @@
 #pragma once
-#include "shared/player_simulation/i_player_simulation_events_processor.h"
+#include "shared/player_simulation/i_simulation_events_processor.h"
 
-class ClientPlayerSimulationEventsProcessor : public PlayerSimulation::IPlayerSimulationEventsProcessor
+class ClientPlayerSimulationEventsProcessor : public PlayerSimulation::ISimulationEventsProcessor
 {
 	public:
 		ClientPlayerSimulationEventsProcessor() = default;

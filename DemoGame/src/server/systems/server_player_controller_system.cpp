@@ -53,12 +53,13 @@ static void ExecutePlayerSimulation( Engine::ECS::GameEntity& entity, const Inpu
 {
 	// Get all data needed for the simulation
 	const PlayerControllerComponent& playerController = entity.GetComponent< PlayerControllerComponent >();
-	const PlayerStateConfiguration& playerStateConfiguration = playerController.stateConfiguration;
-	const PlayerState currentPlayerState = GetPlayerStateFromPlayerEntity( entity, input_state.tick );
+	const PlayerSimulation::PlayerStateConfiguration& playerStateConfiguration = playerController.stateConfiguration;
+	const PlayerSimulation::PlayerState currentPlayerState =
+	    PlayerSimulation::GetPlayerStateFromPlayerEntity( entity, input_state.tick );
 	PlayerSimulation::PlayerStateSimulator playerStateSimulator;
 
 	// Simulate the player logic and get the resulted simulation state
-	const PlayerState resultPlayerState =
+	const PlayerSimulation::PlayerState resultPlayerState =
 	    playerStateSimulator.Simulate( input_state, currentPlayerState, playerStateConfiguration, elapsed_time );
 
 	// Apply the resulted simulation state to the entity
@@ -109,8 +110,8 @@ void ServerPlayerControllerSystem::ConfigurePlayerControllerComponent( Engine::E
 	const PlayerControllerComponentConfiguration& player_controller_config =
 	    static_cast< const PlayerControllerComponentConfiguration& >( *component_config_found->second );
 
-	const PlayerStateConfiguration playerStateConfig( player_controller_config.movementSpeed,
-	                                                  player_controller_config.fireRatePerSecond );
+	const PlayerSimulation::PlayerStateConfiguration playerStateConfig( player_controller_config.movementSpeed,
+	                                                                    player_controller_config.fireRatePerSecond );
 
 	PlayerControllerComponent& player_controller = entity.GetComponent< PlayerControllerComponent >();
 	player_controller.stateConfiguration = playerStateConfig;

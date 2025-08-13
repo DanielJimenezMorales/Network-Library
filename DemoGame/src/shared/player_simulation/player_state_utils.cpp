@@ -10,49 +10,52 @@
 
 #include "core/Buffer.h"
 
-PlayerState GetPlayerStateFromPlayerEntity( const Engine::ECS::GameEntity& player_entity, uint32 current_tick )
+namespace PlayerSimulation
 {
-	PlayerState playerState;
-	playerState.tick = current_tick;
+	PlayerState GetPlayerStateFromPlayerEntity( const Engine::ECS::GameEntity& player_entity, uint32 current_tick )
+	{
+		PlayerState playerState;
+		playerState.tick = current_tick;
 
-	const Engine::TransformComponent& transform = player_entity.GetComponent< Engine::TransformComponent >();
-	playerState.position = transform.GetPosition();
-	playerState.rotationAngle = transform.GetRotationAngle();
+		const Engine::TransformComponent& transform = player_entity.GetComponent< Engine::TransformComponent >();
+		playerState.position = transform.GetPosition();
+		playerState.rotationAngle = transform.GetRotationAngle();
 
-	const PlayerControllerComponent& playerController = player_entity.GetComponent< PlayerControllerComponent >();
-	playerState.timeLeftUntilNextShot = playerController.timeLeftUntilNextShot;
+		const PlayerControllerComponent& playerController = player_entity.GetComponent< PlayerControllerComponent >();
+		playerState.timeLeftUntilNextShot = playerController.timeLeftUntilNextShot;
 
-	return playerState;
-}
+		return playerState;
+	}
 
-void ApplyPlayerStateToPlayerEntity( Engine::ECS::GameEntity& player_entity, const PlayerState& player_state )
-{
-	Engine::TransformComponent& transform = player_entity.GetComponent< Engine::TransformComponent >();
-	transform.SetPosition( player_state.position );
-	transform.SetRotationAngle( player_state.rotationAngle );
+	void ApplyPlayerStateToPlayerEntity( Engine::ECS::GameEntity& player_entity, const PlayerState& player_state )
+	{
+		Engine::TransformComponent& transform = player_entity.GetComponent< Engine::TransformComponent >();
+		transform.SetPosition( player_state.position );
+		transform.SetRotationAngle( player_state.rotationAngle );
 
-	PlayerControllerComponent& playerController = player_entity.GetComponent< PlayerControllerComponent >();
-	playerController.timeLeftUntilNextShot = player_state.timeLeftUntilNextShot;
-}
+		PlayerControllerComponent& playerController = player_entity.GetComponent< PlayerControllerComponent >();
+		playerController.timeLeftUntilNextShot = player_state.timeLeftUntilNextShot;
+	}
 
-void SerializePlayerStateToBuffer( const PlayerState& player_state, NetLib::Buffer& buffer )
-{
-	buffer.WriteInteger( player_state.tick );
-	buffer.WriteFloat( player_state.position.X() );
-	buffer.WriteFloat( player_state.position.Y() );
+	void SerializePlayerStateToBuffer( const PlayerState& player_state, NetLib::Buffer& buffer )
+	{
+		buffer.WriteInteger( player_state.tick );
+		buffer.WriteFloat( player_state.position.X() );
+		buffer.WriteFloat( player_state.position.Y() );
 
-	buffer.WriteFloat( player_state.rotationAngle );
-}
+		buffer.WriteFloat( player_state.rotationAngle );
+	}
 
-PlayerState DeserializePlayerStateFromBuffer( NetLib::Buffer& buffer )
-{
-	PlayerState playerState;
+	PlayerState DeserializePlayerStateFromBuffer( NetLib::Buffer& buffer )
+	{
+		PlayerState playerState;
 
-	playerState.tick = buffer.ReadInteger();
-	playerState.position.X( buffer.ReadFloat() );
-	playerState.position.Y( buffer.ReadFloat() );
+		playerState.tick = buffer.ReadInteger();
+		playerState.position.X( buffer.ReadFloat() );
+		playerState.position.Y( buffer.ReadFloat() );
 
-	playerState.rotationAngle = buffer.ReadFloat();
+		playerState.rotationAngle = buffer.ReadFloat();
 
-	return playerState;
-}
+		return playerState;
+	}
+} // namespace PlayerSimulation
