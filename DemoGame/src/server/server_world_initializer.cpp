@@ -44,6 +44,7 @@
 #include "server/systems/server_player_controller_system.h"
 #include "server/systems/server_dummy_input_handler_system.h"
 #include "server/systems/server_hit_registration_system.h"
+#include "server/systems/server_remove_death_entities_system.h"
 //---
 
 #include "shared/InputActionIdsConfiguration.h"
@@ -229,6 +230,12 @@ static bool AddGameplayToWorld( Engine::ECS::World& world )
 	    new ServerHitRegistrationSystem() );
 
 	world.AddSystem( server_player_controller_and_hit_registration_system_coordinator );
+
+	// Add remove death entities from world system
+	Engine::ECS::SystemCoordinator* remove_death_entities_system_coordinator =
+	    new Engine::ECS::SystemCoordinator( Engine::ECS::ExecutionStage::TICK );
+	remove_death_entities_system_coordinator->AddSystemToTail( new ServerRemoveDeathEntitiesSystem() );
+	world.AddSystem( remove_death_entities_system_coordinator );
 
 	return true;
 }

@@ -25,6 +25,11 @@ namespace Engine
 			_entities.destroy( static_cast< entt::entity >( id ) );
 		}
 
+		bool EntityContainer::IsEntityInWorld( const GameEntity& entity ) const
+		{
+			return _entities.valid( static_cast< entt::entity >( entity.GetId() ) );
+		}
+
 		GameEntity EntityContainer::GetEntityFromId( uint32 id )
 		{
 			GameEntity result;

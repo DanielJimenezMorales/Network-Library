@@ -4,9 +4,12 @@
 namespace Engine
 {
 	/// <summary>
-	/// <para>Rotations will be represented using one float32 which will represent the rotation angles. This rotation is
-	/// anti-clockwise. A rotation angle of 0 degrees
-	///  will mean that the object is facing downward or in other words, its forward vector is (0, -1)</para>
+	/// <para>Rotations:
+	/// - Will be represented using a float32 for the rotation angle (0 - 360).
+	/// - LEFT = 0 degrees / (1, 0), RIGHT = 180 degrees / (-1, 0), UP = 90 degrees / (0, 1), DOWN = 270 degrees / (0,
+	/// -1)
+	/// - The transform rotates anti-clockwise. That means that if the transform is looking left (1, 0) and we rotate it
+	/// 90 degrees, it will end up looking up (0, 1)</para>
 	/// </summary>
 	struct TransformComponent
 	{
@@ -31,8 +34,6 @@ namespace Engine
 			// Scale
 			Vec2f GetScale() const { return _scale; }
 			void SetScale( const Vec2f& newScale ) { _scale = newScale; }
-
-			Vec2f ConvertRotationAngleToNormalizedDirection() const;
 
 		private:
 			Vec2f _position;

@@ -27,7 +27,7 @@ namespace Engine
 		const RayGizmo& ray_gizmo = static_cast< const RayGizmo& >( gizmo );
 
 		const Vec2f start_position = transform.GetPosition();
-		const Vec2f direction = transform.ConvertRotationAngleToNormalizedDirection();
+		const Vec2f direction = transform.GetForwardVector();
 		const Vec2f end_position = transform.GetPosition() + ( ray_gizmo.GetLength() * direction );
 
 		const Vec2f screen_start_position =

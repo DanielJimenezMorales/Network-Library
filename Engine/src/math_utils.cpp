@@ -23,4 +23,10 @@ namespace Engine
 		const float32 angle_in_radians = angle * PI / 180.f;
 		return Vec2f( std::cosf( angle_in_radians ), std::sinf( angle_in_radians ) );
 	}
-}
+
+	float32 ConvertNormalizedDirectionToAngle( const Vec2f& normalized_direction )
+	{
+		const float32 angle_in_radians = std::atan2f( normalized_direction.Y(), normalized_direction.X() );
+		return angle_in_radians * 180.f / PI;
+	}
+} // namespace Engine

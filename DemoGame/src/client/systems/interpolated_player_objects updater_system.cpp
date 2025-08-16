@@ -21,7 +21,8 @@ static float32 GetMinimumDistanceBetweenAngles( float32 a, float32 b )
 	return fabs( delta );
 }
 
-static bool IsSnapToGhostRequired( const Engine::TransformComponent& ghost, const Engine::TransformComponent& interpolated,
+static bool IsSnapToGhostRequired( const Engine::TransformComponent& ghost,
+                                   const Engine::TransformComponent& interpolated,
                                    const InterpolatedObjectComponent& interpolation_config )
 {
 	return Vec2f::GetSquareDistance( ghost.GetPosition(), interpolated.GetPosition() ) >=
@@ -55,7 +56,7 @@ static float32 MoveTowardsAngle( float32 initial, float32 target, float32 max_di
 	return initial + ( deltaSign * max_distance_delta );
 }
 
-void InterpolatedPlayerObjectUpdaterSystem::Execute(Engine::ECS::World& world, float32 elapsed_time )
+void InterpolatedPlayerObjectUpdaterSystem::Execute( Engine::ECS::World& world, float32 elapsed_time )
 {
 	std::vector< Engine::ECS::GameEntity > interpolatedPlayerEntities =
 	    world.GetEntitiesOfType< InterpolatedObjectComponent >();
@@ -64,7 +65,14 @@ void InterpolatedPlayerObjectUpdaterSystem::Execute(Engine::ECS::World& world, f
 		const InterpolatedObjectComponent& interpolatedObject = it->GetComponent< InterpolatedObjectComponent >();
 		const GhostObjectComponent& ghostObject = it->GetComponent< GhostObjectComponent >();
 
-		const Engine::TransformComponent& ghostTransform = ghostObject.entity.GetComponent< Engine::TransformComponent >();
+		if ( !ghostObject.entity.IsValid() )
+		{
+			LOG_WARNING( "The Ghost object associated with an interpolated object is not valid. Skipping it." );
+			continue;
+		}
+
+		const Engine::TransformComponent& ghostTransform =
+		    ghostObject.entity.GetComponent< Engine::TransformComponent >();
 		Engine::TransformComponent& interpolatedTransform = it->GetComponent< Engine::TransformComponent >();
 
 		Vec2f finalPosition;

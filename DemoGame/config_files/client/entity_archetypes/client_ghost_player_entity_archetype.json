@@ -6,6 +6,7 @@
 		"NetworkEntity",
 		"PlayerController",
 		"HealthComponent",
-		"ClientSidePrediction"
+		"ClientSidePrediction",
+		"InterpolatedObjectReference"
 	]
 }

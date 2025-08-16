@@ -7,8 +7,22 @@ namespace Engine
 
 	float32 GetNoSquareRootDistance( const Vec2f& v1, const Vec2f& v2 );
 	float32 GetDistance( const Vec2f& v1, const Vec2f& v2 );
-	// We're taking the assumption here that angle 0 == (0, 1)
+
+	/// <summary>
+	/// <para>LEFT = 180</para>
+	/// <para>RIGHT = 0</para>
+	/// <para>UP = 90</para>
+	/// <para>DOWN = 270</para>
+	/// </summary>
 	Vec2f ConvertAngleToNormalizedDirection( float32 angle );
+
+	/// <summary>
+	/// <para>LEFT = 180</para>
+	/// <para>RIGHT = 0</para>
+	/// <para>UP = 90</para>
+	/// <para>DOWN = 270</para>
+	/// </summary>
+	float32 ConvertNormalizedDirectionToAngle( const Vec2f& normalized_direction );
 
 	constexpr int32 round_to_int32( float32 value )
 	{

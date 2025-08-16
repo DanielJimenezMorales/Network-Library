@@ -36,6 +36,7 @@
 
 // Client game
 #include "client/components/ghost_object_component.h"
+#include "client/components/interpolated_object_reference_component.h"
 #include "client/components/remote_player_controller_component.h"
 #include "client/components/client_side_prediction_component.h"
 #include "client/components/interpolated_object_component.h"
@@ -89,6 +90,7 @@ static void RegisterComponents( Engine::ECS::World& world )
 	world.RegisterComponent< VirtualMouseComponent >( "VirtualMouse" );
 	world.RegisterComponent< CrosshairComponent >( "Crosshair" );
 	world.RegisterComponent< GhostObjectComponent >( "GhostObject" );
+	world.RegisterComponent< InterpolatedObjectReferenceComponent >( "InterpolatedObjectReference" );
 	world.RegisterComponent< InterpolatedObjectComponent >( "InterpolatedObject" );
 	world.RegisterComponent< ClientSidePredictionComponent >( "ClientSidePrediction" );
 }

@@ -56,9 +56,10 @@ namespace Engine
 
 		float32 angleInRadians = std::acosf( angleCosine );
 
-		// Calculate rotation direction
+		// Calculate rotation direction. Since our system has an anti-clockwise rotation direction, we need to invert
+		// the angle in case the cross product is positive.
 		const float32 crossProduct = ( direction.X() * forward.Y() ) - ( forward.X() * direction.Y() );
-		if ( crossProduct < 0.f )
+		if ( crossProduct > 0.f )
 		{
 			angleInRadians = -angleInRadians;
 		}
@@ -70,33 +71,22 @@ namespace Engine
 
 	Vec2f TransformComponent::GetForwardVector() const
 	{
-		float32 angleInRadians = _rotationAngle * ( PI / 180.f );
-
-		// Since the rotation direction is anti-clockwise, we need to do the sin and cos of negative angle instead of
-		// just the positive angle.
-		Vec2f forwardVector( std::sin( -angleInRadians ), -std::cos( -angleInRadians ) );
-
-		return forwardVector;
-	}
-
-	Vec2f TransformComponent::ConvertRotationAngleToNormalizedDirection() const
-	{
 		return ConvertAngleToNormalizedDirection( _rotationAngle );
 	}
 
 	void TransformComponent::SetRotationAngle( float32 newRotationAngle )
 	{
 		_rotationAngle = std::fmodf( newRotationAngle, 360.0f );
+		if ( _rotationAngle < 0.f )
+		{
+			_rotationAngle += 360.f; // Ensure the angle is always positive
+		}
 	}
 
 	void TransformComponent::SetRotationLookAt( Vec2f look_at_direction )
 	{
 		look_at_direction.Normalize();
 
-		const float32 angle_in_radians = std::atan2f( look_at_direction.X(), look_at_direction.Y() );
-		const float angle_in_degrees = angle_in_radians * 180.f / PI;
-
-		//+180 degrees in order to align with Vec2f(0, 1) being assigned to 0 degrees.
-		_rotationAngle = angle_in_degrees + 180.f;
+		SetRotationAngle( ConvertNormalizedDirectionToAngle( look_at_direction ) );
 	}
 } // namespace Engine

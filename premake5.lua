@@ -53,6 +53,12 @@ PROJECT_DATA =
 		NAME = "TestCommon",
 		PATH = ROOT_PATH "test_common/",
 		PREMAKE_PATH = ROOT_PATH "test_common/test_common_premake5.lua"
+	},
+	TEST_ENGINE =
+	{
+		NAME = "TestEngine",
+		PATH = ROOT_PATH "test_engine/",
+		PREMAKE_PATH = ROOT_PATH "test_engine/test_engine_premake5.lua"
 	}
 }
 
@@ -120,3 +126,4 @@ include (PROJECT_DATA.LAUNCHER_GAME.PREMAKE_PATH)
 group "Tests"
 include (PROJECT_DATA.TEST_GAME.PREMAKE_PATH)
 include (PROJECT_DATA.TEST_COMMON.PREMAKE_PATH)
+include (PROJECT_DATA.TEST_ENGINE.PREMAKE_PATH)

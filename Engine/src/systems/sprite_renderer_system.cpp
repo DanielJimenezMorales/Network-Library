@@ -56,9 +56,10 @@ namespace Engine
 			destRect.w = static_cast< int >( texture->GetDimensions().w * transform.GetScale().X() );
 			destRect.h = static_cast< int >( texture->GetDimensions().h * transform.GetScale().Y() );
 
-			// SDL_RenderCopy(renderer, texture->GetRaw(), &texture->GetDimensions(), &destRect);
+			// SDL Rotates clockwise (the opposite as the engine that does it anti-clockwise), so we need to invert it.
+			const float64 rotationAngle = 360 - transform.GetRotationAngle();
 			SDL_RenderCopyEx( render_global_component.renderer, texture->GetRaw(), &texture->GetDimensions(), &destRect,
-			                  transform.GetRotationAngle(), nullptr, SDL_RendererFlip::SDL_FLIP_NONE );
+			                  rotationAngle, nullptr, SDL_RendererFlip::SDL_FLIP_NONE );
 		}
 	}
 

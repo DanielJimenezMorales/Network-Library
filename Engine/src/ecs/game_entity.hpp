@@ -48,7 +48,15 @@ namespace Engine
 				EntityContainer* GetEntityContainer() { return _entityContainer.GetRawPointer(); }
 				const EntityContainer* GetEntityContainer() const { return _entityContainer.GetRawPointer(); }
 
-				bool IsValid() const { return _entityContainer != nullptr; };
+				// TODO Check for this operation since it could be heavy (due to entt::registry.valid(id)). If that
+				// operation checks for all the entities available it could be heavy to do it a lot of times each tick.
+				// We know that entt's entities storage uses an sparse set with a searching operation complexity going
+				// from O(1) in best case to O(Log n) in worst case. Consider using another approach (maybe a
+				// shared-pointer-like solution?) or a GameEntityRef?
+				bool IsValid() const
+				{
+					return ( _entityContainer != nullptr && _entityContainer->IsEntityInWorld( *this ) );
+				};
 
 				template < typename T, typename... Params >
 				T& AddComponent( Params&&... params );

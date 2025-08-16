@@ -15,7 +15,9 @@ static void OnShotPerformed( Engine::ECS::World& world, const Engine::ECS::GameE
 	const Engine::TransformComponent& playerTransform = player_entity.GetComponent< Engine::TransformComponent >();
 	ShotEntry shotEntry;
 	shotEntry.position = playerTransform.GetPosition();
-	shotEntry.direction = playerTransform.ConvertRotationAngleToNormalizedDirection();
+	shotEntry.direction = playerTransform.GetForwardVector();
+	shotEntry.shooterEntity = player_entity;
+	shotEntry.damage = 10; // TODO: Get the damage from the player entity or some configuration
 
 	HitRegistrationGlobalComponent& hitRegGlobalComponent =
 	    world.GetGlobalComponent< HitRegistrationGlobalComponent >();

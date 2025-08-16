@@ -22,6 +22,8 @@ namespace Engine
 
 				void DestroyGameEntity( EntityId id );
 
+				bool IsEntityInWorld( const GameEntity& entity ) const;
+
 				// Global components
 				template < typename T >
 				bool HasGlobalComponent() const;

@@ -15,7 +15,7 @@ static void OnShotPerformed( Engine::ECS::World& world, const Engine::ECS::GameE
 
 	Engine::Raycaster::Ray ray;
 	ray.origin = local_player_transform.GetPosition();
-	ray.direction = local_player_transform.ConvertRotationAngleToNormalizedDirection();
+	ray.direction = local_player_transform.GetForwardVector();
 	ray.maxDistance = 100;
 
 	const std::vector< Engine::ECS::GameEntity > entities_with_colliders =
