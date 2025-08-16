@@ -41,11 +41,13 @@
 
 #include "server/global_components/hit_registration_global_component.h"
 #include "server/global_components/server_remote_peer_inputs_global_component.h"
+#include "server/global_components/server_dead_players_to_revive_global_component.h"
 
 #include "server/systems/server_player_controller_system.h"
 #include "server/systems/server_dummy_input_handler_system.h"
 #include "server/systems/server_hit_registration_system.h"
 #include "server/systems/server_remove_death_entities_system.h"
+#include "server/systems/server_revive_dead_players_system.h"
 //---
 
 #include "shared/InputActionIdsConfiguration.h"
@@ -235,13 +237,21 @@ static bool AddGameplayToWorld( Engine::ECS::World& world )
 	world.AddSystem( server_player_controller_and_hit_registration_system_coordinator );
 
 	// Add remove death entities from world system
-	Engine::ECS::SystemCoordinator* remove_death_entities_system_coordinator =
+	Engine::ECS::SystemCoordinator* remove_dead_entities_system_coordinator =
 	    new Engine::ECS::SystemCoordinator( Engine::ECS::ExecutionStage::TICK );
-	remove_death_entities_system_coordinator->AddSystemToTail( new ServerRemoveDeathEntitiesSystem() );
-	world.AddSystem( remove_death_entities_system_coordinator );
+	remove_dead_entities_system_coordinator->AddSystemToTail( new ServerRemoveDeathEntitiesSystem() );
+	world.AddSystem( remove_dead_entities_system_coordinator );
 
 	// Add remote peer inputs storage
 	world.AddGlobalComponent< ServerRemotePeerInputsGlobalComponent >();
+
+	// Add revive dead players
+	world.AddGlobalComponent< ServerDeadPlayersToReviveGlobalComponent >();
+
+	Engine::ECS::SystemCoordinator* revive_dead_players_system_coordinator =
+	    new Engine::ECS::SystemCoordinator( Engine::ECS::ExecutionStage::TICK );
+	revive_dead_players_system_coordinator->AddSystemToTail( new ServerReviveDeadPlayersSystem() );
+	world.AddSystem( revive_dead_players_system_coordinator );
 
 	return true;
 }

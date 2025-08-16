@@ -1,11 +1,10 @@
 #pragma once
 #include "ecs/i_simple_system.h"
 
-class ServerHitRegistrationSystem : public Engine::ECS::ISimpleSystem
+class ServerReviveDeadPlayersSystem : public Engine::ECS::ISimpleSystem
 {
 	public:
-		ServerHitRegistrationSystem() = default;
+		ServerReviveDeadPlayersSystem() = default;
 
 		void Execute( Engine::ECS::World& world, float32 elapsed_time ) override;
 };
-

@@ -6,6 +6,8 @@
 #include "shared/global_components/network_peer_global_component.h"
 #include "shared/components/network_entity_component.h"
 
+#include "server/global_components/server_dead_players_to_revive_global_component.h"
+
 void ServerRemoveDeathEntitiesSystem::Execute( Engine::ECS::World& world, float32 elapsed_time )
 {
 	const NetworkPeerGlobalComponent& networkPeerComponent = world.GetGlobalComponent< NetworkPeerGlobalComponent >();
@@ -21,6 +23,16 @@ void ServerRemoveDeathEntitiesSystem::Execute( Engine::ECS::World& world, float3
 			{
 				const NetworkEntityComponent& networkEntityComponent = cit->GetComponent< NetworkEntityComponent >();
 				networkPeerComponent.GetPeerAsServer()->DestroyNetworkEntity( networkEntityComponent.networkEntityId );
+
+				// Add player entity to dead entities to revive in order to create a new one soon.
+				// TODO This should not be hardcoded here. In general, the OnNetworkEntityCreate and destroy code is
+				// pretty spaguetti and needs to be fixed to add some flexibility and be easier to maintain
+				ServerDeadPlayersToReviveGlobalComponent& deadPlayersToReviveComponent =
+				    world.GetGlobalComponent< ServerDeadPlayersToReviveGlobalComponent >();
+				DeadPlayerEntry deadPlayerEntry;
+				deadPlayerEntry.remotePeerId = networkEntityComponent.controlledByPeerId;
+				deadPlayerEntry.timeLeft = 2.f;
+				deadPlayersToReviveComponent.deadPlayersToRevive.push_back( deadPlayerEntry );
 			}
 			else
 			{
