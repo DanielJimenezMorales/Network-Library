@@ -7,8 +7,11 @@
 
 #include "components/transform_component.h"
 
-#include "server/global_components/hit_registration_global_component.h"
 #include "server/hit_reg/shot_entry.h"
+#include "server/global_components/hit_registration_global_component.h"
+#include "server/global_components/server_remote_peer_inputs_global_component.h"
+
+#include "shared/components/network_entity_component.h"
 
 static void OnShotPerformed( Engine::ECS::World& world, const Engine::ECS::GameEntity& player_entity )
 {
@@ -18,6 +21,14 @@ static void OnShotPerformed( Engine::ECS::World& world, const Engine::ECS::GameE
 	shotEntry.direction = playerTransform.GetForwardVector();
 	shotEntry.shooterEntity = player_entity;
 	shotEntry.damage = 10; // TODO: Get the damage from the player entity or some configuration
+
+	const ServerRemotePeerInputsGlobalComponent& remotePeerInputsComponent =
+	    world.GetGlobalComponent< ServerRemotePeerInputsGlobalComponent >();
+	const NetworkEntityComponent& networkEntityComponent = player_entity.GetComponent< NetworkEntityComponent >();
+
+	const RemotePeerInputsStorage& inputsStorage =
+	    remotePeerInputsComponent.remotePeerInputs.at( networkEntityComponent.controlledByPeerId );
+	shotEntry.serverTime = inputsStorage.lastInputState.serverTime;
 
 	HitRegistrationGlobalComponent& hitRegGlobalComponent =
 	    world.GetGlobalComponent< HitRegistrationGlobalComponent >();

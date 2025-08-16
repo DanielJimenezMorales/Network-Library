@@ -28,7 +28,7 @@ class ServerPlayerControllerSystem : public Engine::ECS::ISimpleSystem
 
 	private:
 		void ExecutePlayerSimulation( Engine::ECS::World& world, Engine::ECS::GameEntity& entity,
-		                              const InputState& input_state, float32 elapsed_time );
+		                              const InputState& input_state, float32 elapsed_time, uint32 remote_peer_id );
 
 		PlayerSimulation::PlayerStateSimulator _playerStateSimulator;
 		ServerPlayerSimulationEventsProcessor _eventsProcessor;

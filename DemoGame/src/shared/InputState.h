@@ -16,6 +16,7 @@ class InputState : public NetLib::IInputState
 
 		// Header fields
 		uint32 tick;
+		float32 serverTime;
 
 		// Body fields
 		Vec2f movement;

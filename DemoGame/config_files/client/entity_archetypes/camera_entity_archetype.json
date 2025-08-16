@@ -1,7 +1,0 @@
-{
-	"name": "camera",
-	"components": [
-		"Transform",
-		"Camera"
-	]
-}

@@ -79,9 +79,8 @@ static void ParseComponentConfiguration( const nlohmann::json& json_data,
 	}
 }
 
-bool JsonConfigurationLoader::LoadPrefabs( std::vector< Engine::ECS::Prefab >& out_prefabs )
+bool JsonConfigurationLoader::LoadPrefabs( std::vector< Engine::ECS::Prefab >& out_prefabs, const std::string& relative_path)
 {
-	static const std::string relative_path = "config_files/entity_prefabs/";
 	std::vector< std::string > prefab_files;
 	GetAllFilesInDirectory( prefab_files, relative_path );
 

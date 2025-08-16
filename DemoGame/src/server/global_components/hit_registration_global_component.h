@@ -6,4 +6,5 @@
 struct HitRegistrationGlobalComponent
 {
 		std::queue< ShotEntry > pendingShotEntries;
+		float32 maxAllowedRollbackTimeSeconds = 0.25f;
 };

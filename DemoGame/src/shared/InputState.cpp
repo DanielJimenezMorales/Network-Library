@@ -5,6 +5,7 @@
 InputState::InputState()
     : IInputState()
     , tick( 0 )
+    , serverTime( 0.f )
     , movement( 0.f, 0.f )
     , isShooting( false )
     , virtualMousePosition( 0.f, 0.f )
@@ -13,12 +14,14 @@ InputState::InputState()
 
 int32 InputState::GetSize() const
 {
-	return ( 1 * sizeof( uint32 ) ) + ( 4 * sizeof( float32 ) ) + ( 1 * sizeof( uint8 ) );
+	return ( 1 * sizeof( uint32 ) ) + ( 5 * sizeof( float32 ) ) + ( 1 * sizeof( uint8 ) );
 }
 
 void InputState::Serialize( NetLib::Buffer& buffer ) const
 {
 	buffer.WriteInteger( tick );
+	buffer.WriteFloat( serverTime );
+
 	buffer.WriteFloat( movement.X() );
 	buffer.WriteFloat( movement.Y() );
 
@@ -31,6 +34,7 @@ void InputState::Serialize( NetLib::Buffer& buffer ) const
 void InputState::Deserialize( NetLib::Buffer& buffer )
 {
 	tick = buffer.ReadInteger();
+	serverTime = buffer.ReadFloat();
 
 	movement.X( buffer.ReadFloat() );
 	movement.Y( buffer.ReadFloat() );

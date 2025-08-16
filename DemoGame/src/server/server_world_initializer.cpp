@@ -40,6 +40,7 @@
 #include "server/components/server_player_state_storage_component.h"
 
 #include "server/global_components/hit_registration_global_component.h"
+#include "server/global_components/server_remote_peer_inputs_global_component.h"
 
 #include "server/systems/server_player_controller_system.h"
 #include "server/systems/server_dummy_input_handler_system.h"
@@ -100,6 +101,7 @@ static void RegisterArchetypes( Engine::ECS::World& world )
 {
 	JsonConfigurationLoader configuration_loader;
 	std::vector< Engine::ECS::Archetype > loaded_archetypes;
+	configuration_loader.LoadArchetypes( loaded_archetypes, "config_files/shared/entity_archetypes/" );
 	configuration_loader.LoadArchetypes( loaded_archetypes, "config_files/server/entity_archetypes/" );
 
 	for ( auto cit = loaded_archetypes.cbegin(); cit != loaded_archetypes.cend(); ++cit )
@@ -112,7 +114,8 @@ static void RegisterPrefabs( Engine::ECS::World& world )
 {
 	JsonConfigurationLoader configuration_loader;
 	std::vector< Engine::ECS::Prefab > loaded_prefabs;
-	configuration_loader.LoadPrefabs( loaded_prefabs );
+	configuration_loader.LoadPrefabs( loaded_prefabs, "config_files/shared/entity_prefabs/" );
+	configuration_loader.LoadPrefabs( loaded_prefabs, "config_files/server/entity_prefabs/" );
 
 	for ( auto it = loaded_prefabs.begin(); it != loaded_prefabs.end(); ++it )
 	{
@@ -236,6 +239,9 @@ static bool AddGameplayToWorld( Engine::ECS::World& world )
 	    new Engine::ECS::SystemCoordinator( Engine::ECS::ExecutionStage::TICK );
 	remove_death_entities_system_coordinator->AddSystemToTail( new ServerRemoveDeathEntitiesSystem() );
 	world.AddSystem( remove_death_entities_system_coordinator );
+
+	// Add remote peer inputs storage
+	world.AddGlobalComponent< ServerRemotePeerInputsGlobalComponent >();
 
 	return true;
 }

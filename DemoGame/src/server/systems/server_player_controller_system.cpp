@@ -14,6 +14,7 @@
 #include "shared/components/network_entity_component.h"
 
 #include "server/components/server_player_state_storage_component.h"
+#include "server/global_components/server_remote_peer_inputs_global_component.h"
 
 #include "shared/global_components/network_peer_global_component.h"
 
@@ -28,15 +29,17 @@ ServerPlayerControllerSystem::ServerPlayerControllerSystem()
 {
 }
 
-static const InputState* GetInputForPlayer( const Engine::ECS::GameEntity& entity, NetLib::Server* server_peer )
+static uint32 GetRemotePeerId( const Engine::ECS::GameEntity& entity )
 {
 	assert( entity.HasComponent< NetworkEntityComponent >() );
 
-	// Get the network entity componet in order to get the controlled peer id and be able to grab the current inputs
-	// to simulate
 	const NetworkEntityComponent& networkEntityComponent = entity.GetComponent< NetworkEntityComponent >();
-	const NetLib::IInputState* baseInputState =
-	    server_peer->GetInputFromRemotePeer( networkEntityComponent.controlledByPeerId );
+	return networkEntityComponent.controlledByPeerId;
+}
+
+static const InputState* GetNextInputFromRemotePeer( uint32 remote_peer_id, NetLib::Server* server_peer )
+{
+	const NetLib::IInputState* baseInputState = server_peer->GetInputFromRemotePeer( remote_peer_id );
 
 	// If we don't have any input state from the remote peer we skip this entity
 	// TODO Server should always have inputs to simulate. If no inputs have arrived from server duplicate and return
@@ -49,8 +52,17 @@ static const InputState* GetInputForPlayer( const Engine::ECS::GameEntity& entit
 	return static_cast< const InputState* >( baseInputState );
 }
 
+static void UpdateLastInputSimulated( Engine::ECS::World& world, const InputState& input_state, uint32 remote_peer_id )
+{
+	ServerRemotePeerInputsGlobalComponent& remotePeerInputsComponent =
+	    world.GetGlobalComponent< ServerRemotePeerInputsGlobalComponent >();
+
+	remotePeerInputsComponent.remotePeerInputs[ remote_peer_id ].lastInputState = input_state;
+}
+
 void ServerPlayerControllerSystem::ExecutePlayerSimulation( Engine::ECS::World& world, Engine::ECS::GameEntity& entity,
-                                                            const InputState& input_state, float32 elapsed_time )
+                                                            const InputState& input_state, float32 elapsed_time,
+                                                            uint32 remote_peer_id )
 {
 	// Get all data needed for the simulation
 	const PlayerControllerComponent& playerController = entity.GetComponent< PlayerControllerComponent >();
@@ -64,6 +76,10 @@ void ServerPlayerControllerSystem::ExecutePlayerSimulation( Engine::ECS::World& 
 
 	// Apply the resulted simulation state to the entity
 	ApplyPlayerStateToPlayerEntity( entity, resultPlayerState );
+
+	// Update last simulated state for remote peer. This is used to get the input state server time on the HitReg
+	// algorithm
+	UpdateLastInputSimulated( world, input_state, remote_peer_id );
 
 	// Fire simulation events
 	_playerStateSimulator.ProcessLastSimulationEvents( world, entity, &_eventsProcessor );
@@ -84,7 +100,8 @@ void ServerPlayerControllerSystem::Execute( Engine::ECS::World& world, float32 e
 	for ( auto it = entities.begin(); it != entities.end(); ++it )
 	{
 		// Get the input state for the current player.
-		const InputState* inputState = GetInputForPlayer( *it, serverPeer );
+		const uint32 remotePeerId = GetRemotePeerId( *it );
+		const InputState* inputState = GetNextInputFromRemotePeer( remotePeerId, serverPeer );
 		if ( inputState == nullptr )
 		{
 			LOG_WARNING( "No input state found for player. Skipping its simulation..." );
@@ -92,7 +109,7 @@ void ServerPlayerControllerSystem::Execute( Engine::ECS::World& world, float32 e
 		}
 
 		// Execute player simulation based on inputs
-		ExecutePlayerSimulation( world, *it, *inputState, elapsed_time );
+		ExecutePlayerSimulation( world, *it, *inputState, elapsed_time, remotePeerId );
 	}
 }
 

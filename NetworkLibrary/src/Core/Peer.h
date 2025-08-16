@@ -92,6 +92,9 @@ namespace NetLib
 			uint32 GetMetric( uint32 remote_peer_id, const std::string& metric_name,
 			                  const std::string& value_type ) const;
 
+			float64 GetLocalTime() const;
+			float64 GetServerTime() const;
+
 			// Delegates related
 			template < typename Functor >
 			Common::Delegate<>::SubscriptionHandler SubscribeToOnLocalPeerConnect( Functor&& functor );

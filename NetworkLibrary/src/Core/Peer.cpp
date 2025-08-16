@@ -11,6 +11,7 @@
 
 #include "core/buffer.h"
 #include "core/remote_peer.h"
+#include "core/time_clock.h"
 
 namespace NetLib
 {
@@ -104,6 +105,20 @@ namespace NetLib
 		}
 
 		return result;
+	}
+
+	float64 Peer::GetLocalTime() const
+	{
+		// TODO Make the time clock class not be a singleton and be a peer class variable. You will need probably a
+		// system to update it within UPDATE STAGE
+		return TimeClock::GetInstance().GetLocalTimeSeconds();
+	}
+
+	float64 Peer::GetServerTime() const
+	{
+		// TODO Make the time clock class not be a singleton and be a peer class variable. You will need probably a
+		// system to update it within UPDATE STAGE
+		return TimeClock::GetInstance().GetServerTimeSeconds();
 	}
 
 	bool Peer::UnsubscribeToOnRemotePeerDisconnect( const Common::Delegate< uint32 >::SubscriptionHandler& handler )

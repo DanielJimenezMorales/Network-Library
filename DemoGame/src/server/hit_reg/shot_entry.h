@@ -7,13 +7,15 @@
 struct ShotEntry
 {
 		ShotEntry()
-		    : position( 0.0f, 0.0f )
+		    : serverTime( 0.f )
+		    , position( 0.0f, 0.0f )
 		    , direction( 0.0f, 1.0f )
 		    , damage( 0 )
 		    , shooterEntity()
 		{
 		}
 
+		float32 serverTime;
 		Vec2f position;
 		Vec2f direction;
 		uint32 damage;

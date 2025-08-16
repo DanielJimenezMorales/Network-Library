@@ -11,7 +11,8 @@ class JsonConfigurationLoader : public IConfigurationLoader
 	public:
 		JsonConfigurationLoader();
 
-		bool LoadArchetypes( std::vector< Engine::ECS::Archetype >& out_archetypes, const std::string& relative_path ) override
+		bool LoadArchetypes( std::vector< Engine::ECS::Archetype >& out_archetypes,
+		                     const std::string& relative_path ) override
 		{
 			std::vector< std::string > archetype_files;
 			GetAllFilesInDirectory( archetype_files, relative_path );
@@ -44,7 +45,7 @@ class JsonConfigurationLoader : public IConfigurationLoader
 			return true;
 		};
 
-		bool LoadPrefabs( std::vector< Engine::ECS::Prefab >& out_prefabs ) override;
+		bool LoadPrefabs( std::vector< Engine::ECS::Prefab >& out_prefabs, const std::string& relative_path ) override;
 
 	private:
 		bool GetAllFilesInDirectory( std::vector< std::string >& out_files, const std::string& directory_name );

@@ -1,9 +1,0 @@
-{
-	"name": "client_interpolated_player",
-	"components": [
-		"Transform",
-		"SpriteRenderer",
-		"GhostObject",
-		"InterpolatedObject"
-	]
-}

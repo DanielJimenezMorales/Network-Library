@@ -99,6 +99,7 @@ static void RegisterArchetypes( Engine::ECS::World& world )
 {
 	JsonConfigurationLoader configuration_loader;
 	std::vector< Engine::ECS::Archetype > loaded_archetypes;
+	configuration_loader.LoadArchetypes( loaded_archetypes, "config_files/shared/entity_archetypes/" );
 	configuration_loader.LoadArchetypes( loaded_archetypes, "config_files/client/entity_archetypes/" );
 
 	for ( auto cit = loaded_archetypes.cbegin(); cit != loaded_archetypes.cend(); ++cit )
@@ -111,7 +112,8 @@ static void RegisterPrefabs( Engine::ECS::World& world )
 {
 	JsonConfigurationLoader configuration_loader;
 	std::vector< Engine::ECS::Prefab > loaded_prefabs;
-	configuration_loader.LoadPrefabs( loaded_prefabs );
+	configuration_loader.LoadPrefabs( loaded_prefabs, "config_files/shared/entity_prefabs/" );
+	configuration_loader.LoadPrefabs( loaded_prefabs, "config_files/client/entity_prefabs/" );
 
 	for ( auto it = loaded_prefabs.begin(); it != loaded_prefabs.end(); ++it )
 	{

@@ -22,6 +22,7 @@
 #include "client/components/client_side_prediction_component.h"
 
 #include "shared/global_components/network_peer_global_component.h"
+#include "shared/global_components/network_peer_global_component.h"
 #include "global_components/input_handler_global_component.h"
 
 #include "shared/player_simulation/player_state_utils.h"
@@ -39,6 +40,9 @@ ClientLocalPlayerPredictorSystem::ClientLocalPlayerPredictorSystem( Engine::ECS:
 
 static void ProcessInputs( Engine::ECS::World& world, InputState& outInputState )
 {
+	const NetworkPeerGlobalComponent& networkPeerComponent = world.GetGlobalComponent< NetworkPeerGlobalComponent >();
+	outInputState.serverTime = networkPeerComponent.peer->GetServerTime();
+
 	const Engine::InputHandlerGlobalComponent& inputHandler =
 	    world.GetGlobalComponent< Engine::InputHandlerGlobalComponent >();
 
