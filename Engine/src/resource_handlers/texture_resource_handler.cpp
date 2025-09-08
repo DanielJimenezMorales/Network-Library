@@ -83,8 +83,9 @@ namespace Engine
 		}
 		SDL_FreeSurface( imageSurface );
 
-		SDL_Rect sourceTextureRect;
-		int32 result = SDL_QueryTexture( imageTexture, NULL, NULL, &sourceTextureRect.w, &sourceTextureRect.h );
+		int32 textureWidth = 0;
+		int32 textureHeight = 0;
+		int32 result = SDL_QueryTexture( imageTexture, NULL, NULL, &textureWidth, &textureHeight );
 		if ( result != 0 )
 		{
 			LOG_ERROR( "Can't query texture at %s. Query error code: %d. SDL error: %s", stringFilePath, result,
@@ -94,10 +95,7 @@ namespace Engine
 			return nullptr;
 		}
 
-		sourceTextureRect.x = 10;
-		sourceTextureRect.y = 0;
-
-		Texture* texture = new Texture( imageTexture, sourceTextureRect );
+		Texture* texture = new Texture( imageTexture, textureWidth, textureHeight );
 		assert( texture != nullptr );
 
 		CacheTexture( stringFilePath, texture );
