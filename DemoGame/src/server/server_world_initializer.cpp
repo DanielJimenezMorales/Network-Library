@@ -38,6 +38,7 @@
 
 // Server game
 #include "server/components/server_player_state_storage_component.h"
+#include "server/components/server_transform_history_component.h"
 
 #include "server/global_components/hit_registration_global_component.h"
 #include "server/global_components/server_remote_peer_inputs_global_component.h"
@@ -97,6 +98,7 @@ static void RegisterComponents( Engine::ECS::World& world )
 
 	// This is server side only
 	world.RegisterComponent< ServerPlayerStateStorageComponent >( "ServerPlayerStateStorage" );
+	world.RegisterComponent< ServerTransformHistoryComponent >( "ServerTransformHistory" );
 }
 
 static void RegisterArchetypes( Engine::ECS::World& world )

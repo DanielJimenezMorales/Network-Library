@@ -1,31 +1,73 @@
 #include "server_hit_registration_system.h"
 
 #include "logger.h"
+#include "AlgorithmUtils.h"
 
 #include "raycaster.h"
 #include "ecs/world.h"
+#include "ecs/game_entity.hpp"
 #include "components/collider_2d_component.h"
 #include "components/transform_component.h"
 
 #include "shared/components/health_component.h"
+#include "shared/components/network_entity_component.h"
 #include "shared/global_components/network_peer_global_component.h"
 
 #include "server/hit_reg/shot_entry.h"
+#include "server/components/server_transform_history_component.h"
 #include "server/global_components/hit_registration_global_component.h"
 
 #include <vector>
+#include <cassert>
 
 struct RewindableEntitiesSnapshot
 {
-		std::vector< uint32 > rewindableEntityStates;
+		struct Entry
+		{
+				Engine::ECS::EntityId entityId;
+				Vec2f position;
+				float32 rotationAngle;
+		};
+
+		std::vector< Entry > rewindableEntityStates;
 };
 
-static void SaveCurrentState( const Engine::ECS::World& world, RewindableEntitiesSnapshot& snapshot )
+static void SaveCurrentState(
+    /*TODO Add const here since we won't modify it. Although I get an error when I do it. Investigate it*/ Engine::ECS::
+        World& world,
+    RewindableEntitiesSnapshot& snapshot )
 {
+	// TODO Filter by entities not only with NetworkEntityComponent but also with Collider component
+	const std::vector< Engine::ECS::GameEntity > entitiesWithNetworkComponent =
+	    world.GetEntitiesOfType< NetworkEntityComponent >();
+
+	auto cit = entitiesWithNetworkComponent.cbegin();
+	for ( ; cit != entitiesWithNetworkComponent.cend(); ++cit )
+	{
+		if ( cit->HasComponent< Engine::Collider2DComponent >() )
+		{
+			const Engine::TransformComponent& transformComponent = cit->GetComponent< Engine::TransformComponent >();
+			RewindableEntitiesSnapshot::Entry entry;
+			entry.entityId = cit->GetId();
+			entry.position = transformComponent.GetPosition();
+			entry.rotationAngle = transformComponent.GetRotationAngle();
+			snapshot.rewindableEntityStates.push_back( entry );
+		}
+	}
 }
 
 static void RestoreCurrentState( Engine::ECS::World& world, const RewindableEntitiesSnapshot& snapshot )
 {
+	auto cit = snapshot.rewindableEntityStates.cbegin();
+	for ( ; cit != snapshot.rewindableEntityStates.cend(); ++cit )
+	{
+		Engine::ECS::GameEntity entity = world.GetEntityFromId( cit->entityId );
+		assert( entity.IsValid() );
+
+		Engine::TransformComponent& transformComponent = entity.GetComponent< Engine::TransformComponent >();
+		transformComponent.SetPosition( cit->position );
+		transformComponent.SetRotationAngle( cit->rotationAngle );
+	}
 }
 
 /// <summary>
@@ -57,8 +99,122 @@ static bool IsShotEntryValid( const Engine::ECS::World& world,
 	return result;
 }
 
+static bool IsTimeBetweenLeftAndRight( const ServerTransformHistoryComponent& transform_history_component,
+                                       float32 target_time, int32 left, int32 right )
+{
+	bool isGreaterThanLeft = false;
+	if ( left >= 0 )
+	{
+		if ( transform_history_component.serverTimeBuffer[ left ] <= target_time )
+		{
+			isGreaterThanLeft = true;
+		}
+	}
+
+	bool isGreaterThanRight = false;
+	if ( right < transform_history_component.serverTimeBuffer.size() )
+	{
+		if ( transform_history_component.serverTimeBuffer[ right ] >= target_time )
+		{
+			isGreaterThanRight = true;
+		}
+	}
+}
+
+static void FindPreviousAndNextTimeIndexes( const ServerTransformHistoryComponent& transform_history_component,
+                                            float32 target_time, int32& previous, int32& next )
+{
+	previous = -1;
+	next = -1;
+
+	uint32 firstBiggerIndex = 0;
+	bool firstBiggerFound = false;
+	for ( ; firstBiggerIndex < transform_history_component.serverTimeBuffer.size(); ++firstBiggerIndex )
+	{
+		if ( transform_history_component.serverTimeBuffer[ firstBiggerIndex ] >= target_time )
+		{
+			firstBiggerFound = true;
+			break;
+		}
+	}
+
+	if ( firstBiggerFound )
+	{
+		if ( firstBiggerIndex == 0 )
+		{
+			next = firstBiggerIndex;
+		}
+		else
+		{
+			next = firstBiggerIndex;
+			previous = firstBiggerIndex - 1;
+		}
+	}
+	else
+	{
+		previous = transform_history_component.serverTimeBuffer.size() - 1;
+	}
+}
+
+static HistoryEntry GetInterpolatedState( const ServerTransformHistoryComponent& transform_history_component,
+                                          int32 previous_index, int32 next_index, float32 server_time )
+{
+	const float32 previousTime = transform_history_component.serverTimeBuffer[ previous_index ];
+	const float32 nextTime = transform_history_component.serverTimeBuffer[ next_index ];
+	const float32 t = ( server_time - previousTime ) / ( nextTime - previousTime );
+	assert( t >= 0.f && t <= 1.f );
+
+	const HistoryEntry& previousHistoryEntry = transform_history_component.historyBuffer[ previous_index ];
+	const HistoryEntry& nextHistoryEntry = transform_history_component.historyBuffer[ next_index ];
+
+	HistoryEntry interpolatedHistoryEntry;
+	interpolatedHistoryEntry.position.X(
+	    Common::AlgorithmUtils::Lerp( previousHistoryEntry.position.X(), nextHistoryEntry.position.X(), t ) );
+	interpolatedHistoryEntry.position.Y(
+	    Common::AlgorithmUtils::Lerp( previousHistoryEntry.position.Y(), nextHistoryEntry.position.Y(), t ) );
+
+	interpolatedHistoryEntry.rotationAngle =
+	    Common::AlgorithmUtils::Lerp( previousHistoryEntry.rotationAngle, nextHistoryEntry.rotationAngle, t );
+
+	return interpolatedHistoryEntry;
+}
+
 static void RollbackEntities( Engine::ECS::World& world, float32 serverTime )
 {
+	std::vector< Engine::ECS::GameEntity > entitiesWithNetworkComponent =
+	    world.GetEntitiesOfType< NetworkEntityComponent >();
+
+	auto it = entitiesWithNetworkComponent.begin();
+	for ( ; it != entitiesWithNetworkComponent.end(); ++it )
+	{
+		const ServerTransformHistoryComponent& transformHistoryComponent =
+		    it->GetComponent< ServerTransformHistoryComponent >();
+
+		// Based on the server time we need to rollback, get the closest upper and lower timestamps
+		int32 previousIndex = -1;
+		int32 nextIndex = -1;
+		FindPreviousAndNextTimeIndexes( transformHistoryComponent, serverTime, previousIndex, nextIndex );
+		assert( nextIndex >= 0 );
+
+		// If the server time is older than the oldest timestamp in the buffer, clamp it
+		if ( previousIndex == -1 )
+		{
+			Engine::TransformComponent& transformComponent = it->GetComponent< Engine::TransformComponent >();
+			const HistoryEntry& historyEntry = transformHistoryComponent.historyBuffer[ 0 ];
+			transformComponent.SetPosition( historyEntry.position );
+			transformComponent.SetRotationAngle( historyEntry.rotationAngle );
+		}
+		// Otherwise interpolate between the upper and lower timestamps to be as accurate as possible.
+		else
+		{
+			const HistoryEntry interpolatedHistoryEntry =
+			    GetInterpolatedState( transformHistoryComponent, previousIndex, nextIndex, serverTime );
+
+			Engine::TransformComponent& transformComponent = it->GetComponent< Engine::TransformComponent >();
+			transformComponent.SetPosition( interpolatedHistoryEntry.position );
+			transformComponent.SetRotationAngle( interpolatedHistoryEntry.rotationAngle );
+		}
+	}
 }
 
 static void ProcessShotEntry( Engine::ECS::World& world, const ShotEntry& shotEntry )
@@ -95,18 +251,24 @@ void ServerHitRegistrationSystem::Execute( Engine::ECS::World& world, float32 el
 	HitRegistrationGlobalComponent& hitRegGlobalComponent =
 	    world.GetGlobalComponent< HitRegistrationGlobalComponent >();
 
+	// If there are pending shots to process...
 	if ( hitRegGlobalComponent.pendingShotEntries.size() > 0 )
 	{
+		// Save the current state in order to recover it once all shots were processed
 		RewindableEntitiesSnapshot snapshot;
 		SaveCurrentState( world, snapshot );
 
+		// For each pending shot...
 		while ( !hitRegGlobalComponent.pendingShotEntries.empty() )
 		{
 			const ShotEntry shotEntry = hitRegGlobalComponent.pendingShotEntries.front();
 			hitRegGlobalComponent.pendingShotEntries.pop();
 
+			// TODO Instead of discarting invalid shot entries, process them with the maximum allowed rollback time
+			//TODO Also consider the client-side delay from remote entity interpolation and not only the latency
 			if ( IsShotEntryValid( world, hitRegGlobalComponent, shotEntry ) )
 			{
+				// Rollback all entities to the shot's server time and perform the shot
 				RollbackEntities( world, shotEntry.serverTime );
 				ProcessShotEntry( world, shotEntry );
 			}
@@ -116,6 +278,7 @@ void ServerHitRegistrationSystem::Execute( Engine::ECS::World& world, float32 el
 			}
 		}
 
+		// Restore the state to continue with simulation
 		RestoreCurrentState( world, snapshot );
 	}
 }

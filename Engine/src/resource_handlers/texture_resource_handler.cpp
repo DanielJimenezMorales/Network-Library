@@ -94,7 +94,7 @@ namespace Engine
 			return nullptr;
 		}
 
-		sourceTextureRect.x = 0;
+		sourceTextureRect.x = 10;
 		sourceTextureRect.y = 0;
 
 		Texture* texture = new Texture( imageTexture, sourceTextureRect );

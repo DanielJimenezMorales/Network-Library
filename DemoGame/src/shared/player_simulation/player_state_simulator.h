@@ -28,7 +28,7 @@ namespace PlayerSimulation
 	class PlayerStateSimulator
 	{
 		public:
-			PlayerStateSimulator();
+			PlayerStateSimulator() = default;
 
 			PlayerState Simulate( const InputState& inputs, const PlayerState& current_state,
 			                      const PlayerStateConfiguration& configuration, float32 elapsed_time );

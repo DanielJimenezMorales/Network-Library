@@ -14,6 +14,7 @@
 #include "shared/components/network_entity_component.h"
 
 #include "server/components/server_player_state_storage_component.h"
+#include "server/components/server_transform_history_component.h"
 #include "server/global_components/server_remote_peer_inputs_global_component.h"
 
 #include "shared/global_components/network_peer_global_component.h"
@@ -52,6 +53,20 @@ static const InputState* GetNextInputFromRemotePeer( uint32 remote_peer_id, NetL
 	return static_cast< const InputState* >( baseInputState );
 }
 
+static void ApplyServerSidePlayerStateToPlayerEntity( Engine::ECS::GameEntity& player_entity,
+                                                      const InputState& input_state,
+                                                      const PlayerSimulation::PlayerState& player_state )
+{
+	ServerTransformHistoryComponent& serverTransformHistory =
+	    player_entity.GetComponent< ServerTransformHistoryComponent >();
+	serverTransformHistory.serverTimeBuffer[ serverTransformHistory.currentIndex ] = input_state.serverTime;
+	HistoryEntry historyEntry;
+	historyEntry.position = player_state.position;
+	historyEntry.rotationAngle = player_state.rotationAngle;
+	serverTransformHistory.historyBuffer[ serverTransformHistory.currentIndex ] = historyEntry;
+	serverTransformHistory.currentIndex = ( serverTransformHistory.currentIndex + 1 ) % MAX_HISTORY_BUFFER_SIZE;
+}
+
 static void UpdateLastInputSimulated( Engine::ECS::World& world, const InputState& input_state, uint32 remote_peer_id )
 {
 	ServerRemotePeerInputsGlobalComponent& remotePeerInputsComponent =
@@ -64,6 +79,7 @@ void ServerPlayerControllerSystem::ExecutePlayerSimulation( Engine::ECS::World& 
                                                             const InputState& input_state, float32 elapsed_time,
                                                             uint32 remote_peer_id )
 {
+	LOG_INFO( "aaaaaaaaaaaaaaaaa" );
 	// Get all data needed for the simulation
 	const PlayerControllerComponent& playerController = entity.GetComponent< PlayerControllerComponent >();
 	const PlayerSimulation::PlayerStateConfiguration& playerStateConfiguration = playerController.stateConfiguration;
@@ -76,6 +92,9 @@ void ServerPlayerControllerSystem::ExecutePlayerSimulation( Engine::ECS::World& 
 
 	// Apply the resulted simulation state to the entity
 	ApplyPlayerStateToPlayerEntity( entity, resultPlayerState );
+
+	LOG_INFO( "bbbbbbbbbbbbbbbbbbbbbbbbb" );
+	ApplyServerSidePlayerStateToPlayerEntity( entity, input_state, resultPlayerState );
 
 	// Update last simulated state for remote peer. This is used to get the input state server time on the HitReg
 	// algorithm

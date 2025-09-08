@@ -14,14 +14,6 @@
 
 namespace PlayerSimulation
 {
-	PlayerStateSimulator::PlayerStateSimulator()
-	    : _movementController()
-	    , _rotationController()
-	    , _shootingController()
-	    , _simulationEventsHandler()
-	{
-	}
-
 	PlayerState PlayerStateSimulator::Simulate( const InputState& inputs, const PlayerState& current_state,
 	                                            const PlayerStateConfiguration& configuration, float32 elapsed_time )
 	{

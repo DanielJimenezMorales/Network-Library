@@ -7,6 +7,7 @@
 		"NetworkEntity",
 		"PlayerController",
 		"HealthComponent",
-		"ServerPlayerStateStorage"
+		"ServerPlayerStateStorage",
+		"ServerTransformHistory"
 	]
 }

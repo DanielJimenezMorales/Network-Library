@@ -29,10 +29,12 @@ namespace PlayerSimulation
 
 	void ApplyPlayerStateToPlayerEntity( Engine::ECS::GameEntity& player_entity, const PlayerState& player_state )
 	{
+		// Update Transform
 		Engine::TransformComponent& transform = player_entity.GetComponent< Engine::TransformComponent >();
 		transform.SetPosition( player_state.position );
 		transform.SetRotationAngle( player_state.rotationAngle );
 
+		// Update Player Controller
 		PlayerControllerComponent& playerController = player_entity.GetComponent< PlayerControllerComponent >();
 		playerController.timeLeftUntilNextShot = player_state.timeLeftUntilNextShot;
 	}
