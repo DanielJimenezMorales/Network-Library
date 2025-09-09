@@ -8,6 +8,7 @@
 #include "component_configurations/sprite_renderer_component_configuration.h"
 #include "component_configurations/camera_component_configuration.h"
 #include "component_configurations/collider_2d_component_configuration.h"
+#include "component_configurations/animation_component_configuration.h"
 
 #include "shared/component_configurations/player_controller_component_configuration.h"
 #include "shared/component_configurations/temporary_lifetime_component_configuration.h"
@@ -77,9 +78,17 @@ static void ParseComponentConfiguration( const nlohmann::json& json_data,
 		    ( json_data.contains( "current_health" ) ) ? json_data[ "current_health" ] : max_health;
 		out_component_config = new HealthComponentConfiguration( max_health, current_health );
 	}
+	else if ( component_name == "Animation" )
+	{
+		const uint32 pixelsPerFrame = json_data[ "pixels_per_frame" ];
+		const uint32 numberOfFrames = json_data[ "number_of_frames" ];
+		const uint32 frameRate = json_data[ "frame_rate" ];
+		out_component_config = new AnimationComponentConfiguration( pixelsPerFrame, numberOfFrames, frameRate );
+	}
 }
 
-bool JsonConfigurationLoader::LoadPrefabs( std::vector< Engine::ECS::Prefab >& out_prefabs, const std::string& relative_path)
+bool JsonConfigurationLoader::LoadPrefabs( std::vector< Engine::ECS::Prefab >& out_prefabs,
+                                           const std::string& relative_path )
 {
 	std::vector< std::string > prefab_files;
 	GetAllFilesInDirectory( prefab_files, relative_path );

@@ -7,6 +7,7 @@
 #include "components/collider_2d_component.h"
 #include "components/gizmo_renderer_component.h"
 #include "components/raycast_component.h"
+#include "components/animation_component.h"
 
 #include "global_components/input_handler_global_component.h"
 
@@ -19,6 +20,8 @@
 #include "inputs/mouse_controller.h"
 
 #include "render/rendering_inicialization_utils.h"
+
+#include "systems/animation_system.h"
 
 // Network library
 #include "core/client.h"
@@ -78,6 +81,7 @@ static void RegisterComponents( Engine::ECS::World& world )
 	world.RegisterComponent< Engine::Collider2DComponent >( "Collider2D" );
 	world.RegisterComponent< Engine::CameraComponent >( "Camera" );
 	world.RegisterComponent< Engine::RaycastComponent >( "Raycast" );
+	world.RegisterComponent< Engine::AnimationComponent >( "Animation" );
 
 	// Shared game
 	world.RegisterComponent< NetworkEntityComponent >( "NetworkEntity" );
@@ -150,6 +154,18 @@ static bool AddInputsToWorld( Engine::ECS::World& world )
 
 static bool AddRenderingToWorld( Engine::ECS::World& world )
 {
+	// Add Animation system
+	// TODO move the Animation system to a different function. Evaluate if moving it to an Engine function like
+	// Engine::AddRenderingToWorld
+	Engine::ECS::SystemCoordinator* animation_system_coordinator =
+	    new Engine::ECS::SystemCoordinator( Engine::ECS::ExecutionStage::UPDATE );
+	Engine::AnimationSystem* animationSystem = new Engine::AnimationSystem();
+	animation_system_coordinator->AddSystemToTail( animationSystem );
+	auto on_configure_animation_callback = std::bind( &Engine::AnimationSystem::ConfigureAnimationComponent,
+	                                                  animationSystem, std::placeholders::_1, std::placeholders::_2 );
+	world.SubscribeToOnEntityConfigure( on_configure_animation_callback );
+	world.AddSystem( animation_system_coordinator );
+
 	bool result = Engine::AddRenderingToWorld( world );
 	if ( !result )
 	{
@@ -314,6 +330,10 @@ static bool CreateGameEntities( Engine::ECS::World& world )
 
 	// Add virtual mouse entity
 	world.CreateGameEntity( "VirtualMouse", Vec2f( 0, 0 ) );
+
+	// Add animated dummy
+	auto entity = world.CreateGameEntity( "AnimatedDummy", Vec2f( -5.f, 0.f ) );
+	entity.GetComponent< Engine::TransformComponent >().SetRotationAngle( 0.f );
 
 	return true;
 }

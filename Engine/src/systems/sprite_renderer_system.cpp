@@ -89,5 +89,9 @@ namespace Engine
 		SpriteRendererComponent& sprite_renderer = entity.GetComponent< SpriteRendererComponent >();
 		sprite_renderer.textureHandler =
 		    _textureResourceHandler.LoadTexture( sprite_renderer_config.texturePath.c_str() );
+		const Texture* texture = _textureResourceHandler.TryGetTextureFromHandler( sprite_renderer.textureHandler );
+		assert( texture != nullptr );
+		sprite_renderer.width = texture->GetWidth();
+		sprite_renderer.height = texture->GetHeight();
 	}
 } // namespace Engine

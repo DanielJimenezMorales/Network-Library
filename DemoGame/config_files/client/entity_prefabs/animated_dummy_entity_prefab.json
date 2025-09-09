@@ -1,0 +1,16 @@
+{
+	"name": "AnimatedDummy",
+	"archetype": "animated_dummy",
+	"component_configs": [
+		{
+			"name": "SpriteRenderer",
+			"texture_path": "sprites/PlayerSprites/player_idle_sheet.png"
+		},
+		{
+			"name": "Animation",
+			"pixels_per_frame": 16,
+			"number_of_frames": 4,
+			"frame_rate": 8
+		}
+	]
+}
