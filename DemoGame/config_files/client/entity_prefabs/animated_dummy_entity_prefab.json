@@ -8,7 +8,10 @@
 		},
 		{
 			"name": "Animation",
-			"pixels_per_frame": 16,
+			"start_frame_x_pixel": 0,
+			"start_frame_y_pixel": 48,
+			"frame_width_pixels": 16,
+			"frame_height_pixels": 16,
 			"number_of_frames": 4,
 			"frame_rate": 8
 		}

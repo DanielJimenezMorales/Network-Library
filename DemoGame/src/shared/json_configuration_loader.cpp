@@ -80,10 +80,14 @@ static void ParseComponentConfiguration( const nlohmann::json& json_data,
 	}
 	else if ( component_name == "Animation" )
 	{
-		const uint32 pixelsPerFrame = json_data[ "pixels_per_frame" ];
+		const uint32 startFrameXPixel = json_data[ "start_frame_x_pixel" ];
+		const uint32 startFrameYPixel = json_data[ "start_frame_y_pixel" ];
+		const uint32 frameWidthPixels = json_data[ "frame_width_pixels" ];
+		const uint32 frameHeightPixels = json_data[ "frame_height_pixels" ];
 		const uint32 numberOfFrames = json_data[ "number_of_frames" ];
 		const uint32 frameRate = json_data[ "frame_rate" ];
-		out_component_config = new AnimationComponentConfiguration( pixelsPerFrame, numberOfFrames, frameRate );
+		out_component_config = new AnimationComponentConfiguration(
+		    startFrameXPixel, startFrameYPixel, frameWidthPixels, frameHeightPixels, numberOfFrames, frameRate );
 	}
 }
 

@@ -5,9 +5,14 @@
 
 struct AnimationComponentConfiguration : public Engine::ECS::ComponentConfiguration
 {
-		AnimationComponentConfiguration( uint32 pixels_per_frame, uint32 number_of_frames, uint32 frame_rate )
+		AnimationComponentConfiguration( uint32 start_animation_x_pixel, uint32 start_animation_y_pixel,
+		                                 uint32 frame_width_pixels, uint32 frame_height_pixels, uint32 number_of_frames,
+		                                 uint32 frame_rate )
 		    : Engine::ECS::ComponentConfiguration( "Animation" )
-		    , pixelsPerFrame( pixels_per_frame )
+		    , startFrameXPixel( start_animation_x_pixel )
+		    , startFrameYPixel( start_animation_y_pixel )
+		    , frameWidthPixels( frame_width_pixels )
+		    , frameHeightPixels( frame_height_pixels )
 		    , numberOfFrames( number_of_frames )
 		    , frameRate( frame_rate )
 		{
@@ -15,7 +20,10 @@ struct AnimationComponentConfiguration : public Engine::ECS::ComponentConfigurat
 
 		AnimationComponentConfiguration* Clone() const override { return new AnimationComponentConfiguration( *this ); }
 
-		uint32 pixelsPerFrame;
+		uint32 startFrameXPixel;
+		uint32 startFrameYPixel;
+		uint32 frameWidthPixels;
+		uint32 frameHeightPixels;
 		uint32 numberOfFrames;
 		uint32 frameRate;
 };

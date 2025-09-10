@@ -32,14 +32,16 @@ void Engine::AnimationSystem::Execute( ECS::World& world, float32 elapsed_time )
 		// Update sprite renderer to show the current animation frame
 		// TODO Add other variables for better flexibility such as initial horizontal pixel, initial vertical pixel,
 		// frame width and height
-		const uint32 totalAnimationFramesPixels = animation.pixelsPerFrame * animation.numberOfFrames;
-		const uint32 startCurrentFramePixel = animation.pixelsPerFrame * animation.currentFrame;
-		spriteRenderer.uv0.X( static_cast< float32 >( startCurrentFramePixel ) / spriteRenderer.width );
-		spriteRenderer.uv0.Y( 0.2f ); // TODO Do not hardcode this
+		const uint32 startCurrentFrameXPixel =
+		    animation.startFrameXPixel + ( animation.frameWidthPixels * animation.currentFrame );
+		const uint32 startCurrentFrameYPixel = animation.startFrameYPixel;
+		spriteRenderer.uv0.X( static_cast< float32 >( startCurrentFrameXPixel ) / spriteRenderer.width );
+		spriteRenderer.uv0.Y( static_cast< float32 >( startCurrentFrameYPixel ) / spriteRenderer.height );
 
-		spriteRenderer.uv1.X( static_cast< float32 >( startCurrentFramePixel + animation.pixelsPerFrame ) /
+		spriteRenderer.uv1.X( static_cast< float32 >( startCurrentFrameXPixel + animation.frameWidthPixels ) /
 		                      spriteRenderer.width );
-		spriteRenderer.uv1.Y( 0.4f ); // TODO Do not hardcode this
+		spriteRenderer.uv1.Y( static_cast< float32 >( startCurrentFrameYPixel + animation.frameHeightPixels ) /
+		                      spriteRenderer.height );
 	}
 }
 
@@ -59,9 +61,12 @@ void Engine::AnimationSystem::ConfigureAnimationComponent( ECS::GameEntity& enti
 	const AnimationComponentConfiguration& animation_config =
 	    static_cast< const AnimationComponentConfiguration& >( *component_config_found->second );
 	AnimationComponent& animation = entity.GetComponent< AnimationComponent >();
-	animation.currentFrame = 0;
+	animation.startFrameXPixel = animation_config.startFrameXPixel;
+	animation.startFrameYPixel = animation_config.startFrameYPixel;
+	animation.frameWidthPixels = animation_config.frameWidthPixels;
+	animation.frameHeightPixels = animation_config.frameHeightPixels;
 	animation.frameRate = animation_config.frameRate;
 	animation.numberOfFrames = animation_config.numberOfFrames;
-	animation.pixelsPerFrame = animation_config.pixelsPerFrame;
+	animation.currentFrame = 0;
 	animation.timeAccumulator = 0.f;
 }

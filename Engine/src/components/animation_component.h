@@ -6,7 +6,10 @@ namespace Engine
 	struct AnimationComponent
 	{
 		public:
-			uint32 pixelsPerFrame;
+			uint32 startFrameXPixel;
+			uint32 startFrameYPixel;
+			uint32 frameWidthPixels;
+			uint32 frameHeightPixels;
 			uint32 numberOfFrames;
 			uint32 frameRate;
 			uint32 currentFrame;
