@@ -2,6 +2,8 @@
 
 #include "json.hpp"
 
+#include "logger.h"
+
 #include "ecs/prefab.h"
 #include "ecs/component_configuration.h"
 
@@ -91,14 +93,44 @@ static void ParseComponentConfiguration( const nlohmann::json& json_data,
 	}
 	else if ( component_name == "Animation" )
 	{
-		const uint32 startFrameXPixel = json_data[ "start_frame_x_pixel" ];
-		const uint32 startFrameYPixel = json_data[ "start_frame_y_pixel" ];
-		const uint32 frameWidthPixels = json_data[ "frame_width_pixels" ];
-		const uint32 frameHeightPixels = json_data[ "frame_height_pixels" ];
-		const uint32 numberOfFrames = json_data[ "number_of_frames" ];
-		const uint32 frameRate = json_data[ "frame_rate" ];
-		out_component_config = new AnimationComponentConfiguration(
-		    startFrameXPixel, startFrameYPixel, frameWidthPixels, frameHeightPixels, numberOfFrames, frameRate );
+		std::string initialAnimationName = json_data[ "initial_animation_name" ];
+		bool foundInitialAnimationName = false;
+		std::vector< Engine::AnimationClip > animations;
+		auto animations_data = json_data[ "animations" ];
+		auto cit = animations_data.cbegin();
+		for ( ; cit != animations_data.cend(); ++cit )
+		{
+			const nlohmann::json& animation_json_data = *cit;
+
+			Engine::AnimationClip clip;
+			clip.name = animation_json_data[ "name" ];
+			clip.startFrameXPixel = animation_json_data[ "start_frame_x_pixel" ];
+			clip.startFrameYPixel = animation_json_data[ "start_frame_y_pixel" ];
+			clip.frameWidthPixels = animation_json_data[ "frame_width_pixels" ];
+			clip.frameHeightPixels = animation_json_data[ "frame_height_pixels" ];
+			clip.numberOfFrames = animation_json_data[ "number_of_frames" ];
+			clip.frameRate = animation_json_data[ "frame_rate" ];
+			animations.push_back( clip );
+
+			if ( !foundInitialAnimationName )
+			{
+				if ( clip.name == initialAnimationName )
+				{
+					foundInitialAnimationName = true;
+				}
+			}
+		}
+
+		assert( !animations.empty() );
+
+		if ( !foundInitialAnimationName )
+		{
+			LOG_WARNING( "Couldn't find Initial animation name %s. Setting the first animation name in the array",
+			             initialAnimationName.c_str() );
+			initialAnimationName = animations.front().name;
+		}
+
+		out_component_config = new AnimationComponentConfiguration( animations, initialAnimationName );
 	}
 }
 

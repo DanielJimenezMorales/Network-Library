@@ -1,5 +1,7 @@
 #include "animation_system.h"
 
+#include "logger.h"
+
 #include "ecs/world.h"
 #include "ecs/game_entity.hpp"
 #include "ecs/prefab.h"
@@ -16,33 +18,41 @@ void Engine::AnimationSystem::Execute( ECS::World& world, float32 elapsed_time )
 	for ( ; it != entities.end(); ++it )
 	{
 		AnimationComponent& animation = it->GetComponent< AnimationComponent >();
-
-		// Calculate current animation frame
-		animation.timeAccumulator += elapsed_time;
-		const float32 frameDuration = 1.f / animation.frameRate;
-		if ( animation.timeAccumulator >= frameDuration )
+		if ( animation.currentAnimation != nullptr )
 		{
-			const uint32 numberOfFramesToAdvance = static_cast< uint32 >( animation.timeAccumulator / frameDuration );
-			animation.currentFrame = ( animation.currentFrame + numberOfFramesToAdvance ) % animation.numberOfFrames;
-			animation.timeAccumulator -= numberOfFramesToAdvance * frameDuration;
+			const AnimationClip& currentAnimation = *animation.currentAnimation;
+
+			// Calculate current animation frame
+			animation.timeAccumulator += elapsed_time;
+			const float32 frameDuration = 1.f / currentAnimation.frameRate;
+			if ( animation.timeAccumulator >= frameDuration )
+			{
+				const uint32 numberOfFramesToAdvance =
+				    static_cast< uint32 >( animation.timeAccumulator / frameDuration );
+				animation.currentFrame =
+				    ( animation.currentFrame + numberOfFramesToAdvance ) % currentAnimation.numberOfFrames;
+				animation.timeAccumulator -= numberOfFramesToAdvance * frameDuration;
+			}
+
+			SpriteRendererComponent& spriteRenderer = it->GetComponent< SpriteRendererComponent >();
+			assert( spriteRenderer.type == SpriteType::SPRITE_SHEET );
+
+			// Update sprite renderer to show the current animation frame
+			// TODO Add other variables for better flexibility such as initial horizontal pixel, initial vertical pixel,
+			// frame width and height
+			const uint32 startCurrentFrameXPixel =
+			    currentAnimation.startFrameXPixel + ( currentAnimation.frameWidthPixels * animation.currentFrame );
+			const uint32 startCurrentFrameYPixel = currentAnimation.startFrameYPixel;
+			spriteRenderer.uv0.X( static_cast< float32 >( startCurrentFrameXPixel ) / spriteRenderer.width );
+			spriteRenderer.uv0.Y( static_cast< float32 >( startCurrentFrameYPixel ) / spriteRenderer.height );
+
+			spriteRenderer.uv1.X(
+			    static_cast< float32 >( startCurrentFrameXPixel + currentAnimation.frameWidthPixels ) /
+			    spriteRenderer.width );
+			spriteRenderer.uv1.Y(
+			    static_cast< float32 >( startCurrentFrameYPixel + currentAnimation.frameHeightPixels ) /
+			    spriteRenderer.height );
 		}
-
-		SpriteRendererComponent& spriteRenderer = it->GetComponent< SpriteRendererComponent >();
-		assert( spriteRenderer.type == SpriteType::SPRITE_SHEET );
-
-		// Update sprite renderer to show the current animation frame
-		// TODO Add other variables for better flexibility such as initial horizontal pixel, initial vertical pixel,
-		// frame width and height
-		const uint32 startCurrentFrameXPixel =
-		    animation.startFrameXPixel + ( animation.frameWidthPixels * animation.currentFrame );
-		const uint32 startCurrentFrameYPixel = animation.startFrameYPixel;
-		spriteRenderer.uv0.X( static_cast< float32 >( startCurrentFrameXPixel ) / spriteRenderer.width );
-		spriteRenderer.uv0.Y( static_cast< float32 >( startCurrentFrameYPixel ) / spriteRenderer.height );
-
-		spriteRenderer.uv1.X( static_cast< float32 >( startCurrentFrameXPixel + animation.frameWidthPixels ) /
-		                      spriteRenderer.width );
-		spriteRenderer.uv1.Y( static_cast< float32 >( startCurrentFrameYPixel + animation.frameHeightPixels ) /
-		                      spriteRenderer.height );
 	}
 }
 
@@ -62,12 +72,22 @@ void Engine::AnimationSystem::ConfigureAnimationComponent( ECS::GameEntity& enti
 	const AnimationComponentConfiguration& animation_config =
 	    static_cast< const AnimationComponentConfiguration& >( *component_config_found->second );
 	AnimationComponent& animation = entity.GetComponent< AnimationComponent >();
-	animation.startFrameXPixel = animation_config.startFrameXPixel;
-	animation.startFrameYPixel = animation_config.startFrameYPixel;
-	animation.frameWidthPixels = animation_config.frameWidthPixels;
-	animation.frameHeightPixels = animation_config.frameHeightPixels;
-	animation.frameRate = animation_config.frameRate;
-	animation.numberOfFrames = animation_config.numberOfFrames;
+
+	auto cit = animation_config.animations.cbegin();
+	for ( ; cit != animation_config.animations.cend(); ++cit )
+	{
+		if ( animation.animations.find( cit->name ) == animation.animations.end() )
+		{
+			animation.animations[ cit->name ] = *cit;
+		}
+		else
+		{
+			LOG_WARNING( "Animation clip with name %s is duplicate in prefab %s. Skipping this clip.",
+			             cit->name.c_str(), prefab.name.c_str() );
+		}
+	}
+
+	animation.currentAnimation = &animation.animations[ animation_config.initialAnimationName ];
 	animation.currentFrame = 0;
 	animation.timeAccumulator = 0.f;
 }

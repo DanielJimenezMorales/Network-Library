@@ -3,27 +3,23 @@
 
 #include "ecs/component_configuration.h"
 
+#include "components/animation_component.h"
+
+#include <vector>
+#include <string>
+
 struct AnimationComponentConfiguration : public Engine::ECS::ComponentConfiguration
 {
-		AnimationComponentConfiguration( uint32 start_animation_x_pixel, uint32 start_animation_y_pixel,
-		                                 uint32 frame_width_pixels, uint32 frame_height_pixels, uint32 number_of_frames,
-		                                 uint32 frame_rate )
+		AnimationComponentConfiguration( const std::vector< Engine::AnimationClip >& animations,
+		                                 const std::string& initial_animation_name )
 		    : Engine::ECS::ComponentConfiguration( "Animation" )
-		    , startFrameXPixel( start_animation_x_pixel )
-		    , startFrameYPixel( start_animation_y_pixel )
-		    , frameWidthPixels( frame_width_pixels )
-		    , frameHeightPixels( frame_height_pixels )
-		    , numberOfFrames( number_of_frames )
-		    , frameRate( frame_rate )
+		    , animations( animations )
+		    , initialAnimationName( initial_animation_name )
 		{
 		}
 
 		AnimationComponentConfiguration* Clone() const override { return new AnimationComponentConfiguration( *this ); }
 
-		uint32 startFrameXPixel;
-		uint32 startFrameYPixel;
-		uint32 frameWidthPixels;
-		uint32 frameHeightPixels;
-		uint32 numberOfFrames;
-		uint32 frameRate;
+		std::vector< Engine::AnimationClip > animations;
+		std::string initialAnimationName;
 };

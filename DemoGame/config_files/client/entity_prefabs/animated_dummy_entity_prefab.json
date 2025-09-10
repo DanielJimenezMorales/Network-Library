@@ -9,12 +9,54 @@
 		},
 		{
 			"name": "Animation",
-			"start_frame_x_pixel": 0,
-			"start_frame_y_pixel": 48,
-			"frame_width_pixels": 16,
-			"frame_height_pixels": 16,
-			"number_of_frames": 4,
-			"frame_rate": 8
+			"animations": [
+				{
+					"name": "IDLE_FRONT",
+					"start_frame_x_pixel": 0,
+					"start_frame_y_pixel": 0,
+					"frame_width_pixels": 16,
+					"frame_height_pixels": 16,
+					"number_of_frames": 4,
+					"frame_rate": 8
+				},
+				{
+					"name": "IDLE_FRONT_LEFT",
+					"start_frame_x_pixel": 0,
+					"start_frame_y_pixel": 16,
+					"frame_width_pixels": 16,
+					"frame_height_pixels": 16,
+					"number_of_frames": 4,
+					"frame_rate": 8
+				},
+				{
+					"name": "IDLE_LEFT",
+					"start_frame_x_pixel": 0,
+					"start_frame_y_pixel": 32,
+					"frame_width_pixels": 16,
+					"frame_height_pixels": 16,
+					"number_of_frames": 4,
+					"frame_rate": 8
+				},
+				{
+					"name": "IDLE_BACK_LEFT",
+					"start_frame_x_pixel": 0,
+					"start_frame_y_pixel": 48,
+					"frame_width_pixels": 16,
+					"frame_height_pixels": 16,
+					"number_of_frames": 4,
+					"frame_rate": 8
+				},
+				{
+					"name": "IDLE_BACK",
+					"start_frame_x_pixel": 0,
+					"start_frame_y_pixel": 64,
+					"frame_width_pixels": 16,
+					"frame_height_pixels": 16,
+					"number_of_frames": 4,
+					"frame_rate": 8
+				}
+			],
+			"initial_animation_name": "IDLE_BACK_LEFT"
 		}
 	]
 }
