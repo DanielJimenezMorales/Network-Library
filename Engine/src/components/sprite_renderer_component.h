@@ -5,11 +5,18 @@
 
 namespace Engine
 {
+	enum class SpriteType
+	{
+		SINGLE = 0,
+		SPRITE_SHEET = 1
+	};
+
 	struct SpriteRendererComponent
 	{
 		public:
 			SpriteRendererComponent()
 			    : textureHandler( TextureHandler::GetInvalid() )
+			    , type( SpriteType::SINGLE )
 			    , width( 0 )
 			    , height( 0 )
 			    , uv0( 0.f, 0.f )
@@ -19,6 +26,7 @@ namespace Engine
 
 			SpriteRendererComponent( const TextureHandler& texture_handler )
 			    : textureHandler( texture_handler )
+			    , type( SpriteType::SINGLE )
 			    , width( 0 )
 			    , height( 0 )
 			    , uv0( 0.f, 0.f )
@@ -27,9 +35,10 @@ namespace Engine
 			}
 
 			TextureHandler textureHandler;
+			SpriteType type;
 			uint32 width;
 			uint32 height;
 			Vec2f uv0;
 			Vec2f uv1;
 	};
-}
+} // namespace Engine

@@ -28,6 +28,7 @@ void Engine::AnimationSystem::Execute( ECS::World& world, float32 elapsed_time )
 		}
 
 		SpriteRendererComponent& spriteRenderer = it->GetComponent< SpriteRendererComponent >();
+		assert( spriteRenderer.type == SpriteType::SPRITE_SHEET );
 
 		// Update sprite renderer to show the current animation frame
 		// TODO Add other variables for better flexibility such as initial horizontal pixel, initial vertical pixel,

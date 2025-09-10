@@ -32,7 +32,18 @@ static void ParseComponentConfiguration( const nlohmann::json& json_data,
 	if ( component_name == "SpriteRenderer" )
 	{
 		const std::string texture_name = json_data[ "texture_path" ];
-		out_component_config = new Engine::SpriteRendererComponentConfiguration( texture_name );
+		const std::string typeName = json_data[ "type" ];
+		Engine::SpriteType type;
+		if ( typeName == "SPRITE_SHEET" )
+		{
+			type = Engine::SpriteType::SPRITE_SHEET;
+		}
+		else
+		{
+			type = Engine::SpriteType::SINGLE;
+		}
+
+		out_component_config = new Engine::SpriteRendererComponentConfiguration( texture_name, type );
 	}
 	else if ( component_name == "Camera" )
 	{
