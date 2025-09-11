@@ -15,6 +15,7 @@ namespace Engine
 			uint32 frameHeightPixels;
 			uint32 numberOfFrames;
 			uint32 frameRate;
+			bool flipX;
 	};
 
 	struct AnimationComponent

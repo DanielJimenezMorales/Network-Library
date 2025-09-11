@@ -21,6 +21,7 @@ namespace Engine
 			    , height( 0 )
 			    , uv0( 0.f, 0.f )
 			    , uv1( 1.f, 1.f )
+			    , flipX( false )
 			{
 			}
 
@@ -31,6 +32,7 @@ namespace Engine
 			    , height( 0 )
 			    , uv0( 0.f, 0.f )
 			    , uv1( 1.f, 1.f )
+			    , flipX( false )
 			{
 			}
 
@@ -40,5 +42,6 @@ namespace Engine
 			uint32 height;
 			Vec2f uv0;
 			Vec2f uv1;
+			bool flipX;
 	};
 } // namespace Engine

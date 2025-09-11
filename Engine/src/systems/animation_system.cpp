@@ -52,6 +52,7 @@ void Engine::AnimationSystem::Execute( ECS::World& world, float32 elapsed_time )
 			spriteRenderer.uv1.Y(
 			    static_cast< float32 >( startCurrentFrameYPixel + currentAnimation.frameHeightPixels ) /
 			    spriteRenderer.height );
+			spriteRenderer.flipX = currentAnimation.flipX;
 		}
 	}
 }

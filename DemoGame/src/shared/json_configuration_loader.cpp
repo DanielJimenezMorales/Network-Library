@@ -110,6 +110,7 @@ static void ParseComponentConfiguration( const nlohmann::json& json_data,
 			clip.frameHeightPixels = animation_json_data[ "frame_height_pixels" ];
 			clip.numberOfFrames = animation_json_data[ "number_of_frames" ];
 			clip.frameRate = animation_json_data[ "frame_rate" ];
+			clip.flipX = animation_json_data[ "flip_x" ];
 			animations.push_back( clip );
 
 			if ( !foundInitialAnimationName )
