@@ -50,16 +50,27 @@ namespace Engine
 				continue;
 			}
 
+			SDL_Rect srcRect;
+			srcRect.x = static_cast< int32 >( spriteRenderer.uv0.X() * texture->GetWidth() );
+			srcRect.y = static_cast< int32 >( spriteRenderer.uv0.Y() * texture->GetHeight() );
+			srcRect.w =
+			    static_cast< int32 >( ( spriteRenderer.uv1.X() - spriteRenderer.uv0.X() ) * texture->GetWidth() );
+			srcRect.h =
+			    static_cast< int32 >( ( spriteRenderer.uv1.Y() - spriteRenderer.uv0.Y() ) * texture->GetHeight() );
+
 			SDL_Rect destRect;
-			destRect.x = static_cast< int >( screenPosition.X() - ( texture->GetDimensions().w / 2.f ) );
-			destRect.y = static_cast< int >( screenPosition.Y() - ( texture->GetDimensions().h / 2.f ) );
-			destRect.w = static_cast< int >( texture->GetDimensions().w * transform.GetScale().X() );
-			destRect.h = static_cast< int >( texture->GetDimensions().h * transform.GetScale().Y() );
+			destRect.x = static_cast< int >( screenPosition.X() - ( texture->GetWidth() / 2.f ) );
+			destRect.y = static_cast< int >( screenPosition.Y() - ( texture->GetHeight() / 2.f ) );
+			destRect.w = static_cast< int >( texture->GetWidth() * transform.GetScale().X() );
+			destRect.h = static_cast< int >( texture->GetHeight() * transform.GetScale().Y() );
+
+			const SDL_RendererFlip flip =
+			    spriteRenderer.flipX ? SDL_RendererFlip::SDL_FLIP_HORIZONTAL : SDL_RendererFlip::SDL_FLIP_NONE;
 
 			// SDL Rotates clockwise (the opposite as the engine that does it anti-clockwise), so we need to invert it.
 			const float64 rotationAngle = 360 - transform.GetRotationAngle();
-			SDL_RenderCopyEx( render_global_component.renderer, texture->GetRaw(), &texture->GetDimensions(), &destRect,
-			                  rotationAngle, nullptr, SDL_RendererFlip::SDL_FLIP_NONE );
+			SDL_RenderCopyEx( render_global_component.renderer, texture->GetRaw(), &srcRect, &destRect, rotationAngle,
+			                  nullptr, flip );
 		}
 	}
 
@@ -81,5 +92,10 @@ namespace Engine
 		SpriteRendererComponent& sprite_renderer = entity.GetComponent< SpriteRendererComponent >();
 		sprite_renderer.textureHandler =
 		    _textureResourceHandler.LoadTexture( sprite_renderer_config.texturePath.c_str() );
+		const Texture* texture = _textureResourceHandler.TryGetTextureFromHandler( sprite_renderer.textureHandler );
+		assert( texture != nullptr );
+		sprite_renderer.type = sprite_renderer_config.type;
+		sprite_renderer.width = texture->GetWidth();
+		sprite_renderer.height = texture->GetHeight();
 	}
 } // namespace Engine

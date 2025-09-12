@@ -4,7 +4,8 @@
 	"component_configs": [
 		{
 			"name": "SpriteRenderer",
-			"texture_path": "sprites/PlayerSprites/playerHead.png"
+			"texture_path": "sprites/PlayerSprites/playerHead.png",
+			"type": "SINGLE"
 		},
 		{
 			"name": "Collider2D",

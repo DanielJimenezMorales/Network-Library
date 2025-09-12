@@ -4,16 +4,16 @@
 	"component_configs": [
 		{
 			"name": "SpriteRenderer",
-			"texture_path": "sprites/PlayerSprites/playerHead.png"
+			"texture_path": "sprites/PlayerSprites/playerHead.png",
+			"type": "SINGLE"
 		},
 		{
 			"name": "Collider2D",
 			"collision_response_type": "Dynamic",
 			"is_trigger": false,
-			"bounds_config":
-			{
-				"type":"Circle",
-				"radius":5
+			"bounds_config": {
+				"type": "Circle",
+				"radius": 5
 			}
 		}
 	]

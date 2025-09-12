@@ -2,12 +2,15 @@
 
 #include "json.hpp"
 
+#include "logger.h"
+
 #include "ecs/prefab.h"
 #include "ecs/component_configuration.h"
 
 #include "component_configurations/sprite_renderer_component_configuration.h"
 #include "component_configurations/camera_component_configuration.h"
 #include "component_configurations/collider_2d_component_configuration.h"
+#include "component_configurations/animation_component_configuration.h"
 
 #include "shared/component_configurations/player_controller_component_configuration.h"
 #include "shared/component_configurations/temporary_lifetime_component_configuration.h"
@@ -31,7 +34,18 @@ static void ParseComponentConfiguration( const nlohmann::json& json_data,
 	if ( component_name == "SpriteRenderer" )
 	{
 		const std::string texture_name = json_data[ "texture_path" ];
-		out_component_config = new Engine::SpriteRendererComponentConfiguration( texture_name );
+		const std::string typeName = json_data[ "type" ];
+		Engine::SpriteType type;
+		if ( typeName == "SPRITE_SHEET" )
+		{
+			type = Engine::SpriteType::SPRITE_SHEET;
+		}
+		else
+		{
+			type = Engine::SpriteType::SINGLE;
+		}
+
+		out_component_config = new Engine::SpriteRendererComponentConfiguration( texture_name, type );
 	}
 	else if ( component_name == "Camera" )
 	{
@@ -77,9 +91,52 @@ static void ParseComponentConfiguration( const nlohmann::json& json_data,
 		    ( json_data.contains( "current_health" ) ) ? json_data[ "current_health" ] : max_health;
 		out_component_config = new HealthComponentConfiguration( max_health, current_health );
 	}
+	else if ( component_name == "Animation" )
+	{
+		std::string initialAnimationName = json_data[ "initial_animation_name" ];
+		bool foundInitialAnimationName = false;
+		std::vector< Engine::AnimationClip > animations;
+		auto animations_data = json_data[ "animations" ];
+		auto cit = animations_data.cbegin();
+		for ( ; cit != animations_data.cend(); ++cit )
+		{
+			const nlohmann::json& animation_json_data = *cit;
+
+			Engine::AnimationClip clip;
+			clip.name = animation_json_data[ "name" ];
+			clip.startFrameXPixel = animation_json_data[ "start_frame_x_pixel" ];
+			clip.startFrameYPixel = animation_json_data[ "start_frame_y_pixel" ];
+			clip.frameWidthPixels = animation_json_data[ "frame_width_pixels" ];
+			clip.frameHeightPixels = animation_json_data[ "frame_height_pixels" ];
+			clip.numberOfFrames = animation_json_data[ "number_of_frames" ];
+			clip.frameRate = animation_json_data[ "frame_rate" ];
+			clip.flipX = animation_json_data[ "flip_x" ];
+			animations.push_back( clip );
+
+			if ( !foundInitialAnimationName )
+			{
+				if ( clip.name == initialAnimationName )
+				{
+					foundInitialAnimationName = true;
+				}
+			}
+		}
+
+		assert( !animations.empty() );
+
+		if ( !foundInitialAnimationName )
+		{
+			LOG_WARNING( "Couldn't find Initial animation name %s. Setting the first animation name in the array",
+			             initialAnimationName.c_str() );
+			initialAnimationName = animations.front().name;
+		}
+
+		out_component_config = new AnimationComponentConfiguration( animations, initialAnimationName );
+	}
 }
 
-bool JsonConfigurationLoader::LoadPrefabs( std::vector< Engine::ECS::Prefab >& out_prefabs, const std::string& relative_path)
+bool JsonConfigurationLoader::LoadPrefabs( std::vector< Engine::ECS::Prefab >& out_prefabs,
+                                           const std::string& relative_path )
 {
 	std::vector< std::string > prefab_files;
 	GetAllFilesInDirectory( prefab_files, relative_path );

@@ -1,0 +1,8 @@
+{
+	"name": "animated_dummy",
+	"components": [
+		"Transform",
+		"SpriteRenderer",
+		"Animation"
+	]
+}

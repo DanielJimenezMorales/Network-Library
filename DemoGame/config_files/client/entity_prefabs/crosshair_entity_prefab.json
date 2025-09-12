@@ -4,7 +4,8 @@
 	"component_configs": [
 		{
 			"name": "SpriteRenderer",
-			"texture_path": "sprites/Crosshair/crosshair.png"
+			"texture_path": "sprites/Crosshair/crosshair.png",
+			"type": "SINGLE"
 		}
 	]
 }
