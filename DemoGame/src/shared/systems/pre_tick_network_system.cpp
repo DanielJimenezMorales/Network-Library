@@ -24,10 +24,10 @@ static void Server_SpawnRemotePeerConnect( Engine::ECS::World& world, uint32 rem
 
 static void Server_CreateInputSlot( Engine::ECS::World& world, uint32 remotePeerId )
 {
-	ServerRemotePeerInputsGlobalComponent& remotePeerInputsComponent =
+	/*ServerRemotePeerInputsGlobalComponent& remotePeerInputsComponent =
 	    world.GetGlobalComponent< ServerRemotePeerInputsGlobalComponent >();
 
-	remotePeerInputsComponent.remotePeerInputs.emplace( remotePeerId, RemotePeerInputsStorage() );
+	remotePeerInputsComponent.remotePeerInputs.emplace( remotePeerId, RemotePeerInputsStorage() );*/
 }
 
 void PreTickNetworkSystem::Execute( Engine::ECS::World& world, float32 elapsed_time )
