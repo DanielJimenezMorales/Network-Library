@@ -9,6 +9,8 @@
 #include "components/raycast_component.h"
 #include "components/animation_component.h"
 
+#include "transform_component_proxy.h"
+
 #include "global_components/input_handler_global_component.h"
 
 #include "ecs/system_coordinator.h"
@@ -333,7 +335,8 @@ static bool CreateGameEntities( Engine::ECS::World& world )
 
 	// Add animated dummy
 	auto entity = world.CreateGameEntity( "AnimatedDummy", Vec2f( -5.f, 0.f ) );
-	entity.GetComponent< Engine::TransformComponent >().SetRotationAngle( 0.f );
+	Engine::TransformComponentProxy animatedDummyTransform( entity );
+	animatedDummyTransform.SetGlobalRotationAngle( 0.f );
 
 	return true;
 }

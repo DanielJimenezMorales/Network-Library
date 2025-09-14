@@ -17,7 +17,7 @@ struct HistoryEntry
 		float32 rotationAngle;
 };
 
-static constexpr uint32 MAX_HISTORY_BUFFER_SIZE = 20;
+static constexpr uint32 MAX_HISTORY_BUFFER_SIZE = 30;
 
 /// <summary>
 /// This component stores the history of position + rotation data from previous simulation ticks in order to be able to

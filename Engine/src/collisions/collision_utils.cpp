@@ -2,7 +2,7 @@
 
 #include "math_utils.h"
 
-#include "components/transform_component.h"
+#include "transform_component_proxy.h"
 
 #include <cassert>
 
@@ -15,23 +15,26 @@ namespace Engine
 		return distanceBetweenCenters < squareRadiusSum;
 	}
 
-	void SeparateCircleWithCircle( TransformComponent& transformA, float32 radiusA, TransformComponent& transformB,
-	                               float32 radiusB )
+	void SeparateCircleWithCircle( TransformComponentProxy& transformA, float32 radiusA,
+	                               TransformComponentProxy& transformB, float32 radiusB )
 	{
 		const float32 radiusSum = radiusA + radiusB;
-		const float32 distanceBetweenCenters = GetDistance( transformA.GetPosition(), transformB.GetPosition() );
+		const float32 distanceBetweenCenters =
+		    GetDistance( transformA.GetGlobalPosition(), transformB.GetGlobalPosition() );
 		const float32 halfDistanceDifference = ( radiusSum - distanceBetweenCenters ) / 2.f;
 		assert( halfDistanceDifference >= 0.f );
 
-		TransformComponent& leftCircle =
-		    ( transformA.GetPosition().X() <= transformB.GetPosition().X() ) ? transformA : transformB;
-		TransformComponent& rightCircle =
-		    ( transformA.GetPosition().X() <= transformB.GetPosition().X() ) ? transformB : transformA;
+		TransformComponentProxy& leftCircle =
+		    ( transformA.GetGlobalPosition().X() <= transformB.GetGlobalPosition().X() ) ? transformA : transformB;
+		TransformComponentProxy& rightCircle =
+		    ( transformA.GetGlobalPosition().X() <= transformB.GetGlobalPosition().X() ) ? transformB : transformA;
 
-		Vec2f leftToRightDirection = rightCircle.GetPosition() - leftCircle.GetPosition();
+		Vec2f leftToRightDirection = rightCircle.GetGlobalPosition() - leftCircle.GetGlobalPosition();
 		leftToRightDirection.Normalize();
 
-		rightCircle.SetPosition( rightCircle.GetPosition() + ( leftToRightDirection * halfDistanceDifference ) );
-		leftCircle.SetPosition( leftCircle.GetPosition() - ( leftToRightDirection * halfDistanceDifference ) );
+		rightCircle.SetGlobalPosition( rightCircle.GetGlobalPosition() +
+		                               ( leftToRightDirection * halfDistanceDifference ) );
+		leftCircle.SetGlobalPosition( leftCircle.GetGlobalPosition() -
+		                              ( leftToRightDirection * halfDistanceDifference ) );
 	}
 }

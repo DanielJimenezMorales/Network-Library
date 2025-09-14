@@ -8,7 +8,7 @@
 
 #include "ecs/game_entity.hpp"
 
-#include "components/transform_component.h"
+#include "transform_component_proxy.h"
 
 namespace Engine
 {
@@ -162,11 +162,9 @@ namespace Engine
 				return GameEntity();
 			}
 
-			assert( new_entity.HasComponent< TransformComponent >() );
-
-			TransformComponent& new_entity_transform = new_entity.GetComponent< TransformComponent >();
-			new_entity_transform.SetPosition( position );
-			new_entity_transform.SetRotationLookAt( look_at_direction );
+			TransformComponentProxy newEntityTransform( new_entity );
+			newEntityTransform.SetGlobalPosition( position );
+			newEntityTransform.SetRotationLookAt( look_at_direction );
 
 			// Configure components
 			_onEntityConfigure.Execute( new_entity, *prefab );

@@ -11,9 +11,11 @@
 
 #include "global_components/render_global_component.h"
 
-#include "components/transform_component.h"
 #include "components/sprite_renderer_component.h"
 #include "components/camera_component.h"
+#include "components/transform_component.h"
+
+#include "read_only_transform_component_proxy.h"
 
 #include "component_configurations/sprite_renderer_component_configuration.h"
 
@@ -32,7 +34,7 @@ namespace Engine
 
 		const ECS::GameEntity camera_entity = world.GetFirstEntityOfType< CameraComponent >();
 		const CameraComponent& camera = camera_entity.GetComponent< CameraComponent >();
-		const TransformComponent& camera_transform = camera_entity.GetComponent< TransformComponent >();
+		ReadOnlyTransformComponentProxy cameraTransform( camera_entity );
 
 		std::vector< ECS::GameEntity > entities =
 		    world.GetEntitiesOfBothTypes< SpriteRendererComponent, TransformComponent >();
@@ -40,10 +42,10 @@ namespace Engine
 		{
 			// auto [spriteRenderer, transform] = view.get<SpriteRendererComponent, TransformComponent>(entity);
 			const SpriteRendererComponent& spriteRenderer = it->GetComponent< SpriteRendererComponent >();
-			const TransformComponent& transform = it->GetComponent< TransformComponent >();
+			ReadOnlyTransformComponentProxy transform( *it );
 
 			const Vec2f screenPosition =
-			    ConvertFromWorldPositionToScreenPosition( transform.GetPosition(), camera, camera_transform );
+			    ConvertFromWorldPositionToScreenPosition( transform.GetGlobalPosition(), camera, cameraTransform );
 			const Texture* texture = _textureResourceHandler.TryGetTextureFromHandler( spriteRenderer.textureHandler );
 			if ( texture == nullptr )
 			{
@@ -61,14 +63,14 @@ namespace Engine
 			SDL_Rect destRect;
 			destRect.x = static_cast< int >( screenPosition.X() - ( texture->GetWidth() / 2.f ) );
 			destRect.y = static_cast< int >( screenPosition.Y() - ( texture->GetHeight() / 2.f ) );
-			destRect.w = static_cast< int >( texture->GetWidth() * transform.GetScale().X() );
-			destRect.h = static_cast< int >( texture->GetHeight() * transform.GetScale().Y() );
+			destRect.w = static_cast< int >( texture->GetWidth() * transform.GetGlobalScale().X() );
+			destRect.h = static_cast< int >( texture->GetHeight() * transform.GetGlobalScale().Y() );
 
 			const SDL_RendererFlip flip =
 			    spriteRenderer.flipX ? SDL_RendererFlip::SDL_FLIP_HORIZONTAL : SDL_RendererFlip::SDL_FLIP_NONE;
 
 			// SDL Rotates clockwise (the opposite as the engine that does it anti-clockwise), so we need to invert it.
-			const float64 rotationAngle = 360 - transform.GetRotationAngle();
+			const float64 rotationAngle = 360 - transform.GetGlobalRotationAngle();
 			SDL_RenderCopyEx( render_global_component.renderer, texture->GetRaw(), &srcRect, &destRect, rotationAngle,
 			                  nullptr, flip );
 		}

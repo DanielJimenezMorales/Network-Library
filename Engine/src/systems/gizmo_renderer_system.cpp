@@ -10,8 +10,10 @@
 #include "global_components/render_global_component.h"
 
 #include "components/gizmo_renderer_component.h"
-#include "components/transform_component.h"
 #include "components/camera_component.h"
+#include "components/transform_component.h"
+
+#include "read_only_transform_component_proxy.h"
 
 #include "components/collider_2d_component.h"
 #include "components/raycast_component.h"
@@ -36,13 +38,13 @@ namespace Engine
 
 		const ECS::GameEntity& camera_entity = world.GetFirstEntityOfType< CameraComponent >();
 		const CameraComponent& camera = camera_entity.GetComponent< CameraComponent >();
-		const TransformComponent& camera_transform = camera_entity.GetComponent< TransformComponent >();
+		ReadOnlyTransformComponentProxy cameraTransform( camera_entity );
 
 		std::vector< ECS::GameEntity > entities =
 		    world.GetEntitiesOfBothTypes< GizmoRendererComponent, TransformComponent >();
 		for ( auto it = entities.begin(); it != entities.end(); ++it )
 		{
-			const TransformComponent& transform = it->GetComponent< TransformComponent >();
+			ReadOnlyTransformComponentProxy transform( *it );
 			const GizmoRendererComponent& gizmo_renderer = it->GetComponent< GizmoRendererComponent >();
 
 			const Gizmo* gizmo = _gizmoResourceHandler.TryGetGizmoFromHandler( gizmo_renderer.gizmoHandler );
@@ -56,7 +58,7 @@ namespace Engine
 			{
 				const GizmoRenderer* gizmo_renderer = gizmo_renderer_found->second;
 				assert( gizmo_renderer != nullptr );
-				gizmo_renderer->Render( *gizmo, camera, camera_transform, transform, render_global_component.renderer );
+				gizmo_renderer->Render( *gizmo, camera, cameraTransform, transform, render_global_component.renderer );
 			}
 
 			// TODO cache the color in a variable so I dont need to hardcode it in different places of the code

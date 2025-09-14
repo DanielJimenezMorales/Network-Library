@@ -6,8 +6,12 @@
 #include "raycaster.h"
 #include "ecs/world.h"
 #include "ecs/game_entity.hpp"
+
 #include "components/collider_2d_component.h"
 #include "components/transform_component.h"
+
+#include "read_only_transform_component_proxy.h"
+#include "transform_component_proxy.h"
 
 #include "shared/components/health_component.h"
 #include "shared/components/network_entity_component.h"
@@ -46,11 +50,11 @@ static void SaveCurrentState(
 	{
 		if ( cit->HasComponent< Engine::Collider2DComponent >() )
 		{
-			const Engine::TransformComponent& transformComponent = cit->GetComponent< Engine::TransformComponent >();
+			Engine::ReadOnlyTransformComponentProxy transformComponent( *cit );
 			RewindableEntitiesSnapshot::Entry entry;
 			entry.entityId = cit->GetId();
-			entry.position = transformComponent.GetPosition();
-			entry.rotationAngle = transformComponent.GetRotationAngle();
+			entry.position = transformComponent.GetGlobalPosition();
+			entry.rotationAngle = transformComponent.GetGlobalRotationAngle();
 			snapshot.rewindableEntityStates.push_back( entry );
 		}
 	}
@@ -64,9 +68,9 @@ static void RestoreCurrentState( Engine::ECS::World& world, const RewindableEnti
 		Engine::ECS::GameEntity entity = world.GetEntityFromId( cit->entityId );
 		assert( entity.IsValid() );
 
-		Engine::TransformComponent& transformComponent = entity.GetComponent< Engine::TransformComponent >();
-		transformComponent.SetPosition( cit->position );
-		transformComponent.SetRotationAngle( cit->rotationAngle );
+		Engine::TransformComponentProxy transformComponent( entity );
+		transformComponent.SetGlobalPosition( cit->position );
+		transformComponent.SetGlobalRotationAngle( cit->rotationAngle );
 	}
 }
 
@@ -194,15 +198,21 @@ static void RollbackEntities( Engine::ECS::World& world, float32 serverTime )
 		int32 previousIndex = -1;
 		int32 nextIndex = -1;
 		FindPreviousAndNextTimeIndexes( transformHistoryComponent, serverTime, previousIndex, nextIndex );
+		if (nextIndex < 0)
+		{
+			bool a = true;
+		}
+		//TODO Investigate hit reg issue that is hitting this assert.
 		assert( nextIndex >= 0 );
+
+		Engine::TransformComponentProxy transformComponent( *it );
 
 		// If the server time is older than the oldest timestamp in the buffer, clamp it
 		if ( previousIndex == -1 )
 		{
-			Engine::TransformComponent& transformComponent = it->GetComponent< Engine::TransformComponent >();
 			const HistoryEntry& historyEntry = transformHistoryComponent.historyBuffer[ 0 ];
-			transformComponent.SetPosition( historyEntry.position );
-			transformComponent.SetRotationAngle( historyEntry.rotationAngle );
+			transformComponent.SetGlobalPosition( historyEntry.position );
+			transformComponent.SetGlobalRotationAngle( historyEntry.rotationAngle );
 		}
 		// Otherwise interpolate between the upper and lower timestamps to be as accurate as possible.
 		else
@@ -210,9 +220,8 @@ static void RollbackEntities( Engine::ECS::World& world, float32 serverTime )
 			const HistoryEntry interpolatedHistoryEntry =
 			    GetInterpolatedState( transformHistoryComponent, previousIndex, nextIndex, serverTime );
 
-			Engine::TransformComponent& transformComponent = it->GetComponent< Engine::TransformComponent >();
-			transformComponent.SetPosition( interpolatedHistoryEntry.position );
-			transformComponent.SetRotationAngle( interpolatedHistoryEntry.rotationAngle );
+			transformComponent.SetGlobalPosition( interpolatedHistoryEntry.position );
+			transformComponent.SetGlobalRotationAngle( interpolatedHistoryEntry.rotationAngle );
 		}
 	}
 }
@@ -265,11 +274,13 @@ void ServerHitRegistrationSystem::Execute( Engine::ECS::World& world, float32 el
 			hitRegGlobalComponent.pendingShotEntries.pop();
 
 			// TODO Instead of discarting invalid shot entries, process them with the maximum allowed rollback time
-			//TODO Also consider the client-side delay from remote entity interpolation and not only the latency
+			// TODO Also consider the client-side delay from remote entity interpolation and not only the latency
 			if ( IsShotEntryValid( world, hitRegGlobalComponent, shotEntry ) )
 			{
 				// Rollback all entities to the shot's server time and perform the shot
 				RollbackEntities( world, shotEntry.serverTime );
+				// TODO Force an update of all transform hierarchies so the shot doesn't collide with any child entity
+				// with a collider that has not been repositioned
 				ProcessShotEntry( world, shotEntry );
 			}
 			else

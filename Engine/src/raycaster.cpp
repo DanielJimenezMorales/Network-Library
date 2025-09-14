@@ -1,7 +1,8 @@
 #include "raycaster.h"
 
-#include "components/transform_component.h"
 #include "components/collider_2d_component.h"
+
+#include "read_only_transform_component_proxy.h"
 
 #include "collisions/circle_bounds_2d.h"
 
@@ -18,7 +19,7 @@ namespace Engine
 		/// book
 		/// https://www.r-5.org/files/books/computers/algo-list/realtime-3d/Christer_Ericson-Real-Time_Collision_Detection-EN.pdf
 		/// </summary>
-		static bool PerformRaycastAgainstSphere( const Ray& ray, const TransformComponent& circle_transform,
+		static bool PerformRaycastAgainstSphere( const Ray& ray, ReadOnlyTransformComponentProxy& circle_transform,
 		                                         const CircleBounds2D& circle_collider, RaycastResult& out_result )
 		{
 			bool has_collided = false;
@@ -30,7 +31,7 @@ namespace Engine
 
 			// Cache circle data
 			const float32 circle_radius = circle_collider.GetRadius();
-			const Vec2f circle_position = circle_transform.GetPosition();
+			const Vec2f circle_position = circle_transform.GetGlobalPosition();
 
 			// Apply second grade formula
 			// second_grade_formula_result = -b -sqrt(b^2 - c) where b = Dot(m,d), m = x0 - C and c = Dot(m, m) - r^2
@@ -99,7 +100,7 @@ namespace Engine
 					}
 				}
 
-				const TransformComponent& transform = cit->GetComponent< TransformComponent >();
+				ReadOnlyTransformComponentProxy transform( *cit );
 				const Collider2DComponent& collider = cit->GetComponent< Collider2DComponent >();
 				const Bounds2D* bounds = collider.GetBounds2D();
 				const CollisionShapeType shape_type = bounds->GetShapeType();

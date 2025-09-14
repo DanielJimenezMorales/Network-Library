@@ -3,7 +3,7 @@
 
 namespace Engine
 {
-	struct TransformComponent;
+	class ReadOnlyTransformComponentProxy;
 	struct CameraComponent;
 	class Gizmo;
 
@@ -14,7 +14,7 @@ namespace Engine
 			~GizmoRenderer() {}
 
 			virtual void Render( const Gizmo& gizmo, const CameraComponent& camera,
-			                     const TransformComponent& camera_transform, const TransformComponent& transform,
-			                     SDL_Renderer* renderer ) const = 0;
+			                     ReadOnlyTransformComponentProxy& camera_transform,
+			                     ReadOnlyTransformComponentProxy& transform, SDL_Renderer* renderer ) const = 0;
 	};
 }

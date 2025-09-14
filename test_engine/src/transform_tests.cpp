@@ -2,7 +2,9 @@
 #include "numeric_types.h"
 
 #include "Vec2f.h"
-#include "components/transform_component.h"
+
+#include "read_only_transform_component_proxy.h"
+#include "transform_component_proxy.h"
 
 namespace
 {

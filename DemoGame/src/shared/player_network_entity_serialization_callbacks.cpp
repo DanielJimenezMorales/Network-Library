@@ -5,7 +5,8 @@
 #include "ecs/game_entity.hpp"
 #include "ecs/world.h"
 
-#include "components/transform_component.h"
+#include "transform_component_proxy.h"
+#include "read_only_transform_component_proxy.h"
 
 #include "server/components/server_player_state_storage_component.h"
 
@@ -27,11 +28,11 @@ void SerializeForOwner( const Engine::ECS::World& world, const Engine::ECS::Game
 
 void SerializeForNonOwner( const Engine::ECS::GameEntity& entity, NetLib::Buffer& buffer )
 {
-	const Engine::TransformComponent& transform = entity.GetComponent< Engine::TransformComponent >();
-	const Vec2f position = transform.GetPosition();
+	Engine::ReadOnlyTransformComponentProxy transform( entity );
+	const Vec2f position = transform.GetGlobalPosition();
 	buffer.WriteFloat( position.X() );
 	buffer.WriteFloat( position.Y() );
-	buffer.WriteFloat( transform.GetRotationAngle() );
+	buffer.WriteFloat( transform.GetGlobalRotationAngle() );
 }
 
 void DeserializeForOwner( Engine::ECS::GameEntity& entity, NetLib::Buffer& buffer )
@@ -46,13 +47,13 @@ void DeserializeForOwner( Engine::ECS::GameEntity& entity, NetLib::Buffer& buffe
 
 void DeserializeForNonOwner( Engine::ECS::GameEntity& entity, NetLib::Buffer& buffer )
 {
-	Engine::TransformComponent& transform = entity.GetComponent< Engine::TransformComponent >();
+	Engine::TransformComponentProxy transform( entity );
 	Vec2f position;
 	position.X( buffer.ReadFloat() );
 	position.Y( buffer.ReadFloat() );
 
-	transform.SetPosition( position );
+	transform.SetGlobalPosition( position );
 
 	const float32 rotation_angle = buffer.ReadFloat();
-	transform.SetRotationAngle( rotation_angle );
+	transform.SetGlobalRotationAngle( rotation_angle );
 }
