@@ -34,6 +34,7 @@ namespace NetLib
 
 			void RegisterInputStateFactory( IInputStateFactory* factory );
 			const IInputState* GetInputFromRemotePeer( uint32 remotePeerId );
+			const IInputState* GetLastInputPoppedFromRemotePeer( uint32 remote_peer_id ) const;
 			bool EnableInputBufferForRemotePeer( uint32 remote_peer_id );
 			bool DisableInputBufferForRemotePeer( uint32 remote_peer_id );
 

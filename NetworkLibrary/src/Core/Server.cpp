@@ -63,9 +63,14 @@ namespace NetLib
 		_inputsFactory = factory;
 	}
 
-	const IInputState* Server::GetInputFromRemotePeer( uint32 remotePeerId )
+	const IInputState* Server::GetInputFromRemotePeer( uint32 remote_peer_id )
 	{
-		return _remotePeerInputsHandler.GetNextInputFromRemotePeer( remotePeerId );
+		return _remotePeerInputsHandler.PopNextInputFromRemotePeer( remote_peer_id );
+	}
+
+	const IInputState* Server::GetLastInputPoppedFromRemotePeer( uint32 remote_peer_id ) const
+	{
+		return _remotePeerInputsHandler.GetLastInputPoppedFromRemotePeer( remote_peer_id );
 	}
 
 	bool Server::EnableInputBufferForRemotePeer( uint32 remote_peer_id )
@@ -436,6 +441,6 @@ namespace NetLib
 
 	void Server::InternalOnRemotePeerDisconnect( const RemotePeer& remote_peer )
 	{
-		_remotePeerInputsHandler.RemoveRemotePeer( remote_peer.GetClientIndex() );
+		_remotePeerInputsHandler.RemoveInputsBuffer( remote_peer.GetClientIndex() );
 	}
 } // namespace NetLib

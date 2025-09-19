@@ -14,12 +14,21 @@ namespace NetLib
 		_inputsBuffered.push( input );
 	}
 
-	IInputState* RemotePeerInputsBuffer::GetNextInputState()
+	const IInputState* RemotePeerInputsBuffer::PopNextInputState()
 	{
 		assert( GetNumberOfInputsBuffered() > 0 );
 
 		IInputState* inputToReturn = _inputsBuffered.front();
+		assert( inputToReturn != nullptr );
+
 		_inputsBuffered.pop();
+
+		if ( _lastInputPopped != nullptr )
+		{
+			delete _lastInputPopped;
+		}
+
+		_lastInputPopped = inputToReturn;
 		return inputToReturn;
 	}
 
@@ -72,7 +81,7 @@ namespace NetLib
 		inputsBuffer->AddInputState( input );
 	}
 
-	const IInputState* RemotePeerInputsHandler::GetNextInputFromRemotePeer( uint32 remote_peer_id )
+	const IInputState* RemotePeerInputsHandler::PopNextInputFromRemotePeer( uint32 remote_peer_id )
 	{
 		RemotePeerInputsBuffer* inputsBuffer = TryGetInputsBufferFromRemotePeerId( remote_peer_id );
 		assert( inputsBuffer != nullptr );
@@ -82,15 +91,22 @@ namespace NetLib
 			return nullptr;
 		}
 
-		return inputsBuffer->GetNextInputState();
+		return inputsBuffer->PopNextInputState();
 	}
 
-	void RemotePeerInputsHandler::RemoveRemotePeer( uint32 remotePeerId )
+	const IInputState* RemotePeerInputsHandler::GetLastInputPoppedFromRemotePeer( uint32 remote_peer_id ) const
 	{
-		auto remotePeerFoundIt = _remotePeerIdToInputsBufferMap.find( remotePeerId );
+		const RemotePeerInputsBuffer* inputsBuffer = TryGetInputsBufferFromRemotePeerId( remote_peer_id );
+		assert( inputsBuffer != nullptr );
+		return inputsBuffer->GetLastInputPopped();
+	}
+
+	void RemotePeerInputsHandler::RemoveInputsBuffer( uint32 remote_peer_id )
+	{
+		auto remotePeerFoundIt = _remotePeerIdToInputsBufferMap.find( remote_peer_id );
 		if ( remotePeerFoundIt != _remotePeerIdToInputsBufferMap.end() )
 		{
-			_remotePeerIdToInputsBufferMap.erase( remotePeerId );
+			_remotePeerIdToInputsBufferMap.erase( remote_peer_id );
 		}
 	}
 
