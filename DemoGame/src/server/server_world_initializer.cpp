@@ -69,6 +69,9 @@
 
 #include <SDL.h>
 
+// TODO EMP Remove later
+#include "server/systems/temp_kill_player_after_seconds_system.h"
+
 // TODO Make the rule of following this initialization order to avoid issues:
 //  1. Register components
 //  2. Register archetypes
@@ -245,6 +248,16 @@ static bool AddGameplayToWorld( Engine::ECS::World& world )
 
 	// Add remote peer inputs storage
 	world.AddGlobalComponent< ServerRemotePeerInputsGlobalComponent >();
+
+	// TODO TEMP Remove later
+	Engine::ECS::SystemCoordinator* tempKillPlayerAfterSecondsSystemCoordinator =
+	    new Engine::ECS::SystemCoordinator( Engine::ECS::ExecutionStage::TICK );
+	TempKillPlayerAfterSecondsSystem* tempKillPlayerAfterSecondsSystem = new TempKillPlayerAfterSecondsSystem();
+	tempKillPlayerAfterSecondsSystemCoordinator->AddSystemToTail( tempKillPlayerAfterSecondsSystem );
+	auto on_player_create = std::bind( &TempKillPlayerAfterSecondsSystem::OnPlayerCreated,
+	                                   tempKillPlayerAfterSecondsSystem, std::placeholders::_1 );
+	world.SubscribeToOnEntityConfigure( on_player_create );
+	world.AddSystem( tempKillPlayerAfterSecondsSystemCoordinator );
 
 	// Add revive dead players
 	world.AddGlobalComponent< ServerDeadPlayersToReviveGlobalComponent >();

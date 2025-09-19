@@ -31,8 +31,11 @@ namespace NetLib
 			uint32 CreateNetworkEntity( uint32 entityType, uint32 controlledByPeerId, float32 posX, float32 posY );
 			void DestroyNetworkEntity( uint32 entityId );
 			// TODO Create a method for destroying all network entities controlled by a remote peer
+
 			void RegisterInputStateFactory( IInputStateFactory* factory );
 			const IInputState* GetInputFromRemotePeer( uint32 remotePeerId );
+			bool EnableInputBufferForRemotePeer( uint32 remote_peer_id );
+			bool DisableInputBufferForRemotePeer( uint32 remote_peer_id );
 
 			template < typename Functor >
 			uint32 SubscribeToOnNetworkEntityCreate( Functor&& functor );
@@ -48,6 +51,9 @@ namespace NetLib
 			void ProcessMessageFromUnknownPeer( const Message& message, const Address& address ) override;
 			void TickConcrete( float32 elapsedTime ) override;
 			bool StopConcrete() override;
+
+			void InternalOnRemotePeerConnect( RemotePeer& remote_peer ) override;
+			void InternalOnRemotePeerDisconnect( const RemotePeer& remote_peer ) override;
 
 		private:
 			uint64 GenerateServerSalt() const;

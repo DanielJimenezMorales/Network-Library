@@ -14,12 +14,14 @@ void ServerReviveDeadPlayersSystem::Execute( Engine::ECS::World& world, float32 
 
 	NetworkPeerGlobalComponent& networkPeerComponent = world.GetGlobalComponent< NetworkPeerGlobalComponent >();
 
+	// Update revival time left for each dead player
 	auto it = deadPlayersToReviveComponent.deadPlayersToRevive.begin();
 	for ( ; it != deadPlayersToReviveComponent.deadPlayersToRevive.end(); ++it )
 	{
 		it->timeLeft -= elapsed_time;
 	}
 
+	// Revive dead players whose time left is up
 	for ( int32 i = deadPlayersToReviveComponent.deadPlayersToRevive.size() - 1; i >= 0; --i )
 	{
 		if ( deadPlayersToReviveComponent.deadPlayersToRevive[ i ].timeLeft <= 0.f )
@@ -29,7 +31,21 @@ void ServerReviveDeadPlayersSystem::Execute( Engine::ECS::World& world, float32 
 			deadPlayersToReviveComponent.deadPlayersToRevive.erase(
 			    deadPlayersToReviveComponent.deadPlayersToRevive.cbegin() + i );
 
-			networkPeerComponent.GetPeerAsServer()->CreateNetworkEntity( 10, remotePeerId, 0.f, 0.f );
+			NetLib::Server* server = networkPeerComponent.GetPeerAsServer();
+			const NetLib::RemotePeerState remotePeerState = server->GetRemotePeerState( remotePeerId );
+			if ( remotePeerState == NetLib::RemotePeerState::Connected )
+			{
+				server->CreateNetworkEntity( 10, remotePeerId, 0.f, 0.f );
+				// TODO Move this to a network player factory
+				server->EnableInputBufferForRemotePeer( remotePeerId );
+			}
+			else
+			{
+				LOG_INFO( "ServerReviveDeadPlayersSystem::%s, Trying to revive a player from a remote peer id that is "
+				          "not connected. Probably the remote peer disconnected while the player was waiting for being "
+				          "revived.",
+				          THIS_FUNCTION_NAME );
+			}
 		}
 	}
 }
