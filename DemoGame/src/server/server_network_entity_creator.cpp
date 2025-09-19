@@ -11,8 +11,6 @@
 #include "shared/components/network_entity_component.h"
 #include "shared/player_network_entity_serialization_callbacks.h"
 
-#include "server/global_components/server_remote_peer_inputs_global_component.h"
-
 ServerNetworkEntityCreator::ServerNetworkEntityCreator( Engine::ECS::World* world )
     : _world( world )
     , _config()
@@ -28,11 +26,6 @@ uint32 ServerNetworkEntityCreator::OnNetworkEntityCreate( const NetLib::OnNetwor
 	const Engine::ECS::GameEntity entity =
 	    _world->CreateGameEntity( "Player", Vec2f( config.positionX, config.positionY ) );
 
-	// Create input slots for simulation
-	ServerRemotePeerInputsGlobalComponent& remotePeerInputsComponent =
-	    _world->GetGlobalComponent< ServerRemotePeerInputsGlobalComponent >();
-	remotePeerInputsComponent.remotePeerInputs.emplace( config.controlledByPeerId, RemotePeerInputsStorage() );
-
 	return entity.GetId();
 }
 
@@ -40,13 +33,6 @@ void ServerNetworkEntityCreator::OnNetworkEntityDestroy( uint32 in_game_id )
 {
 	const Engine::ECS::GameEntity entity = _world->GetEntityFromId( in_game_id );
 	const NetworkEntityComponent& networkEntityComponent = entity.GetComponent< NetworkEntityComponent >();
-
-	// Remove input slot for simulation
-	ServerRemotePeerInputsGlobalComponent& remotePeerInputsComponent =
-	    _world->GetGlobalComponent< ServerRemotePeerInputsGlobalComponent >();
-	assert( remotePeerInputsComponent.remotePeerInputs.find( networkEntityComponent.controlledByPeerId ) !=
-	        remotePeerInputsComponent.remotePeerInputs.end() );
-	remotePeerInputsComponent.remotePeerInputs.erase( networkEntityComponent.controlledByPeerId );
 
 	// Remove the game entity
 	_world->DestroyGameEntity( in_game_id );

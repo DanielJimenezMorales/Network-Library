@@ -41,7 +41,6 @@
 #include "server/components/server_transform_history_component.h"
 
 #include "server/global_components/hit_registration_global_component.h"
-#include "server/global_components/server_remote_peer_inputs_global_component.h"
 #include "server/global_components/server_dead_players_to_revive_global_component.h"
 
 #include "server/systems/server_player_controller_system.h"
@@ -245,9 +244,6 @@ static bool AddGameplayToWorld( Engine::ECS::World& world )
 	    new Engine::ECS::SystemCoordinator( Engine::ECS::ExecutionStage::TICK );
 	remove_dead_entities_system_coordinator->AddSystemToTail( new ServerRemoveDeathEntitiesSystem() );
 	world.AddSystem( remove_dead_entities_system_coordinator );
-
-	// Add remote peer inputs storage
-	world.AddGlobalComponent< ServerRemotePeerInputsGlobalComponent >();
 
 	// TODO TEMP Remove later
 	Engine::ECS::SystemCoordinator* tempKillPlayerAfterSecondsSystemCoordinator =
