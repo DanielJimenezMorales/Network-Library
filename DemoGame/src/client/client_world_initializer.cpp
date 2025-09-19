@@ -52,6 +52,8 @@
 #include "client/systems/client_local_player_predictor_system.h"
 #include "client/systems/remote_player_controller_system.h"
 #include "client/systems/interpolated_player_objects updater_system.h"
+
+#include "client/client_network_entity_creator.h"
 //---
 
 #include "shared/InputActionIdsConfiguration.h"
@@ -66,7 +68,6 @@
 
 #include "shared/global_components/network_peer_global_component.h"
 
-#include "shared/network_entity_creator.h"
 #include "shared/json_configuration_loader.h"
 
 ClientWorldInitializer::ClientWorldInitializer()
@@ -185,16 +186,14 @@ static bool AddNetworkToWorld( Engine::ECS::World& world )
 	networkPeerComponent.peer = clientPeer;
 
 	// Create network entity creator system
-	NetworkEntityCreatorSystem* network_entity_creator = new NetworkEntityCreatorSystem();
-	network_entity_creator->SetScene( &world );
-	network_entity_creator->SetPeerType( clientPeer->GetPeerType() );
-	world.SubscribeToOnEntityConfigure( std::bind( &NetworkEntityCreatorSystem::OnNetworkEntityComponentConfigure,
-	                                               network_entity_creator, std::placeholders::_1,
+	ClientNetworkEntityCreator* networkEntityCreator = new ClientNetworkEntityCreator( &world );
+	world.SubscribeToOnEntityConfigure( std::bind( &ClientNetworkEntityCreator::OnNetworkEntityComponentConfigure,
+	                                               networkEntityCreator, std::placeholders::_1,
 	                                               std::placeholders::_2 ) );
-	clientPeer->SubscribeToOnNetworkEntityCreate( std::bind( &NetworkEntityCreatorSystem::OnNetworkEntityCreate,
-	                                                         network_entity_creator, std::placeholders::_1 ) );
-	clientPeer->SubscribeToOnNetworkEntityDestroy( std::bind( &NetworkEntityCreatorSystem::OnNetworkEntityDestroy,
-	                                                          network_entity_creator, std::placeholders::_1 ) );
+	clientPeer->SubscribeToOnNetworkEntityCreate(
+	    std::bind( &ClientNetworkEntityCreator::OnNetworkEntityCreate, networkEntityCreator, std::placeholders::_1 ) );
+	clientPeer->SubscribeToOnNetworkEntityDestroy(
+	    std::bind( &ClientNetworkEntityCreator::OnNetworkEntityDestroy, networkEntityCreator, std::placeholders::_1 ) );
 
 	// Pre tick network system
 	Engine::ECS::SystemCoordinator* preTickNetworkSystemCoordinator =

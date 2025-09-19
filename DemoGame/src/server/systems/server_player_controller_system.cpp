@@ -15,7 +15,6 @@
 
 #include "server/components/server_player_state_storage_component.h"
 #include "server/components/server_transform_history_component.h"
-#include "server/global_components/server_remote_peer_inputs_global_component.h"
 
 #include "shared/global_components/network_peer_global_component.h"
 
@@ -67,14 +66,6 @@ static void ApplyServerSidePlayerStateToPlayerEntity( Engine::ECS::GameEntity& p
 	serverTransformHistory.currentIndex = ( serverTransformHistory.currentIndex + 1 ) % MAX_HISTORY_BUFFER_SIZE;
 }
 
-static void UpdateLastInputSimulated( Engine::ECS::World& world, const InputState& input_state, uint32 remote_peer_id )
-{
-	ServerRemotePeerInputsGlobalComponent& remotePeerInputsComponent =
-	    world.GetGlobalComponent< ServerRemotePeerInputsGlobalComponent >();
-
-	remotePeerInputsComponent.remotePeerInputs[ remote_peer_id ].lastInputState = input_state;
-}
-
 void ServerPlayerControllerSystem::ExecutePlayerSimulation( Engine::ECS::World& world, Engine::ECS::GameEntity& entity,
                                                             const InputState& input_state, float32 elapsed_time,
                                                             uint32 remote_peer_id )
@@ -95,10 +86,6 @@ void ServerPlayerControllerSystem::ExecutePlayerSimulation( Engine::ECS::World& 
 
 	LOG_INFO( "bbbbbbbbbbbbbbbbbbbbbbbbb" );
 	ApplyServerSidePlayerStateToPlayerEntity( entity, input_state, resultPlayerState );
-
-	// Update last simulated state for remote peer. This is used to get the input state server time on the HitReg
-	// algorithm
-	UpdateLastInputSimulated( world, input_state, remote_peer_id );
 
 	// Fire simulation events
 	_playerStateSimulator.ProcessLastSimulationEvents( world, entity, &_eventsProcessor );

@@ -90,6 +90,18 @@ namespace NetLib
 		return true;
 	}
 
+	RemotePeerState Peer::GetRemotePeerState( uint32 remote_peer_id ) const
+	{
+		RemotePeerState result = RemotePeerState::Disconnected;
+		const RemotePeer* remotePeer = _remotePeersHandler.GetRemotePeerFromId( remote_peer_id );
+		if ( remotePeer != nullptr )
+		{
+			result = remotePeer->GeturrentState();
+		}
+
+		return result;
+	}
+
 	uint32 Peer::GetMetric( uint32 remote_peer_id, const std::string& metric_name, const std::string& value_type ) const
 	{
 		uint32 result = 0;
@@ -174,6 +186,7 @@ namespace NetLib
 	void Peer::ConnectRemotePeer( RemotePeer& remotePeer )
 	{
 		remotePeer.SetConnected();
+		InternalOnRemotePeerConnect( remotePeer );
 		ExecuteOnRemotePeerConnect( remotePeer.GetClientIndex() );
 	}
 
@@ -213,6 +226,7 @@ namespace NetLib
 			CreateDisconnectionPacket( remotePeer, reason );
 		}
 
+		InternalOnRemotePeerDisconnect( remotePeer );
 		const uint32 id = remotePeer.GetClientIndex();
 		bool removedSuccesfully = _remotePeersHandler.RemoveRemotePeer( id );
 		assert( removedSuccesfully );
