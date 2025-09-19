@@ -121,6 +121,15 @@ void ClientLocalPlayerPredictorSystem::Execute( Engine::ECS::World& world, float
 		return;
 	}
 
+	std::vector< Engine::ECS::GameEntity > localPredictedEntities =
+	    world.GetEntitiesOfType< ClientSidePredictionComponent >();
+
+	// Check if there's any entity that needs to be predicted
+	if ( localPredictedEntities.empty() )
+	{
+		return;
+	}
+
 	// Get the current network simulation tick
 	const uint32 currentTick = networkPeerComponent.peer->GetCurrentTick();
 
@@ -129,8 +138,6 @@ void ClientLocalPlayerPredictorSystem::Execute( Engine::ECS::World& world, float
 	SendInputsToServer( world, inputState );
 
 	// Predict the next simulation state based on the inputs for each predicted entity
-	std::vector< Engine::ECS::GameEntity > localPredictedEntities =
-	    world.GetEntitiesOfType< ClientSidePredictionComponent >();
 	for ( auto it = localPredictedEntities.begin(); it != localPredictedEntities.end(); ++it )
 	{
 		ExecuteLocalPrediction( *it, inputState, elapsed_time );

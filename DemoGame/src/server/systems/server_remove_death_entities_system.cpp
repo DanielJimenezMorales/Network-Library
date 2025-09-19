@@ -22,7 +22,11 @@ void ServerRemoveDeathEntitiesSystem::Execute( Engine::ECS::World& world, float3
 			if ( cit->HasComponent< NetworkEntityComponent >() )
 			{
 				const NetworkEntityComponent& networkEntityComponent = cit->GetComponent< NetworkEntityComponent >();
-				networkPeerComponent.GetPeerAsServer()->DestroyNetworkEntity( networkEntityComponent.networkEntityId );
+				NetLib::Server* server = networkPeerComponent.GetPeerAsServer();
+				server->DestroyNetworkEntity( networkEntityComponent.networkEntityId );
+				// TODO Move this to a player factory
+				server->DisableInputBufferForRemotePeer( networkEntityComponent.controlledByPeerId );
+				LOG_INFO( "Removing networked player entity." );
 
 				// Add player entity to dead entities to revive in order to create a new one soon.
 				// TODO This should not be hardcoded here. In general, the OnNetworkEntityCreate and destroy code is

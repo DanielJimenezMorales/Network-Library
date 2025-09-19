@@ -41,7 +41,6 @@
 #include "server/components/server_transform_history_component.h"
 
 #include "server/global_components/hit_registration_global_component.h"
-#include "server/global_components/server_remote_peer_inputs_global_component.h"
 #include "server/global_components/server_dead_players_to_revive_global_component.h"
 
 #include "server/systems/server_player_controller_system.h"
@@ -49,6 +48,8 @@
 #include "server/systems/server_hit_registration_system.h"
 #include "server/systems/server_remove_death_entities_system.h"
 #include "server/systems/server_revive_dead_players_system.h"
+
+#include "server/server_network_entity_creator.h"
 //---
 
 #include "shared/InputActionIdsConfiguration.h"
@@ -63,7 +64,6 @@
 
 #include "shared/global_components/network_peer_global_component.h"
 
-#include "shared/network_entity_creator.h"
 #include "shared/json_configuration_loader.h"
 
 #include <SDL.h>
@@ -158,16 +158,14 @@ static bool AddNetworkToWorld( Engine::ECS::World& world )
 	networkPeerComponent.peer = serverPeer;
 
 	// Create network entity creator system
-	NetworkEntityCreatorSystem* network_entity_creator = new NetworkEntityCreatorSystem();
-	network_entity_creator->SetScene( &world );
-	network_entity_creator->SetPeerType( serverPeer->GetPeerType() );
-	world.SubscribeToOnEntityConfigure( std::bind( &NetworkEntityCreatorSystem::OnNetworkEntityComponentConfigure,
-	                                               network_entity_creator, std::placeholders::_1,
+	ServerNetworkEntityCreator* networkEntityCreator = new ServerNetworkEntityCreator( &world );
+	world.SubscribeToOnEntityConfigure( std::bind( &ServerNetworkEntityCreator::OnNetworkEntityComponentConfigure,
+	                                               networkEntityCreator, std::placeholders::_1,
 	                                               std::placeholders::_2 ) );
-	serverPeer->SubscribeToOnNetworkEntityCreate( std::bind( &NetworkEntityCreatorSystem::OnNetworkEntityCreate,
-	                                                         network_entity_creator, std::placeholders::_1 ) );
-	serverPeer->SubscribeToOnNetworkEntityDestroy( std::bind( &NetworkEntityCreatorSystem::OnNetworkEntityDestroy,
-	                                                          network_entity_creator, std::placeholders::_1 ) );
+	serverPeer->SubscribeToOnNetworkEntityCreate(
+	    std::bind( &ServerNetworkEntityCreator::OnNetworkEntityCreate, networkEntityCreator, std::placeholders::_1 ) );
+	serverPeer->SubscribeToOnNetworkEntityDestroy(
+	    std::bind( &ServerNetworkEntityCreator::OnNetworkEntityDestroy, networkEntityCreator, std::placeholders::_1 ) );
 
 	// Register input state factory
 	InputStateFactory* inputStateFactory = new InputStateFactory();
@@ -243,9 +241,6 @@ static bool AddGameplayToWorld( Engine::ECS::World& world )
 	    new Engine::ECS::SystemCoordinator( Engine::ECS::ExecutionStage::TICK );
 	remove_dead_entities_system_coordinator->AddSystemToTail( new ServerRemoveDeathEntitiesSystem() );
 	world.AddSystem( remove_dead_entities_system_coordinator );
-
-	// Add remote peer inputs storage
-	world.AddGlobalComponent< ServerRemotePeerInputsGlobalComponent >();
 
 	// Add revive dead players
 	world.AddGlobalComponent< ServerDeadPlayersToReviveGlobalComponent >();

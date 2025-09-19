@@ -63,9 +63,24 @@ namespace NetLib
 		_inputsFactory = factory;
 	}
 
-	const IInputState* Server::GetInputFromRemotePeer( uint32 remotePeerId )
+	const IInputState* Server::GetInputFromRemotePeer( uint32 remote_peer_id )
 	{
-		return _remotePeerInputsHandler.GetNextInputFromRemotePeer( remotePeerId );
+		return _remotePeerInputsHandler.PopNextInputFromRemotePeer( remote_peer_id );
+	}
+
+	const IInputState* Server::GetLastInputPoppedFromRemotePeer( uint32 remote_peer_id ) const
+	{
+		return _remotePeerInputsHandler.GetLastInputPoppedFromRemotePeer( remote_peer_id );
+	}
+
+	bool Server::EnableInputBufferForRemotePeer( uint32 remote_peer_id )
+	{
+		return _remotePeerInputsHandler.EnableInputBuffer( remote_peer_id );
+	}
+
+	bool Server::DisableInputBufferForRemotePeer( uint32 remote_peer_id )
+	{
+		return _remotePeerInputsHandler.DisableInputBuffer( remote_peer_id );
 	}
 
 	Server::~Server()
@@ -331,12 +346,22 @@ namespace NetLib
 
 	void Server::ProcessInputs( const InputStateMessage& message, RemotePeer& remotePeer )
 	{
-		IInputState* inputState = _inputsFactory->Create();
-		assert( inputState != nullptr );
+		const bool areInputsEnabled =
+		    _remotePeerInputsHandler.GetInputsBufferAvailability( remotePeer.GetClientIndex() );
+		if ( areInputsEnabled )
+		{
+			IInputState* inputState = _inputsFactory->Create();
+			assert( inputState != nullptr );
 
-		Buffer buffer( message.data, message.dataSize );
-		inputState->Deserialize( buffer );
-		_remotePeerInputsHandler.AddInputState( inputState, remotePeer.GetClientIndex() );
+			Buffer buffer( message.data, message.dataSize );
+			inputState->Deserialize( buffer );
+			_remotePeerInputsHandler.AddInputState( inputState, remotePeer.GetClientIndex() );
+		}
+		else
+		{
+			LOG_INFO( "Server::%s, Inputs buffer for remote peer %u are disabled. Ignoring input...",
+			          THIS_FUNCTION_NAME, remotePeer.GetClientIndex() );
+		}
 	}
 
 	void Server::ProcessDisconnection( const DisconnectionMessage& message, RemotePeer& remotePeer )
@@ -407,5 +432,15 @@ namespace NetLib
 	bool Server::StopConcrete()
 	{
 		return true;
+	}
+
+	void Server::InternalOnRemotePeerConnect( RemotePeer& remote_peer )
+	{
+		_remotePeerInputsHandler.CreateInputsBuffer( remote_peer.GetClientIndex() );
+	}
+
+	void Server::InternalOnRemotePeerDisconnect( const RemotePeer& remote_peer )
+	{
+		_remotePeerInputsHandler.RemoveInputsBuffer( remote_peer.GetClientIndex() );
 	}
 } // namespace NetLib

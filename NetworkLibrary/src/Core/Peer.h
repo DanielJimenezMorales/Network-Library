@@ -73,6 +73,7 @@ namespace NetLib
 			bool Stop();
 
 			PeerConnectionState GetConnectionState() const { return _connectionState; }
+			RemotePeerState GetRemotePeerState( uint32 remote_peer_id ) const;
 
 			/// <summary>
 			/// Returns the type of this peer. It can be either a client or a server.
@@ -138,6 +139,13 @@ namespace NetLib
 			void RequestStop( bool shouldNotifyRemotePeers, ConnectionFailedReasonType reason );
 
 			// Delegates related
+
+			/// <summary>
+			/// Called during OnRemotePeerConnect. This function is used for events happening inside the network library
+			/// code. This function will be called before teh OnRemotePeerConnect Delegate
+			/// </summary>
+			virtual void InternalOnRemotePeerConnect( RemotePeer& remote_peer ) = 0;
+			virtual void InternalOnRemotePeerDisconnect( const RemotePeer& remote_peer ) = 0;
 			void ExecuteOnLocalPeerConnect();
 			void ExecuteOnLocalPeerDisconnect( ConnectionFailedReasonType reason );
 

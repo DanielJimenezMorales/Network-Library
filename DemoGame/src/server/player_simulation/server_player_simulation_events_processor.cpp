@@ -9,9 +9,10 @@
 
 #include "server/hit_reg/shot_entry.h"
 #include "server/global_components/hit_registration_global_component.h"
-#include "server/global_components/server_remote_peer_inputs_global_component.h"
 
 #include "shared/components/network_entity_component.h"
+#include "shared/global_components/network_peer_global_component.h"
+#include "shared/InputState.h"
 
 static void OnShotPerformed( Engine::ECS::World& world, const Engine::ECS::GameEntity& player_entity )
 {
@@ -22,13 +23,18 @@ static void OnShotPerformed( Engine::ECS::World& world, const Engine::ECS::GameE
 	shotEntry.shooterEntity = player_entity;
 	shotEntry.damage = 10; // TODO: Get the damage from the player entity or some configuration
 
-	const ServerRemotePeerInputsGlobalComponent& remotePeerInputsComponent =
-	    world.GetGlobalComponent< ServerRemotePeerInputsGlobalComponent >();
+	// Get the last input simulated
+	const NetworkPeerGlobalComponent& networkPeerGlobalComponent =
+	    world.GetGlobalComponent< NetworkPeerGlobalComponent >();
 	const NetworkEntityComponent& networkEntityComponent = player_entity.GetComponent< NetworkEntityComponent >();
 
-	const RemotePeerInputsStorage& inputsStorage =
-	    remotePeerInputsComponent.remotePeerInputs.at( networkEntityComponent.controlledByPeerId );
-	shotEntry.serverTime = inputsStorage.lastInputState.serverTime;
+	const NetLib::Server* server = networkPeerGlobalComponent.GetPeerAsServer();
+	const NetLib::IInputState* baseLastInputState =
+	    server->GetLastInputPoppedFromRemotePeer( networkEntityComponent.controlledByPeerId );
+	assert( baseLastInputState != nullptr );
+
+	const InputState* lastInputState = static_cast< const InputState* >( baseLastInputState );
+	shotEntry.serverTime = lastInputState->serverTime;
 
 	HitRegistrationGlobalComponent& hitRegGlobalComponent =
 	    world.GetGlobalComponent< HitRegistrationGlobalComponent >();
