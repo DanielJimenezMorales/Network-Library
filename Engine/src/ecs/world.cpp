@@ -214,9 +214,31 @@ namespace Engine
 				_entitiesToRemoveRequests.pop();
 
 				GameEntity entity = _entityContainer.GetEntityFromId( entity_id );
-				_onEntityDestroy.Execute( entity );
-				_entityContainer.DestroyGameEntity( entity_id );
+				DestroyInmediateGameEntity( entity );
 			}
 		}
+
+		void World::DestroyInmediateGameEntity( ECS::GameEntity& entity )
+		{
+			// Destroy children entities first
+			TransformComponentProxy entityTransform( entity );
+			if ( entityTransform.HasChildren() )
+			{
+				std::vector< ECS::GameEntity >& children = entityTransform.GetChildren();
+				auto it = children.begin();
+				for ( ; it != children.end(); ++it )
+				{
+					DestroyInmediateGameEntity( *it );
+				}
+			}
+
+			// In the really rare case where there could be a weird situation where the children of any child entity is
+			// this entity (Cyclic). In that case the issue is within the transform component proxy
+			assert( entity.IsValid() );
+
+			_onEntityDestroy.Execute( entity );
+			_entityContainer.DestroyGameEntity( entity.GetId() );
+		}
+
 	} // namespace ECS
 } // namespace Engine

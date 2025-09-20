@@ -40,6 +40,9 @@ namespace Engine
 			// Parent-Child relationships
 			void RemoveParent();
 			void SetParent( ECS::GameEntity& parent_entity );
+			bool HasChildren() const;
+			const std::vector< ECS::GameEntity >& GetChildren() const;
+			std::vector< ECS::GameEntity > GetChildren();
 
 		private:
 			ECS::GameEntity _entity;

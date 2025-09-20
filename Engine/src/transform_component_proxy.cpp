@@ -126,7 +126,7 @@ namespace Engine
 		}
 	}
 
-	void Engine::TransformComponentProxy::SetParent( ECS::GameEntity& parent_entity )
+	void TransformComponentProxy::SetParent( ECS::GameEntity& parent_entity )
 	{
 		if ( _transformComponent->_parent.IsValid() )
 		{
@@ -139,5 +139,20 @@ namespace Engine
 
 		// Set parent as current parent
 		_transformComponent->_parent = parent_entity;
+	}
+
+	bool TransformComponentProxy::HasChildren() const
+	{
+		return !_transformComponent->_children.empty();
+	}
+
+	const std::vector< ECS::GameEntity >& TransformComponentProxy::GetChildren() const
+	{
+		return _transformComponent->_children;
+	}
+
+	std::vector< ECS::GameEntity > TransformComponentProxy::GetChildren()
+	{
+		return _transformComponent->_children;
 	}
 } // namespace Engine
