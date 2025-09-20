@@ -37,6 +37,10 @@ namespace Engine
 			Vec2f GetGlobalScale();
 			void SetGlobalScale( const Vec2f& new_scale );
 
+			// Parent-Child relationships
+			void RemoveParent();
+			void SetParent( ECS::GameEntity& parent_entity );
+
 		private:
 			ECS::GameEntity _entity;
 			TransformComponent* _transformComponent;

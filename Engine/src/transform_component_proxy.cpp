@@ -102,4 +102,42 @@ namespace Engine
 	{
 		_transformComponent->_scale = new_scale;
 	}
+
+	void TransformComponentProxy::RemoveParent()
+	{
+		if ( _transformComponent->_parent.IsValid() )
+		{
+			// Remove child from parent
+			TransformComponent& parentTransform = _transformComponent->_parent.GetComponent< TransformComponent >();
+			auto cit = parentTransform._children.cbegin();
+			for ( ; cit != parentTransform._children.cend(); ++cit )
+			{
+				if ( *cit == _entity )
+				{
+					break;
+				}
+			}
+
+			assert( cit != parentTransform._children.cend() );
+			parentTransform._children.erase( cit );
+
+			// Remove parent from current
+			_transformComponent->_parent = ECS::GameEntity();
+		}
+	}
+
+	void Engine::TransformComponentProxy::SetParent( ECS::GameEntity& parent_entity )
+	{
+		if ( _transformComponent->_parent.IsValid() )
+		{
+			RemoveParent();
+		}
+
+		// Set current as child parent
+		TransformComponent& parentTransform = parent_entity.GetComponent< TransformComponent >();
+		parentTransform._children.push_back( _entity );
+
+		// Set parent as current parent
+		_transformComponent->_parent = parent_entity;
+	}
 } // namespace Engine

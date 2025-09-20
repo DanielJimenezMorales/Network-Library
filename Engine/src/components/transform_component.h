@@ -1,6 +1,8 @@
 #pragma once
 #include "vec2f.h"
 
+#include "ecs/game_entity.hpp"
+
 #include <vector>
 
 namespace Engine
@@ -20,6 +22,8 @@ namespace Engine
 			    : _position( Vec2f( 0.f, 0.f ) )
 			    , _rotationAngle( 0.f )
 			    , _scale( Vec2f( 1.f, 1.f ) )
+			    , _parent()
+			    , _children()
 			{
 			}
 
@@ -27,6 +31,8 @@ namespace Engine
 			    : _position( Vec2f( x, y ) )
 			    , _rotationAngle( 0.f )
 			    , _scale( Vec2f( 1.f, 1.f ) )
+			    , _parent()
+			    , _children()
 			{
 			}
 
@@ -34,6 +40,8 @@ namespace Engine
 			    : _position( position )
 			    , _rotationAngle( rotation )
 			    , _scale( Vec2f( 1.f, 1.f ) )
+			    , _parent()
+			    , _children()
 			{
 			}
 
@@ -44,6 +52,9 @@ namespace Engine
 			Vec2f _position;
 			float32 _rotationAngle;
 			Vec2f _scale;
+
+			ECS::GameEntity _parent;
+			std::vector< ECS::GameEntity > _children;
 
 			static constexpr Vec2f DEFAULT_FORWARD_VECTOR = Vec2f( 0.f, -1.f );
 

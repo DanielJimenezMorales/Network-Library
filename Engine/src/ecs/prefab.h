@@ -1,6 +1,7 @@
 #pragma once
 #include <string>
 #include <unordered_map>
+#include <vector>
 
 #include "ecs/component_configuration.h"
 
@@ -23,6 +24,7 @@ namespace Engine
 				std::string name;
 				std::string archetype;
 				std::unordered_map< std::string, ComponentConfiguration* > componentConfigurations;
+				std::vector< std::string > childrenPrefabNames;
 
 			private:
 				void Free();

@@ -152,26 +152,40 @@ namespace Engine
 			}
 
 			// Create entity
-			GameEntity new_entity = _entityContainer.CreateGameEntity();
+			GameEntity newEntity = _entityContainer.CreateGameEntity();
 
 			// Attach components
-			if ( !AddComponentsToEntity( archetype, new_entity ) )
+			if ( !AddComponentsToEntity( archetype, newEntity ) )
 			{
 				// If components creation failed, we destroy the entity
-				_entityContainer.DestroyGameEntity( new_entity.GetId() );
+				_entityContainer.DestroyGameEntity( newEntity.GetId() );
 				return GameEntity();
 			}
 
-			TransformComponentProxy newEntityTransform( new_entity );
+			TransformComponentProxy newEntityTransform( newEntity );
 			newEntityTransform.SetGlobalPosition( position );
 			newEntityTransform.SetRotationLookAt( look_at_direction );
 
+			// Spawn children entitities, if any
+			if ( !prefab->childrenPrefabNames.empty() )
+			{
+				auto childrenPrefabNamesCit = prefab->childrenPrefabNames.cbegin();
+				for ( ; childrenPrefabNamesCit != prefab->childrenPrefabNames.cend(); ++childrenPrefabNamesCit )
+				{
+					assert( prefab_name != *childrenPrefabNamesCit );
+
+					GameEntity childEntity = CreateGameEntity( *childrenPrefabNamesCit, Vec2f( 0.f, 0.f ) );
+					TransformComponentProxy childEntityTransform( childEntity );
+					childEntityTransform.SetParent( newEntity );
+				}
+			}
+
 			// Configure components
-			_onEntityConfigure.Execute( new_entity, *prefab );
+			_onEntityConfigure.Execute( newEntity, *prefab );
 
 			// Call OnEntityCreate
-			_onEntityCreate.Execute( new_entity );
-			return new_entity;
+			_onEntityCreate.Execute( newEntity );
+			return newEntity;
 		}
 
 		bool World::AddComponentsToEntity( const Archetype& archetype, GameEntity& entity )

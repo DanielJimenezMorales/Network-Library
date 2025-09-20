@@ -11,11 +11,11 @@
 			"name": "Collider2D",
 			"collision_response_type": "Static",
 			"is_trigger": false,
-			"bounds_config":
-			{
-				"type":"Circle",
-				"radius":5
+			"bounds_config": {
+				"type": "Circle",
+				"radius": 5
 			}
 		}
-	]
+	],
+	"children_prefab_names": [ "Weapon" ]
 }

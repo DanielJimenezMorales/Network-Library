@@ -8,12 +8,14 @@ namespace Engine
 		    : name()
 		    , archetype()
 		    , componentConfigurations()
+		    , childrenPrefabNames()
 		{
 		}
 
 		Prefab::Prefab( const Prefab& other )
 		    : name( other.name )
 		    , archetype( other.archetype )
+		    , childrenPrefabNames( other.childrenPrefabNames )
 		    , componentConfigurations()
 		{
 			CopyComponents( other.componentConfigurations );

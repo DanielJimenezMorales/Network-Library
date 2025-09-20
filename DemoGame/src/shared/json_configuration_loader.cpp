@@ -170,6 +170,11 @@ bool JsonConfigurationLoader::LoadPrefabs( std::vector< Engine::ECS::Prefab >& o
 			}
 		}
 
+		if ( data.contains( "children_prefab_names" ) )
+		{
+			prefab.childrenPrefabNames = std::move( data[ "children_prefab_names" ] );
+		}
+
 		out_prefabs.push_back( std::move( prefab ) );
 	}
 
