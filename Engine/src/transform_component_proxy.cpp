@@ -123,6 +123,8 @@ namespace Engine
 
 			// Remove parent from current
 			_transformComponent->_parent = ECS::GameEntity();
+
+			_transformComponent->_isDirty = true;
 		}
 	}
 
@@ -139,6 +141,8 @@ namespace Engine
 
 		// Set parent as current parent
 		_transformComponent->_parent = parent_entity;
+
+		_transformComponent->_isDirty = true;
 	}
 
 	bool TransformComponentProxy::HasChildren() const

@@ -32,9 +32,12 @@ For exampple, the following code snippet represents the archetype of a wall, whi
 Prefabs represents a specific configuration for the components of an archetype. As with archetypes, the engine will also use a JSON loader to load them from `.../NetworkLibrary/DemoGame/config_files/entity_prefabs`.
 
 A prefab have the following fields:
-- Name: A unique string-based name to identify the prefab.
-- Archetype: The archetype name the prefab is associated with.
-- Component configs: An array of component configurations for the different components of the archetype.
+|**Name**|**Type**|**Required**|**Description**|
+|---|---|---|---|
+|name|String|Yes|The unique name of the prefab|
+|archetype_name|String|Yes|The archetype name the prefab is associated with|
+|component_configs|Objects Array|No|The configurations for the different components defined in the archetype. Component configurations are never mandatory and will be defaulted if there is not one defined here|
+|children_prefab_names|Strings Array|No|The children prefab names that the prefab is parent of. During the prefab instantiation, all children prefabs will be created along with the parent prefab|
 
 For exampple, the following code snippet represents the archetype of a wall, which contains three components:
 ```json
