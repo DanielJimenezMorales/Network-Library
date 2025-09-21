@@ -35,7 +35,7 @@ A prefab have the following fields:
 |**Name**|**Type**|**Required**|**Description**|
 |---|---|---|---|
 |name|String|Yes|The unique name of the prefab|
-|archetype_name|String|Yes|The archetype name the prefab is associated with|
+|archetype|String|Yes|The archetype name the prefab is associated with|
 |component_configs|Objects Array|No|The configurations for the different components defined in the archetype. Component configurations are never mandatory and will be defaulted if there is not one defined here|
 |children_prefab_names|Strings Array|No|The children prefab names that the prefab is parent of. During the prefab instantiation, all children prefabs will be created along with the parent prefab|
 

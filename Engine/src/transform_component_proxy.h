@@ -31,7 +31,7 @@ namespace Engine
 			void SetGlobalRotationAngle( float32 new_angle );
 			void SetRotationLookAt( Vec2f look_at_direction );
 			void LookAt( const Vec2f& position );
-			Vec2f GetForwardVector() const;
+			Vec2f GetForwardVector();
 
 			// Scale
 			Vec2f GetGlobalScale();
@@ -45,6 +45,9 @@ namespace Engine
 			std::vector< ECS::GameEntity > GetChildren();
 
 		private:
+			void SetChildrenDirty();
+			void ResolveDirty();
+
 			ECS::GameEntity _entity;
 			TransformComponent* _transformComponent;
 	};
