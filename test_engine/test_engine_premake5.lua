@@ -24,7 +24,8 @@ project (project_data.NAME)
 		engine_project_data.PATH .. "src",
 
 		ROOT_PATH "vendor/googletest/googletest/include",
-		ROOT_PATH "vendor/googletest/googletest"
+		ROOT_PATH "vendor/googletest/googletest",
+		ROOT_PATH "vendor/entt/include"
 	}
 
 	libdirs

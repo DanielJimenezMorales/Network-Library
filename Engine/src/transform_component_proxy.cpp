@@ -188,6 +188,11 @@ namespace Engine
 		_transformComponent->_isDirty = parentTransform._isDirty;
 	}
 
+	bool TransformComponentProxy::HasParent() const
+	{
+		return _transformComponent->_parent.IsValid();
+	}
+
 	bool TransformComponentProxy::HasChildren() const
 	{
 		return !_transformComponent->_children.empty();
