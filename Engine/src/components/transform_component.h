@@ -22,6 +22,9 @@ namespace Engine
 			    : _position( Vec2f( 0.f, 0.f ) )
 			    , _rotationAngle( 0.f )
 			    , _scale( Vec2f( 1.f, 1.f ) )
+			    , _localPosition( Vec2f( 0.f, 0.f ) )
+			    , _localRotationAngle( 0.f )
+			    , _localScale( Vec2f( 1.f, 1.f ) )
 			    , _isDirty( false )
 			    , _parent()
 			    , _children()
@@ -32,6 +35,9 @@ namespace Engine
 			    : _position( Vec2f( x, y ) )
 			    , _rotationAngle( 0.f )
 			    , _scale( Vec2f( 1.f, 1.f ) )
+			    , _localPosition( Vec2f( 0.f, 0.f ) )
+			    , _localRotationAngle( 0.f )
+			    , _localScale( Vec2f( 1.f, 1.f ) )
 			    , _isDirty( false )
 			    , _parent()
 			    , _children()
@@ -42,6 +48,9 @@ namespace Engine
 			    : _position( position )
 			    , _rotationAngle( rotation )
 			    , _scale( Vec2f( 1.f, 1.f ) )
+			    , _localPosition( Vec2f( 0.f, 0.f ) )
+			    , _localRotationAngle( 0.f )
+			    , _localScale( Vec2f( 1.f, 1.f ) )
 			    , _isDirty( false )
 			    , _parent()
 			    , _children()
@@ -55,6 +64,10 @@ namespace Engine
 			Vec2f _position;
 			float32 _rotationAngle;
 			Vec2f _scale;
+
+			Vec2f _localPosition;
+			float32 _localRotationAngle;
+			Vec2f _localScale;
 
 			bool _isDirty;
 

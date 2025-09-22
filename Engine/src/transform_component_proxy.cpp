@@ -38,6 +38,18 @@ namespace Engine
 		SetChildrenDirty();
 	}
 
+	Vec2f TransformComponentProxy::GetLocalPosition()
+	{
+		return _transformComponent->_localPosition;
+	}
+
+	void TransformComponentProxy::SetLocalPosition( const Vec2f& new_local_position )
+	{
+		_transformComponent->_localPosition = new_local_position;
+		_transformComponent->_isDirty = true;
+		SetChildrenDirty();
+	}
+
 	float32 TransformComponentProxy::GetGlobalRotation()
 	{
 		if ( _transformComponent->_isDirty )
@@ -61,6 +73,23 @@ namespace Engine
 			_transformComponent->_rotationAngle += 360.f; // Ensure the angle is always positive
 		}
 
+		SetChildrenDirty();
+	}
+
+	float32 TransformComponentProxy::GetLocalRotationAngle()
+	{
+		return _transformComponent->_localRotationAngle;
+	}
+
+	void TransformComponentProxy::SetLocalRotationAngle( float32 new_local_angle )
+	{
+		_transformComponent->_rotationAngle = std::fmodf( new_local_angle, 360.0f );
+		if ( _transformComponent->_rotationAngle < 0.f )
+		{
+			_transformComponent->_rotationAngle += 360.f; // Ensure the angle is always positive
+		}
+
+		_transformComponent->_isDirty = true;
 		SetChildrenDirty();
 	}
 
@@ -138,6 +167,18 @@ namespace Engine
 		SetChildrenDirty();
 	}
 
+	Vec2f TransformComponentProxy::GetLocalScale()
+	{
+		return _transformComponent->_localScale;
+	}
+
+	void TransformComponentProxy::SetLocalScale( const Vec2f& new_local_scale )
+	{
+		_transformComponent->_localScale = new_local_scale;
+		_transformComponent->_isDirty = true;
+		SetChildrenDirty();
+	}
+
 	void TransformComponentProxy::RemoveParent()
 	{
 		if ( _transformComponent->_parent.IsValid() )
@@ -158,6 +199,11 @@ namespace Engine
 
 			// Remove parent from current
 			_transformComponent->_parent = ECS::GameEntity();
+
+			// Reset local transform to default values
+			_transformComponent->_localPosition = Vec2f( 0.f, 0.f );
+			_transformComponent->_localRotationAngle = 0.f;
+			_transformComponent->_localScale = Vec2f( 1.f, 1.f );
 
 			_transformComponent->_isDirty = false;
 		}
@@ -184,8 +230,14 @@ namespace Engine
 		// Set parent as current parent
 		_transformComponent->_parent = parent_entity;
 
-		// If parent is dirty, then child must be dirty too
-		_transformComponent->_isDirty = parentTransform._isDirty;
+		// If parent is dirty, resolve it
+		TransformComponentProxy parentTransformProxy( parent_entity );
+		parentTransformProxy.ResolveDirty();
+
+		// Calculate local transform based on current global transform and parent's global transform
+		_transformComponent->_localPosition = GetGlobalPosition() - parentTransformProxy.GetGlobalPosition();
+		_transformComponent->_localRotationAngle = GetGlobalRotation() - parentTransformProxy.GetGlobalRotation();
+		_transformComponent->_localScale = GetGlobalScale() - parentTransformProxy.GetGlobalScale();
 	}
 
 	bool TransformComponentProxy::HasParent() const
@@ -225,6 +277,27 @@ namespace Engine
 
 	void TransformComponentProxy::ResolveDirty()
 	{
-		// TODO
+		if ( !_transformComponent->_isDirty || !HasParent() )
+		{
+			return;
+		}
+
+		// Resolve parent's dirty state first
+		TransformComponentProxy parentTransformProxy( _transformComponent->_parent );
+		if ( parentTransformProxy.IsDirty() )
+		{
+			parentTransformProxy.ResolveDirty();
+		}
+
+		// Recalculate global transform based on local transform and parent's global transform
+		_transformComponent->_position = parentTransformProxy.GetGlobalPosition() + GetLocalPosition();
+		_transformComponent->_rotationAngle = parentTransformProxy.GetGlobalRotation() + GetLocalRotationAngle();
+		_transformComponent->_scale = parentTransformProxy.GetGlobalScale() + GetLocalScale();
+		_transformComponent->_isDirty = false;
+	}
+
+	bool TransformComponentProxy::IsDirty() const
+	{
+		return _transformComponent->_isDirty;
 	}
 } // namespace Engine

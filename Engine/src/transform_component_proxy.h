@@ -25,10 +25,14 @@ namespace Engine
 			// Position
 			Vec2f GetGlobalPosition();
 			void SetGlobalPosition( const Vec2f& new_position );
+			Vec2f GetLocalPosition();
+			void SetLocalPosition( const Vec2f& new_local_position );
 
 			// Rotation
 			float32 GetGlobalRotation();
 			void SetGlobalRotationAngle( float32 new_angle );
+			float32 GetLocalRotationAngle();
+			void SetLocalRotationAngle( float32 new_local_angle );
 			void SetRotationLookAt( Vec2f look_at_direction );
 			void LookAt( const Vec2f& position );
 			Vec2f GetForwardVector();
@@ -36,6 +40,8 @@ namespace Engine
 			// Scale
 			Vec2f GetGlobalScale();
 			void SetGlobalScale( const Vec2f& new_scale );
+			Vec2f GetLocalScale();
+			void SetLocalScale( const Vec2f& new_local_scale );
 
 			// Parent-Child relationships
 			void RemoveParent();
@@ -48,6 +54,7 @@ namespace Engine
 		private:
 			void SetChildrenDirty();
 			void ResolveDirty();
+			bool IsDirty() const;
 
 			ECS::GameEntity _entity;
 			TransformComponent* _transformComponent;
