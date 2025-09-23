@@ -23,7 +23,6 @@ namespace Engine
 			ResolveDirty();
 		}
 
-		_transformComponent->_isDirty = true;
 		return _transformComponent->_position;
 	}
 
@@ -237,6 +236,8 @@ namespace Engine
 		// Calculate local transform based on current global transform and parent's global transform
 		_transformComponent->_localPosition = GetGlobalPosition() - parentTransformProxy.GetGlobalPosition();
 		_transformComponent->_localRotationAngle = GetGlobalRotation() - parentTransformProxy.GetGlobalRotation();
+		Vec2f thisScale = GetGlobalScale();
+		Vec2f parentScale = parentTransformProxy.GetGlobalScale();
 		_transformComponent->_localScale = GetGlobalScale() - parentTransformProxy.GetGlobalScale();
 	}
 

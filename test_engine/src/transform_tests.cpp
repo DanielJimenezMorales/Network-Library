@@ -143,6 +143,7 @@ namespace
 		world.RegisterPrefab( std::move( parentPrefab ) );
 	}
 
+	// An entity with a parent has its parent removed. We check that the parent-child relationship is correctly removed.
 	TEST( TransformParentTests, RemoveParent )
 	{
 		Engine::ECS::World world;
@@ -184,6 +185,8 @@ namespace
 		EXPECT_FALSE( parentTransformProxy.HasChildren() );
 	}
 
+	// An entity with no parent is set as child of another entity. We check that the parent-child relationship is
+	// correctly set.
 	TEST( TransformParentTests, HavingNoParentSetParent )
 	{
 		Engine::ECS::World world;
@@ -211,6 +214,8 @@ namespace
 		EXPECT_TRUE( parentTransformProxy.HasChildren() );
 	}
 
+	// An entity with a parent is set as child of another entity. We check that the parent-child relationship is
+	// correctly set.
 	TEST( TransformParentTests, HavingParentSetOtherParent )
 	{
 		Engine::ECS::World world;
@@ -268,6 +273,7 @@ namespace
 		EXPECT_TRUE( otherParentTransformProxy.HasChildren() );
 	}
 
+	// When moving a parent entity we check it also moves its child entity accordingly.
 	TEST( TransformParentTests, MovingParentCheckIfChildHasAlsoMoved )
 	{
 		const Vec2f parentInitialPosition( 0.f, 0.f );
@@ -292,6 +298,47 @@ namespace
 
 		EXPECT_NEAR( childTransformProxy.GetGlobalPosition().X(), childResultedPosition.X(), EPSILON );
 		EXPECT_NEAR( childTransformProxy.GetGlobalPosition().Y(), childResultedPosition.Y(), EPSILON );
+	}
+
+	// An entity with a parent is set as child of another entity. We check that the local transform is set accordingly
+	TEST( TransformParentTests, SettingParentCheckLocalTransformFromChild )
+	{
+		const Vec2f parentInitialPosition( 0.f, 0.f );
+		const Vec2f childInitialPosition( 5.f, 5.f );
+		const Vec2f resultedLocalPosition = childInitialPosition - parentInitialPosition;
+
+		const float32 parentInitialRotationAngle = 0.f;
+		const float32 childInitialRotationAngle = 90.f;
+		const float32 resultedLocalRotationAngle = childInitialRotationAngle - parentInitialRotationAngle;
+
+		const Vec2f parentInitialScale( 1.f, 1.f );
+		const Vec2f childInitialScale( 5.f, 5.f );
+		const Vec2f resultedLocalScale = childInitialScale - parentInitialScale;
+		Engine::ECS::World world;
+
+		// Load world with nested prefab
+		LoadNestedTransformOnlyPrefabIntoWorld( world );
+
+		// Create entities
+		Engine::ECS::GameEntity parent = world.CreateGameEntity( "TransformOnlyChild", parentInitialPosition );
+		Engine::ECS::GameEntity child = world.CreateGameEntity( "TransformOnlyChild", childInitialPosition );
+
+		Engine::TransformComponentProxy parentTransformProxy( parent );
+		parentTransformProxy.SetGlobalRotationAngle( parentInitialRotationAngle );
+		parentTransformProxy.SetGlobalScale( parentInitialScale );
+
+		Engine::TransformComponentProxy childTransformProxy( child );
+		childTransformProxy.SetGlobalRotationAngle( childInitialRotationAngle );
+		childTransformProxy.SetGlobalScale( childInitialScale );
+
+		// Set parent
+		childTransformProxy.SetParent( parent );
+
+		EXPECT_NEAR( childTransformProxy.GetLocalPosition().X(), resultedLocalPosition.X(), EPSILON );
+		EXPECT_NEAR( childTransformProxy.GetLocalPosition().Y(), resultedLocalPosition.Y(), EPSILON );
+		EXPECT_NEAR( childTransformProxy.GetLocalRotationAngle(), resultedLocalRotationAngle, EPSILON );
+		EXPECT_NEAR( childTransformProxy.GetLocalScale().X(), resultedLocalScale.X(), EPSILON );
+		EXPECT_NEAR( childTransformProxy.GetLocalScale().Y(), resultedLocalScale.Y(), EPSILON );
 	}
 
 	INSTANTIATE_TEST_SUITE_P( SetRotationLookAt, RotationAngleAndDirectionParams,
