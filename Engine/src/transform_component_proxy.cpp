@@ -39,13 +39,31 @@ namespace Engine
 
 	Vec2f TransformComponentProxy::GetLocalPosition()
 	{
-		return _transformComponent->_localPosition;
+		Vec2f result;
+		if ( HasParent() )
+		{
+			result = _transformComponent->_localPosition;
+		}
+		else
+		{
+			result = _transformComponent->_position;
+		}
+
+		return result;
 	}
 
 	void TransformComponentProxy::SetLocalPosition( const Vec2f& new_local_position )
 	{
-		_transformComponent->_localPosition = new_local_position;
-		_transformComponent->_isDirty = true;
+		if ( HasParent() )
+		{
+			_transformComponent->_localPosition = new_local_position;
+			_transformComponent->_isDirty = true;
+		}
+		else
+		{
+			_transformComponent->_position = new_local_position;
+		}
+
 		SetChildrenDirty();
 	}
 
@@ -77,18 +95,40 @@ namespace Engine
 
 	float32 TransformComponentProxy::GetLocalRotationAngle()
 	{
-		return _transformComponent->_localRotationAngle;
+		float32 result;
+		if ( HasParent() )
+		{
+			result = _transformComponent->_localRotationAngle;
+		}
+		else
+		{
+			result = _transformComponent->_rotationAngle;
+		}
+
+		return result;
 	}
 
 	void TransformComponentProxy::SetLocalRotationAngle( float32 new_local_angle )
 	{
-		_transformComponent->_rotationAngle = std::fmodf( new_local_angle, 360.0f );
-		if ( _transformComponent->_rotationAngle < 0.f )
+		if (HasParent())
 		{
-			_transformComponent->_rotationAngle += 360.f; // Ensure the angle is always positive
+			_transformComponent->_localRotationAngle = std::fmodf(new_local_angle, 360.0f);
+			if (_transformComponent->_localRotationAngle < 0.f)
+			{
+				_transformComponent->_localRotationAngle += 360.f; // Ensure the angle is always positive
+			}
+
+			_transformComponent->_isDirty = true;
+		}
+		else
+		{
+			_transformComponent->_rotationAngle = std::fmodf(new_local_angle, 360.0f);
+			if (_transformComponent->_rotationAngle < 0.f)
+			{
+				_transformComponent->_rotationAngle += 360.f; // Ensure the angle is always positive
+			}
 		}
 
-		_transformComponent->_isDirty = true;
 		SetChildrenDirty();
 	}
 
@@ -168,13 +208,31 @@ namespace Engine
 
 	Vec2f TransformComponentProxy::GetLocalScale()
 	{
-		return _transformComponent->_localScale;
+		Vec2f result;
+		if ( HasParent() )
+		{
+			result = _transformComponent->_localScale;
+		}
+		else
+		{
+			result = _transformComponent->_scale;
+		}
+
+		return result;
 	}
 
 	void TransformComponentProxy::SetLocalScale( const Vec2f& new_local_scale )
 	{
-		_transformComponent->_localScale = new_local_scale;
-		_transformComponent->_isDirty = true;
+		if ( HasParent() )
+		{
+			_transformComponent->_localPosition = new_local_scale;
+			_transformComponent->_isDirty = true;
+		}
+		else
+		{
+			_transformComponent->_position = new_local_scale;
+		}
+
 		SetChildrenDirty();
 	}
 
@@ -182,6 +240,8 @@ namespace Engine
 	{
 		if ( _transformComponent->_parent.IsValid() )
 		{
+			ResolveDirty();
+
 			// Remove child from parent
 			TransformComponent& parentTransform = _transformComponent->_parent.GetComponent< TransformComponent >();
 			auto cit = parentTransform._children.cbegin();

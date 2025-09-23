@@ -341,6 +341,113 @@ namespace
 		EXPECT_NEAR( childTransformProxy.GetLocalScale().Y(), resultedLocalScale.Y(), EPSILON );
 	}
 
+	// An entity with a parent has its parent removed. We check that the child has his local transform equal to his
+	// global transform.
+	TEST( TransformParentTests, RemovingParentCheckLocalTransformFromChildIsEqualToGlobalTransform )
+	{
+		const Vec2f parentPosition( 0.f, 0.f );
+		const Vec2f childPosition( 10.f, 10.f );
+		const float32 childRotationAngle = 90.f;
+		const Vec2f childScale( 2.f, 2.f );
+		Engine::ECS::World world;
+
+		// Load world with nested prefab
+		LoadNestedTransformOnlyPrefabIntoWorld( world );
+
+		// Create entities
+		Engine::ECS::GameEntity parent = world.CreateGameEntity( "TransformOnlyParent", parentPosition );
+
+		Engine::TransformComponentProxy parentTransformProxy( parent );
+		auto children = parentTransformProxy.GetChildren();
+		assert( children.size() == 1 );
+
+		Engine::ECS::GameEntity child = children[ 0 ];
+		Engine::TransformComponentProxy childTransformProxy( child );
+		childTransformProxy.SetLocalPosition( childPosition );
+		childTransformProxy.SetLocalRotationAngle( childRotationAngle );
+		childTransformProxy.SetLocalScale( childScale );
+
+		childTransformProxy.RemoveParent();
+
+		EXPECT_NEAR( childTransformProxy.GetLocalPosition().X(), childTransformProxy.GetGlobalPosition().X(), EPSILON );
+		EXPECT_NEAR( childTransformProxy.GetLocalPosition().Y(), childTransformProxy.GetGlobalPosition().Y(), EPSILON );
+		EXPECT_NEAR( childTransformProxy.GetLocalRotationAngle(), childTransformProxy.GetGlobalRotation(), EPSILON );
+		EXPECT_NEAR( childTransformProxy.GetLocalScale().X(), childTransformProxy.GetGlobalScale().X(), EPSILON );
+		EXPECT_NEAR( childTransformProxy.GetLocalScale().Y(), childTransformProxy.GetGlobalScale().Y(), EPSILON );
+	}
+
+	// A parent entity gets destroyed. We check that the child entity is also destroyed.
+	TEST( TransformParentTests, DestroyParentCheckChildIsAlsoDestroyed )
+	{
+		const Vec2f parentPosition( 0.f, 0.f );
+		const Vec2f childPosition( 10.f, 10.f );
+		Engine::ECS::World world;
+
+		// Load world with nested prefab
+		LoadNestedTransformOnlyPrefabIntoWorld( world );
+
+		// Create entity
+		Engine::ECS::GameEntity parent = world.CreateGameEntity( "TransformOnlyParent", parentPosition );
+
+		// Destroy entity
+		world.DestroyGameEntity( parent );
+		world.EndOfFrame(); // To process the destroy request
+
+		EXPECT_TRUE( world.GetEntitiesOfType< Engine::TransformComponent >().empty() );
+	}
+
+	// A entity with a parent gets its local position updated. We check that the entity's local and global position is
+	// updated.
+	TEST( TransformParentTests, ChildWithParentSetLocalPositionCheckItAlsoUpdatesGlobalPosition )
+	{
+		const Vec2f parentInitialPosition( 1.f, 1.f );
+		const Vec2f childNewLocalPosition( 10.f, 10.f );
+		const Vec2f childFinalGlobalPosition = parentInitialPosition + childNewLocalPosition;
+		Engine::ECS::World world;
+
+		// Load world with nested prefab
+		LoadNestedTransformOnlyPrefabIntoWorld( world );
+
+		// Create entity
+		Engine::ECS::GameEntity parent = world.CreateGameEntity( "TransformOnlyChild", parentInitialPosition );
+		Engine::ECS::GameEntity child = world.CreateGameEntity( "TransformOnlyChild", parentInitialPosition );
+
+		Engine::TransformComponentProxy childTransformProxy( child );
+		childTransformProxy.SetParent( parent );
+
+		// Update local position
+		childTransformProxy.SetLocalPosition( childNewLocalPosition );
+
+		EXPECT_NEAR( childTransformProxy.GetLocalPosition().X(), childNewLocalPosition.X(), EPSILON );
+		EXPECT_NEAR( childTransformProxy.GetLocalPosition().Y(), childNewLocalPosition.Y(), EPSILON );
+		EXPECT_NEAR( childTransformProxy.GetGlobalPosition().X(), childFinalGlobalPosition.X(), EPSILON );
+		EXPECT_NEAR( childTransformProxy.GetGlobalPosition().Y(), childFinalGlobalPosition.Y(), EPSILON );
+	}
+
+	// A entity without a parent gets its local position updated. We check that the entity's local and global position
+	// is updated.
+	TEST( TransformParentTests, ChildWithoutParentSetLocalPositionCheckItAlsoUpdatesGlobalPosition )
+	{
+		const Vec2f childNewLocalPosition( 10.f, 10.f );
+		Engine::ECS::World world;
+
+		// Load world with nested prefab
+		LoadNestedTransformOnlyPrefabIntoWorld( world );
+
+		// Create entity
+		Engine::ECS::GameEntity child = world.CreateGameEntity( "TransformOnlyChild", Vec2f( 0.f, 0.f ) );
+
+		Engine::TransformComponentProxy childTransformProxy( child );
+
+		// Update local position
+		childTransformProxy.SetLocalPosition( childNewLocalPosition );
+
+		EXPECT_NEAR( childTransformProxy.GetLocalPosition().X(), childNewLocalPosition.X(), EPSILON );
+		EXPECT_NEAR( childTransformProxy.GetLocalPosition().Y(), childNewLocalPosition.Y(), EPSILON );
+		EXPECT_NEAR( childTransformProxy.GetGlobalPosition().X(), childNewLocalPosition.X(), EPSILON );
+		EXPECT_NEAR( childTransformProxy.GetGlobalPosition().Y(), childNewLocalPosition.Y(), EPSILON );
+	}
+
 	INSTANTIATE_TEST_SUITE_P( SetRotationLookAt, RotationAngleAndDirectionParams,
 	                          ::testing::Values( std::make_tuple( 0.f, Vec2f( 1.f, 0.f ) ),
 	                                             std::make_tuple( 90.f, Vec2f( 0.f, 1.f ) ),
