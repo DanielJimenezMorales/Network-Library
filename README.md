@@ -6,8 +6,9 @@ A Network Library for competitive realtime multiplayer games.
 This repository contains four different projects:
 1. Network library
 2. Demo game. [Docs](docs/demo_game/demo_game_index.md)
-3. Common (Shared files between Demo game and Network Library projects)
-4. Tests
+3. Engine [Docs](docs/engine/engine_index.md)
+4. Common (Shared files between Demo game and Network Library projects)
+5. Tests
 
 ## Network library Features:
 Implementation Legend: 
