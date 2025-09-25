@@ -54,6 +54,7 @@ struct Vec2f
 		Vec2f operator-( float32 rhs ) const { return Vec2f( _x - rhs, _y - rhs ); }
 
 		// *
+		Vec2f operator*( const Vec2f& rhs ) { return Vec2f( _x * rhs._x, _y * rhs._y ); }
 		Vec2f operator*( float32 rhs ) const { return Vec2f( _x * rhs, _y * rhs ); }
 		friend Vec2f operator*( float32 lhs, const Vec2f& rhs ) { return rhs * lhs; }
 

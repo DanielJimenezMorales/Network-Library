@@ -167,16 +167,19 @@ namespace Engine
 			newEntityTransform.SetRotationLookAt( look_at_direction );
 
 			// Spawn children entitities, if any
-			if ( !prefab->childrenPrefabNames.empty() )
+			if ( !prefab->childrenPrefabs.empty() )
 			{
-				auto childrenPrefabNamesCit = prefab->childrenPrefabNames.cbegin();
-				for ( ; childrenPrefabNamesCit != prefab->childrenPrefabNames.cend(); ++childrenPrefabNamesCit )
+				auto childrenPrefabsCit = prefab->childrenPrefabs.cbegin();
+				for ( ; childrenPrefabsCit != prefab->childrenPrefabs.cend(); ++childrenPrefabsCit )
 				{
-					assert( prefab_name != *childrenPrefabNamesCit );
+					assert( prefab_name != childrenPrefabsCit->name );
 
-					GameEntity childEntity = CreateGameEntity( *childrenPrefabNamesCit, Vec2f( 0.f, 0.f ) );
+					GameEntity childEntity = CreateGameEntity( childrenPrefabsCit->name, position, look_at_direction );
 					TransformComponentProxy childEntityTransform( childEntity );
 					childEntityTransform.SetParent( newEntity );
+					childEntityTransform.SetLocalPosition( childrenPrefabsCit->localPosition );
+					childEntityTransform.SetLocalRotationAngle( childrenPrefabsCit->localRotation );
+					childEntityTransform.SetLocalScale( childrenPrefabsCit->localScale );
 				}
 			}
 

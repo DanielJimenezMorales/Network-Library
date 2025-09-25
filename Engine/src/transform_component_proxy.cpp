@@ -110,10 +110,10 @@ namespace Engine
 
 	void TransformComponentProxy::SetLocalRotationAngle( float32 new_local_angle )
 	{
-		if (HasParent())
+		if ( HasParent() )
 		{
-			_transformComponent->_localRotationAngle = std::fmodf(new_local_angle, 360.0f);
-			if (_transformComponent->_localRotationAngle < 0.f)
+			_transformComponent->_localRotationAngle = std::fmodf( new_local_angle, 360.0f );
+			if ( _transformComponent->_localRotationAngle < 0.f )
 			{
 				_transformComponent->_localRotationAngle += 360.f; // Ensure the angle is always positive
 			}
@@ -122,8 +122,8 @@ namespace Engine
 		}
 		else
 		{
-			_transformComponent->_rotationAngle = std::fmodf(new_local_angle, 360.0f);
-			if (_transformComponent->_rotationAngle < 0.f)
+			_transformComponent->_rotationAngle = std::fmodf( new_local_angle, 360.0f );
+			if ( _transformComponent->_rotationAngle < 0.f )
 			{
 				_transformComponent->_rotationAngle += 360.f; // Ensure the angle is always positive
 			}
@@ -225,12 +225,12 @@ namespace Engine
 	{
 		if ( HasParent() )
 		{
-			_transformComponent->_localPosition = new_local_scale;
+			_transformComponent->_localScale = new_local_scale;
 			_transformComponent->_isDirty = true;
 		}
 		else
 		{
-			_transformComponent->_position = new_local_scale;
+			_transformComponent->_localScale = new_local_scale;
 		}
 
 		SetChildrenDirty();
@@ -353,7 +353,7 @@ namespace Engine
 		// Recalculate global transform based on local transform and parent's global transform
 		_transformComponent->_position = parentTransformProxy.GetGlobalPosition() + GetLocalPosition();
 		_transformComponent->_rotationAngle = parentTransformProxy.GetGlobalRotation() + GetLocalRotationAngle();
-		_transformComponent->_scale = parentTransformProxy.GetGlobalScale() + GetLocalScale();
+		_transformComponent->_scale = parentTransformProxy.GetGlobalScale() * GetLocalScale();
 		_transformComponent->_isDirty = false;
 	}
 

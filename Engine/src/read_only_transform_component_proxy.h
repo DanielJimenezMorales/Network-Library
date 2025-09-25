@@ -5,6 +5,8 @@
 
 #include "vec2f.h"
 
+// TODO Add the same access-only features as TransformComponentProxy here. Evaluate setting a few member variables of
+// TransformComponent as mutable
 namespace Engine
 {
 	struct TransformComponent;
