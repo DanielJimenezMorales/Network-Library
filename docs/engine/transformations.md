@@ -55,7 +55,7 @@ If developers want to interact with transforms they need to use one of the follo
 Any of the classes above can't be stored as a member variable as the entity can be removed or the transform component be re-allocated elsewhere. If developers need to use it multiple times within different functions of a class or module consider querying it multiple times.
 
 ### Purpose of Transform Proxies
-The reason why the TransformComponent needs to be consumed through a proxy class is because of the features it provides:
+The reason why the `TransformComponent` needs to be consumed through a proxy class is because of the features it provides:
 - **On demand propagation of updates through the hierarchy**: Transform hierarchies are not updated right after being changed but in a lazy way. This solution is explained in a later section.
 - **Safety on its hierarchy operations**: The proxy adds a few checks to avoid any potential issue from devs manipulating the raw parent and children values.
 
