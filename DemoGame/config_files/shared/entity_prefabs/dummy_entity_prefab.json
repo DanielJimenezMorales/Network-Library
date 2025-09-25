@@ -21,10 +21,10 @@
 		{
 			"name": "Weapon",
 			"local_position_x": -10,
-			"local_position_y": -10,
-			"local_rotation": 0,
-			"local_scale_x": 5,
-			"local_scale_y": 5
+			"local_position_y": 0,
+			"local_rotation": 110,
+			"local_scale_x": 2,
+			"local_scale_y": 2
 		}
 	]
 }

@@ -9,6 +9,7 @@ namespace Engine
 	ReadOnlyTransformComponentProxy::ReadOnlyTransformComponentProxy( const ECS::GameEntity& entity )
 	    : _entity( entity )
 	    , _transformComponent( nullptr )
+	    , _helperFunctions()
 	{
 		assert( entity.IsValid() );
 		assert( entity.HasComponent< TransformComponent >() );
@@ -18,21 +19,21 @@ namespace Engine
 
 	Vec2f ReadOnlyTransformComponentProxy::GetGlobalPosition()
 	{
-		return _transformComponent->_position;
+		return _helperFunctions.GetGlobalPosition( *_transformComponent );
 	}
 
 	float32 ReadOnlyTransformComponentProxy::GetGlobalRotationAngle()
 	{
-		return _transformComponent->_rotationAngle;
+		return _helperFunctions.GetGlobalRotation( *_transformComponent );
 	}
 
 	Vec2f ReadOnlyTransformComponentProxy::GetForwardVector() const
 	{
-		return ConvertAngleToNormalizedDirection( _transformComponent->_rotationAngle );
+		return _helperFunctions.GetForwardVector( *_transformComponent );
 	}
 
 	Vec2f ReadOnlyTransformComponentProxy::GetGlobalScale()
 	{
-		return _transformComponent->_scale;
+		return _helperFunctions.GetGlobalScale( *_transformComponent );
 	}
 } // namespace Engine

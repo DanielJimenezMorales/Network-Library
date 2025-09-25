@@ -61,22 +61,21 @@ namespace Engine
 			TransformComponent& operator=( const TransformComponent& other ) = default;
 
 		private:
-			Vec2f _position;
-			float32 _rotationAngle;
-			Vec2f _scale;
+			mutable Vec2f _position;
+			mutable float32 _rotationAngle;
+			mutable Vec2f _scale;
 
 			Vec2f _localPosition;
 			float32 _localRotationAngle;
 			Vec2f _localScale;
 
-			bool _isDirty;
+			mutable bool _isDirty;
 
 			ECS::GameEntity _parent;
 			std::vector< ECS::GameEntity > _children;
 
 			static constexpr Vec2f DEFAULT_FORWARD_VECTOR = Vec2f( 0.f, -1.f );
 
-			friend class TransformComponentProxy;
-			friend class ReadOnlyTransformComponentProxy;
+			friend class TransformHierarchyHelperFunctions;
 	};
 } // namespace Engine

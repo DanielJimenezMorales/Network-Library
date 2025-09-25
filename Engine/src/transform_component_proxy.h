@@ -4,6 +4,7 @@
 #include "ecs/game_entity.hpp"
 
 #include "read_only_transform_component_proxy.h"
+#include "transform/transform_hierarchy_helper_functions.h"
 
 #include "vec2f.h"
 
@@ -58,5 +59,7 @@ namespace Engine
 
 			ECS::GameEntity _entity;
 			TransformComponent* _transformComponent;
+
+			const TransformHierarchyHelperFunctions _helperFunctions;
 	};
 } // namespace Engine

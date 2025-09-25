@@ -139,7 +139,12 @@ namespace
 		Engine::ECS::Prefab parentPrefab = Engine::ECS::Prefab();
 		parentPrefab.name = "TransformOnlyParent";
 		parentPrefab.archetype = "transform_only";
-		parentPrefab.childrenPrefabNames.push_back( "TransformOnlyChild" );
+		Engine::ECS::ChildPrefab childPrefabInstance;
+		childPrefabInstance.name = "TransformOnlyChild";
+		childPrefabInstance.localPosition = Vec2f( 0.f, 0.f );
+		childPrefabInstance.localRotation = 0.f;
+		childPrefabInstance.localScale = Vec2f( 1.f, 1.f );
+		parentPrefab.childrenPrefabs.push_back( childPrefabInstance );
 		world.RegisterPrefab( std::move( parentPrefab ) );
 	}
 

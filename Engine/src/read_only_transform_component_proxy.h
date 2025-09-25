@@ -5,6 +5,8 @@
 
 #include "vec2f.h"
 
+#include "transform/transform_hierarchy_helper_functions.h"
+
 // TODO Add the same access-only features as TransformComponentProxy here. Evaluate setting a few member variables of
 // TransformComponent as mutable
 namespace Engine
@@ -34,5 +36,7 @@ namespace Engine
 		private:
 			const ECS::GameEntity _entity;
 			const TransformComponent* _transformComponent;
+
+			const TransformHierarchyHelperFunctions _helperFunctions;
 	};
 } // namespace Engine
