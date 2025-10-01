@@ -10,7 +10,7 @@
 
 namespace Engine
 {
-	class ReadOnlyTransformComponentProxy;
+	struct TransformComponent;
 
 	enum class CollisionResponseType : uint8
 	{
@@ -36,13 +36,13 @@ namespace Engine
 
 			const Bounds2D* GetBounds2D() const { return _bounds; }
 			CollisionShapeType GetShapeType() const { return _bounds->GetShapeType(); }
-			void GetAxes( ReadOnlyTransformComponentProxy& transform, std::vector< Vec2f >& outAxes ) const;
-			void ProjectAxis( ReadOnlyTransformComponentProxy& transform, const Vec2f& axis, float& outMin,
+			void GetAxes( const TransformComponent& transform, std::vector< Vec2f >& outAxes ) const;
+			void ProjectAxis( const TransformComponent& transform, const Vec2f& axis, float& outMin,
 			                  float& outMax ) const;
-			Vec2f GetClosestVertex( ReadOnlyTransformComponentProxy& transform, const Vec2f& inputPoint ) const;
+			Vec2f GetClosestVertex( const TransformComponent& transform, const Vec2f& inputPoint ) const;
 
-			float32 GetMinX( ReadOnlyTransformComponentProxy& transform ) const;
-			float32 GetMaxX( ReadOnlyTransformComponentProxy& transform ) const;
+			float32 GetMinX( const TransformComponent& transform ) const;
+			float32 GetMaxX( const TransformComponent& transform ) const;
 
 			std::unique_ptr< GizmoConfiguration > GetGizmo() const;
 

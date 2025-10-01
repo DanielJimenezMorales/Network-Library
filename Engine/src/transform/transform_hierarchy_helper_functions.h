@@ -9,12 +9,11 @@ namespace Engine
 {
 	struct TransformComponent;
 
-	class TransformHierarchyHelperFunctions
+	class TransformComponentProxy
 	{
 		public:
-			TransformHierarchyHelperFunctions() = default;
+			TransformComponentProxy() = default;
 
-		private:
 			// Position
 			Vec2f GetGlobalPosition( const TransformComponent& transform ) const;
 			void SetGlobalPosition( TransformComponent& transform, const Vec2f& new_position ) const;
@@ -44,11 +43,9 @@ namespace Engine
 			bool HasChildren( const TransformComponent& transform ) const;
 			std::vector< ECS::GameEntity > GetChildren( const TransformComponent& transform ) const;
 
+		private:
 			void SetChildrenDirty( const TransformComponent& transform ) const;
 			void ResolveDirty( const TransformComponent& transform ) const;
 			bool IsDirty( const TransformComponent& transform ) const;
-
-			friend class TransformComponentProxy;
-			friend class ReadOnlyTransformComponentProxy;
 	};
 } // namespace Engine

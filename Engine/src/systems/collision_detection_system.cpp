@@ -8,8 +8,7 @@
 #include "components/collider_2d_component.h"
 #include "components/transform_component.h"
 
-#include "read_only_transform_component_proxy.h"
-#include "transform_component_proxy.h"
+#include "transform/transform_hierarchy_helper_functions.h"
 
 #include "component_configurations/collider_2d_component_configuration.h"
 
@@ -27,10 +26,10 @@ namespace Engine
 	bool ReturnMinLeft( const ECS::GameEntity& colliderEntityA, const ECS::GameEntity& colliderEntityB )
 	{
 		const Collider2DComponent& colliderA = colliderEntityA.GetComponent< Collider2DComponent >();
-		ReadOnlyTransformComponentProxy transformA( colliderEntityA );
+		const TransformComponent& transformA = colliderEntityA.GetComponent< TransformComponent >();
 
 		const Collider2DComponent& colliderB = colliderEntityB.GetComponent< Collider2DComponent >();
-		ReadOnlyTransformComponentProxy transformB( colliderEntityB );
+		const TransformComponent& transformB = colliderEntityB.GetComponent< TransformComponent >();
 
 		return colliderA.GetMinX( transformA ) < colliderB.GetMinX( transformB );
 	}
@@ -79,26 +78,25 @@ namespace Engine
 		{
 			// Get first object collider & transform components
 			const Collider2DComponent& colliderA = collision_entities[ i ].GetComponent< Collider2DComponent >();
-			TransformComponentProxy transformA( collision_entities[ i ] );
+			TransformComponent& transformA = collision_entities[ i ].GetComponent< TransformComponent >();
 
 			for ( uint32 j = i + 1; j < collision_entities.size(); ++j )
 			{
 				// Get second object collider & transform components
 				const Collider2DComponent& colliderB = collision_entities[ j ].GetComponent< Collider2DComponent >();
-				TransformComponentProxy transformB( collision_entities[ j ] );
+				TransformComponent& transformB = collision_entities[ j ].GetComponent< TransformComponent >();
 
 				// Check if these two objects have any collision possibilities. If not, don't check the first object
 				// anymore since the colliders are ordered by left, it means the rest of colliders won't have any
 				// collision possibilities either.
-				if ( colliderA.GetMaxX( transformA.AsReadOnly() ) < colliderB.GetMinX( transformB.AsReadOnly() ) )
+				if ( colliderA.GetMaxX( transformA ) < colliderB.GetMinX( transformB ) )
 				{
 					break;
 				}
 
 				// Check for collision and if success, get the MTV for collision response
 				MinimumTranslationVector mtv;
-				if ( AreTwoShapesCollidingUsingSAT( colliderA, transformA.AsReadOnly(), colliderB,
-				                                    transformB.AsReadOnly(), mtv ) )
+				if ( AreTwoShapesCollidingUsingSAT( colliderA, transformA, colliderB, transformB, mtv ) )
 				{
 					if ( !colliderA.IsTrigger() && !colliderB.IsTrigger() )
 					{
@@ -110,9 +108,9 @@ namespace Engine
 	}
 
 	bool CollisionDetectionSystem::AreTwoShapesCollidingUsingSAT( const Collider2DComponent& collider1,
-	                                                              ReadOnlyTransformComponentProxy& transform1,
+	                                                              const TransformComponent& transform1,
 	                                                              const Collider2DComponent& collider2,
-	                                                              ReadOnlyTransformComponentProxy& transform2,
+	                                                              const TransformComponent& transform2,
 	                                                              MinimumTranslationVector& outMtv ) const
 	{
 		std::vector< Vec2f > axesToCheck;
@@ -151,11 +149,13 @@ namespace Engine
 	}
 
 	void CollisionDetectionSystem::GetAllAxes( const Collider2DComponent& collider1,
-	                                           ReadOnlyTransformComponentProxy& transform1,
+	                                           const TransformComponent& transform1,
 	                                           const Collider2DComponent& collider2,
-	                                           ReadOnlyTransformComponentProxy& transform2,
+	                                           const TransformComponent& transform2,
 	                                           std::vector< Vec2f >& outAxesVector ) const
 	{
+		const TransformComponentProxy transformComponentProxy;
+
 		if ( collider1.GetShapeType() == CollisionShapeType::Convex &&
 		     collider2.GetShapeType() == CollisionShapeType::Convex )
 		{
@@ -167,21 +167,22 @@ namespace Engine
 		{
 			collider1.GetAxes( transform1, outAxesVector );
 			const Vec2f centerToClosestVertexAxis =
-			    collider1.GetClosestVertex( transform1, transform2.GetGlobalPosition() );
+			    collider1.GetClosestVertex( transform1, transformComponentProxy.GetGlobalPosition( transform2 ) );
 			outAxesVector.push_back( centerToClosestVertexAxis );
 		}
 		else if ( collider1.GetShapeType() == CollisionShapeType::Circle &&
 		          collider2.GetShapeType() == CollisionShapeType::Convex )
 		{
 			const Vec2f centerToClosestVertexAxis =
-			    collider2.GetClosestVertex( transform2, transform1.GetGlobalPosition() );
+			    collider2.GetClosestVertex( transform2, transformComponentProxy.GetGlobalPosition( transform1 ) );
 			outAxesVector.push_back( centerToClosestVertexAxis );
 			collider2.GetAxes( transform2, outAxesVector );
 		}
 		else if ( collider1.GetShapeType() == CollisionShapeType::Circle &&
 		          collider2.GetShapeType() == CollisionShapeType::Circle )
 		{
-			const Vec2f centerToCenterAxis = transform2.GetGlobalPosition() - transform1.GetGlobalPosition();
+			const Vec2f centerToCenterAxis = transformComponentProxy.GetGlobalPosition( transform2 ) -
+			                                 transformComponentProxy.GetGlobalPosition( transform1 );
 			outAxesVector.push_back( centerToCenterAxis );
 		}
 	}
@@ -214,28 +215,35 @@ namespace Engine
 	}
 
 	void CollisionDetectionSystem::ApplyCollisionResponse( const Collider2DComponent& collider1,
-	                                                       TransformComponentProxy& transform1,
+	                                                       TransformComponent& transform1,
 	                                                       const Collider2DComponent& collider2,
-	                                                       TransformComponentProxy& transform2,
+	                                                       TransformComponent& transform2,
 	                                                       const MinimumTranslationVector& mtv ) const
 	{
+		const TransformComponentProxy transformComponentProxy;
 		Vec2f resultedTranslationVector = mtv.direction * mtv.magnitude;
 
 		if ( collider1.GetCollisionResponse() == CollisionResponseType::Dynamic &&
 		     collider2.GetCollisionResponse() == CollisionResponseType::Static )
 		{
-			transform1.SetGlobalPosition( transform1.GetGlobalPosition() - resultedTranslationVector );
+			transformComponentProxy.SetGlobalPosition(
+			    transform1, transformComponentProxy.GetGlobalPosition( transform1 ) - resultedTranslationVector );
 		}
 		else if ( collider1.GetCollisionResponse() == CollisionResponseType::Static &&
 		          collider2.GetCollisionResponse() == CollisionResponseType::Dynamic )
 		{
-			transform2.SetGlobalPosition( transform2.GetGlobalPosition() + resultedTranslationVector );
+			transformComponentProxy.SetGlobalPosition(
+			    transform2, transformComponentProxy.GetGlobalPosition( transform2 ) + resultedTranslationVector );
 		}
 		else if ( collider1.GetCollisionResponse() == CollisionResponseType::Dynamic &&
 		          collider2.GetCollisionResponse() == CollisionResponseType::Dynamic )
 		{
-			transform1.SetGlobalPosition( transform1.GetGlobalPosition() - ( resultedTranslationVector / 2.f ) );
-			transform2.SetGlobalPosition( transform2.GetGlobalPosition() + ( resultedTranslationVector / 2.f ) );
+			transformComponentProxy.SetGlobalPosition( transform1,
+			                                           transformComponentProxy.GetGlobalPosition( transform1 ) -
+			                                               ( resultedTranslationVector / 2.f ) );
+			transformComponentProxy.SetGlobalPosition( transform2,
+			                                           transformComponentProxy.GetGlobalPosition( transform2 ) +
+			                                               ( resultedTranslationVector / 2.f ) );
 		}
 		else if ( collider1.GetCollisionResponse() == CollisionResponseType::Static &&
 		          collider2.GetCollisionResponse() == CollisionResponseType::Static )

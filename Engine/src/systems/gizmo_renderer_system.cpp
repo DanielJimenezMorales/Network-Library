@@ -13,8 +13,6 @@
 #include "components/camera_component.h"
 #include "components/transform_component.h"
 
-#include "read_only_transform_component_proxy.h"
-
 #include "components/collider_2d_component.h"
 #include "components/raycast_component.h"
 
@@ -38,13 +36,13 @@ namespace Engine
 
 		const ECS::GameEntity& camera_entity = world.GetFirstEntityOfType< CameraComponent >();
 		const CameraComponent& camera = camera_entity.GetComponent< CameraComponent >();
-		ReadOnlyTransformComponentProxy cameraTransform( camera_entity );
+		const TransformComponent& cameraTransform = camera_entity.GetComponent< TransformComponent >();
 
 		std::vector< ECS::GameEntity > entities =
 		    world.GetEntitiesOfBothTypes< GizmoRendererComponent, TransformComponent >();
 		for ( auto it = entities.begin(); it != entities.end(); ++it )
 		{
-			ReadOnlyTransformComponentProxy transform( *it );
+			const TransformComponent& transform = it->GetComponent< TransformComponent >();
 			const GizmoRendererComponent& gizmo_renderer = it->GetComponent< GizmoRendererComponent >();
 
 			const Gizmo* gizmo = _gizmoResourceHandler.TryGetGizmoFromHandler( gizmo_renderer.gizmoHandler );

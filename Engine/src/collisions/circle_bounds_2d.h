@@ -27,14 +27,13 @@ namespace Engine
 
 			float32 GetRadius() const;
 
-			void GetAxes( ReadOnlyTransformComponentProxy& transform, std::vector< Vec2f >& outAxes ) const override;
-			void ProjectAxis( ReadOnlyTransformComponentProxy& transform, const Vec2f& axis, float& outMin,
+			void GetAxes( const TransformComponent& transform, std::vector< Vec2f >& outAxes ) const override;
+			void ProjectAxis( const TransformComponent& transform, const Vec2f& axis, float& outMin,
 			                  float& outMax ) const override;
-			Vec2f GetClosestVertex( ReadOnlyTransformComponentProxy& transform,
-			                        const Vec2f& inputPoint ) const override;
+			Vec2f GetClosestVertex( const TransformComponent& transform, const Vec2f& inputPoint ) const override;
 
-			float32 GetMinX( ReadOnlyTransformComponentProxy& transform ) const override;
-			float32 GetMaxX( ReadOnlyTransformComponentProxy& transform ) const override;
+			float32 GetMinX( const TransformComponent& transform ) const override;
+			float32 GetMaxX( const TransformComponent& transform ) const override;
 
 			std::unique_ptr< GizmoConfiguration > GetGizmo() const override;
 

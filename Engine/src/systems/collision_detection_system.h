@@ -8,8 +8,7 @@
 namespace Engine
 {
 	struct Collider2DComponent;
-	class ReadOnlyTransformComponentProxy;
-	class TransformComponentProxy;
+	struct TransformComponent;
 
 	namespace ECS
 	{
@@ -75,9 +74,9 @@ namespace Engine
 			/// translation vector (useful for collision response)</para>
 			/// </summary>
 			bool AreTwoShapesCollidingUsingSAT( const Collider2DComponent& collider1,
-			                                    ReadOnlyTransformComponentProxy& transform1,
+			                                    const TransformComponent& transform1,
 			                                    const Collider2DComponent& collider2,
-			                                    ReadOnlyTransformComponentProxy& transform2,
+			                                    const TransformComponent& transform2,
 			                                    MinimumTranslationVector& outMtv ) const;
 
 			/// <summary>
@@ -85,8 +84,8 @@ namespace Engine
 			/// are:</para> <para>1) 2D convex shape VS 2D convex shape</para> <para>2) 2D convex shape VS 2D circle (or
 			/// viceversa)</para> <para>3) 2D circle VS 2D circle</para>
 			/// </summary>
-			void GetAllAxes( const Collider2DComponent& collider1, ReadOnlyTransformComponentProxy& transform1,
-			                 const Collider2DComponent& collider2, ReadOnlyTransformComponentProxy& transform2,
+			void GetAllAxes( const Collider2DComponent& collider1, const TransformComponent& transform1,
+			                 const Collider2DComponent& collider2, const TransformComponent& transform2,
 			                 std::vector< Vec2f >& outAxesVector ) const;
 			void NormalizeAxes( std::vector< Vec2f >& axesVector ) const;
 
@@ -114,8 +113,8 @@ namespace Engine
 			/// method supports the following types of collision responses:</para> <para>1) Dynamic collider VS Dynamic
 			/// collider</para> <para>2) Dynamic collider VS Static collider (or viceversa)</para>
 			/// </summary>
-			void ApplyCollisionResponse( const Collider2DComponent& collider1, TransformComponentProxy& transform1,
-			                             const Collider2DComponent& collider2, TransformComponentProxy& transform2,
+			void ApplyCollisionResponse( const Collider2DComponent& collider1, TransformComponent& transform1,
+			                             const Collider2DComponent& collider2, TransformComponent& transform2,
 			                             const MinimumTranslationVector& mtv ) const;
 	};
 } // namespace Engine

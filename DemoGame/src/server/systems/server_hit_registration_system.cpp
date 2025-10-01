@@ -10,8 +10,7 @@
 #include "components/collider_2d_component.h"
 #include "components/transform_component.h"
 
-#include "read_only_transform_component_proxy.h"
-#include "transform_component_proxy.h"
+#include "transform/transform_hierarchy_helper_functions.h"
 
 #include "shared/components/health_component.h"
 #include "shared/components/network_entity_component.h"
@@ -45,16 +44,17 @@ static void SaveCurrentState(
 	const std::vector< Engine::ECS::GameEntity > entitiesWithNetworkComponent =
 	    world.GetEntitiesOfType< NetworkEntityComponent >();
 
+	const Engine::TransformComponentProxy transformComponentProxy;
 	auto cit = entitiesWithNetworkComponent.cbegin();
 	for ( ; cit != entitiesWithNetworkComponent.cend(); ++cit )
 	{
 		if ( cit->HasComponent< Engine::Collider2DComponent >() )
 		{
-			Engine::ReadOnlyTransformComponentProxy transformComponent( *cit );
+			const Engine::TransformComponent& transform = cit->GetComponent< Engine::TransformComponent >();
 			RewindableEntitiesSnapshot::Entry entry;
 			entry.entityId = cit->GetId();
-			entry.position = transformComponent.GetGlobalPosition();
-			entry.rotationAngle = transformComponent.GetGlobalRotationAngle();
+			entry.position = transformComponentProxy.GetGlobalPosition( transform );
+			entry.rotationAngle = transformComponentProxy.GetGlobalRotation( transform );
 			snapshot.rewindableEntityStates.push_back( entry );
 		}
 	}
@@ -62,15 +62,17 @@ static void SaveCurrentState(
 
 static void RestoreCurrentState( Engine::ECS::World& world, const RewindableEntitiesSnapshot& snapshot )
 {
+	const Engine::TransformComponentProxy transformComponentProxy;
+
 	auto cit = snapshot.rewindableEntityStates.cbegin();
 	for ( ; cit != snapshot.rewindableEntityStates.cend(); ++cit )
 	{
 		Engine::ECS::GameEntity entity = world.GetEntityFromId( cit->entityId );
 		assert( entity.IsValid() );
 
-		Engine::TransformComponentProxy transformComponent( entity );
-		transformComponent.SetGlobalPosition( cit->position );
-		transformComponent.SetGlobalRotationAngle( cit->rotationAngle );
+		Engine::TransformComponent& transform = entity.GetComponent< Engine::TransformComponent >();
+		transformComponentProxy.SetGlobalPosition( transform, cit->position );
+		transformComponentProxy.SetGlobalRotationAngle( transform, cit->rotationAngle );
 	}
 }
 
@@ -185,6 +187,8 @@ static HistoryEntry GetInterpolatedState( const ServerTransformHistoryComponent&
 
 static void RollbackEntities( Engine::ECS::World& world, float32 serverTime )
 {
+	const Engine::TransformComponentProxy transformComponentProxy;
+
 	std::vector< Engine::ECS::GameEntity > entitiesWithNetworkComponent =
 	    world.GetEntitiesOfType< NetworkEntityComponent >();
 
@@ -198,21 +202,21 @@ static void RollbackEntities( Engine::ECS::World& world, float32 serverTime )
 		int32 previousIndex = -1;
 		int32 nextIndex = -1;
 		FindPreviousAndNextTimeIndexes( transformHistoryComponent, serverTime, previousIndex, nextIndex );
-		if (nextIndex < 0)
+		if ( nextIndex < 0 )
 		{
 			bool a = true;
 		}
-		//TODO Investigate hit reg issue that is hitting this assert.
+		// TODO Investigate hit reg issue that is hitting this assert.
 		assert( nextIndex >= 0 );
 
-		Engine::TransformComponentProxy transformComponent( *it );
+		Engine::TransformComponent& transform = it->GetComponent< Engine::TransformComponent >();
 
 		// If the server time is older than the oldest timestamp in the buffer, clamp it
 		if ( previousIndex == -1 )
 		{
 			const HistoryEntry& historyEntry = transformHistoryComponent.historyBuffer[ 0 ];
-			transformComponent.SetGlobalPosition( historyEntry.position );
-			transformComponent.SetGlobalRotationAngle( historyEntry.rotationAngle );
+			transformComponentProxy.SetGlobalPosition( transform, historyEntry.position );
+			transformComponentProxy.SetGlobalRotationAngle( transform, historyEntry.rotationAngle );
 		}
 		// Otherwise interpolate between the upper and lower timestamps to be as accurate as possible.
 		else
@@ -220,8 +224,8 @@ static void RollbackEntities( Engine::ECS::World& world, float32 serverTime )
 			const HistoryEntry interpolatedHistoryEntry =
 			    GetInterpolatedState( transformHistoryComponent, previousIndex, nextIndex, serverTime );
 
-			transformComponent.SetGlobalPosition( interpolatedHistoryEntry.position );
-			transformComponent.SetGlobalRotationAngle( interpolatedHistoryEntry.rotationAngle );
+			transformComponentProxy.SetGlobalPosition( transform, interpolatedHistoryEntry.position );
+			transformComponentProxy.SetGlobalRotationAngle( transform, interpolatedHistoryEntry.rotationAngle );
 		}
 	}
 }

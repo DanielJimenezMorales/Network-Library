@@ -9,7 +9,9 @@
 
 #include "components/camera_component.h"
 
-#include "read_only_transform_component_proxy.h"
+#include "components/transform_component.h"
+
+#include "transform/transform_hierarchy_helper_functions.h"
 
 #include "gizmos/gizmo.h"
 #include "gizmos/circle_gizmo.h"
@@ -22,13 +24,14 @@ namespace Engine
 	}
 
 	void CircleGizmoRenderer::Render( const Gizmo& gizmo, const CameraComponent& camera,
-	                                  ReadOnlyTransformComponentProxy& camera_transform,
-	                                  ReadOnlyTransformComponentProxy& transform, SDL_Renderer* renderer ) const
+	                                  const TransformComponent& camera_transform, const TransformComponent& transform,
+	                                  SDL_Renderer* renderer ) const
 	{
 		assert( gizmo.GetType() == GizmoType::CIRCLE2D );
 
 		const CircleGizmo& circle_gizmo = static_cast< const CircleGizmo& >( gizmo );
-		const Vec2f position = transform.GetGlobalPosition();
+		const TransformComponentProxy transformComponentProxy;
+		const Vec2f position = transformComponentProxy.GetGlobalPosition( transform );
 
 		// Start at the top of the circle
 		float32 x = circle_gizmo.GetRadius();

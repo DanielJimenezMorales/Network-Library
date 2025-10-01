@@ -8,8 +8,7 @@
 #include "ecs/prefab.h"
 #include "ecs/archetype.h"
 
-#include "read_only_transform_component_proxy.h"
-#include "transform_component_proxy.h"
+#include "transform/transform_hierarchy_helper_functions.h"
 
 #include "components/transform_component.h"
 
@@ -54,12 +53,13 @@ namespace
 
 		// Get transform
 		Engine::ECS::GameEntity entity = world.GetFirstEntityOfType< Engine::TransformComponent >();
-		Engine::TransformComponentProxy transformComponentProxy( entity );
+		Engine::TransformComponent& transformComponent = entity.GetComponent< Engine::TransformComponent >();
 
 		// Set rotation look at
-		transformComponentProxy.SetRotationLookAt( direction );
+		const Engine::TransformComponentProxy transformComponentProxy;
+		transformComponentProxy.SetRotationLookAt( transformComponent, direction );
 
-		EXPECT_NEAR( transformComponentProxy.GetGlobalRotation(), angle, EPSILON );
+		EXPECT_NEAR( transformComponentProxy.GetGlobalRotation( transformComponent ), angle, EPSILON );
 	}
 
 	TEST_P( RotationAngleAndDirectionParams, GetForwardVector )
@@ -77,13 +77,14 @@ namespace
 
 		// Get transform
 		Engine::ECS::GameEntity entity = world.GetFirstEntityOfType< Engine::TransformComponent >();
-		Engine::TransformComponentProxy transformComponentProxy( entity );
+		Engine::TransformComponent& transformComponent = entity.GetComponent< Engine::TransformComponent >();
 
 		// Set global rotation
-		transformComponentProxy.SetGlobalRotationAngle( angle );
+		const Engine::TransformComponentProxy transformComponentProxy;
+		transformComponentProxy.SetGlobalRotationAngle( transformComponent, angle );
 
 		// Calculate forward vector
-		const Vec2f resultedForwardVector = transformComponentProxy.GetForwardVector();
+		const Vec2f resultedForwardVector = transformComponentProxy.GetForwardVector( transformComponent );
 
 		EXPECT_NEAR( resultedForwardVector.X(), forwardVector.X(), EPSILON );
 		EXPECT_NEAR( resultedForwardVector.Y(), forwardVector.Y(), EPSILON );
@@ -110,12 +111,13 @@ namespace
 
 		// Get transform
 		Engine::ECS::GameEntity entity = world.GetFirstEntityOfType< Engine::TransformComponent >();
-		Engine::TransformComponentProxy transformComponentProxy( entity );
+		Engine::TransformComponent& transformComponent = entity.GetComponent< Engine::TransformComponent >();
 
 		// Set angle based on look at position
-		transformComponentProxy.LookAt( lookAtPosition );
+		const Engine::TransformComponentProxy transformComponentProxy;
+		transformComponentProxy.LookAt( transformComponent, lookAtPosition );
 
-		EXPECT_NEAR( transformComponentProxy.GetGlobalRotation(), angle, EPSILON );
+		EXPECT_NEAR( transformComponentProxy.GetGlobalRotation( transformComponent ), angle, EPSILON );
 	}
 
 	static void LoadNestedTransformOnlyPrefabIntoWorld( Engine::ECS::World& world )
@@ -158,36 +160,43 @@ namespace
 
 		// Create entities
 		world.CreateGameEntity( "TransformOnlyParent", Vec2f( 0.f, 0.f ) );
+
 		// Find the child entity
+		const Engine::TransformComponentProxy transformComponentProxy;
 		std::vector< Engine::ECS::GameEntity > entities = world.GetEntitiesOfType< Engine::TransformComponent >();
 		auto childIt = entities.begin();
 		for ( ; childIt != entities.end(); ++childIt )
 		{
-			Engine::TransformComponentProxy transformProxy( *childIt );
-			if ( transformProxy.HasParent() )
+			const Engine::TransformComponent& childTransformComponent =
+			    childIt->GetComponent< Engine::TransformComponent >();
+			if ( transformComponentProxy.HasParent( childTransformComponent ) )
 			{
 				break;
 			}
 		}
-		Engine::TransformComponentProxy childTransformProxy( *childIt );
+
+		Engine::TransformComponent& childTransformComponent = childIt->GetComponent< Engine::TransformComponent >();
 
 		// Find the parent entity
 		auto parentIt = entities.begin();
 		for ( ; parentIt != entities.end(); ++parentIt )
 		{
-			Engine::TransformComponentProxy transformProxy( *parentIt );
-			if ( transformProxy.HasChildren() )
+			const Engine::TransformComponent& parentTransformComponent =
+			    parentIt->GetComponent< Engine::TransformComponent >();
+			if ( transformComponentProxy.HasChildren( parentTransformComponent ) )
 			{
 				break;
 			}
 		}
-		Engine::TransformComponentProxy parentTransformProxy( *parentIt );
+
+		const Engine::TransformComponent& parentTransformComponent =
+		    parentIt->GetComponent< Engine::TransformComponent >();
 
 		// Remove parent
-		childTransformProxy.RemoveParent();
+		transformComponentProxy.RemoveParent( childTransformComponent, *childIt );
 
-		EXPECT_FALSE( childTransformProxy.HasParent() );
-		EXPECT_FALSE( parentTransformProxy.HasChildren() );
+		EXPECT_FALSE( transformComponentProxy.HasParent( childTransformComponent ) );
+		EXPECT_FALSE( transformComponentProxy.HasChildren( parentTransformComponent ) );
 	}
 
 	// An entity with no parent is set as child of another entity. We check that the parent-child relationship is
@@ -208,15 +217,18 @@ namespace
 		assert( entities.size() == 2 );
 
 		Engine::ECS::GameEntity parentEntity = entities[ 0 ];
+		const Engine::TransformComponent& parentTransformComponent =
+		    parentEntity.GetComponent< Engine::TransformComponent >();
 		Engine::ECS::GameEntity childEntity = entities[ 1 ];
-		Engine::TransformComponentProxy parentTransformProxy( parentEntity );
-		Engine::TransformComponentProxy childTransformProxy( childEntity );
+		Engine::TransformComponent& childTransformComponent = childEntity.GetComponent< Engine::TransformComponent >();
+
+		const Engine::TransformComponentProxy transformComponentProxy;
 
 		// Set parent
-		childTransformProxy.SetParent( parentEntity );
+		transformComponentProxy.SetParent( childTransformComponent, childEntity, parentEntity );
 
-		EXPECT_TRUE( childTransformProxy.HasParent() );
-		EXPECT_TRUE( parentTransformProxy.HasChildren() );
+		EXPECT_TRUE( transformComponentProxy.HasParent( childTransformComponent ) );
+		EXPECT_TRUE( transformComponentProxy.HasChildren( parentTransformComponent ) );
 	}
 
 	// An entity with a parent is set as child of another entity. We check that the parent-child relationship is
@@ -236,46 +248,56 @@ namespace
 		std::vector< Engine::ECS::GameEntity > entities = world.GetEntitiesOfType< Engine::TransformComponent >();
 		assert( entities.size() == 3 );
 
+		const Engine::TransformComponentProxy transformComponentProxy;
+
 		auto childIt = entities.begin();
 		for ( ; childIt != entities.end(); ++childIt )
 		{
-			Engine::TransformComponentProxy transformProxy( *childIt );
-			if ( transformProxy.HasParent() )
+			const Engine::TransformComponent& childTransformComponent =
+			    childIt->GetComponent< Engine::TransformComponent >();
+			if ( transformComponentProxy.HasParent( childTransformComponent ) )
 			{
 				break;
 			}
 		}
-		Engine::TransformComponentProxy childTransformProxy( *childIt );
+
+		Engine::TransformComponent& childTransformComponent = childIt->GetComponent< Engine::TransformComponent >();
 
 		auto firstParentIt = entities.begin();
 		for ( ; firstParentIt != entities.end(); ++firstParentIt )
 		{
-			Engine::TransformComponentProxy transformProxy( *firstParentIt );
-			if ( transformProxy.HasChildren() )
+			const Engine::TransformComponent& firstParentTransformComponent =
+			    firstParentIt->GetComponent< Engine::TransformComponent >();
+			if ( transformComponentProxy.HasChildren( firstParentTransformComponent ) )
 			{
 				break;
 			}
 		}
-		Engine::TransformComponentProxy firstParentTransformProxy( *firstParentIt );
+
+		const Engine::TransformComponent& firstParentTransformComponent =
+		    firstParentIt->GetComponent< Engine::TransformComponent >();
 
 		auto otherParentIt = entities.begin();
 		for ( ; otherParentIt != entities.end(); ++otherParentIt )
 		{
-			Engine::TransformComponentProxy transformProxy( *otherParentIt );
-			if ( !transformProxy.HasParent() && !transformProxy.HasChildren() )
+			const Engine::TransformComponent& otherParentTransformComponent =
+			    otherParentIt->GetComponent< Engine::TransformComponent >();
+			if ( !transformComponentProxy.HasParent( otherParentTransformComponent ) &&
+			     !transformComponentProxy.HasChildren( otherParentTransformComponent ) )
 			{
 				break;
 			}
 		}
 		Engine::ECS::GameEntity otherParentEntity = *otherParentIt;
-		Engine::TransformComponentProxy otherParentTransformProxy( *otherParentIt );
+		const Engine::TransformComponent& otherParentTransformComponent =
+		    otherParentEntity.GetComponent< Engine::TransformComponent >();
 
 		// Set parent
-		childTransformProxy.SetParent( otherParentEntity );
+		transformComponentProxy.SetParent( childTransformComponent, *childIt, otherParentEntity );
 
-		EXPECT_TRUE( childTransformProxy.HasParent() );
-		EXPECT_FALSE( firstParentTransformProxy.HasChildren() );
-		EXPECT_TRUE( otherParentTransformProxy.HasChildren() );
+		EXPECT_TRUE( transformComponentProxy.HasParent( childTransformComponent ) );
+		EXPECT_FALSE( transformComponentProxy.HasChildren( firstParentTransformComponent ) );
+		EXPECT_TRUE( transformComponentProxy.HasChildren( otherParentTransformComponent ) );
 	}
 
 	// When moving a parent entity we check it also moves its child entity accordingly.
@@ -294,15 +316,18 @@ namespace
 		Engine::ECS::GameEntity parent = world.CreateGameEntity( "TransformOnlyChild", parentInitialPosition );
 		Engine::ECS::GameEntity child = world.CreateGameEntity( "TransformOnlyChild", childInitialPosition );
 
-		Engine::TransformComponentProxy parentTransformProxy( parent );
-		Engine::TransformComponentProxy childTransformProxy( child );
-		childTransformProxy.SetParent( parent );
+		const Engine::TransformComponentProxy transformComponentProxy;
+		Engine::TransformComponent& parentTransformComponent = parent.GetComponent< Engine::TransformComponent >();
+		Engine::TransformComponent& childTransformComponent = child.GetComponent< Engine::TransformComponent >();
+		transformComponentProxy.SetParent( childTransformComponent, child, parent );
 
 		// Move parent
-		parentTransformProxy.SetGlobalPosition( Vec2f( movement, movement ) );
+		transformComponentProxy.SetGlobalPosition( parentTransformComponent, Vec2f( movement, movement ) );
 
-		EXPECT_NEAR( childTransformProxy.GetGlobalPosition().X(), childResultedPosition.X(), EPSILON );
-		EXPECT_NEAR( childTransformProxy.GetGlobalPosition().Y(), childResultedPosition.Y(), EPSILON );
+		EXPECT_NEAR( transformComponentProxy.GetGlobalPosition( childTransformComponent ).X(),
+		             childResultedPosition.X(), EPSILON );
+		EXPECT_NEAR( transformComponentProxy.GetGlobalPosition( childTransformComponent ).Y(),
+		             childResultedPosition.Y(), EPSILON );
 	}
 
 	// An entity with a parent is set as child of another entity. We check that the local transform is set accordingly
@@ -328,22 +353,28 @@ namespace
 		Engine::ECS::GameEntity parent = world.CreateGameEntity( "TransformOnlyChild", parentInitialPosition );
 		Engine::ECS::GameEntity child = world.CreateGameEntity( "TransformOnlyChild", childInitialPosition );
 
-		Engine::TransformComponentProxy parentTransformProxy( parent );
-		parentTransformProxy.SetGlobalRotationAngle( parentInitialRotationAngle );
-		parentTransformProxy.SetGlobalScale( parentInitialScale );
+		const Engine::TransformComponentProxy transformComponentProxy;
+		Engine::TransformComponent& parentTransformComponent = parent.GetComponent< Engine::TransformComponent >();
+		transformComponentProxy.SetGlobalRotationAngle( parentTransformComponent, parentInitialRotationAngle );
+		transformComponentProxy.SetGlobalScale( parentTransformComponent, parentInitialScale );
 
-		Engine::TransformComponentProxy childTransformProxy( child );
-		childTransformProxy.SetGlobalRotationAngle( childInitialRotationAngle );
-		childTransformProxy.SetGlobalScale( childInitialScale );
+		Engine::TransformComponent& childTransformComponent = child.GetComponent< Engine::TransformComponent >();
+		transformComponentProxy.SetGlobalRotationAngle( childTransformComponent, childInitialRotationAngle );
+		transformComponentProxy.SetGlobalScale( childTransformComponent, childInitialScale );
 
 		// Set parent
-		childTransformProxy.SetParent( parent );
+		transformComponentProxy.SetParent( childTransformComponent, child, parent );
 
-		EXPECT_NEAR( childTransformProxy.GetLocalPosition().X(), resultedLocalPosition.X(), EPSILON );
-		EXPECT_NEAR( childTransformProxy.GetLocalPosition().Y(), resultedLocalPosition.Y(), EPSILON );
-		EXPECT_NEAR( childTransformProxy.GetLocalRotationAngle(), resultedLocalRotationAngle, EPSILON );
-		EXPECT_NEAR( childTransformProxy.GetLocalScale().X(), resultedLocalScale.X(), EPSILON );
-		EXPECT_NEAR( childTransformProxy.GetLocalScale().Y(), resultedLocalScale.Y(), EPSILON );
+		EXPECT_NEAR( transformComponentProxy.GetLocalPosition( childTransformComponent ).X(), resultedLocalPosition.X(),
+		             EPSILON );
+		EXPECT_NEAR( transformComponentProxy.GetLocalPosition( childTransformComponent ).Y(), resultedLocalPosition.Y(),
+		             EPSILON );
+		EXPECT_NEAR( transformComponentProxy.GetLocalRotationAngle( childTransformComponent ),
+		             resultedLocalRotationAngle, EPSILON );
+		EXPECT_NEAR( transformComponentProxy.GetLocalScale( childTransformComponent ).X(), resultedLocalScale.X(),
+		             EPSILON );
+		EXPECT_NEAR( transformComponentProxy.GetLocalScale( childTransformComponent ).Y(), resultedLocalScale.Y(),
+		             EPSILON );
 	}
 
 	// An entity with a parent has its parent removed. We check that the child has his local transform equal to his
@@ -362,23 +393,30 @@ namespace
 		// Create entities
 		Engine::ECS::GameEntity parent = world.CreateGameEntity( "TransformOnlyParent", parentPosition );
 
-		Engine::TransformComponentProxy parentTransformProxy( parent );
-		auto children = parentTransformProxy.GetChildren();
+		const Engine::TransformComponentProxy transformComponentProxy;
+
+		Engine::TransformComponent& parentTransformComponent = parent.GetComponent< Engine::TransformComponent >();
+		auto children = transformComponentProxy.GetChildren( parentTransformComponent );
 		assert( children.size() == 1 );
 
 		Engine::ECS::GameEntity child = children[ 0 ];
-		Engine::TransformComponentProxy childTransformProxy( child );
-		childTransformProxy.SetLocalPosition( childPosition );
-		childTransformProxy.SetLocalRotationAngle( childRotationAngle );
-		childTransformProxy.SetLocalScale( childScale );
+		Engine::TransformComponent& childTransformComponent = child.GetComponent< Engine::TransformComponent >();
+		transformComponentProxy.SetLocalPosition( childTransformComponent, childPosition );
+		transformComponentProxy.SetLocalRotationAngle( childTransformComponent, childRotationAngle );
+		transformComponentProxy.SetLocalScale( childTransformComponent, childScale );
 
-		childTransformProxy.RemoveParent();
+		transformComponentProxy.RemoveParent( childTransformComponent, child );
 
-		EXPECT_NEAR( childTransformProxy.GetLocalPosition().X(), childTransformProxy.GetGlobalPosition().X(), EPSILON );
-		EXPECT_NEAR( childTransformProxy.GetLocalPosition().Y(), childTransformProxy.GetGlobalPosition().Y(), EPSILON );
-		EXPECT_NEAR( childTransformProxy.GetLocalRotationAngle(), childTransformProxy.GetGlobalRotation(), EPSILON );
-		EXPECT_NEAR( childTransformProxy.GetLocalScale().X(), childTransformProxy.GetGlobalScale().X(), EPSILON );
-		EXPECT_NEAR( childTransformProxy.GetLocalScale().Y(), childTransformProxy.GetGlobalScale().Y(), EPSILON );
+		EXPECT_NEAR( transformComponentProxy.GetLocalPosition( childTransformComponent ).X(),
+		             transformComponentProxy.GetGlobalPosition( childTransformComponent ).X(), EPSILON );
+		EXPECT_NEAR( transformComponentProxy.GetLocalPosition( childTransformComponent ).Y(),
+		             transformComponentProxy.GetGlobalPosition( childTransformComponent ).Y(), EPSILON );
+		EXPECT_NEAR( transformComponentProxy.GetLocalRotationAngle( childTransformComponent ),
+		             transformComponentProxy.GetGlobalRotation( childTransformComponent ), EPSILON );
+		EXPECT_NEAR( transformComponentProxy.GetLocalScale( childTransformComponent ).X(),
+		             transformComponentProxy.GetGlobalScale( childTransformComponent ).X(), EPSILON );
+		EXPECT_NEAR( transformComponentProxy.GetLocalScale( childTransformComponent ).Y(),
+		             transformComponentProxy.GetGlobalScale( childTransformComponent ).Y(), EPSILON );
 	}
 
 	// A parent entity gets destroyed. We check that the child entity is also destroyed.
@@ -417,16 +455,22 @@ namespace
 		Engine::ECS::GameEntity parent = world.CreateGameEntity( "TransformOnlyChild", parentInitialPosition );
 		Engine::ECS::GameEntity child = world.CreateGameEntity( "TransformOnlyChild", parentInitialPosition );
 
-		Engine::TransformComponentProxy childTransformProxy( child );
-		childTransformProxy.SetParent( parent );
+		const Engine::TransformComponentProxy transformComponentProxy;
+
+		Engine::TransformComponent& childTransformComponent = child.GetComponent< Engine::TransformComponent >();
+		transformComponentProxy.SetParent( childTransformComponent, child, parent );
 
 		// Update local position
-		childTransformProxy.SetLocalPosition( childNewLocalPosition );
+		transformComponentProxy.SetLocalPosition( childTransformComponent, childNewLocalPosition );
 
-		EXPECT_NEAR( childTransformProxy.GetLocalPosition().X(), childNewLocalPosition.X(), EPSILON );
-		EXPECT_NEAR( childTransformProxy.GetLocalPosition().Y(), childNewLocalPosition.Y(), EPSILON );
-		EXPECT_NEAR( childTransformProxy.GetGlobalPosition().X(), childFinalGlobalPosition.X(), EPSILON );
-		EXPECT_NEAR( childTransformProxy.GetGlobalPosition().Y(), childFinalGlobalPosition.Y(), EPSILON );
+		EXPECT_NEAR( transformComponentProxy.GetLocalPosition( childTransformComponent ).X(), childNewLocalPosition.X(),
+		             EPSILON );
+		EXPECT_NEAR( transformComponentProxy.GetLocalPosition( childTransformComponent ).Y(), childNewLocalPosition.Y(),
+		             EPSILON );
+		EXPECT_NEAR( transformComponentProxy.GetGlobalPosition( childTransformComponent ).X(),
+		             childFinalGlobalPosition.X(), EPSILON );
+		EXPECT_NEAR( transformComponentProxy.GetGlobalPosition( childTransformComponent ).Y(),
+		             childFinalGlobalPosition.Y(), EPSILON );
 	}
 
 	// A entity without a parent gets its local position updated. We check that the entity's local and global position
@@ -442,15 +486,20 @@ namespace
 		// Create entity
 		Engine::ECS::GameEntity child = world.CreateGameEntity( "TransformOnlyChild", Vec2f( 0.f, 0.f ) );
 
-		Engine::TransformComponentProxy childTransformProxy( child );
+		const Engine::TransformComponentProxy transformComponentProxy;
+		Engine::TransformComponent& childTransformComponent = child.GetComponent< Engine::TransformComponent >();
 
 		// Update local position
-		childTransformProxy.SetLocalPosition( childNewLocalPosition );
+		transformComponentProxy.SetLocalPosition( childTransformComponent, childNewLocalPosition );
 
-		EXPECT_NEAR( childTransformProxy.GetLocalPosition().X(), childNewLocalPosition.X(), EPSILON );
-		EXPECT_NEAR( childTransformProxy.GetLocalPosition().Y(), childNewLocalPosition.Y(), EPSILON );
-		EXPECT_NEAR( childTransformProxy.GetGlobalPosition().X(), childNewLocalPosition.X(), EPSILON );
-		EXPECT_NEAR( childTransformProxy.GetGlobalPosition().Y(), childNewLocalPosition.Y(), EPSILON );
+		EXPECT_NEAR( transformComponentProxy.GetLocalPosition( childTransformComponent ).X(), childNewLocalPosition.X(),
+		             EPSILON );
+		EXPECT_NEAR( transformComponentProxy.GetLocalPosition( childTransformComponent ).Y(), childNewLocalPosition.Y(),
+		             EPSILON );
+		EXPECT_NEAR( transformComponentProxy.GetGlobalPosition( childTransformComponent ).X(),
+		             childNewLocalPosition.X(), EPSILON );
+		EXPECT_NEAR( transformComponentProxy.GetGlobalPosition( childTransformComponent ).Y(),
+		             childNewLocalPosition.Y(), EPSILON );
 	}
 
 	INSTANTIATE_TEST_SUITE_P( SetRotationLookAt, RotationAngleAndDirectionParams,

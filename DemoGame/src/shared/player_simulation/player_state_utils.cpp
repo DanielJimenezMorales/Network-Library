@@ -4,8 +4,9 @@
 
 #include "ecs/game_entity.hpp"
 
-#include "transform_component_proxy.h"
-#include "read_only_transform_component_proxy.h"
+#include "components/transform_component.h"
+
+#include "transform/transform_hierarchy_helper_functions.h"
 
 #include "shared/components/player_controller_component.h"
 
@@ -18,9 +19,10 @@ namespace PlayerSimulation
 		PlayerState playerState;
 		playerState.tick = current_tick;
 
-		Engine::ReadOnlyTransformComponentProxy transformComponentProxy(player_entity);
-		playerState.position = transformComponentProxy.GetGlobalPosition();
-		playerState.rotationAngle = transformComponentProxy.GetGlobalRotationAngle();
+		const Engine::TransformComponentProxy transformComponentProxy;
+		const Engine::TransformComponent& transform = player_entity.GetComponent< Engine::TransformComponent >();
+		playerState.position = transformComponentProxy.GetGlobalPosition( transform );
+		playerState.rotationAngle = transformComponentProxy.GetGlobalRotation( transform );
 
 		const PlayerControllerComponent& playerController = player_entity.GetComponent< PlayerControllerComponent >();
 		playerState.timeLeftUntilNextShot = playerController.timeLeftUntilNextShot;
@@ -30,10 +32,11 @@ namespace PlayerSimulation
 
 	void ApplyPlayerStateToPlayerEntity( Engine::ECS::GameEntity& player_entity, const PlayerState& player_state )
 	{
+		const Engine::TransformComponentProxy transformComponentProxy;
 		// Update Transform
-		Engine::TransformComponentProxy transformComponentProxy( player_entity );
-		transformComponentProxy.SetGlobalPosition( player_state.position );
-		transformComponentProxy.SetGlobalRotationAngle( player_state.rotationAngle );
+		Engine::TransformComponent& transform = player_entity.GetComponent< Engine::TransformComponent >();
+		transformComponentProxy.SetGlobalPosition( transform, player_state.position );
+		transformComponentProxy.SetGlobalRotationAngle( transform, player_state.rotationAngle );
 
 		// Update Player Controller
 		PlayerControllerComponent& playerController = player_entity.GetComponent< PlayerControllerComponent >();

@@ -76,6 +76,6 @@ namespace Engine
 
 			static constexpr Vec2f DEFAULT_FORWARD_VECTOR = Vec2f( 0.f, -1.f );
 
-			friend class TransformHierarchyHelperFunctions;
+			friend class TransformComponentProxy;
 	};
 } // namespace Engine

@@ -2,7 +2,9 @@
 
 #include "gizmos/circle_gizmo.h"
 
-#include "read_only_transform_component_proxy.h"
+#include "components/transform_component.h"
+
+#include "transform/transform_hierarchy_helper_functions.h"
 
 namespace Engine
 {
@@ -12,12 +14,12 @@ namespace Engine
 	}
 
 	// TODO Change name to this file
-	void CircleBounds2D::GetAxes(ReadOnlyTransformComponentProxy& transform, std::vector< Vec2f >& outAxes ) const
+	void CircleBounds2D::GetAxes( const TransformComponent& transform, std::vector< Vec2f >& outAxes ) const
 	{
 		// Circle axes are calculated apart since it is not a default convex polygon but a curve shape
 	}
 
-	void CircleBounds2D::ProjectAxis( ReadOnlyTransformComponentProxy& transform, const Vec2f& axis, float& outMin,
+	void CircleBounds2D::ProjectAxis( const TransformComponent& transform, const Vec2f& axis, float& outMin,
 	                                  float& outMax ) const
 	{
 		/*In order to get the min and max projection points of the circle, we have to do the following steps :
@@ -31,25 +33,28 @@ namespace Engine
 		//Max projection = CenterProjection + Radius
 		*/
 
-		const Vec2f center = transform.GetGlobalPosition();
+		const TransformComponentProxy transformComponentProxy;
+		const Vec2f center = transformComponentProxy.GetGlobalPosition( transform );
 		const float32 centerProjection = ( center.X() * axis.X() ) + ( center.Y() * axis.Y() );
 		outMin = centerProjection - _radius;
 		outMax = centerProjection + _radius;
 	}
 
-	Vec2f CircleBounds2D::GetClosestVertex(ReadOnlyTransformComponentProxy& transform, const Vec2f& inputPoint ) const
+	Vec2f CircleBounds2D::GetClosestVertex( const TransformComponent& transform, const Vec2f& inputPoint ) const
 	{
 		return Vec2f();
 	}
 
-	float32 CircleBounds2D::GetMinX(ReadOnlyTransformComponentProxy& transform ) const
+	float32 CircleBounds2D::GetMinX( const TransformComponent& transform ) const
 	{
-		return transform.GetGlobalPosition().X() - _radius;
+		const TransformComponentProxy transformComponentProxy;
+		return transformComponentProxy.GetGlobalPosition( transform ).X() - _radius;
 	}
 
-	float32 CircleBounds2D::GetMaxX(ReadOnlyTransformComponentProxy& transform ) const
+	float32 CircleBounds2D::GetMaxX( const TransformComponent& transform ) const
 	{
-		return transform.GetGlobalPosition().X() + _radius;
+		const TransformComponentProxy transformComponentProxy;
+		return transformComponentProxy.GetGlobalPosition( transform ).X() + _radius;
 	}
 
 	std::unique_ptr< GizmoConfiguration > CircleBounds2D::GetGizmo() const

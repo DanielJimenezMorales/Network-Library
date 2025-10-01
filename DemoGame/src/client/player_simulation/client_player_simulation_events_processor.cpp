@@ -5,18 +5,19 @@
 #include "components/collider_2d_component.h"
 #include "components/transform_component.h"
 
-#include "read_only_transform_component_proxy.h"
+#include "transform/transform_hierarchy_helper_functions.h"
 
 #include "ecs/world.h"
 #include "ecs/game_entity.hpp"
 
 static void OnShotPerformed( Engine::ECS::World& world, const Engine::ECS::GameEntity& player_entity )
 {
-	Engine::ReadOnlyTransformComponentProxy localPlayerTransform( player_entity );
+	const Engine::TransformComponent& localPlayerTransform = player_entity.GetComponent< Engine::TransformComponent >();
 
 	Engine::Raycaster::Ray ray;
-	ray.origin = localPlayerTransform.GetGlobalPosition();
-	ray.direction = localPlayerTransform.GetForwardVector();
+	const Engine::TransformComponentProxy transformComponentProxy;
+	ray.origin = transformComponentProxy.GetGlobalPosition( localPlayerTransform );
+	ray.direction = transformComponentProxy.GetForwardVector( localPlayerTransform );
 	ray.maxDistance = 100;
 
 	const std::vector< Engine::ECS::GameEntity > entities_with_colliders =

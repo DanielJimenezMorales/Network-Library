@@ -8,7 +8,9 @@
 
 #include "ecs/game_entity.hpp"
 
-#include "transform_component_proxy.h"
+#include "components/transform_component.h"
+
+#include "transform/transform_hierarchy_helper_functions.h"
 
 namespace Engine
 {
@@ -162,9 +164,10 @@ namespace Engine
 				return GameEntity();
 			}
 
-			TransformComponentProxy newEntityTransform( newEntity );
-			newEntityTransform.SetGlobalPosition( position );
-			newEntityTransform.SetRotationLookAt( look_at_direction );
+			const TransformComponentProxy transformComponentProxy;
+			TransformComponent& newEntityTransform = newEntity.GetComponent< TransformComponent >();
+			transformComponentProxy.SetGlobalPosition( newEntityTransform, position );
+			transformComponentProxy.SetRotationLookAt( newEntityTransform, look_at_direction );
 
 			// Spawn children entitities, if any
 			if ( !prefab->childrenPrefabs.empty() )
@@ -175,11 +178,15 @@ namespace Engine
 					assert( prefab_name != childrenPrefabsCit->name );
 
 					GameEntity childEntity = CreateGameEntity( childrenPrefabsCit->name, position, look_at_direction );
-					TransformComponentProxy childEntityTransform( childEntity );
-					childEntityTransform.SetParent( newEntity );
-					childEntityTransform.SetLocalPosition( childrenPrefabsCit->localPosition );
-					childEntityTransform.SetLocalRotationAngle( childrenPrefabsCit->localRotation );
-					childEntityTransform.SetLocalScale( childrenPrefabsCit->localScale );
+					TransformComponent& childEntityTransformComponent =
+					    childEntity.GetComponent< TransformComponent >();
+					transformComponentProxy.SetParent( childEntityTransformComponent, childEntity, newEntity );
+					transformComponentProxy.SetLocalPosition( childEntityTransformComponent,
+					                                          childrenPrefabsCit->localPosition );
+					transformComponentProxy.SetLocalRotationAngle( childEntityTransformComponent,
+					                                               childrenPrefabsCit->localRotation );
+					transformComponentProxy.SetLocalScale( childEntityTransformComponent,
+					                                       childrenPrefabsCit->localScale );
 				}
 			}
 
@@ -224,10 +231,11 @@ namespace Engine
 		void World::DestroyInmediateGameEntity( ECS::GameEntity& entity )
 		{
 			// Destroy children entities first
-			TransformComponentProxy entityTransform( entity );
-			if ( entityTransform.HasChildren() )
+			const TransformComponentProxy transformComponentProxy;
+			const TransformComponent& entityTransform = entity.GetComponent< TransformComponent >();
+			if ( transformComponentProxy.HasChildren( entityTransform ) )
 			{
-				std::vector< ECS::GameEntity >& children = entityTransform.GetChildren();
+				std::vector< ECS::GameEntity > children = transformComponentProxy.GetChildren( entityTransform );
 				auto it = children.begin();
 				for ( ; it != children.end(); ++it )
 				{

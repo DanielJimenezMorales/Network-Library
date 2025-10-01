@@ -9,7 +9,7 @@ It supports:
 - [Representation](#Representation)
 - [Parent-Child Hierarchies](#Parent-Child-Hierarchies)
 - [Local vs Global Transforms](#Local-vs-Global-Transforms)
-- [Transform Component Proxies](#Transform-Component-Proxies)
+- [Transform Component Proxies](#Transform-Component-Proxy)
 - [On Demand Hierarchy Updates Propagation](#On-Demand-Hierarchy-Updates-Propagation)
 
 ## Representation
@@ -44,17 +44,10 @@ When working with the transform component of an entity, it’s important to dist
 - Represents the **absolute position, rotation, and scale in world-space**.
 - It is calculated as the entity’s local transform plus its parent’s global transform.
 
-## Transform Component Proxies
-The `TransformComponent` is the only component intentionally restricted to only a few limited classes, called proxies.
+## Transform Component Proxy
+The `TransformComponent` is the only component with the access to its data intentionally restricted. The only class that can access to its data is called `TransformComponentProxy`. The `TransformComponentProxy` is a stateless class that allows consumers perform different write and/or read operations to a `TransformComponent`. The reason why the component's access is limited to this class is to guanrantee a correct transform hierarchy behaviour.
 
-### Types of Transform Proxies
-If developers want to interact with transforms they need to use one of the following classes:
-- **TransformComponentProxy**: It allows querying and modifying the different properties of the `TransformComponent`.
-- **ReadOnlyTransformComponentProxy**: It only allows querying the different properties of the `TransformComponent` but not modifying them.
-
-Any of the classes above can't be stored as a member variable as the entity can be removed or the transform component be re-allocated elsewhere. If developers need to use it multiple times within different functions of a class or module consider querying it multiple times.
-
-### Purpose of Transform Proxies
+### Purpose of the Transform Proxy class
 The reason why the `TransformComponent` needs to be consumed through a proxy class is because of the features it provides:
 - **On demand propagation of updates through the hierarchy**: Transform hierarchies are not updated right after being changed but in a lazy way. This solution is explained in a later section.
 - **Safety on its hierarchy operations**: The proxy adds a few checks to avoid any potential issue from devs manipulating the raw parent and children values.
@@ -64,30 +57,16 @@ Everytime we want to query or modify any properties from an entity's `TransformC
 ```cpp
 using namespace Engine;
 
-//Get the entity you want to consume its TransformComponent
+//Get the TransformComponent you want to consume
 ECS::GameEntity entity = world.GetFirstEntityOfType<TransformComponent>();
+TransformComponent& transform = entity.GetComponent<TransformComponent>();
 
-// Create a proxy based on the entity
-TransformComponentProxy transformProxy(entity);
-
-// Now we can use it
-transformProxy.RemoveParent();
-transformProxy.SetGlobalPosition(Vec2f(20.f, 3.f));
-```
-
-If a constant `GameEntity` is passed because only access is granted, we can use the `ReadOnlyTransformComponentProxy` as follow
-```cpp
-using namespace Engine;
-
-//Get the entity you want to consume its TransformComponent
-const ECS::GameEntity entity = world.GetFirstEntityOfType<TransformComponent>();
-
-// Create a proxy based on the entity
-ReadOnlyTransformComponentProxy transformProxy(entity);
+// Create a proxy
+TransformComponentProxy transformProxy;
 
 // Now we can use it
-bool hasParent = transformProxy.HasParent();
-float32 localRot = transformProxy.GetLocalRotationAngle();
+transformProxy.RemoveParent(transform);
+transformProxy.SetGlobalPosition(transform, Vec2f(20.f, 3.f));
 ```
 
 ## On Demand Hierarchy Updates Propagation

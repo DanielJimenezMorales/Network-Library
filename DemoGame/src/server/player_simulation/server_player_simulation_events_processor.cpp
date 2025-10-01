@@ -5,7 +5,9 @@
 #include "ecs/world.h"
 #include "ecs/game_entity.hpp"
 
-#include "read_only_transform_component_proxy.h"
+#include "components/transform_component.h"
+
+#include "transform/transform_hierarchy_helper_functions.h"
 
 #include "server/hit_reg/shot_entry.h"
 #include "server/global_components/hit_registration_global_component.h"
@@ -16,10 +18,12 @@
 
 static void OnShotPerformed( Engine::ECS::World& world, const Engine::ECS::GameEntity& player_entity )
 {
-	Engine::ReadOnlyTransformComponentProxy playerTransform(player_entity);
+	const Engine::TransformComponentProxy transformComponentProxy;
+
+	const Engine::TransformComponent& playerTransform = player_entity.GetComponent< Engine::TransformComponent >();
 	ShotEntry shotEntry;
-	shotEntry.position = playerTransform.GetGlobalPosition();
-	shotEntry.direction = playerTransform.GetForwardVector();
+	shotEntry.position = transformComponentProxy.GetGlobalPosition( playerTransform );
+	shotEntry.direction = transformComponentProxy.GetForwardVector( playerTransform );
 	shotEntry.shooterEntity = player_entity;
 	shotEntry.damage = 10; // TODO: Get the damage from the player entity or some configuration
 

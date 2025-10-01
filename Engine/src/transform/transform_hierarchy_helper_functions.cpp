@@ -6,7 +6,7 @@
 
 namespace Engine
 {
-	Vec2f Engine::TransformHierarchyHelperFunctions::GetGlobalPosition( const TransformComponent& transform ) const
+	Vec2f TransformComponentProxy::GetGlobalPosition( const TransformComponent& transform ) const
 	{
 		if ( transform._isDirty )
 		{
@@ -16,7 +16,7 @@ namespace Engine
 		return transform._position;
 	}
 
-	void TransformHierarchyHelperFunctions::SetGlobalPosition( TransformComponent& transform,
+	void TransformComponentProxy::SetGlobalPosition( TransformComponent& transform,
 	                                                           const Vec2f& new_position ) const
 	{
 		if ( transform._isDirty )
@@ -28,7 +28,7 @@ namespace Engine
 		SetChildrenDirty( transform );
 	}
 
-	Vec2f TransformHierarchyHelperFunctions::GetLocalPosition( const TransformComponent& transform ) const
+	Vec2f TransformComponentProxy::GetLocalPosition( const TransformComponent& transform ) const
 	{
 		Vec2f result;
 		if ( HasParent( transform ) )
@@ -43,7 +43,7 @@ namespace Engine
 		return result;
 	}
 
-	void TransformHierarchyHelperFunctions::SetLocalPosition( TransformComponent& transform,
+	void TransformComponentProxy::SetLocalPosition( TransformComponent& transform,
 	                                                          const Vec2f& new_local_position ) const
 	{
 		if ( HasParent( transform ) )
@@ -59,7 +59,7 @@ namespace Engine
 		SetChildrenDirty( transform );
 	}
 
-	float32 TransformHierarchyHelperFunctions::GetGlobalRotation( const TransformComponent& transform ) const
+	float32 TransformComponentProxy::GetGlobalRotation( const TransformComponent& transform ) const
 	{
 		if ( transform._isDirty )
 		{
@@ -69,7 +69,7 @@ namespace Engine
 		return transform._rotationAngle;
 	}
 
-	void TransformHierarchyHelperFunctions::SetGlobalRotationAngle( TransformComponent& transform,
+	void TransformComponentProxy::SetGlobalRotationAngle( TransformComponent& transform,
 	                                                                float32 new_angle ) const
 	{
 		if ( transform._isDirty )
@@ -86,7 +86,7 @@ namespace Engine
 		SetChildrenDirty( transform );
 	}
 
-	float32 TransformHierarchyHelperFunctions::GetLocalRotationAngle( const TransformComponent& transform ) const
+	float32 TransformComponentProxy::GetLocalRotationAngle( const TransformComponent& transform ) const
 	{
 		float32 result;
 		if ( HasParent( transform ) )
@@ -101,7 +101,7 @@ namespace Engine
 		return result;
 	}
 
-	void TransformHierarchyHelperFunctions::SetLocalRotationAngle( TransformComponent& transform,
+	void TransformComponentProxy::SetLocalRotationAngle( TransformComponent& transform,
 	                                                               float32 new_local_angle ) const
 	{
 		if ( HasParent( transform ) )
@@ -126,7 +126,7 @@ namespace Engine
 		SetChildrenDirty( transform );
 	}
 
-	void TransformHierarchyHelperFunctions::SetRotationLookAt( TransformComponent& transform,
+	void TransformComponentProxy::SetRotationLookAt( TransformComponent& transform,
 	                                                           Vec2f look_at_direction ) const
 	{
 		look_at_direction.Normalize();
@@ -134,7 +134,7 @@ namespace Engine
 		SetGlobalRotationAngle( transform, ConvertNormalizedDirectionToAngle( look_at_direction ) );
 	}
 
-	void TransformHierarchyHelperFunctions::LookAt( TransformComponent& transform, const Vec2f& position ) const
+	void TransformComponentProxy::LookAt( TransformComponent& transform, const Vec2f& position ) const
 	{
 		const Vec2f direction = position - GetGlobalPosition( transform );
 		if ( direction == Vec2f( 0, 0 ) )
@@ -175,12 +175,12 @@ namespace Engine
 		SetGlobalRotationAngle( transform, GetGlobalRotation( transform ) + angleInDegrees );
 	}
 
-	Vec2f TransformHierarchyHelperFunctions::GetForwardVector( const TransformComponent& transform ) const
+	Vec2f TransformComponentProxy::GetForwardVector( const TransformComponent& transform ) const
 	{
 		return ConvertAngleToNormalizedDirection( GetGlobalRotation( transform ) );
 	}
 
-	Vec2f TransformHierarchyHelperFunctions::GetGlobalScale( const TransformComponent& transform ) const
+	Vec2f TransformComponentProxy::GetGlobalScale( const TransformComponent& transform ) const
 	{
 		if ( transform._isDirty )
 		{
@@ -190,7 +190,7 @@ namespace Engine
 		return transform._scale;
 	}
 
-	void TransformHierarchyHelperFunctions::SetGlobalScale( TransformComponent& transform,
+	void TransformComponentProxy::SetGlobalScale( TransformComponent& transform,
 	                                                        const Vec2f& new_scale ) const
 	{
 		if ( transform._isDirty )
@@ -202,7 +202,7 @@ namespace Engine
 		SetChildrenDirty( transform );
 	}
 
-	Vec2f TransformHierarchyHelperFunctions::GetLocalScale( const TransformComponent& transform ) const
+	Vec2f TransformComponentProxy::GetLocalScale( const TransformComponent& transform ) const
 	{
 		Vec2f result;
 		if ( HasParent( transform ) )
@@ -217,7 +217,7 @@ namespace Engine
 		return result;
 	}
 
-	void TransformHierarchyHelperFunctions::SetLocalScale( TransformComponent& transform,
+	void TransformComponentProxy::SetLocalScale( TransformComponent& transform,
 	                                                       const Vec2f& new_local_scale ) const
 	{
 		if ( HasParent( transform ) )
@@ -233,7 +233,7 @@ namespace Engine
 		SetChildrenDirty( transform );
 	}
 
-	void TransformHierarchyHelperFunctions::RemoveParent( TransformComponent& transform,
+	void TransformComponentProxy::RemoveParent( TransformComponent& transform,
 	                                                      ECS::GameEntity& transform_entity ) const
 	{
 		assert( transform_entity.IsValid() );
@@ -268,7 +268,7 @@ namespace Engine
 		}
 	}
 
-	void TransformHierarchyHelperFunctions::SetParent( TransformComponent& transform, ECS::GameEntity& transform_entity,
+	void TransformComponentProxy::SetParent( TransformComponent& transform, ECS::GameEntity& transform_entity,
 	                                                   ECS::GameEntity& parent_entity ) const
 	{
 		assert( transform_entity.IsValid() );
@@ -306,23 +306,23 @@ namespace Engine
 		transform._localScale = GetGlobalScale( transform ) - GetGlobalScale( parentTransform );
 	}
 
-	bool TransformHierarchyHelperFunctions::HasParent( const TransformComponent& transform ) const
+	bool TransformComponentProxy::HasParent( const TransformComponent& transform ) const
 	{
 		return transform._parent.IsValid();
 	}
 
-	bool TransformHierarchyHelperFunctions::HasChildren( const TransformComponent& transform ) const
+	bool TransformComponentProxy::HasChildren( const TransformComponent& transform ) const
 	{
 		return !transform._children.empty();
 	}
 
-	std::vector< ECS::GameEntity > TransformHierarchyHelperFunctions::GetChildren(
+	std::vector< ECS::GameEntity > TransformComponentProxy::GetChildren(
 	    const TransformComponent& transform ) const
 	{
 		return transform._children;
 	}
 
-	void TransformHierarchyHelperFunctions::SetChildrenDirty( const TransformComponent& transform ) const
+	void TransformComponentProxy::SetChildrenDirty( const TransformComponent& transform ) const
 	{
 		auto childrenIt = transform._children.begin();
 		for ( ; childrenIt != transform._children.end(); ++childrenIt )
@@ -336,7 +336,7 @@ namespace Engine
 		}
 	}
 
-	void TransformHierarchyHelperFunctions::ResolveDirty( const TransformComponent& transform ) const
+	void TransformComponentProxy::ResolveDirty( const TransformComponent& transform ) const
 	{
 		if ( !transform._isDirty || !HasParent( transform ) )
 		{
@@ -357,7 +357,7 @@ namespace Engine
 		transform._isDirty = false;
 	}
 
-	bool TransformHierarchyHelperFunctions::IsDirty( const TransformComponent& transform ) const
+	bool TransformComponentProxy::IsDirty( const TransformComponent& transform ) const
 	{
 		return transform._isDirty;
 	}
