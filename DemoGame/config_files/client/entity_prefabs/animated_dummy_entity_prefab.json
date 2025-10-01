@@ -93,5 +93,6 @@
 			],
 			"initial_animation_name": "IDLE_FRONT_LEFT"
 		}
-	]
+	],
+	"children_prefab_names": []
 }

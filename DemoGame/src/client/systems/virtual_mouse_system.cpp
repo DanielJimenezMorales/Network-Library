@@ -8,6 +8,8 @@
 #include "components/camera_component.h"
 #include "components/transform_component.h"
 
+#include "transform/transform_hierarchy_helper_functions.h"
+
 #include "client/components/virtual_mouse_component.h"
 
 #include "global_components/input_handler_global_component.h"
@@ -20,10 +22,12 @@ void VirtualMouseSystem::Execute( Engine::ECS::World& world, float32 elapsed_tim
 	const Engine::InputHandlerGlobalComponent& inputHandlerGlobalComponent =
 	    world.GetGlobalComponent< Engine::InputHandlerGlobalComponent >();
 
+	const Engine::TransformComponentProxy transformComponentProxy;
+
 	std::vector< Engine::ECS::GameEntity > entities = world.GetEntitiesOfType< VirtualMouseComponent >();
 	for ( auto it = entities.begin(); it != entities.end(); ++it )
 	{
-		Engine::TransformComponent& virtual_mouse_transform = it->GetComponent< Engine::TransformComponent >();
+		Engine::TransformComponent& virtualMouseTransform = it->GetComponent< Engine::TransformComponent >();
 
 		int32 mouseDeltaX, mouseDeltaY = 0;
 		inputHandlerGlobalComponent.CursorGetDelta( MOUSE_NAME, mouseDeltaX, mouseDeltaY );
@@ -32,7 +36,7 @@ void VirtualMouseSystem::Execute( Engine::ECS::World& world, float32 elapsed_tim
 		Vec2f distance( mouseDeltaX, -mouseDeltaY );
 		distance *= 100 * elapsed_time;
 
-		const Vec2f new_position = virtual_mouse_transform.GetPosition() + distance;
-		virtual_mouse_transform.SetPosition( new_position );
+		const Vec2f new_position = transformComponentProxy.GetGlobalPosition( virtualMouseTransform ) + distance;
+		transformComponentProxy.SetGlobalPosition( virtualMouseTransform, new_position );
 	}
 }

@@ -5,8 +5,10 @@
 #include "vec2f.h"
 #include "coordinates_conversion_utils.h"
 
-#include "components/transform_component.h"
 #include "components/camera_component.h"
+#include "components/transform_component.h"
+
+#include "transform/transform_hierarchy_helper_functions.h"
 
 #include "gizmos/gizmo.h"
 #include "gizmos/ray_gizmo.h"
@@ -24,11 +26,14 @@ namespace Engine
 	{
 		assert( gizmo.GetType() == GizmoType::RAY );
 
+		const TransformComponentProxy transformComponentProxy;
+
 		const RayGizmo& ray_gizmo = static_cast< const RayGizmo& >( gizmo );
 
-		const Vec2f start_position = transform.GetPosition();
-		const Vec2f direction = transform.GetForwardVector();
-		const Vec2f end_position = transform.GetPosition() + ( ray_gizmo.GetLength() * direction );
+		const Vec2f start_position = transformComponentProxy.GetGlobalPosition( transform );
+		const Vec2f direction = transformComponentProxy.GetForwardVector( transform );
+		const Vec2f end_position =
+		    transformComponentProxy.GetGlobalPosition( transform ) + ( ray_gizmo.GetLength() * direction );
 
 		const Vec2f screen_start_position =
 		    ConvertFromWorldPositionToScreenPosition( start_position, camera, camera_transform );

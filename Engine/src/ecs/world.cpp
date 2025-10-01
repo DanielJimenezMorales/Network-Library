@@ -10,6 +10,8 @@
 
 #include "components/transform_component.h"
 
+#include "transform/transform_hierarchy_helper_functions.h"
+
 namespace Engine
 {
 	namespace ECS
@@ -152,28 +154,48 @@ namespace Engine
 			}
 
 			// Create entity
-			GameEntity new_entity = _entityContainer.CreateGameEntity();
+			GameEntity newEntity = _entityContainer.CreateGameEntity();
 
 			// Attach components
-			if ( !AddComponentsToEntity( archetype, new_entity ) )
+			if ( !AddComponentsToEntity( archetype, newEntity ) )
 			{
 				// If components creation failed, we destroy the entity
-				_entityContainer.DestroyGameEntity( new_entity.GetId() );
+				_entityContainer.DestroyGameEntity( newEntity.GetId() );
 				return GameEntity();
 			}
 
-			assert( new_entity.HasComponent< TransformComponent >() );
+			const TransformComponentProxy transformComponentProxy;
+			TransformComponent& newEntityTransform = newEntity.GetComponent< TransformComponent >();
+			transformComponentProxy.SetGlobalPosition( newEntityTransform, position );
+			transformComponentProxy.SetRotationLookAt( newEntityTransform, look_at_direction );
 
-			TransformComponent& new_entity_transform = new_entity.GetComponent< TransformComponent >();
-			new_entity_transform.SetPosition( position );
-			new_entity_transform.SetRotationLookAt( look_at_direction );
+			// Spawn children entitities, if any
+			if ( !prefab->childrenPrefabs.empty() )
+			{
+				auto childrenPrefabsCit = prefab->childrenPrefabs.cbegin();
+				for ( ; childrenPrefabsCit != prefab->childrenPrefabs.cend(); ++childrenPrefabsCit )
+				{
+					assert( prefab_name != childrenPrefabsCit->name );
+
+					GameEntity childEntity = CreateGameEntity( childrenPrefabsCit->name, position, look_at_direction );
+					TransformComponent& childEntityTransformComponent =
+					    childEntity.GetComponent< TransformComponent >();
+					transformComponentProxy.SetParent( childEntityTransformComponent, childEntity, newEntity );
+					transformComponentProxy.SetLocalPosition( childEntityTransformComponent,
+					                                          childrenPrefabsCit->localPosition );
+					transformComponentProxy.SetLocalRotationAngle( childEntityTransformComponent,
+					                                               childrenPrefabsCit->localRotation );
+					transformComponentProxy.SetLocalScale( childEntityTransformComponent,
+					                                       childrenPrefabsCit->localScale );
+				}
+			}
 
 			// Configure components
-			_onEntityConfigure.Execute( new_entity, *prefab );
+			_onEntityConfigure.Execute( newEntity, *prefab );
 
 			// Call OnEntityCreate
-			_onEntityCreate.Execute( new_entity );
-			return new_entity;
+			_onEntityCreate.Execute( newEntity );
+			return newEntity;
 		}
 
 		bool World::AddComponentsToEntity( const Archetype& archetype, GameEntity& entity )
@@ -202,9 +224,32 @@ namespace Engine
 				_entitiesToRemoveRequests.pop();
 
 				GameEntity entity = _entityContainer.GetEntityFromId( entity_id );
-				_onEntityDestroy.Execute( entity );
-				_entityContainer.DestroyGameEntity( entity_id );
+				DestroyInmediateGameEntity( entity );
 			}
 		}
+
+		void World::DestroyInmediateGameEntity( ECS::GameEntity& entity )
+		{
+			// Destroy children entities first
+			const TransformComponentProxy transformComponentProxy;
+			const TransformComponent& entityTransform = entity.GetComponent< TransformComponent >();
+			if ( transformComponentProxy.HasChildren( entityTransform ) )
+			{
+				std::vector< ECS::GameEntity > children = transformComponentProxy.GetChildren( entityTransform );
+				auto it = children.begin();
+				for ( ; it != children.end(); ++it )
+				{
+					DestroyInmediateGameEntity( *it );
+				}
+			}
+
+			// In the really rare case where there could be a weird situation where the children of any child entity is
+			// this entity (Cyclic). In that case the issue is within the transform component proxy
+			assert( entity.IsValid() );
+
+			_onEntityDestroy.Execute( entity );
+			_entityContainer.DestroyGameEntity( entity.GetId() );
+		}
+
 	} // namespace ECS
 } // namespace Engine

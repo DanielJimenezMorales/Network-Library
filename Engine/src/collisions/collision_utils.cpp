@@ -4,6 +4,8 @@
 
 #include "components/transform_component.h"
 
+#include "transform/transform_hierarchy_helper_functions.h"
+
 #include <cassert>
 
 namespace Engine
@@ -18,20 +20,31 @@ namespace Engine
 	void SeparateCircleWithCircle( TransformComponent& transformA, float32 radiusA, TransformComponent& transformB,
 	                               float32 radiusB )
 	{
+		const TransformComponentProxy transformComponentProxy;
+
 		const float32 radiusSum = radiusA + radiusB;
-		const float32 distanceBetweenCenters = GetDistance( transformA.GetPosition(), transformB.GetPosition() );
+		const float32 distanceBetweenCenters = GetDistance( transformComponentProxy.GetGlobalPosition( transformA ),
+		                                                    transformComponentProxy.GetGlobalPosition( transformB ) );
 		const float32 halfDistanceDifference = ( radiusSum - distanceBetweenCenters ) / 2.f;
 		assert( halfDistanceDifference >= 0.f );
 
-		TransformComponent& leftCircle =
-		    ( transformA.GetPosition().X() <= transformB.GetPosition().X() ) ? transformA : transformB;
-		TransformComponent& rightCircle =
-		    ( transformA.GetPosition().X() <= transformB.GetPosition().X() ) ? transformB : transformA;
+		TransformComponent& leftCircle = ( transformComponentProxy.GetGlobalPosition( transformA ).X() <=
+		                                   transformComponentProxy.GetGlobalPosition( transformB ).X() )
+		                                     ? transformA
+		                                     : transformB;
+		TransformComponent& rightCircle = ( transformComponentProxy.GetGlobalPosition( transformA ).X() <=
+		                                    transformComponentProxy.GetGlobalPosition( transformB ).X() )
+		                                      ? transformB
+		                                      : transformA;
 
-		Vec2f leftToRightDirection = rightCircle.GetPosition() - leftCircle.GetPosition();
+		Vec2f leftToRightDirection = transformComponentProxy.GetGlobalPosition( rightCircle ) -
+		                             transformComponentProxy.GetGlobalPosition( leftCircle );
 		leftToRightDirection.Normalize();
 
-		rightCircle.SetPosition( rightCircle.GetPosition() + ( leftToRightDirection * halfDistanceDifference ) );
-		leftCircle.SetPosition( leftCircle.GetPosition() - ( leftToRightDirection * halfDistanceDifference ) );
+		transformComponentProxy.SetGlobalPosition( rightCircle,
+		                                           transformComponentProxy.GetGlobalPosition( rightCircle ) +
+		                                               ( leftToRightDirection * halfDistanceDifference ) );
+		transformComponentProxy.SetGlobalPosition( leftCircle, transformComponentProxy.GetGlobalPosition( leftCircle ) -
+		                                                           ( leftToRightDirection * halfDistanceDifference ) );
 	}
 }

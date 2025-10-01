@@ -1,6 +1,10 @@
 #pragma once
 #include "vec2f.h"
 
+#include "ecs/game_entity.hpp"
+
+#include <vector>
+
 namespace Engine
 {
 	/// <summary>
@@ -14,33 +18,64 @@ namespace Engine
 	struct TransformComponent
 	{
 		public:
-			TransformComponent();
-			TransformComponent( float32 x, float32 y );
-			TransformComponent( const Vec2f& position, float32 rotation );
+			TransformComponent()
+			    : _position( Vec2f( 0.f, 0.f ) )
+			    , _rotationAngle( 0.f )
+			    , _scale( Vec2f( 1.f, 1.f ) )
+			    , _localPosition( Vec2f( 0.f, 0.f ) )
+			    , _localRotationAngle( 0.f )
+			    , _localScale( Vec2f( 1.f, 1.f ) )
+			    , _isDirty( false )
+			    , _parent()
+			    , _children()
+			{
+			}
+
+			TransformComponent( float32 x, float32 y )
+			    : _position( Vec2f( x, y ) )
+			    , _rotationAngle( 0.f )
+			    , _scale( Vec2f( 1.f, 1.f ) )
+			    , _localPosition( Vec2f( 0.f, 0.f ) )
+			    , _localRotationAngle( 0.f )
+			    , _localScale( Vec2f( 1.f, 1.f ) )
+			    , _isDirty( false )
+			    , _parent()
+			    , _children()
+			{
+			}
+
+			TransformComponent( const Vec2f& position, float32 rotation )
+			    : _position( position )
+			    , _rotationAngle( rotation )
+			    , _scale( Vec2f( 1.f, 1.f ) )
+			    , _localPosition( Vec2f( 0.f, 0.f ) )
+			    , _localRotationAngle( 0.f )
+			    , _localScale( Vec2f( 1.f, 1.f ) )
+			    , _isDirty( false )
+			    , _parent()
+			    , _children()
+			{
+			}
 
 			TransformComponent( const TransformComponent& other ) = default;
-
-			// Position
-			Vec2f GetPosition() const { return _position; }
-			void SetPosition( const Vec2f& newPosition ) { _position = newPosition; }
-
-			// Rotation
-			float32 GetRotationAngle() const { return _rotationAngle; }
-			void SetRotationAngle( float32 newRotationAngle );
-			void SetRotationLookAt( Vec2f look_at_direction );
-			void LookAt( const Vec2f& position );
-			Vec2f GetForwardVector() const;
-
-			// Scale
-			Vec2f GetScale() const { return _scale; }
-			void SetScale( const Vec2f& newScale ) { _scale = newScale; }
+			TransformComponent& operator=( const TransformComponent& other ) = default;
 
 		private:
-			Vec2f _position;
+			mutable Vec2f _position;
+			mutable float32 _rotationAngle;
+			mutable Vec2f _scale;
 
-			float32 _rotationAngle;
+			Vec2f _localPosition;
+			float32 _localRotationAngle;
+			Vec2f _localScale;
+
+			mutable bool _isDirty;
+
+			ECS::GameEntity _parent;
+			std::vector< ECS::GameEntity > _children;
+
 			static constexpr Vec2f DEFAULT_FORWARD_VECTOR = Vec2f( 0.f, -1.f );
 
-			Vec2f _scale;
+			friend class TransformComponentProxy;
 	};
 } // namespace Engine

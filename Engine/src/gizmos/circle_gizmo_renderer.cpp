@@ -7,8 +7,11 @@
 #include "coordinates_conversion_utils.h"
 #include "math_utils.h"
 
-#include "components/transform_component.h"
 #include "components/camera_component.h"
+
+#include "components/transform_component.h"
+
+#include "transform/transform_hierarchy_helper_functions.h"
 
 #include "gizmos/gizmo.h"
 #include "gizmos/circle_gizmo.h"
@@ -27,7 +30,8 @@ namespace Engine
 		assert( gizmo.GetType() == GizmoType::CIRCLE2D );
 
 		const CircleGizmo& circle_gizmo = static_cast< const CircleGizmo& >( gizmo );
-		const Vec2f position = transform.GetPosition();
+		const TransformComponentProxy transformComponentProxy;
+		const Vec2f position = transformComponentProxy.GetGlobalPosition( transform );
 
 		// Start at the top of the circle
 		float32 x = circle_gizmo.GetRadius();

@@ -12,8 +12,10 @@
 #include "ecs/prefab.h"
 #include "ecs/world.h"
 
-#include "components/transform_component.h"
 #include "components/collider_2d_component.h"
+#include "components/transform_component.h"
+
+#include "transform/transform_hierarchy_helper_functions.h"
 
 #include "shared/components/player_controller_component.h"
 #include "shared/components/health_component.h"
@@ -52,12 +54,13 @@ static void ProcessInputs( Engine::ECS::World& world, InputState& outInputState 
 
 	outInputState.isShooting = inputHandler.CursorGetButtonPressed( MOUSE_NAME, SHOOT_BUTTON );
 
-	const Engine::ECS::GameEntity& virtual_mouse_entity = world.GetFirstEntityOfType< VirtualMouseComponent >();
-	const Engine::TransformComponent& virtual_mouse_transform =
-	    virtual_mouse_entity.GetComponent< Engine::TransformComponent >();
+	const Engine::ECS::GameEntity& virtualMousEentity = world.GetFirstEntityOfType< VirtualMouseComponent >();
+	const Engine::TransformComponent& virtualMouseTransform =
+	    virtualMousEentity.GetComponent< Engine::TransformComponent >();
 	// TODO instead of sending a position as an input, we should send the delta from the mouse. As the position can be
 	// easily hackable.
-	outInputState.virtualMousePosition = virtual_mouse_transform.GetPosition();
+	const Engine::TransformComponentProxy transformComponentProxy;
+	outInputState.virtualMousePosition = transformComponentProxy.GetGlobalPosition( virtualMouseTransform );
 }
 
 static InputState GetInputState( Engine::ECS::World& world, uint32 current_tick, float32 elapsed_time )

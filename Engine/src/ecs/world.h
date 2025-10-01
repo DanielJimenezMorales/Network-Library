@@ -104,6 +104,7 @@ namespace Engine
 				                        const Vec2f& look_at_direction );
 				bool AddComponentsToEntity( const Archetype& archetype, GameEntity& entity );
 				void DestroyPendingEntities();
+				void DestroyInmediateGameEntity( ECS::GameEntity& entity );
 
 				EntityContainer _entityContainer;
 				SystemsHandler _systemsHandler;

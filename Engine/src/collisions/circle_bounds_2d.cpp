@@ -4,6 +4,8 @@
 
 #include "components/transform_component.h"
 
+#include "transform/transform_hierarchy_helper_functions.h"
+
 namespace Engine
 {
 	float32 CircleBounds2D::GetRadius() const
@@ -31,7 +33,8 @@ namespace Engine
 		//Max projection = CenterProjection + Radius
 		*/
 
-		const Vec2f center = transform.GetPosition();
+		const TransformComponentProxy transformComponentProxy;
+		const Vec2f center = transformComponentProxy.GetGlobalPosition( transform );
 		const float32 centerProjection = ( center.X() * axis.X() ) + ( center.Y() * axis.Y() );
 		outMin = centerProjection - _radius;
 		outMax = centerProjection + _radius;
@@ -44,12 +47,14 @@ namespace Engine
 
 	float32 CircleBounds2D::GetMinX( const TransformComponent& transform ) const
 	{
-		return transform.GetPosition().X() - _radius;
+		const TransformComponentProxy transformComponentProxy;
+		return transformComponentProxy.GetGlobalPosition( transform ).X() - _radius;
 	}
 
 	float32 CircleBounds2D::GetMaxX( const TransformComponent& transform ) const
 	{
-		return transform.GetPosition().X() + _radius;
+		const TransformComponentProxy transformComponentProxy;
+		return transformComponentProxy.GetGlobalPosition( transform ).X() + _radius;
 	}
 
 	std::unique_ptr< GizmoConfiguration > CircleBounds2D::GetGizmo() const

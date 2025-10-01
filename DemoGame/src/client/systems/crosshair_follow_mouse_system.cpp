@@ -7,18 +7,23 @@
 
 #include "components/transform_component.h"
 
+#include "transform/transform_hierarchy_helper_functions.h"
+
 #include "client/components/virtual_mouse_component.h"
 #include "client/components/crosshair_component.h"
 
 void CrosshairFollowMouseSystem::Execute( Engine::ECS::World& world, float32 elapsed_time )
 {
+	const Engine::TransformComponentProxy transformComponentProxy;
+
 	const Engine::ECS::GameEntity& virtual_mouse_entity = world.GetFirstEntityOfType< VirtualMouseComponent >();
 
-	const Engine::TransformComponent& transform = virtual_mouse_entity.GetComponent< Engine::TransformComponent >();
-
+	const Engine::TransformComponent& virtualMousetransform =
+	    virtual_mouse_entity.GetComponent< Engine::TransformComponent >();
 	Engine::ECS::GameEntity entity = world.GetFirstEntityOfType< CrosshairComponent >();
 
 	// Update crosshair world position
-	Engine::TransformComponent& crosshairTransformComponent = entity.GetComponent< Engine::TransformComponent >();
-	crosshairTransformComponent.SetPosition( transform.GetPosition() );
+	Engine::TransformComponent& crosshairTransform = entity.GetComponent< Engine::TransformComponent >();
+	transformComponentProxy.SetGlobalPosition( crosshairTransform,
+	                                           transformComponentProxy.GetGlobalPosition( virtualMousetransform ) );
 }

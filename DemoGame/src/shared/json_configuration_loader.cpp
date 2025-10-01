@@ -170,6 +170,25 @@ bool JsonConfigurationLoader::LoadPrefabs( std::vector< Engine::ECS::Prefab >& o
 			}
 		}
 
+		if ( data.contains( "children_prefabs" ) )
+		{
+			auto childrenPrefabs = data[ "children_prefabs" ];
+			prefab.childrenPrefabs.reserve( childrenPrefabs.size() );
+			for ( auto childrenPrefabsCit = childrenPrefabs.cbegin(); childrenPrefabsCit != childrenPrefabs.cend();
+			      ++childrenPrefabsCit )
+			{
+				Engine::ECS::ChildPrefab childPrefab;
+				childPrefab.name = ( *childrenPrefabsCit )[ "name" ];
+				childPrefab.localPosition.X( ( *childrenPrefabsCit )[ "local_position_x" ] );
+				childPrefab.localPosition.Y( ( *childrenPrefabsCit )[ "local_position_y" ] );
+				childPrefab.localRotation = ( *childrenPrefabsCit )[ "local_rotation" ];
+				childPrefab.localScale.X( ( *childrenPrefabsCit )[ "local_scale_x" ] );
+				childPrefab.localScale.Y( ( *childrenPrefabsCit )[ "local_scale_y" ] );
+
+				prefab.childrenPrefabs.push_back( childPrefab );
+			}
+		}
+
 		out_prefabs.push_back( std::move( prefab ) );
 	}
 

@@ -5,6 +5,8 @@
 
 #include "components/transform_component.h"
 
+#include "transform/transform_hierarchy_helper_functions.h"
+
 #include "client/components/ghost_object_component.h"
 #include "client/components/interpolated_object_component.h"
 
@@ -25,9 +27,12 @@ static bool IsSnapToGhostRequired( const Engine::TransformComponent& ghost,
                                    const Engine::TransformComponent& interpolated,
                                    const InterpolatedObjectComponent& interpolation_config )
 {
-	return Vec2f::GetSquareDistance( ghost.GetPosition(), interpolated.GetPosition() ) >=
+	const Engine::TransformComponentProxy transformComponentProxy;
+	return Vec2f::GetSquareDistance( transformComponentProxy.GetGlobalPosition( ghost ),
+	                                 transformComponentProxy.GetGlobalPosition( interpolated ) ) >=
 	           interpolation_config.squaredSnapToGhostPositionDistanceThreshold ||
-	       GetMinimumDistanceBetweenAngles( ghost.GetRotationAngle(), interpolated.GetRotationAngle() ) >=
+	       GetMinimumDistanceBetweenAngles( transformComponentProxy.GetGlobalRotation( ghost ),
+	                                        transformComponentProxy.GetGlobalRotation( interpolated ) ) >=
 	           interpolation_config.snapToGhostOrientationThreshold;
 }
 
@@ -58,6 +63,8 @@ static float32 MoveTowardsAngle( float32 initial, float32 target, float32 max_di
 
 void InterpolatedPlayerObjectUpdaterSystem::Execute( Engine::ECS::World& world, float32 elapsed_time )
 {
+	const Engine::TransformComponentProxy transformComponentProxy;
+
 	std::vector< Engine::ECS::GameEntity > interpolatedPlayerEntities =
 	    world.GetEntitiesOfType< InterpolatedObjectComponent >();
 	for ( auto it = interpolatedPlayerEntities.begin(); it != interpolatedPlayerEntities.end(); ++it )
@@ -79,24 +86,26 @@ void InterpolatedPlayerObjectUpdaterSystem::Execute( Engine::ECS::World& world, 
 		float32 finalRotationAngle;
 		if ( IsSnapToGhostRequired( ghostTransform, interpolatedTransform, interpolatedObject ) )
 		{
-			finalPosition = ghostTransform.GetPosition();
-			finalRotationAngle = ghostTransform.GetRotationAngle();
+			finalPosition = transformComponentProxy.GetGlobalPosition( ghostTransform );
+			finalRotationAngle = transformComponentProxy.GetGlobalRotation( ghostTransform );
 		}
 		else
 		{
 			const float32 positionalInterpolationVelocity = interpolatedObject.positionalSmoothingFactor * elapsed_time;
 			const float32 orientationalInterpolationVelocity =
 			    interpolatedObject.orientationalSmoothingFactor * elapsed_time;
-			finalPosition.X( InterpolateFloat32( interpolatedTransform.GetPosition().X(),
-			                                     ghostTransform.GetPosition().X(), positionalInterpolationVelocity ) );
-			finalPosition.Y( InterpolateFloat32( interpolatedTransform.GetPosition().Y(),
-			                                     ghostTransform.GetPosition().Y(), positionalInterpolationVelocity ) );
-			finalRotationAngle =
-			    MoveTowardsAngle( interpolatedTransform.GetRotationAngle(), ghostTransform.GetRotationAngle(),
-			                      orientationalInterpolationVelocity );
+			finalPosition.X( InterpolateFloat32( transformComponentProxy.GetGlobalPosition( interpolatedTransform ).X(),
+			                                     transformComponentProxy.GetGlobalPosition( ghostTransform ).X(),
+			                                     positionalInterpolationVelocity ) );
+			finalPosition.Y( InterpolateFloat32( transformComponentProxy.GetGlobalPosition( interpolatedTransform ).Y(),
+			                                     transformComponentProxy.GetGlobalPosition( ghostTransform ).Y(),
+			                                     positionalInterpolationVelocity ) );
+			finalRotationAngle = MoveTowardsAngle( transformComponentProxy.GetGlobalRotation( interpolatedTransform ),
+			                                       transformComponentProxy.GetGlobalRotation( ghostTransform ),
+			                                       orientationalInterpolationVelocity );
 		}
 
-		interpolatedTransform.SetPosition( finalPosition );
-		interpolatedTransform.SetRotationAngle( finalRotationAngle );
+		transformComponentProxy.SetGlobalPosition( interpolatedTransform, finalPosition );
+		transformComponentProxy.SetGlobalRotationAngle( interpolatedTransform, finalRotationAngle );
 	}
 }

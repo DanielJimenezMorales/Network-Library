@@ -41,7 +41,8 @@ namespace Engine
 			virtual void GetAxes( const TransformComponent& transform, std::vector< Vec2f >& outAxes ) const = 0;
 			virtual void ProjectAxis( const TransformComponent& transform, const Vec2f& axis, float& outMin,
 			                          float& outMax ) const = 0;
-			virtual Vec2f GetClosestVertex( const TransformComponent& transform, const Vec2f& inputPoint ) const = 0;
+			virtual Vec2f GetClosestVertex( const TransformComponent& transform,
+			                                const Vec2f& inputPoint ) const = 0;
 
 			virtual float32 GetMinX( const TransformComponent& transform ) const = 0;
 			virtual float32 GetMaxX( const TransformComponent& transform ) const = 0;

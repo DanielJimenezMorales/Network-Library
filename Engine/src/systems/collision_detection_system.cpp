@@ -8,6 +8,8 @@
 #include "components/collider_2d_component.h"
 #include "components/transform_component.h"
 
+#include "transform/transform_hierarchy_helper_functions.h"
+
 #include "component_configurations/collider_2d_component_configuration.h"
 
 #include "ecs/game_entity.hpp"
@@ -152,6 +154,8 @@ namespace Engine
 	                                           const TransformComponent& transform2,
 	                                           std::vector< Vec2f >& outAxesVector ) const
 	{
+		const TransformComponentProxy transformComponentProxy;
+
 		if ( collider1.GetShapeType() == CollisionShapeType::Convex &&
 		     collider2.GetShapeType() == CollisionShapeType::Convex )
 		{
@@ -162,20 +166,23 @@ namespace Engine
 		          collider2.GetShapeType() == CollisionShapeType::Circle )
 		{
 			collider1.GetAxes( transform1, outAxesVector );
-			const Vec2f centerToClosestVertexAxis = collider1.GetClosestVertex( transform1, transform2.GetPosition() );
+			const Vec2f centerToClosestVertexAxis =
+			    collider1.GetClosestVertex( transform1, transformComponentProxy.GetGlobalPosition( transform2 ) );
 			outAxesVector.push_back( centerToClosestVertexAxis );
 		}
 		else if ( collider1.GetShapeType() == CollisionShapeType::Circle &&
 		          collider2.GetShapeType() == CollisionShapeType::Convex )
 		{
-			const Vec2f centerToClosestVertexAxis = collider2.GetClosestVertex( transform2, transform1.GetPosition() );
+			const Vec2f centerToClosestVertexAxis =
+			    collider2.GetClosestVertex( transform2, transformComponentProxy.GetGlobalPosition( transform1 ) );
 			outAxesVector.push_back( centerToClosestVertexAxis );
 			collider2.GetAxes( transform2, outAxesVector );
 		}
 		else if ( collider1.GetShapeType() == CollisionShapeType::Circle &&
 		          collider2.GetShapeType() == CollisionShapeType::Circle )
 		{
-			const Vec2f centerToCenterAxis = transform2.GetPosition() - transform1.GetPosition();
+			const Vec2f centerToCenterAxis = transformComponentProxy.GetGlobalPosition( transform2 ) -
+			                                 transformComponentProxy.GetGlobalPosition( transform1 );
 			outAxesVector.push_back( centerToCenterAxis );
 		}
 	}
@@ -213,23 +220,30 @@ namespace Engine
 	                                                       TransformComponent& transform2,
 	                                                       const MinimumTranslationVector& mtv ) const
 	{
+		const TransformComponentProxy transformComponentProxy;
 		Vec2f resultedTranslationVector = mtv.direction * mtv.magnitude;
 
 		if ( collider1.GetCollisionResponse() == CollisionResponseType::Dynamic &&
 		     collider2.GetCollisionResponse() == CollisionResponseType::Static )
 		{
-			transform1.SetPosition( transform1.GetPosition() - resultedTranslationVector );
+			transformComponentProxy.SetGlobalPosition(
+			    transform1, transformComponentProxy.GetGlobalPosition( transform1 ) - resultedTranslationVector );
 		}
 		else if ( collider1.GetCollisionResponse() == CollisionResponseType::Static &&
 		          collider2.GetCollisionResponse() == CollisionResponseType::Dynamic )
 		{
-			transform2.SetPosition( transform2.GetPosition() + resultedTranslationVector );
+			transformComponentProxy.SetGlobalPosition(
+			    transform2, transformComponentProxy.GetGlobalPosition( transform2 ) + resultedTranslationVector );
 		}
 		else if ( collider1.GetCollisionResponse() == CollisionResponseType::Dynamic &&
 		          collider2.GetCollisionResponse() == CollisionResponseType::Dynamic )
 		{
-			transform1.SetPosition( transform1.GetPosition() - ( resultedTranslationVector / 2.f ) );
-			transform2.SetPosition( transform2.GetPosition() + ( resultedTranslationVector / 2.f ) );
+			transformComponentProxy.SetGlobalPosition( transform1,
+			                                           transformComponentProxy.GetGlobalPosition( transform1 ) -
+			                                               ( resultedTranslationVector / 2.f ) );
+			transformComponentProxy.SetGlobalPosition( transform2,
+			                                           transformComponentProxy.GetGlobalPosition( transform2 ) +
+			                                               ( resultedTranslationVector / 2.f ) );
 		}
 		else if ( collider1.GetCollisionResponse() == CollisionResponseType::Static &&
 		          collider2.GetCollisionResponse() == CollisionResponseType::Static )

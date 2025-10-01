@@ -4,27 +4,31 @@
 
 #include "ecs/game_entity.hpp"
 
-#include "components/transform_component.h"
 #include "components/camera_component.h"
+#include "components/transform_component.h"
+
+#include "transform/transform_hierarchy_helper_functions.h"
 
 namespace Engine
 {
 	Vec2f ConvertFromWorldPositionToScreenPosition( Vec2f worldPosition, const ECS::GameEntity& camera_entity )
 	{
 		assert( camera_entity.HasComponent< CameraComponent >() );
-		assert( camera_entity.HasComponent< TransformComponent >() );
 
 		const CameraComponent& camera = camera_entity.GetComponent< CameraComponent >();
-		const TransformComponent& camera_transform = camera_entity.GetComponent< TransformComponent >();
+		const TransformComponent& transform = camera_entity.GetComponent< TransformComponent >();
 
-		return ConvertFromWorldPositionToScreenPosition( worldPosition, camera, camera_transform );
+		return ConvertFromWorldPositionToScreenPosition( worldPosition, camera, transform );
 	}
 
 	Vec2f ConvertFromWorldPositionToScreenPosition( Vec2f worldPosition, const CameraComponent& camera,
-	                                                const TransformComponent& camera_transform )
+	                                                const Engine::TransformComponent& camera_transform )
 	{
+		const TransformComponentProxy transformComponentProxy;
+
 		// Convert from world coordinates to uncentered screen coordinates
-		worldPosition = ( worldPosition - camera_transform.GetPosition() ) * CameraComponent::PIXELS_PER_WORLD_UNIT;
+		worldPosition = ( worldPosition - transformComponentProxy.GetGlobalPosition( camera_transform ) ) *
+		                CameraComponent::PIXELS_PER_WORLD_UNIT;
 
 		// This is due to SDL2 tracks positive Y downward, so I need to invert it. I want positive Y to go up by
 		// default
@@ -40,16 +44,15 @@ namespace Engine
 	Vec2f ConvertFromScreenPositionToWorldPosition( Vec2f screenPosition, const ECS::GameEntity& camera_entity )
 	{
 		assert( camera_entity.HasComponent< CameraComponent >() );
-		assert( camera_entity.HasComponent< TransformComponent >() );
 
 		const CameraComponent& camera = camera_entity.GetComponent< CameraComponent >();
-		const TransformComponent& camera_transform = camera_entity.GetComponent< TransformComponent >();
+		const TransformComponent& transform = camera_entity.GetComponent< TransformComponent >();
 
-		return ConvertFromScreenPositionToWorldPosition( screenPosition, camera, camera_transform );
+		return ConvertFromScreenPositionToWorldPosition( screenPosition, camera, transform );
 	}
 
 	Vec2f ConvertFromScreenPositionToWorldPosition( Vec2f screenPosition, const CameraComponent& camera,
-	                                                const TransformComponent& camera_transform )
+	                                                const Engine::TransformComponent& camera_transform )
 	{
 		screenPosition.AddToX( -static_cast< float >( camera.width / 2 ) );
 		screenPosition.AddToY( -static_cast< float >( camera.height / 2 ) );
@@ -59,7 +62,8 @@ namespace Engine
 		screenPosition = Vec2f( screenPosition.X(), -screenPosition.Y() );
 
 		screenPosition /= CameraComponent::PIXELS_PER_WORLD_UNIT;
-		const Vec2f camera_position = camera_transform.GetPosition();
+		const Engine::TransformComponentProxy transformComponentProxy;
+		const Vec2f camera_position = transformComponentProxy.GetGlobalPosition( camera_transform );
 		screenPosition.AddToX( camera_position.X() );
 		screenPosition.AddToY( camera_position.Y() );
 		return screenPosition;

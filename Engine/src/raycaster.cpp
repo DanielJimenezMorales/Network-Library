@@ -1,7 +1,9 @@
 #include "raycaster.h"
 
-#include "components/transform_component.h"
 #include "components/collider_2d_component.h"
+#include "components/transform_component.h"
+
+#include "transform/transform_hierarchy_helper_functions.h"
 
 #include "collisions/circle_bounds_2d.h"
 
@@ -21,6 +23,7 @@ namespace Engine
 		static bool PerformRaycastAgainstSphere( const Ray& ray, const TransformComponent& circle_transform,
 		                                         const CircleBounds2D& circle_collider, RaycastResult& out_result )
 		{
+			const TransformComponentProxy transformComponentProxy;
 			bool has_collided = false;
 
 			// Cache Ray data
@@ -30,7 +33,7 @@ namespace Engine
 
 			// Cache circle data
 			const float32 circle_radius = circle_collider.GetRadius();
-			const Vec2f circle_position = circle_transform.GetPosition();
+			const Vec2f circle_position = transformComponentProxy.GetGlobalPosition( circle_transform );
 
 			// Apply second grade formula
 			// second_grade_formula_result = -b -sqrt(b^2 - c) where b = Dot(m,d), m = x0 - C and c = Dot(m, m) - r^2

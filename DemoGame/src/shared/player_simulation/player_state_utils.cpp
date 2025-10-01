@@ -6,6 +6,8 @@
 
 #include "components/transform_component.h"
 
+#include "transform/transform_hierarchy_helper_functions.h"
+
 #include "shared/components/player_controller_component.h"
 
 #include "core/Buffer.h"
@@ -17,9 +19,10 @@ namespace PlayerSimulation
 		PlayerState playerState;
 		playerState.tick = current_tick;
 
+		const Engine::TransformComponentProxy transformComponentProxy;
 		const Engine::TransformComponent& transform = player_entity.GetComponent< Engine::TransformComponent >();
-		playerState.position = transform.GetPosition();
-		playerState.rotationAngle = transform.GetRotationAngle();
+		playerState.position = transformComponentProxy.GetGlobalPosition( transform );
+		playerState.rotationAngle = transformComponentProxy.GetGlobalRotation( transform );
 
 		const PlayerControllerComponent& playerController = player_entity.GetComponent< PlayerControllerComponent >();
 		playerState.timeLeftUntilNextShot = playerController.timeLeftUntilNextShot;
@@ -29,10 +32,11 @@ namespace PlayerSimulation
 
 	void ApplyPlayerStateToPlayerEntity( Engine::ECS::GameEntity& player_entity, const PlayerState& player_state )
 	{
+		const Engine::TransformComponentProxy transformComponentProxy;
 		// Update Transform
 		Engine::TransformComponent& transform = player_entity.GetComponent< Engine::TransformComponent >();
-		transform.SetPosition( player_state.position );
-		transform.SetRotationAngle( player_state.rotationAngle );
+		transformComponentProxy.SetGlobalPosition( transform, player_state.position );
+		transformComponentProxy.SetGlobalRotationAngle( transform, player_state.rotationAngle );
 
 		// Update Player Controller
 		PlayerControllerComponent& playerController = player_entity.GetComponent< PlayerControllerComponent >();

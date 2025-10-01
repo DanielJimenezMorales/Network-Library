@@ -9,14 +9,21 @@
 #include "shared/player_simulation/simulation_events_handler.h"
 #include "shared/player_simulation/simulation_events.h"
 
+#include "math_utils.h"
+
 namespace PlayerSimulation
 {
 	static void UpdateLookAt( const InputState& inputs, const PlayerState& current_state, PlayerState& result_state,
 	                          float32 elapsed_time, const PlayerStateConfiguration& configuration )
 	{
-		Engine::TransformComponent transform( current_state.position, current_state.rotationAngle );
+		const Vec2f forwardVector = Engine::ConvertAngleToNormalizedDirection( current_state.rotationAngle );
+		const float32 angleToAdd =
+		    Engine::CalculateRotationAngleToTarget( current_state.position, forwardVector, inputs.virtualMousePosition );
+		result_state.rotationAngle = current_state.rotationAngle + angleToAdd;
+
+		/*Engine::TransformComponent transform( current_state.position, current_state.rotationAngle );
 		transform.LookAt( inputs.virtualMousePosition );
-		result_state.rotationAngle = transform.GetRotationAngle();
+		result_state.rotationAngle = transform.GetRotationAngle();*/
 	}
 
 	bool PlayerRotationController::Simulate( const InputState& inputs, const PlayerState& current_state,
