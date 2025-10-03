@@ -1,6 +1,7 @@
 {
 	"name": "player_aim",
 	"components": [
-		"Transform"
+		"Transform",
+		"PlayerAim"
 	]
 }

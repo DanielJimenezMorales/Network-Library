@@ -9,6 +9,7 @@
 
 #include "client/components/ghost_object_component.h"
 #include "client/components/interpolated_object_component.h"
+#include "client/components/player_aim_component.h"
 
 #include "vec2f.h"
 
@@ -80,7 +81,27 @@ void InterpolatedPlayerObjectUpdaterSystem::Execute( Engine::ECS::World& world, 
 
 		const Engine::TransformComponent& ghostTransform =
 		    ghostObject.entity.GetComponent< Engine::TransformComponent >();
+
 		Engine::TransformComponent& interpolatedTransform = it->GetComponent< Engine::TransformComponent >();
+
+		// Get the entity that holds the rotation (the one with the PlayerAimComponent)
+		Engine::ECS::GameEntity interpolatedRotationEntity;
+		std::vector< Engine::ECS::GameEntity > childrenEntities =
+		    transformComponentProxy.GetChildren( interpolatedTransform );
+		auto childIt = childrenEntities.begin();
+		for ( ; childIt != childrenEntities.end(); ++childIt )
+		{
+			if ( childIt->HasComponent< PlayerAimComponent >() )
+			{
+				interpolatedRotationEntity = *childIt;
+				break;
+			}
+		}
+
+		assert( interpolatedRotationEntity.IsValid() );
+
+		Engine::TransformComponent& interpolatedRotationTransform =
+		    interpolatedRotationEntity.GetComponent< Engine::TransformComponent >();
 
 		Vec2f finalPosition;
 		float32 finalRotationAngle;
@@ -106,6 +127,6 @@ void InterpolatedPlayerObjectUpdaterSystem::Execute( Engine::ECS::World& world, 
 		}
 
 		transformComponentProxy.SetGlobalPosition( interpolatedTransform, finalPosition );
-		transformComponentProxy.SetGlobalRotationAngle( interpolatedTransform, finalRotationAngle );
+		transformComponentProxy.SetGlobalRotationAngle( interpolatedRotationTransform, finalRotationAngle );
 	}
 }

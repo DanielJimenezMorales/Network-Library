@@ -22,6 +22,7 @@ namespace Engine
 			    , uv0( 0.f, 0.f )
 			    , uv1( 1.f, 1.f )
 			    , flipX( false )
+			    , flipY( false )
 			{
 			}
 
@@ -33,6 +34,7 @@ namespace Engine
 			    , uv0( 0.f, 0.f )
 			    , uv1( 1.f, 1.f )
 			    , flipX( false )
+			    , flipY( false )
 			{
 			}
 
@@ -43,5 +45,6 @@ namespace Engine
 			Vec2f uv0;
 			Vec2f uv1;
 			bool flipX;
+			bool flipY;
 	};
 } // namespace Engine

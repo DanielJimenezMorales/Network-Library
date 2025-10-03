@@ -20,14 +20,6 @@ struct InterpolatedObjectComponent
 		{
 		}
 
-		// The entity to interpolate towards
-		Engine::ECS::GameEntity ghostEntity;
-
-		// If invalid, rotation will be applied to the entity with this component, otherwise, it will be apply to
-		// interpolatedRotationChildEntity.
-		// IMPORTANT: interpolatedRotationChildEntity must be a child entity.
-		Engine::ECS::GameEntity interpolatedRotationChildEntity;
-
 		float32 positionalSmoothingFactor;
 		float32 orientationalSmoothingFactor;
 		float32 snapToGhostPositionDistanceThreshold;

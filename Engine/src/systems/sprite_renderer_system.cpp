@@ -73,8 +73,17 @@ namespace Engine
 			center.x = texture->GetWidth() / 2;
 			center.y = texture->GetHeight() / 2;
 
-			const SDL_RendererFlip flip =
-			    spriteRenderer.flipX ? SDL_RendererFlip::SDL_FLIP_HORIZONTAL : SDL_RendererFlip::SDL_FLIP_NONE;
+			// TODO So far, this doesn't support FLIP X and Y at the same time. If both are set, FLIP Y will only be
+			// applied
+			SDL_RendererFlip flip = SDL_RendererFlip::SDL_FLIP_NONE;
+			if ( spriteRenderer.flipX )
+			{
+				flip = SDL_RendererFlip::SDL_FLIP_HORIZONTAL;
+			}
+			else if ( spriteRenderer.flipY )
+			{
+				flip = SDL_RendererFlip::SDL_FLIP_VERTICAL;
+			}
 
 			// SDL Rotates clockwise (the opposite as the engine that does it anti-clockwise), so we need to invert it.
 			const float64 rotationAngle = 360 - transformComponentProxy.GetGlobalRotation( transform );

@@ -47,6 +47,8 @@
 #include "client/components/interpolated_object_component.h"
 #include "client/components/virtual_mouse_component.h"
 #include "client/components/crosshair_component.h"
+#include "client/components/player_aim_component.h"
+#include "client/components/player_visual_weapon_tag_component.h"
 
 #include "client/systems/crosshair_follow_mouse_system.h"
 #include "client/systems/client_local_player_server_reconciliator_system.h"
@@ -54,6 +56,7 @@
 #include "client/systems/client_local_player_predictor_system.h"
 #include "client/systems/remote_player_controller_system.h"
 #include "client/systems/interpolated_player_objects updater_system.h"
+#include "client/systems/player_weapon_flip_system.h"
 
 #include "client/client_network_entity_creator.h"
 //---
@@ -100,6 +103,8 @@ static void RegisterComponents( Engine::ECS::World& world )
 	world.RegisterComponent< InterpolatedObjectReferenceComponent >( "InterpolatedObjectReference" );
 	world.RegisterComponent< InterpolatedObjectComponent >( "InterpolatedObject" );
 	world.RegisterComponent< ClientSidePredictionComponent >( "ClientSidePrediction" );
+	world.RegisterComponent< PlayerAimComponent >( "PlayerAim" );
+	world.RegisterComponent< PlayerVisualWeaponTagComponent >( "PlayerVisualWeaponTag" );
 }
 
 static void RegisterArchetypes( Engine::ECS::World& world )
@@ -244,6 +249,11 @@ static bool AddGameplayToWorld( Engine::ECS::World& world )
 	    new InterpolatedPlayerObjectUpdaterSystem();
 	interpolated_player_objects_system_coordinator->AddSystemToTail( interpolated_player_objects_system );
 	world.AddSystem( interpolated_player_objects_system_coordinator );
+
+	Engine::ECS::SystemCoordinator* player_weapon_flip_system_coordinator =
+	    new Engine::ECS::SystemCoordinator( Engine::ECS::ExecutionStage::UPDATE );
+	player_weapon_flip_system_coordinator->AddSystemToTail( new PlayerWeaponFlipSystem() );
+	world.AddSystem( player_weapon_flip_system_coordinator );
 
 	// Add Client-side player controller system
 	Engine::ECS::SystemCoordinator* client_player_controller_system_coordinator =

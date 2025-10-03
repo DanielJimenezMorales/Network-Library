@@ -6,7 +6,7 @@
 	"children_prefabs": [
 		{
 			"name": "PlayerWeaponHolder",
-			"local_position_x": 6,
+			"local_position_x": 4,
 			"local_position_y": 0,
 			"local_rotation": 0,
 			"local_scale_x": 2,
