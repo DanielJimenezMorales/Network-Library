@@ -502,6 +502,8 @@ namespace
 		             childNewLocalPosition.Y(), EPSILON );
 	}
 
+	// TODO Add test that when changing the parent's global rotation the children local position changes accordingly too
+
 	INSTANTIATE_TEST_SUITE_P( SetRotationLookAt, RotationAngleAndDirectionParams,
 	                          ::testing::Values( std::make_tuple( 0.f, Vec2f( 1.f, 0.f ) ),
 	                                             std::make_tuple( 90.f, Vec2f( 0.f, 1.f ) ),

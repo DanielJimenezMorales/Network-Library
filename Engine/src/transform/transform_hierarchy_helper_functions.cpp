@@ -251,7 +251,6 @@ namespace Engine
 
 			// Remove parent from current
 			transform._parent = ECS::GameEntity();
-			transform._initialParentRotationAngle = 0.f;
 
 			// Reset local transform to default values
 			transform._localPosition = Vec2f( 0.f, 0.f );
@@ -287,7 +286,7 @@ namespace Engine
 
 		// Set parent as current parent
 		transform._parent = parent_entity;
-		//transform._initialParentRotationAngle = GetGlobalRotation( parentTransform );
+		transform._initialParentRotationAngle = GetGlobalRotation( parentTransform );
 
 		// If parent is dirty, resolve it
 		if ( parentTransform._isDirty )
