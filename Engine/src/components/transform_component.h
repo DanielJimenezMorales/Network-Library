@@ -27,6 +27,7 @@ namespace Engine
 			    , _localScale( Vec2f( 1.f, 1.f ) )
 			    , _isDirty( false )
 			    , _parent()
+			    , _initialParentRotationAngle( 0.f )
 			    , _children()
 			{
 			}
@@ -40,6 +41,7 @@ namespace Engine
 			    , _localScale( Vec2f( 1.f, 1.f ) )
 			    , _isDirty( false )
 			    , _parent()
+			    , _initialParentRotationAngle( 0.f )
 			    , _children()
 			{
 			}
@@ -53,6 +55,7 @@ namespace Engine
 			    , _localScale( Vec2f( 1.f, 1.f ) )
 			    , _isDirty( false )
 			    , _parent()
+			    , _initialParentRotationAngle( 0.f )
 			    , _children()
 			{
 			}
@@ -65,13 +68,14 @@ namespace Engine
 			mutable float32 _rotationAngle;
 			mutable Vec2f _scale;
 
-			Vec2f _localPosition;
+			mutable Vec2f _localPosition;
 			float32 _localRotationAngle;
 			Vec2f _localScale;
 
 			mutable bool _isDirty;
 
 			ECS::GameEntity _parent;
+			mutable float32 _initialParentRotationAngle;
 			std::vector< ECS::GameEntity > _children;
 
 			static constexpr Vec2f DEFAULT_FORWARD_VECTOR = Vec2f( 0.f, -1.f );

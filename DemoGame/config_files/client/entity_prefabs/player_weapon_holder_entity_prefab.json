@@ -1,0 +1,11 @@
+{
+	"name": "PlayerWeaponHolder",
+	"archetype": "player_weapon_holder",
+	"component_configs": [
+		{
+			"name": "SpriteRenderer",
+			"texture_path": "sprites/weapon_sprites/mp5.png",
+			"type": "SINGLE"
+		}
+	]
+}

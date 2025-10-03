@@ -69,13 +69,17 @@ namespace Engine
 			destRect.h =
 			    static_cast< int >( texture->GetHeight() * transformComponentProxy.GetGlobalScale( transform ).Y() );
 
+			SDL_Point center;
+			center.x = texture->GetWidth() / 2;
+			center.y = texture->GetHeight() / 2;
+
 			const SDL_RendererFlip flip =
 			    spriteRenderer.flipX ? SDL_RendererFlip::SDL_FLIP_HORIZONTAL : SDL_RendererFlip::SDL_FLIP_NONE;
 
 			// SDL Rotates clockwise (the opposite as the engine that does it anti-clockwise), so we need to invert it.
 			const float64 rotationAngle = 360 - transformComponentProxy.GetGlobalRotation( transform );
 			SDL_RenderCopyEx( render_global_component.renderer, texture->GetRaw(), &srcRect, &destRect, rotationAngle,
-			                  nullptr, flip );
+			                  &center, flip );
 		}
 	}
 

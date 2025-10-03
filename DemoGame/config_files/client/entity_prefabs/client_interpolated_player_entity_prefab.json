@@ -2,10 +2,24 @@
 	"name": "ClientPlayerInterpolated",
 	"archetype": "client_interpolated_player",
 	"component_configs": [
+
+	],
+	"children_prefabs": [
 		{
-			"name": "SpriteRenderer",
-			"texture_path": "sprites/PlayerSprites/playerHead.png",
-			"type": "SINGLE"
+			"name": "AnimatedDummy",
+			"local_position_x": 0,
+			"local_position_y": 0,
+			"local_rotation": 0,
+			"local_scale_x": 1,
+			"local_scale_y": 1
+		},
+		{
+			"name": "PlayerAim",
+			"local_position_x": 0,
+			"local_position_y": 0,
+			"local_rotation": 0,
+			"local_scale_x": 1,
+			"local_scale_y": 1
 		}
 	]
 }
