@@ -3,6 +3,7 @@
 	"components": [
 		"Transform",
 		"SpriteRenderer",
-		"Animation"
+		"Animation",
+		"PlayerBodyAnimationTag"
 	]
 }

@@ -33,10 +33,12 @@ namespace PlayerSimulation
 	{
 		if ( IsMoving( inputs ) )
 		{
+			result_state.isWalking = true;
 			UpdatePosition( inputs, current_state, result_state, elapsed_time, configuration );
 		}
 		else
 		{
+			result_state.isWalking = false;
 			result_state.position = current_state.position;
 		}
 

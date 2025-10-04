@@ -16,15 +16,22 @@ namespace PlayerSimulation
 			// Header fields
 			uint32 tick;
 
-			// Body fields
+			// Position
 			Vec2f position;
+
+			// Rotation
 			float32 rotationAngle;
 
+			// Movement
+			bool isWalking;
+
+			// Shooting
 			float32 timeLeftUntilNextShot;
 
 			bool operator==( const PlayerState& other ) const
 			{
-				return tick == other.tick && position == other.position && rotationAngle == other.rotationAngle;
+				return tick == other.tick && position == other.position && rotationAngle == other.rotationAngle &&
+				       isWalking == other.isWalking && timeLeftUntilNextShot == other.timeLeftUntilNextShot;
 			}
 
 			bool operator!=( const PlayerState& other ) const { return !operator==( other ); }

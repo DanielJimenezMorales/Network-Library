@@ -49,6 +49,7 @@
 #include "client/components/crosshair_component.h"
 #include "client/components/player_aim_component.h"
 #include "client/components/player_visual_weapon_tag_component.h"
+#include "client/components/player_body_animation_tag_component.h"
 
 #include "client/systems/crosshair_follow_mouse_system.h"
 #include "client/systems/client_local_player_server_reconciliator_system.h"
@@ -57,6 +58,7 @@
 #include "client/systems/remote_player_controller_system.h"
 #include "client/systems/interpolated_player_objects updater_system.h"
 #include "client/systems/player_weapon_flip_system.h"
+#include "client/systems/player_body_animation_system.h"
 
 #include "client/client_network_entity_creator.h"
 //---
@@ -105,6 +107,7 @@ static void RegisterComponents( Engine::ECS::World& world )
 	world.RegisterComponent< ClientSidePredictionComponent >( "ClientSidePrediction" );
 	world.RegisterComponent< PlayerAimComponent >( "PlayerAim" );
 	world.RegisterComponent< PlayerVisualWeaponTagComponent >( "PlayerVisualWeaponTag" );
+	world.RegisterComponent< PlayerBodyAnimationTagComponent >( "PlayerBodyAnimationTag" );
 }
 
 static void RegisterArchetypes( Engine::ECS::World& world )
@@ -250,6 +253,11 @@ static bool AddGameplayToWorld( Engine::ECS::World& world )
 	interpolated_player_objects_system_coordinator->AddSystemToTail( interpolated_player_objects_system );
 	world.AddSystem( interpolated_player_objects_system_coordinator );
 
+	Engine::ECS::SystemCoordinator* player_body_animation_system_coordinator =
+	    new Engine::ECS::SystemCoordinator( Engine::ECS::ExecutionStage::UPDATE );
+	player_body_animation_system_coordinator->AddSystemToTail( new PlayerBodyAnimationSystem() );
+	world.AddSystem( player_body_animation_system_coordinator );
+
 	Engine::ECS::SystemCoordinator* player_weapon_flip_system_coordinator =
 	    new Engine::ECS::SystemCoordinator( Engine::ECS::ExecutionStage::UPDATE );
 	player_weapon_flip_system_coordinator->AddSystemToTail( new PlayerWeaponFlipSystem() );
@@ -341,12 +349,6 @@ static bool CreateGameEntities( Engine::ECS::World& world )
 
 	// Add virtual mouse entity
 	world.CreateGameEntity( "VirtualMouse", Vec2f( 0, 0 ) );
-
-	// Add animated dummy
-	auto entity = world.CreateGameEntity( "AnimatedDummy", Vec2f( -5.f, 0.f ) );
-	Engine::TransformComponent& animatedDummyTransform = entity.GetComponent< Engine::TransformComponent >();
-	const Engine::TransformComponentProxy transformComponentProxy;
-	transformComponentProxy.SetGlobalRotationAngle( animatedDummyTransform, 0.f );
 
 	return true;
 }

@@ -145,6 +145,7 @@ namespace Engine
 			}
 			else
 			{
+				// This else is for supporting Tag components with no data inside
 				_entities.emplace< T >( static_cast< entt::entity >( gameEntity._ecsEntityId ) );
 				static T dummy;
 				return dummy;

@@ -305,6 +305,11 @@ namespace Engine
 		return transform._parent.IsValid();
 	}
 
+	ECS::GameEntity TransformComponentProxy::GetParent( const TransformComponent& transform ) const
+	{
+		return transform._parent;
+	}
+
 	bool TransformComponentProxy::HasChildren( const TransformComponent& transform ) const
 	{
 		return !transform._children.empty();

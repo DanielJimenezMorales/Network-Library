@@ -13,5 +13,6 @@ struct PlayerControllerComponent
 
 		PlayerSimulation::PlayerStateConfiguration stateConfiguration;
 
+		bool isWalking;
 		float32 timeLeftUntilNextShot;
 };

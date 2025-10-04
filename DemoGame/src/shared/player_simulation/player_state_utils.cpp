@@ -25,6 +25,7 @@ namespace PlayerSimulation
 		playerState.rotationAngle = transformComponentProxy.GetGlobalRotation( transform );
 
 		const PlayerControllerComponent& playerController = player_entity.GetComponent< PlayerControllerComponent >();
+		playerState.isWalking = playerController.isWalking;
 		playerState.timeLeftUntilNextShot = playerController.timeLeftUntilNextShot;
 
 		return playerState;
@@ -40,6 +41,7 @@ namespace PlayerSimulation
 
 		// Update Player Controller
 		PlayerControllerComponent& playerController = player_entity.GetComponent< PlayerControllerComponent >();
+		playerController.isWalking = player_state.isWalking;
 		playerController.timeLeftUntilNextShot = player_state.timeLeftUntilNextShot;
 	}
 
