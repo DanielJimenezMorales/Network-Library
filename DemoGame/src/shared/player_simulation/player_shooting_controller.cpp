@@ -26,7 +26,6 @@ namespace PlayerSimulation
 
 		if ( inputs.isShooting && newTimeLeftUntilNextShot == 0.f )
 		{
-			LOG_WARNING( "ADD ON SHOT PERFORMED" );
 			newTimeLeftUntilNextShot = configuration.GetFireRate();
 			simulation_events_handler.AddEvent( PlayerSimulation::ON_SHOT_PERFORMED );
 		}
