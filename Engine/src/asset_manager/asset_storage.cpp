@@ -29,9 +29,16 @@ namespace Engine
 		return AssetHandle( path, _type );
 	}
 
-	const AssetHandle AssetStorage::GetAsset( const std::string& path ) const
+	const AssetHandle AssetStorage::TryGetAsset( const std::string& path ) const
 	{
-		return AssetHandle::GetInvalid();
+		if ( IsAssetCached( path ) )
+		{
+			return AssetHandle( path, _type );
+		}
+		else
+		{
+			return AssetHandle::GetInvalid();
+		}
 	}
 
 	const Asset* AssetStorage::GetRawAsset( const AssetHandle& handle ) const

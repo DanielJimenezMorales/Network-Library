@@ -7,6 +7,8 @@
 
 namespace Engine
 {
+	class AssetManager;
+
 	namespace ECS
 	{
 		class Prefab;
@@ -15,7 +17,7 @@ namespace Engine
 	class SpriteRendererSystem : public ECS::ISimpleSystem
 	{
 		public:
-			SpriteRendererSystem( SDL_Renderer* renderer );
+			SpriteRendererSystem( SDL_Renderer* renderer, AssetManager* asset_manager );
 
 			void Execute( ECS::World& world, float32 elapsed_time ) override;
 
@@ -25,5 +27,6 @@ namespace Engine
 
 		private:
 			TextureResourceHandler _textureResourceHandler;
+			AssetManager* _assetManager;
 	};
 } // namespace Engine

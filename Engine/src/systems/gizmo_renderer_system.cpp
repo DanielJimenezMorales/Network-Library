@@ -66,6 +66,7 @@ namespace Engine
 
 	void GizmoRendererSystem::AllocateGizmoRendererComponent( ECS::GameEntity& entity )
 	{
+		LOG_WARNING( "ALLOCATE GIZMO!" );
 		const bool has_raycast = entity.HasComponent< RaycastComponent >();
 		const bool has_collider = entity.HasComponent< RaycastComponent >();
 		if ( entity.HasComponent< RaycastComponent >() )

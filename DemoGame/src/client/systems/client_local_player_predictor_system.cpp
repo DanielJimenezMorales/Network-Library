@@ -92,27 +92,33 @@ static void SendInputsToServer( Engine::ECS::World& world, const InputState& inp
 void ClientLocalPlayerPredictorSystem::ExecuteLocalPrediction( Engine::ECS::GameEntity& entity,
                                                                const InputState& input_state, float32 elapsed_time )
 {
+	LOG_WARNING( "000" );
 	// Get the current state and the configuration for the predicted entity
 	const PlayerSimulation::PlayerState currentState =
 	    PlayerSimulation::GetPlayerStateFromPlayerEntity( entity, input_state.tick );
 
+	LOG_WARNING( "010101" );
 	PlayerControllerComponent& localPlayerController = entity.GetComponent< PlayerControllerComponent >();
 	const PlayerSimulation::PlayerStateConfiguration& playerStateConfiguration =
 	    localPlayerController.stateConfiguration;
 
+	LOG_WARNING( "020202" );
 	// Simulate the player logic locally and get the resulted simulation state
 	const PlayerSimulation::PlayerState resultPlayerState =
 	    _playerStateSimulator.Simulate( input_state, currentState, playerStateConfiguration, elapsed_time );
 
+	LOG_WARNING( "111" );
 	// Store the data in the prediction buffer in case we need to reconcile with the server later.
 	ClientSidePredictionComponent& clientSidePredictionComponent =
 	    entity.GetComponent< ClientSidePredictionComponent >();
 	SavePlayerStateInBuffer( clientSidePredictionComponent, input_state, resultPlayerState, elapsed_time );
 
+	LOG_WARNING( "222" );
 	// Apply the resulted simulation state to the entity
 	PlayerSimulation::ApplyPlayerStateToPlayerEntity( entity, resultPlayerState );
 
 	// Fire simulation events
+	LOG_WARNING( "LLAMO A PROCESAR EVENTOS" );
 	_playerStateSimulator.ProcessLastSimulationEvents( *_world, entity, &_simulationEventsProcessor );
 }
 

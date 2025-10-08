@@ -15,7 +15,7 @@ namespace Engine
 			AssetStorage( AssetType type );
 
 			AssetHandle StoreAsset( Asset* asset );
-			const AssetHandle GetAsset( const std::string& path ) const;
+			const AssetHandle TryGetAsset( const std::string& path ) const;
 			const Asset* GetRawAsset( const AssetHandle& handle ) const;
 
 		private:

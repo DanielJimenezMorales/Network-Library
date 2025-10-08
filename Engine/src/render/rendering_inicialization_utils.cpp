@@ -70,7 +70,8 @@ namespace Engine
 		Engine::RenderClearSystem* renderClearSystem = new Engine::RenderClearSystem();
 		renderSystemCoordinator->AddSystemToTail( renderClearSystem );
 
-		SpriteRendererSystem* spriteRendererSystem = new SpriteRendererSystem( render.renderer );
+		SpriteRendererSystem* spriteRendererSystem =
+		    new SpriteRendererSystem( render.renderer, world.GetAssetManager() );
 		auto on_configure_sprite_renderer_callback =
 		    std::bind( &SpriteRendererSystem::ConfigureSpriteRendererComponent, spriteRendererSystem,
 		               std::placeholders::_1, std::placeholders::_2 );

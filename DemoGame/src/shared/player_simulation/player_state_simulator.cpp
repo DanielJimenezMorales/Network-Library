@@ -17,6 +17,7 @@ namespace PlayerSimulation
 	PlayerState PlayerStateSimulator::Simulate( const InputState& inputs, const PlayerState& current_state,
 	                                            const PlayerStateConfiguration& configuration, float32 elapsed_time )
 	{
+		LOG_WARNING( "SIMULATE" );
 		_simulationEventsHandler.Clear();
 
 		PlayerState playerState;

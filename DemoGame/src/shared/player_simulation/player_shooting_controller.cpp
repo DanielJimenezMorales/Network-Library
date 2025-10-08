@@ -10,6 +10,8 @@
 #include "shared/player_simulation/simulation_events_handler.h"
 #include "shared/player_simulation/simulation_events.h"
 
+#include "logger.h"
+
 namespace PlayerSimulation
 {
 	bool PlayerShootingController::Simulate( const InputState& inputs, const PlayerState& current_state,
@@ -24,6 +26,7 @@ namespace PlayerSimulation
 
 		if ( inputs.isShooting && newTimeLeftUntilNextShot == 0.f )
 		{
+			LOG_WARNING( "ADD ON SHOT PERFORMED" );
 			newTimeLeftUntilNextShot = configuration.GetFireRate();
 			simulation_events_handler.AddEvent( PlayerSimulation::ON_SHOT_PERFORMED );
 		}

@@ -34,7 +34,7 @@ namespace Engine
 		AssetStorage* storage = TryGetAssetStorage( type );
 		if ( storage != nullptr )
 		{
-			handle = storage->GetAsset( path );
+			handle = storage->TryGetAsset( path );
 			if ( !handle.IsValid() )
 			{
 				IAssetLoader* loader = TryGetAssetLoader( type );

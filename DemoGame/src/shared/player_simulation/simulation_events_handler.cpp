@@ -26,9 +26,10 @@ namespace PlayerSimulation
 	{
 		assert( entity.IsValid() );
 		assert( events_processor != nullptr );
-
+		LOG_WARNING( "EVENTS %d", _events.size() );
 		for ( auto cit = _events.cbegin(); cit != _events.cend(); ++cit )
 		{
+			LOG_WARNING( "VOY A PROCESAR EVENTO" );
 			const bool result = events_processor->ProcessEvent( world, entity, *cit );
 			if ( !result )
 			{
