@@ -1,8 +1,6 @@
 #pragma once
 #include "ecs/i_simple_system.h"
 
-#include "resource_handlers/texture_resource_handler.h"
-
 #include "SDL_image.h"
 
 namespace Engine
@@ -21,12 +19,9 @@ namespace Engine
 
 			void Execute( ECS::World& world, float32 elapsed_time ) override;
 
-			TextureResourceHandler* GetTextureResourceHandler() { return &_textureResourceHandler; }
-
 			void ConfigureSpriteRendererComponent( ECS::GameEntity& entity, const ECS::Prefab& prefab );
 
 		private:
-			TextureResourceHandler _textureResourceHandler;
 			AssetManager* _assetManager;
 	};
 } // namespace Engine

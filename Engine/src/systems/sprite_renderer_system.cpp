@@ -1,7 +1,6 @@
 #include "sprite_renderer_system.h"
 
 #include "coordinates_conversion_utils.h"
-#include "texture.h"
 #include "vec2f.h"
 #include "logger.h"
 
@@ -28,8 +27,7 @@
 namespace Engine
 {
 	SpriteRendererSystem::SpriteRendererSystem( SDL_Renderer* renderer, AssetManager* asset_manager )
-	    : _textureResourceHandler( renderer )
-	    , _assetManager( asset_manager )
+	    : _assetManager( asset_manager )
 	{
 	}
 
@@ -52,8 +50,7 @@ namespace Engine
 
 			const Vec2f screenPosition = ConvertFromWorldPositionToScreenPosition(
 			    transformComponentProxy.GetGlobalPosition( transform ), camera, cameraTransform );
-			// const Texture* texture = _textureResourceHandler.TryGetTextureFromHandler( spriteRenderer.textureHandler
-			// );
+
 			const TextureAsset* texture =
 			    _assetManager->GetRawAsset< TextureAsset >( spriteRenderer.textureHandler, AssetType::TEXTURE );
 			if ( texture == nullptr )
