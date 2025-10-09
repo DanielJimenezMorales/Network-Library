@@ -18,5 +18,4 @@ namespace Engine
 		private:
 			SDL_Renderer* _renderer;
 	};
-
 }
