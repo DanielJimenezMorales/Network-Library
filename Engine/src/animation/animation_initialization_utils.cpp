@@ -22,7 +22,7 @@ namespace Engine
 	{
 		Engine::ECS::SystemCoordinator* animation_system_coordinator =
 		    new Engine::ECS::SystemCoordinator( Engine::ECS::ExecutionStage::UPDATE );
-		Engine::AnimationSystem* animationSystem = new Engine::AnimationSystem();
+		Engine::AnimationSystem* animationSystem = new Engine::AnimationSystem( world.GetAssetManager() );
 		animation_system_coordinator->AddSystemToTail( animationSystem );
 		auto on_configure_animation_callback =
 		    std::bind( &Engine::AnimationSystem::ConfigureAnimationComponent, animationSystem, std::placeholders::_1,

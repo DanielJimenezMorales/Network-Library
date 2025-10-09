@@ -12,6 +12,7 @@
 			"animations": [
 				{
 					"name": "IDLE_FRONT",
+					"path": "animations/player/player_idle_front.json",
 					"start_frame_x_pixel": 0,
 					"start_frame_y_pixel": 0,
 					"frame_width_pixels": 16,
@@ -22,6 +23,7 @@
 				},
 				{
 					"name": "IDLE_FRONT_LEFT",
+					"path": "animations/player/player_idle_front_left.json",
 					"start_frame_x_pixel": 0,
 					"start_frame_y_pixel": 16,
 					"frame_width_pixels": 16,
@@ -32,6 +34,7 @@
 				},
 				{
 					"name": "IDLE_LEFT",
+					"path": "animations/player/player_idle_left.json",
 					"start_frame_x_pixel": 0,
 					"start_frame_y_pixel": 32,
 					"frame_width_pixels": 16,
@@ -42,6 +45,7 @@
 				},
 				{
 					"name": "IDLE_BACK_LEFT",
+					"path": "animations/player/player_idle_back_left.json",
 					"start_frame_x_pixel": 0,
 					"start_frame_y_pixel": 48,
 					"frame_width_pixels": 16,
@@ -52,6 +56,7 @@
 				},
 				{
 					"name": "IDLE_BACK",
+					"path": "animations/player/player_idle_back.json",
 					"start_frame_x_pixel": 0,
 					"start_frame_y_pixel": 64,
 					"frame_width_pixels": 16,
@@ -62,6 +67,7 @@
 				},
 				{
 					"name": "IDLE_FRONT_RIGHT",
+					"path": "animations/player/player_idle_front_right.json",
 					"start_frame_x_pixel": 0,
 					"start_frame_y_pixel": 16,
 					"frame_width_pixels": 16,
@@ -72,6 +78,7 @@
 				},
 				{
 					"name": "IDLE_RIGHT",
+					"path": "animations/player/player_idle_right.json",
 					"start_frame_x_pixel": 0,
 					"start_frame_y_pixel": 32,
 					"frame_width_pixels": 16,
@@ -82,6 +89,7 @@
 				},
 				{
 					"name": "IDLE_BACK_RIGHT",
+					"path": "animations/player/player_idle_back_right.json",
 					"start_frame_x_pixel": 0,
 					"start_frame_y_pixel": 48,
 					"frame_width_pixels": 16,

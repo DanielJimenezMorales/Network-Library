@@ -27,7 +27,15 @@ namespace Engine
 				assert( frame_rate > 0 );
 			}
 
-			AssetType GetType() const override { return AssetType::TEXTURE; }
+			AssetType GetType() const override { return AssetType::ANIMATION; }
+
+			uint32 GetStartX() const { return startX; }
+			uint32 GetStartY() const { return startY; }
+			uint32 GetFrameWidth() const { return frameWidth; }
+			uint32 GetFrameHeight() const { return frameHeight; }
+			uint32 GetNumberOfFrames() const { return numberOfFrames; }
+			uint32 GetFrameRate() const { return frameRate; }
+			bool IsFlippedX() const { return flipX; }
 
 		private:
 			uint32 startX;
