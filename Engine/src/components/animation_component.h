@@ -1,6 +1,8 @@
 #pragma once
 #include "numeric_types.h"
 
+#include "asset_manager/asset_handle.h"
+
 #include <string>
 #include <unordered_map>
 
@@ -8,14 +10,20 @@ namespace Engine
 {
 	struct AnimationClip
 	{
+			AnimationClip()
+			    : name()
+			    , assetHandle( AssetHandle::GetInvalid() )
+			{
+			}
+
+			AnimationClip( const std::string& name, const AssetHandle& asset_handle )
+			    : name( name )
+			    , assetHandle( asset_handle )
+			{
+			}
+
 			std::string name;
-			uint32 startFrameXPixel;
-			uint32 startFrameYPixel;
-			uint32 frameWidthPixels;
-			uint32 frameHeightPixels;
-			uint32 numberOfFrames;
-			uint32 frameRate;
-			bool flipX;
+			AssetHandle assetHandle;
 	};
 
 	struct AnimationComponent
@@ -23,14 +31,14 @@ namespace Engine
 		public:
 			AnimationComponent()
 			    : animations()
-			    , currentAnimation( nullptr )
+			    , currentAnimation()
 			    , currentFrame( 0 )
 			    , timeAccumulator( 0.f )
 			{
 			}
 
 			std::unordered_map< std::string, AnimationClip > animations;
-			AnimationClip* currentAnimation;
+			const AnimationClip* currentAnimation;
 
 			uint32 currentFrame;
 			float32 timeAccumulator;

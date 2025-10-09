@@ -1,7 +1,6 @@
 #include "sprite_renderer_system.h"
 
 #include "coordinates_conversion_utils.h"
-#include "texture.h"
 #include "vec2f.h"
 #include "logger.h"
 
@@ -19,12 +18,16 @@
 
 #include "component_configurations/sprite_renderer_component_configuration.h"
 
+#include "asset_manager/asset_manager.h"
+
+#include "render/texture_asset.h"
+
 #include <cassert>
 
 namespace Engine
 {
-	SpriteRendererSystem::SpriteRendererSystem( SDL_Renderer* renderer )
-	    : _textureResourceHandler( renderer )
+	SpriteRendererSystem::SpriteRendererSystem( SDL_Renderer* renderer, AssetManager* asset_manager )
+	    : _assetManager( asset_manager )
 	{
 	}
 
@@ -47,7 +50,9 @@ namespace Engine
 
 			const Vec2f screenPosition = ConvertFromWorldPositionToScreenPosition(
 			    transformComponentProxy.GetGlobalPosition( transform ), camera, cameraTransform );
-			const Texture* texture = _textureResourceHandler.TryGetTextureFromHandler( spriteRenderer.textureHandler );
+
+			const TextureAsset* texture =
+			    _assetManager->GetRawAsset< TextureAsset >( spriteRenderer.textureHandler, AssetType::TEXTURE );
 			if ( texture == nullptr )
 			{
 				continue;
@@ -109,8 +114,12 @@ namespace Engine
 		    static_cast< const SpriteRendererComponentConfiguration& >( *component_config_found->second );
 		SpriteRendererComponent& sprite_renderer = entity.GetComponent< SpriteRendererComponent >();
 		sprite_renderer.textureHandler =
+		    _assetManager->GetAsset( sprite_renderer_config.texturePath, AssetType::TEXTURE );
+		const TextureAsset* texture =
+		    _assetManager->GetRawAsset< TextureAsset >( sprite_renderer.textureHandler, AssetType::TEXTURE );
+		/*sprite_renderer.textureHandler =
 		    _textureResourceHandler.LoadTexture( sprite_renderer_config.texturePath.c_str() );
-		const Texture* texture = _textureResourceHandler.TryGetTextureFromHandler( sprite_renderer.textureHandler );
+		const Texture* texture = _textureResourceHandler.TryGetTextureFromHandler( sprite_renderer.textureHandler );*/
 		assert( texture != nullptr );
 		sprite_renderer.type = sprite_renderer_config.type;
 		sprite_renderer.width = texture->GetWidth();

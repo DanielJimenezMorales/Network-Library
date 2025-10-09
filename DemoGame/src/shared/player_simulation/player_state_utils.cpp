@@ -52,6 +52,10 @@ namespace PlayerSimulation
 		buffer.WriteFloat( player_state.position.Y() );
 
 		buffer.WriteFloat( player_state.rotationAngle );
+		buffer.WriteFloat( player_state.timeLeftUntilNextShot );
+
+		// TODO Serialize this in a more efficient way to fit multiple bools in one byte
+		buffer.WriteInteger( player_state.isWalking ? 1 : 0 );
 	}
 
 	PlayerState DeserializePlayerStateFromBuffer( NetLib::Buffer& buffer )
@@ -63,6 +67,10 @@ namespace PlayerSimulation
 		playerState.position.Y( buffer.ReadFloat() );
 
 		playerState.rotationAngle = buffer.ReadFloat();
+		playerState.timeLeftUntilNextShot = buffer.ReadFloat();
+
+		// TODO Serialize this in a more efficient way to fit multiple bools in one byte
+		playerState.isWalking = buffer.ReadInteger() == 1 ? true : false;
 
 		return playerState;
 	}

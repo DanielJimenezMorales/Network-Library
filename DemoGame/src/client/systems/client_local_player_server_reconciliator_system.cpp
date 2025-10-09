@@ -59,6 +59,7 @@ static void ReconciliateWithServer( Engine::ECS::GameEntity& entity,
                                     const PlayerSimulation::PlayerState& state_from_server,
                                     const NetworkPeerGlobalComponent& network_peer )
 {
+	LOG_WARNING( "Reconciliating with server. Server tick: %u", state_from_server.tick );
 	// Overwrite the predicted state with the one received from server
 	const uint32 slotIndexToReconciliate = prediction_component.ConvertTickToBufferSlotIndex( state_from_server.tick );
 	prediction_component.resultedPlayerStatesBuffer[ slotIndexToReconciliate ] = state_from_server;

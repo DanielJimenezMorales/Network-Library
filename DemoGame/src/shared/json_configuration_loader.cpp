@@ -95,22 +95,16 @@ static void ParseComponentConfiguration( const nlohmann::json& json_data,
 	{
 		std::string initialAnimationName = json_data[ "initial_animation_name" ];
 		bool foundInitialAnimationName = false;
-		std::vector< Engine::AnimationClip > animations;
+		std::vector< AnimationConfiguration > animations;
 		auto animations_data = json_data[ "animations" ];
 		auto cit = animations_data.cbegin();
 		for ( ; cit != animations_data.cend(); ++cit )
 		{
 			const nlohmann::json& animation_json_data = *cit;
 
-			Engine::AnimationClip clip;
+			AnimationConfiguration clip;
 			clip.name = animation_json_data[ "name" ];
-			clip.startFrameXPixel = animation_json_data[ "start_frame_x_pixel" ];
-			clip.startFrameYPixel = animation_json_data[ "start_frame_y_pixel" ];
-			clip.frameWidthPixels = animation_json_data[ "frame_width_pixels" ];
-			clip.frameHeightPixels = animation_json_data[ "frame_height_pixels" ];
-			clip.numberOfFrames = animation_json_data[ "number_of_frames" ];
-			clip.frameRate = animation_json_data[ "frame_rate" ];
-			clip.flipX = animation_json_data[ "flip_x" ];
+			clip.path = animation_json_data[ "path" ];
 			animations.push_back( clip );
 
 			if ( !foundInitialAnimationName )

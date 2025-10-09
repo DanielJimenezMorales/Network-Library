@@ -23,6 +23,8 @@
 
 #include "render/rendering_inicialization_utils.h"
 
+#include "animation/animation_initialization_utils.h"
+
 #include "systems/animation_system.h"
 
 // Network library
@@ -163,20 +165,19 @@ static bool AddInputsToWorld( Engine::ECS::World& world )
 	return true;
 }
 
+static bool AddAnimationToWorld( Engine::ECS::World& world )
+{
+	bool result = Engine::AddAnimationToWorld( world );
+	if ( !result )
+	{
+		return false;
+	}
+
+	return true;
+}
+
 static bool AddRenderingToWorld( Engine::ECS::World& world )
 {
-	// Add Animation system
-	// TODO move the Animation system to a different function. Evaluate if moving it to an Engine function like
-	// Engine::AddRenderingToWorld
-	Engine::ECS::SystemCoordinator* animation_system_coordinator =
-	    new Engine::ECS::SystemCoordinator( Engine::ECS::ExecutionStage::UPDATE );
-	Engine::AnimationSystem* animationSystem = new Engine::AnimationSystem();
-	animation_system_coordinator->AddSystemToTail( animationSystem );
-	auto on_configure_animation_callback = std::bind( &Engine::AnimationSystem::ConfigureAnimationComponent,
-	                                                  animationSystem, std::placeholders::_1, std::placeholders::_2 );
-	world.SubscribeToOnEntityConfigure( on_configure_animation_callback );
-	world.AddSystem( animation_system_coordinator );
-
 	bool result = Engine::AddRenderingToWorld( world );
 	if ( !result )
 	{
@@ -305,6 +306,15 @@ static bool CreateSystemsAndGlobalEntities( Engine::ECS::World& world )
 	if ( !result )
 	{
 		LOG_ERROR( "Can't initialize input handling" );
+	}
+
+	//////////////
+	// ANIMATION
+	//////////////
+	result = AddAnimationToWorld( world );
+	if ( !result )
+	{
+		LOG_ERROR( "Can't initialize animation" );
 	}
 
 	//////////////

@@ -12,6 +12,9 @@
 #include "ecs/archetype_registry.h"
 #include "ecs/prefab_registry.h"
 
+// TODO This function shouldn't be here
+#include "asset_manager/asset_manager.h"
+
 struct Vec2f;
 
 namespace Engine
@@ -98,6 +101,9 @@ namespace Engine
 				bool UnsubscribeFromOnEntityDestroy(
 				    const Common::Delegate< GameEntity& >::SubscriptionHandler& handler );
 
+				// TODO This function shouldn't be here
+				AssetManager* GetAssetManager() { return &_assetManager; }
+
 			private:
 				void CreatePendingEntities();
 				GameEntity SpawnEntity( const std::string& prefab_name, const Vec2f& position,
@@ -119,6 +125,9 @@ namespace Engine
 				Common::Delegate< GameEntity& > _onEntityCreate;
 				Common::Delegate< GameEntity&, const Prefab& > _onEntityConfigure;
 				Common::Delegate< GameEntity& > _onEntityDestroy;
+
+				// TODO This function shouldn't be here
+				AssetManager _assetManager;
 		};
 
 		template < typename T >

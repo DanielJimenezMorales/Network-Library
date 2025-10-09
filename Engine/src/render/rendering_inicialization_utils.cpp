@@ -7,6 +7,10 @@
 #include "systems/sprite_renderer_system.h"
 #include "systems/gizmo_renderer_system.h"
 
+#include "asset_manager/asset_manager.h"
+
+#include "render/texture_asset_loader.h"
+
 #include "ecs/world.h"
 
 #include "SDL_image.h"
@@ -52,6 +56,13 @@ namespace Engine
 		return true;
 	}
 
+	static bool AddRenderingAssetmanagement( ECS::World& world, RenderGlobalComponent& render )
+	{
+		AssetManager* assetManager = world.GetAssetManager();
+		bool result = assetManager->RegisterAsset( AssetType::TEXTURE, new TextureAssetLoader( render.renderer ) );
+		return result;
+	}
+
 	static bool AddRenderingSystems( ECS::World& world, RenderGlobalComponent& render )
 	{
 		ECS::SystemCoordinator* renderSystemCoordinator = new ECS::SystemCoordinator( ECS::ExecutionStage::RENDER );
@@ -59,7 +70,8 @@ namespace Engine
 		Engine::RenderClearSystem* renderClearSystem = new Engine::RenderClearSystem();
 		renderSystemCoordinator->AddSystemToTail( renderClearSystem );
 
-		SpriteRendererSystem* spriteRendererSystem = new SpriteRendererSystem( render.renderer );
+		SpriteRendererSystem* spriteRendererSystem =
+		    new SpriteRendererSystem( render.renderer, world.GetAssetManager() );
 		auto on_configure_sprite_renderer_callback =
 		    std::bind( &SpriteRendererSystem::ConfigureSpriteRendererComponent, spriteRendererSystem,
 		               std::placeholders::_1, std::placeholders::_2 );
@@ -85,6 +97,12 @@ namespace Engine
 		RenderGlobalComponent& renderGlobalComponent = world.AddGlobalComponent< RenderGlobalComponent >();
 
 		bool result = InitSDLRendering( renderGlobalComponent );
+		if ( !result )
+		{
+			return false;
+		}
+
+		result = AddRenderingAssetmanagement( world, renderGlobalComponent );
 		if ( !result )
 		{
 			return false;

@@ -10,6 +10,8 @@
 #include "shared/player_simulation/simulation_events_handler.h"
 #include "shared/player_simulation/simulation_events.h"
 
+#include "logger.h"
+
 namespace PlayerSimulation
 {
 	bool PlayerShootingController::Simulate( const InputState& inputs, const PlayerState& current_state,

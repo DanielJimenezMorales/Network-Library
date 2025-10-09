@@ -8,9 +8,15 @@
 #include <vector>
 #include <string>
 
+struct AnimationConfiguration
+{
+		std::string name;
+		std::string path;
+};
+
 struct AnimationComponentConfiguration : public Engine::ECS::ComponentConfiguration
 {
-		AnimationComponentConfiguration( const std::vector< Engine::AnimationClip >& animations,
+		AnimationComponentConfiguration( const std::vector< AnimationConfiguration >& animations,
 		                                 const std::string& initial_animation_name )
 		    : Engine::ECS::ComponentConfiguration( "Animation" )
 		    , animations( animations )
@@ -20,6 +26,6 @@ struct AnimationComponentConfiguration : public Engine::ECS::ComponentConfigurat
 
 		AnimationComponentConfiguration* Clone() const override { return new AnimationComponentConfiguration( *this ); }
 
-		std::vector< Engine::AnimationClip > animations;
+		std::vector< AnimationConfiguration > animations;
 		std::string initialAnimationName;
 };

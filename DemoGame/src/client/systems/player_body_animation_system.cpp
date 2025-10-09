@@ -57,7 +57,7 @@ static void UpdateAnimationComponent( Engine::ECS::GameEntity& entity, bool is_w
 		LOG_WARNING( "(%.4f, %.4f)", forward_direction.X(), forward_direction.Y() );
 		if ( animation.animations.find( newAnimationName ) != animation.animations.end() )
 		{
-			Engine::AnimationClip* newAnimationClip = &animation.animations[ newAnimationName ];
+			const Engine::AnimationClip* newAnimationClip = &animation.animations[ newAnimationName ];
 			animation.currentAnimation = newAnimationClip;
 			animation.currentFrame = 0;
 			animation.timeAccumulator = 0.f;

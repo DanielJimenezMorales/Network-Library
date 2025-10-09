@@ -21,6 +21,7 @@ project (project_data.NAME)
 		common_project_data.PATH .. "src/",
 
 		ROOT_PATH "vendor/entt/include/",
+		ROOT_PATH "vendor/json/include/",
 
 		ROOT_PATH "vendor/sdl2/SDL2-2.30.1/include/",
 		ROOT_PATH "vendor/sdl2/SDL2_image-2.8.2/include/",

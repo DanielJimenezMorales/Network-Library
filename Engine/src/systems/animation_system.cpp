@@ -11,6 +11,18 @@
 
 #include "component_configurations/animation_component_configuration.h"
 
+#include "asset_manager/asset_manager.h"
+#include "asset_manager/asset_handle.h"
+
+#include "animation/animation_asset.h"
+
+Engine::AnimationSystem::AnimationSystem( AssetManager* asset_manager )
+    : ISimpleSystem()
+    , _assetManager( asset_manager )
+{
+	assert( _assetManager != nullptr );
+}
+
 void Engine::AnimationSystem::Execute( ECS::World& world, float32 elapsed_time )
 {
 	std::vector< ECS::GameEntity > entities = world.GetEntitiesOfType< AnimationComponent >();
@@ -20,17 +32,19 @@ void Engine::AnimationSystem::Execute( ECS::World& world, float32 elapsed_time )
 		AnimationComponent& animation = it->GetComponent< AnimationComponent >();
 		if ( animation.currentAnimation != nullptr )
 		{
-			const AnimationClip& currentAnimation = *animation.currentAnimation;
+			const AnimationAsset* currentAnimationAsset = _assetManager->GetRawAsset< AnimationAsset >(
+			    animation.currentAnimation->assetHandle, AssetType::ANIMATION );
+			assert( currentAnimationAsset != nullptr );
 
 			// Calculate current animation frame
 			animation.timeAccumulator += elapsed_time;
-			const float32 frameDuration = 1.f / currentAnimation.frameRate;
+			const float32 frameDuration = 1.f / currentAnimationAsset->GetFrameRate();
 			if ( animation.timeAccumulator >= frameDuration )
 			{
 				const uint32 numberOfFramesToAdvance =
 				    static_cast< uint32 >( animation.timeAccumulator / frameDuration );
 				animation.currentFrame =
-				    ( animation.currentFrame + numberOfFramesToAdvance ) % currentAnimation.numberOfFrames;
+				    ( animation.currentFrame + numberOfFramesToAdvance ) % currentAnimationAsset->GetNumberOfFrames();
 				animation.timeAccumulator -= numberOfFramesToAdvance * frameDuration;
 			}
 
@@ -40,19 +54,19 @@ void Engine::AnimationSystem::Execute( ECS::World& world, float32 elapsed_time )
 			// Update sprite renderer to show the current animation frame
 			// TODO Add other variables for better flexibility such as initial horizontal pixel, initial vertical pixel,
 			// frame width and height
-			const uint32 startCurrentFrameXPixel =
-			    currentAnimation.startFrameXPixel + ( currentAnimation.frameWidthPixels * animation.currentFrame );
-			const uint32 startCurrentFrameYPixel = currentAnimation.startFrameYPixel;
+			const uint32 startCurrentFrameXPixel = currentAnimationAsset->GetStartX() +
+			                                       ( currentAnimationAsset->GetFrameWidth() * animation.currentFrame );
+			const uint32 startCurrentFrameYPixel = currentAnimationAsset->GetStartY();
 			spriteRenderer.uv0.X( static_cast< float32 >( startCurrentFrameXPixel ) / spriteRenderer.width );
 			spriteRenderer.uv0.Y( static_cast< float32 >( startCurrentFrameYPixel ) / spriteRenderer.height );
 
 			spriteRenderer.uv1.X(
-			    static_cast< float32 >( startCurrentFrameXPixel + currentAnimation.frameWidthPixels ) /
+			    static_cast< float32 >( startCurrentFrameXPixel + currentAnimationAsset->GetFrameWidth() ) /
 			    spriteRenderer.width );
 			spriteRenderer.uv1.Y(
-			    static_cast< float32 >( startCurrentFrameYPixel + currentAnimation.frameHeightPixels ) /
+			    static_cast< float32 >( startCurrentFrameYPixel + currentAnimationAsset->GetFrameHeight() ) /
 			    spriteRenderer.height );
-			spriteRenderer.flipX = currentAnimation.flipX;
+			spriteRenderer.flipX = currentAnimationAsset->IsFlippedX();
 		}
 	}
 }
@@ -79,7 +93,9 @@ void Engine::AnimationSystem::ConfigureAnimationComponent( ECS::GameEntity& enti
 	{
 		if ( animation.animations.find( cit->name ) == animation.animations.end() )
 		{
-			animation.animations[ cit->name ] = *cit;
+			AssetHandle animationHandle = _assetManager->GetAsset( cit->path, AssetType::ANIMATION );
+			assert( animationHandle.IsValid() );
+			animation.animations[ cit->name ] = AnimationClip( cit->name, animationHandle );
 		}
 		else
 		{
