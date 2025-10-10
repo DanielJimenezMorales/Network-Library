@@ -46,7 +46,7 @@ namespace Engine
 		{
 			// auto [spriteRenderer, transform] = view.get<SpriteRendererComponent, TransformComponent>(entity);
 			const SpriteRendererComponent& spriteRenderer = it->GetComponent< SpriteRendererComponent >();
-			if ( !spriteRenderer.textureHandler.IsValid() )
+			if ( !spriteRenderer.textureHandler.IsValid() || spriteRenderer.isDisabled )
 			{
 				continue;
 			}
