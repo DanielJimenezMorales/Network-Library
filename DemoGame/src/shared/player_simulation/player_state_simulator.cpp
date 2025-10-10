@@ -27,6 +27,8 @@ namespace PlayerSimulation
 		                              _simulationEventsHandler );
 		_rotationController.Simulate( inputs, current_state, playerState, elapsed_time, configuration,
 		                              _simulationEventsHandler );
+		_aimingController.Simulate( inputs, current_state, playerState, elapsed_time, configuration,
+		                            _simulationEventsHandler );
 		_shootingController.Simulate( inputs, current_state, playerState, elapsed_time, configuration,
 		                              _simulationEventsHandler );
 

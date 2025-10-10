@@ -26,6 +26,7 @@ namespace PlayerSimulation
 
 		const PlayerControllerComponent& playerController = player_entity.GetComponent< PlayerControllerComponent >();
 		playerState.isWalking = playerController.isWalking;
+		playerState.isAiming = playerController.isAiming;
 		playerState.timeLeftUntilNextShot = playerController.timeLeftUntilNextShot;
 
 		return playerState;
@@ -42,6 +43,7 @@ namespace PlayerSimulation
 		// Update Player Controller
 		PlayerControllerComponent& playerController = player_entity.GetComponent< PlayerControllerComponent >();
 		playerController.isWalking = player_state.isWalking;
+		playerController.isAiming = player_state.isAiming;
 		playerController.timeLeftUntilNextShot = player_state.timeLeftUntilNextShot;
 	}
 
@@ -56,6 +58,7 @@ namespace PlayerSimulation
 
 		// TODO Serialize this in a more efficient way to fit multiple bools in one byte
 		buffer.WriteInteger( player_state.isWalking ? 1 : 0 );
+		buffer.WriteInteger( player_state.isAiming ? 1 : 0 );
 	}
 
 	PlayerState DeserializePlayerStateFromBuffer( NetLib::Buffer& buffer )
@@ -71,6 +74,7 @@ namespace PlayerSimulation
 
 		// TODO Serialize this in a more efficient way to fit multiple bools in one byte
 		playerState.isWalking = buffer.ReadInteger() == 1 ? true : false;
+		playerState.isAiming = buffer.ReadInteger() == 1 ? true : false;
 
 		return playerState;
 	}

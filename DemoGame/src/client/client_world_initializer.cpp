@@ -64,6 +64,7 @@
 #include "client/systems/interpolated_player_objects updater_system.h"
 #include "client/systems/player_weapon_flip_system.h"
 #include "client/systems/player_body_animation_system.h"
+#include "client/systems/player_weapon_visibility_system.h"
 
 #include "client/client_network_entity_creator.h"
 //---
@@ -167,8 +168,10 @@ static bool AddInputsToWorld( Engine::ECS::World& world )
 	inputHandlerGlobalComponent.controllers[ std::string( KEYBOARD_NAME ) ] = keyboard;
 
 	Engine::MouseController* mouse = new Engine::MouseController();
-	const Engine::InputButton mouse_shoot_button( SHOOT_BUTTON, SDL_BUTTON_LEFT );
-	mouse->AddButtonMap( mouse_shoot_button );
+	const Engine::InputButton mouseShootButton( SHOOT_BUTTON, SDL_BUTTON_LEFT );
+	mouse->AddButtonMap( mouseShootButton );
+	const Engine::InputButton mouseAimButton( AIM_BUTTON, SDL_BUTTON_RIGHT );
+	mouse->AddButtonMap( mouseAimButton );
 	inputHandlerGlobalComponent.cursors[ std::string( MOUSE_NAME ) ] = mouse;
 
 	return true;
@@ -272,6 +275,11 @@ static bool AddGameplayToWorld( Engine::ECS::World& world )
 	    new Engine::ECS::SystemCoordinator( Engine::ECS::ExecutionStage::UPDATE );
 	player_weapon_flip_system_coordinator->AddSystemToTail( new PlayerWeaponFlipSystem() );
 	world.AddSystem( player_weapon_flip_system_coordinator );
+
+	Engine::ECS::SystemCoordinator* player_weapon_visibility_system_coordinator =
+	    new Engine::ECS::SystemCoordinator( Engine::ECS::ExecutionStage::UPDATE );
+	player_weapon_visibility_system_coordinator->AddSystemToTail( new PlayerWeaponVisibilitySystem() );
+	world.AddSystem( player_weapon_visibility_system_coordinator );
 
 	// Add Client-side player controller system
 	Engine::ECS::SystemCoordinator* client_player_controller_system_coordinator =

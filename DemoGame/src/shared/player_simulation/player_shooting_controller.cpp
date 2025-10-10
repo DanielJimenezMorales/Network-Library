@@ -24,7 +24,7 @@ namespace PlayerSimulation
 		                                       ? current_state.timeLeftUntilNextShot - elapsed_time
 		                                       : 0.f;
 
-		if ( inputs.isShooting && newTimeLeftUntilNextShot == 0.f )
+		if ( inputs.isShooting && inputs.isAiming && newTimeLeftUntilNextShot == 0.f )
 		{
 			newTimeLeftUntilNextShot = configuration.GetFireRate();
 			simulation_events_handler.AddEvent( PlayerSimulation::ON_SHOT_PERFORMED );

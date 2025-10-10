@@ -51,6 +51,7 @@ static void ProcessInputs( Engine::ECS::World& world, InputState& outInputState 
 	outInputState.movement.Y( inputHandler.ControllerGetAxis( KEYBOARD_NAME, VERTICAL_AXIS ) );
 	outInputState.movement.Normalize();
 
+	outInputState.isAiming = inputHandler.CursorGetButtonPressed( MOUSE_NAME, AIM_BUTTON );
 	outInputState.isShooting = inputHandler.CursorGetButtonPressed( MOUSE_NAME, SHOOT_BUTTON );
 
 	const Engine::ECS::GameEntity& virtualMousEentity = world.GetFirstEntityOfType< VirtualMouseComponent >();
