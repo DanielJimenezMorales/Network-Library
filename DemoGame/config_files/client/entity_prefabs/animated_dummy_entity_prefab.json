@@ -3,11 +3,6 @@
 	"archetype": "animated_dummy",
 	"component_configs": [
 		{
-			"name": "SpriteRenderer",
-			"texture_path": "sprites/PlayerSprites/player_idle_sheet.png",
-			"type": "SPRITE_SHEET"
-		},
-		{
 			"name": "Animation",
 			"animations": [
 				{

@@ -53,7 +53,6 @@ namespace Engine
 				}
 
 				SpriteRendererComponent& spriteRenderer = it->GetComponent< SpriteRendererComponent >();
-				assert( spriteRenderer.type == SpriteType::SPRITE_SHEET );
 
 				// TODO We shouldn't be touching like this the texture, width and height variables from sprite renderer
 				// components. It is very error prone
@@ -65,6 +64,7 @@ namespace Engine
 				    _assetManager->GetRawAsset< TextureAsset >( textureAssetHandle, AssetType::TEXTURE );
 				assert( textureAsset != nullptr );
 				spriteRenderer.textureHandler = textureAssetHandle;
+				spriteRenderer.type = SpriteType::SPRITE_SHEET;
 				spriteRenderer.width = textureAsset->GetWidth();
 				spriteRenderer.height = textureAsset->GetHeight();
 

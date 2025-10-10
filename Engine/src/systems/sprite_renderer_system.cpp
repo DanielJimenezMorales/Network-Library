@@ -46,17 +46,14 @@ namespace Engine
 		{
 			// auto [spriteRenderer, transform] = view.get<SpriteRendererComponent, TransformComponent>(entity);
 			const SpriteRendererComponent& spriteRenderer = it->GetComponent< SpriteRendererComponent >();
-			TransformComponent& transform = it->GetComponent< TransformComponent >();
-
-			const Vec2f screenPosition = ConvertFromWorldPositionToScreenPosition(
-			    transformComponentProxy.GetGlobalPosition( transform ), camera, cameraTransform );
-
-			const TextureAsset* texture =
-			    _assetManager->GetRawAsset< TextureAsset >( spriteRenderer.textureHandler, AssetType::TEXTURE );
-			if ( texture == nullptr )
+			if ( !spriteRenderer.textureHandler.IsValid() )
 			{
 				continue;
 			}
+
+			const TextureAsset* texture =
+			    _assetManager->GetRawAsset< TextureAsset >( spriteRenderer.textureHandler, AssetType::TEXTURE );
+			assert( texture != nullptr );
 
 			SDL_Rect srcRect;
 			srcRect.x = static_cast< int32 >( spriteRenderer.uv0.X() * texture->GetWidth() );
@@ -65,6 +62,10 @@ namespace Engine
 			    static_cast< int32 >( ( spriteRenderer.uv1.X() - spriteRenderer.uv0.X() ) * texture->GetWidth() );
 			srcRect.h =
 			    static_cast< int32 >( ( spriteRenderer.uv1.Y() - spriteRenderer.uv0.Y() ) * texture->GetHeight() );
+
+			TransformComponent& transform = it->GetComponent< TransformComponent >();
+			const Vec2f screenPosition = ConvertFromWorldPositionToScreenPosition(
+			    transformComponentProxy.GetGlobalPosition( transform ), camera, cameraTransform );
 
 			SDL_Rect destRect;
 			destRect.x = static_cast< int >( screenPosition.X() - ( texture->GetWidth() / 2.f ) );
@@ -99,8 +100,6 @@ namespace Engine
 
 	void SpriteRendererSystem::ConfigureSpriteRendererComponent( ECS::GameEntity& entity, const ECS::Prefab& prefab )
 	{
-		// TODO Allow sprite renderer components with no config. For example animated ones, as texture will be
-		// determined by the animation component config
 		auto component_config_found = prefab.componentConfigurations.find( "SpriteRenderer" );
 		if ( component_config_found == prefab.componentConfigurations.end() )
 		{
