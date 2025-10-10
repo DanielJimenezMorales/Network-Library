@@ -10,9 +10,11 @@ namespace Engine
 	class AnimationAsset : public Asset
 	{
 		public:
-			AnimationAsset( const std::string& path, uint32 start_x, uint32 start_y, uint32 frame_width,
-			                uint32 frame_height, uint32 number_of_frames, uint32 frame_rate, bool flip_x )
+			AnimationAsset( const std::string& path, const std::string& sprite_sheet_path, uint32 start_x,
+			                uint32 start_y, uint32 frame_width, uint32 frame_height, uint32 number_of_frames,
+			                uint32 frame_rate, bool flip_x )
 			    : Asset( path )
+			    , spriteSheetPath( sprite_sheet_path )
 			    , startX( start_x )
 			    , startY( start_y )
 			    , frameWidth( frame_width )
@@ -29,6 +31,7 @@ namespace Engine
 
 			AssetType GetType() const override { return AssetType::ANIMATION; }
 
+			const std::string& GetSpriteSheetPath() const { return spriteSheetPath; }
 			uint32 GetStartX() const { return startX; }
 			uint32 GetStartY() const { return startY; }
 			uint32 GetFrameWidth() const { return frameWidth; }
@@ -38,6 +41,7 @@ namespace Engine
 			bool IsFlippedX() const { return flipX; }
 
 		private:
+			std::string spriteSheetPath;
 			uint32 startX;
 			uint32 startY;
 			uint32 frameWidth;

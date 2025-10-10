@@ -25,6 +25,7 @@ namespace Engine
 			{
 				nlohmann::json data = nlohmann::json::parse( inputStream );
 
+				const std::string spriteSheetPath( data[ "spritesheet" ] );
 				const uint32 startX = data[ "start_x_pixel" ];
 				const uint32 startY = data[ "start_y_pixel" ];
 				const uint32 frameWidth = data[ "frame_width_pixels" ];
@@ -33,8 +34,8 @@ namespace Engine
 				const uint32 frameRate = data[ "frame_rate" ];
 				const bool flipX = data[ "flip_x" ];
 
-				AnimationAsset* animationAsset = new AnimationAsset( path, startX, startY, frameWidth, frameHeight,
-				                                                     numberOfFrames, frameRate, flipX );
+				AnimationAsset* animationAsset = new AnimationAsset( path, spriteSheetPath, startX, startY, frameWidth,
+				                                                     frameHeight, numberOfFrames, frameRate, flipX );
 				result = animationAsset;
 			}
 			else

@@ -13,6 +13,8 @@
 
 #include "ecs/world.h"
 
+#include "game.h"
+
 #include "SDL_image.h"
 
 namespace Engine
@@ -56,22 +58,24 @@ namespace Engine
 		return true;
 	}
 
-	static bool AddRenderingAssetmanagement( ECS::World& world, RenderGlobalComponent& render )
+	static bool AddRenderingAssetmanagement( Game& game, RenderGlobalComponent& render )
 	{
-		AssetManager* assetManager = world.GetAssetManager();
-		bool result = assetManager->RegisterAsset( AssetType::TEXTURE, new TextureAssetLoader( render.renderer ) );
+		AssetManager& assetManager = game.GetAssetManager();
+		bool result = assetManager.RegisterAsset( AssetType::TEXTURE, new TextureAssetLoader( render.renderer ) );
 		return result;
 	}
 
-	static bool AddRenderingSystems( ECS::World& world, RenderGlobalComponent& render )
+	static bool AddRenderingSystems( Game& game, RenderGlobalComponent& render )
 	{
+		ECS::World& world = game.GetActiveWorld();
+
 		ECS::SystemCoordinator* renderSystemCoordinator = new ECS::SystemCoordinator( ECS::ExecutionStage::RENDER );
 
 		Engine::RenderClearSystem* renderClearSystem = new Engine::RenderClearSystem();
 		renderSystemCoordinator->AddSystemToTail( renderClearSystem );
 
 		SpriteRendererSystem* spriteRendererSystem =
-		    new SpriteRendererSystem( render.renderer, world.GetAssetManager() );
+		    new SpriteRendererSystem( render.renderer, &game.GetAssetManager() );
 		auto on_configure_sprite_renderer_callback =
 		    std::bind( &SpriteRendererSystem::ConfigureSpriteRendererComponent, spriteRendererSystem,
 		               std::placeholders::_1, std::placeholders::_2 );
@@ -92,8 +96,9 @@ namespace Engine
 		return true;
 	}
 
-	bool AddRenderingToWorld( ECS::World& world )
+	bool AddRenderingToWorld( Game& game )
 	{
+		ECS::World& world = game.GetActiveWorld();
 		RenderGlobalComponent& renderGlobalComponent = world.AddGlobalComponent< RenderGlobalComponent >();
 
 		bool result = InitSDLRendering( renderGlobalComponent );
@@ -102,13 +107,13 @@ namespace Engine
 			return false;
 		}
 
-		result = AddRenderingAssetmanagement( world, renderGlobalComponent );
+		result = AddRenderingAssetmanagement( game, renderGlobalComponent );
 		if ( !result )
 		{
 			return false;
 		}
 
-		result = AddRenderingSystems( world, renderGlobalComponent );
+		result = AddRenderingSystems( game, renderGlobalComponent );
 		if ( !result )
 		{
 			return false;

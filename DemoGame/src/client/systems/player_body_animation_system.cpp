@@ -36,21 +36,21 @@ static void UpdateAnimationComponent( Engine::ECS::GameEntity& entity, bool is_w
 
 	// Determine sector (8-way, each 45° wide)
 	if ( angleDegrees >= 337.5f || angleDegrees < 22.5f )
-		newAnimationName = is_walking ? "IDLE_RIGHT" : "IDLE_RIGHT";
+		newAnimationName = is_walking ? "WALK_RIGHT" : "IDLE_RIGHT";
 	else if ( angleDegrees < 67.5f )
-		newAnimationName = is_walking ? "IDLE_BACK_RIGHT" : "IDLE_BACK_RIGHT";
+		newAnimationName = is_walking ? "WALK_BACK_RIGHT" : "IDLE_BACK_RIGHT";
 	else if ( angleDegrees < 112.5f )
-		newAnimationName = is_walking ? "IDLE_BACK" : "IDLE_BACK";
+		newAnimationName = is_walking ? "WALK_BACK" : "IDLE_BACK";
 	else if ( angleDegrees < 157.5f )
-		newAnimationName = is_walking ? "IDLE_BACK_LEFT" : "IDLE_BACK_LEFT";
+		newAnimationName = is_walking ? "WALK_BACK_LEFT" : "IDLE_BACK_LEFT";
 	else if ( angleDegrees < 202.5f )
-		newAnimationName = is_walking ? "IDLE_LEFT" : "IDLE_LEFT";
+		newAnimationName = is_walking ? "WALK_LEFT" : "IDLE_LEFT";
 	else if ( angleDegrees < 247.5f )
-		newAnimationName = is_walking ? "IDLE_FRONT_LEFT" : "IDLE_FRONT_LEFT";
+		newAnimationName = is_walking ? "WALK_FRONT_LEFT" : "IDLE_FRONT_LEFT";
 	else if ( angleDegrees < 292.5f )
-		newAnimationName = is_walking ? "IDLE_FRONT" : "IDLE_FRONT";
+		newAnimationName = is_walking ? "WALK_FRONT" : "IDLE_FRONT";
 	else // < 337.5f
-		newAnimationName = is_walking ? "IDLE_FRONT_RIGHT" : "IDLE_FRONT_RIGHT";
+		newAnimationName = is_walking ? "WALK_FRONT_RIGHT" : "IDLE_FRONT_RIGHT";
 
 	if ( animation.currentAnimation->name != newAnimationName )
 	{
