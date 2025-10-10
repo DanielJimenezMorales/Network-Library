@@ -99,6 +99,8 @@ namespace Engine
 
 	void SpriteRendererSystem::ConfigureSpriteRendererComponent( ECS::GameEntity& entity, const ECS::Prefab& prefab )
 	{
+		// TODO Allow sprite renderer components with no config. For example animated ones, as texture will be
+		// determined by the animation component config
 		auto component_config_found = prefab.componentConfigurations.find( "SpriteRenderer" );
 		if ( component_config_found == prefab.componentConfigurations.end() )
 		{

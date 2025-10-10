@@ -2,10 +2,7 @@
 
 namespace Engine
 {
-	namespace ECS
-	{
-		class World;
-	}
+	class Game;
 
-	bool AddAnimationToWorld( Engine::ECS::World& world );
+	bool AddAnimationToWorld( Game& game );
 }

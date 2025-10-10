@@ -1,5 +1,6 @@
 local project_data = PROJECT_DATA.ENGINE
 local common_project_data = PROJECT_DATA.COMMON
+local network_library_project_data = PROJECT_DATA.NETWORK_LIBRARY
 
 project (project_data.NAME)
 	kind "StaticLib"
@@ -19,6 +20,7 @@ project (project_data.NAME)
 	{
 		project_data.PATH .. "src/",
 		common_project_data.PATH .. "src/",
+		network_library_project_data.PATH .. "src",
 
 		ROOT_PATH "vendor/entt/include/",
 		ROOT_PATH "vendor/json/include/",

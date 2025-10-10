@@ -2,10 +2,7 @@
 
 namespace Engine
 {
-	namespace ECS
-	{
-		class World;
-	}
+	class Game;
 
 	class IWorldInitializer
 	{
@@ -13,6 +10,6 @@ namespace Engine
 			IWorldInitializer() {};
 			virtual ~IWorldInitializer() {};
 
-			virtual void SetUpWorld( ECS::World& world ) = 0;
+			virtual void SetUpWorld( Game& game ) = 0;
 	};
 }

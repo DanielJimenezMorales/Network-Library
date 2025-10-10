@@ -12,6 +12,7 @@
 #include "transform/transform_hierarchy_helper_functions.h"
 
 #include "global_components/input_handler_global_component.h"
+#include "global_components/asset_management_global_component.h"
 
 #include "ecs/system_coordinator.h"
 #include "ecs/world.h"
@@ -26,6 +27,8 @@
 #include "animation/animation_initialization_utils.h"
 
 #include "systems/animation_system.h"
+
+#include "game.h"
 
 // Network library
 #include "core/client.h"
@@ -138,6 +141,12 @@ static void RegisterPrefabs( Engine::ECS::World& world )
 	}
 }
 
+static bool AddAssetManagementToWorld( Engine::ECS::World& world )
+{
+	world.AddGlobalComponent< Engine::AssetManagementGlobalComponent >();
+	return true;
+}
+
 static bool AddInputsToWorld( Engine::ECS::World& world )
 {
 	bool result = Engine::AddInputsToWorld( world );
@@ -165,9 +174,9 @@ static bool AddInputsToWorld( Engine::ECS::World& world )
 	return true;
 }
 
-static bool AddAnimationToWorld( Engine::ECS::World& world )
+static bool AddAnimationModuleToWorld( Engine::Game& game )
 {
-	bool result = Engine::AddAnimationToWorld( world );
+	bool result = Engine::AddAnimationToWorld( game );
 	if ( !result )
 	{
 		return false;
@@ -176,9 +185,9 @@ static bool AddAnimationToWorld( Engine::ECS::World& world )
 	return true;
 }
 
-static bool AddRenderingToWorld( Engine::ECS::World& world )
+static bool AddRenderingModuleToWorld( Engine::Game& game )
 {
-	bool result = Engine::AddRenderingToWorld( world );
+	bool result = Engine::AddRenderingToWorld( game );
 	if ( !result )
 	{
 		return false;
@@ -297,12 +306,23 @@ static bool AddGameplayToWorld( Engine::ECS::World& world )
 	return true;
 }
 
-static bool CreateSystemsAndGlobalEntities( Engine::ECS::World& world )
+static bool CreateSystemsAndGlobalEntities( Engine::Game& game )
 {
+	Engine::ECS::World& world = game.GetActiveWorld();
+
+	/////////////////////
+	// ASSET MANAGEMENT
+	/////////////////////
+	bool result = AddAssetManagementToWorld( world );
+	if ( !result )
+	{
+		LOG_ERROR( "Can't initialize asset management" );
+	}
+
 	///////////////////
 	// INPUT HANDLING
 	///////////////////
-	bool result = AddInputsToWorld( world );
+	result = AddInputsToWorld( world );
 	if ( !result )
 	{
 		LOG_ERROR( "Can't initialize input handling" );
@@ -311,7 +331,7 @@ static bool CreateSystemsAndGlobalEntities( Engine::ECS::World& world )
 	//////////////
 	// ANIMATION
 	//////////////
-	result = AddAnimationToWorld( world );
+	result = AddAnimationModuleToWorld( game );
 	if ( !result )
 	{
 		LOG_ERROR( "Can't initialize animation" );
@@ -320,7 +340,7 @@ static bool CreateSystemsAndGlobalEntities( Engine::ECS::World& world )
 	//////////////
 	// RENDERING
 	//////////////
-	result = AddRenderingToWorld( world );
+	result = AddRenderingModuleToWorld( game );
 	if ( !result )
 	{
 		LOG_ERROR( "Can't initialize rendering" );
@@ -363,8 +383,9 @@ static bool CreateGameEntities( Engine::ECS::World& world )
 	return true;
 }
 
-void ClientWorldInitializer::SetUpWorld( Engine::ECS::World& world )
+void ClientWorldInitializer::SetUpWorld( Engine::Game& game )
 {
+	Engine::ECS::World& world = game.GetActiveWorld();
 	RegisterComponents( world );
 	RegisterArchetypes( world );
 	RegisterPrefabs( world );
@@ -378,7 +399,7 @@ void ClientWorldInitializer::SetUpWorld( Engine::ECS::World& world )
 	world.SubscribeToOnEntityConfigure( std::bind( &ClientWorldInitializer::ConfigureHealthComponent, this,
 	                                               std::placeholders::_1, std::placeholders::_2 ) );
 
-	CreateSystemsAndGlobalEntities( world );
+	CreateSystemsAndGlobalEntities( game );
 	CreateGameEntities( world );
 }
 

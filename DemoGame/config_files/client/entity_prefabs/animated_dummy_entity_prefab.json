@@ -41,6 +41,40 @@
 				{
 					"name": "IDLE_BACK_RIGHT",
 					"path": "animations/player/player_idle_back_right.json"
+				},
+
+
+				{
+					"name": "WALK_FRONT",
+					"path": "animations/player/player_walk_front.json"
+				},
+				{
+					"name": "WALK_FRONT_LEFT",
+					"path": "animations/player/player_walk_front_left.json"
+				},
+				{
+					"name": "WALK_LEFT",
+					"path": "animations/player/player_walk_left.json"
+				},
+				{
+					"name": "WALK_BACK_LEFT",
+					"path": "animations/player/player_walk_back_left.json"
+				},
+				{
+					"name": "WALK_BACK",
+					"path": "animations/player/player_walk_back.json"
+				},
+				{
+					"name": "WALK_FRONT_RIGHT",
+					"path": "animations/player/player_walk_front_right.json"
+				},
+				{
+					"name": "WALK_RIGHT",
+					"path": "animations/player/player_walk_right.json"
+				},
+				{
+					"name": "WALK_BACK_RIGHT",
+					"path": "animations/player/player_walk_back_right.json"
 				}
 			],
 			"initial_animation_name": "IDLE_FRONT_LEFT"

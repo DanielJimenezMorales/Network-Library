@@ -15,7 +15,7 @@ class ServerWorldInitializer : public Engine::IWorldInitializer
 	public:
 		ServerWorldInitializer();
 
-		void SetUpWorld( Engine::ECS::World& world ) override;
+		void SetUpWorld( Engine::Game& game ) override;
 
 	private:
 		// TODO Temp method. It shouldn't go here

@@ -9,38 +9,42 @@
 
 #include "systems/animation_system.h"
 
+#include "game.h"
+
 namespace Engine
 {
-	static bool AddAnimationAssetmanagement( ECS::World& world )
+	static bool AddAnimationAssetmanagement( Game& game )
 	{
-		AssetManager* assetManager = world.GetAssetManager();
-		assetManager->RegisterAsset( AssetType::ANIMATION, new AnimationAssetLoader() );
+		AssetManager& assetManager = game.GetAssetManager();
+		assetManager.RegisterAsset( AssetType::ANIMATION, new AnimationAssetLoader() );
 		return true;
 	}
 
-	static bool AddAnimationSystems( ECS::World& world )
+	static bool AddAnimationSystems( Engine::Game& game )
 	{
-		Engine::ECS::SystemCoordinator* animation_system_coordinator =
-		    new Engine::ECS::SystemCoordinator( Engine::ECS::ExecutionStage::UPDATE );
-		Engine::AnimationSystem* animationSystem = new Engine::AnimationSystem( world.GetAssetManager() );
+		ECS::World& world = game.GetActiveWorld();
+		AssetManager& assetManager = game.GetAssetManager();
+		ECS::SystemCoordinator* animation_system_coordinator =
+		    new ECS::SystemCoordinator( ECS::ExecutionStage::UPDATE );
+		AnimationSystem* animationSystem = new AnimationSystem( &assetManager );
 		animation_system_coordinator->AddSystemToTail( animationSystem );
 		auto on_configure_animation_callback =
-		    std::bind( &Engine::AnimationSystem::ConfigureAnimationComponent, animationSystem, std::placeholders::_1,
+		    std::bind( &AnimationSystem::ConfigureAnimationComponent, animationSystem, std::placeholders::_1,
 		               std::placeholders::_2 );
 		world.SubscribeToOnEntityConfigure( on_configure_animation_callback );
 		world.AddSystem( animation_system_coordinator );
 		return true;
 	}
 
-	bool AddAnimationToWorld( Engine::ECS::World& world )
+	bool AddAnimationToWorld( Engine::Game& game )
 	{
-		bool result = AddAnimationAssetmanagement( world );
+		bool result = AddAnimationAssetmanagement( game );
 		if ( !result )
 		{
 			return false;
 		}
 
-		result = AddAnimationSystems( world );
+		result = AddAnimationSystems( game );
 		if ( !result )
 		{
 			return false;

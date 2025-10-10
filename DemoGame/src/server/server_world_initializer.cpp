@@ -11,12 +11,15 @@
 #include "components/raycast_component.h"
 
 #include "global_components/input_handler_global_component.h"
+#include "global_components/asset_management_global_component.h"
 
 #include "ecs/system_coordinator.h"
 #include "ecs/world.h"
 #include "ecs/game_entity.hpp"
 
 #include "systems/collision_detection_system.h"
+
+#include "game.h"
 
 #ifdef SERVER_RENDER
 	#include "render/rendering_inicialization_utils.h"
@@ -127,8 +130,14 @@ static void RegisterPrefabs( Engine::ECS::World& world )
 	}
 }
 
+static bool AddAssetManagementToWorld( Engine::ECS::World& world )
+{
+	world.AddGlobalComponent< Engine::AssetManagementGlobalComponent >();
+	return true;
+}
+
 #ifdef SERVER_RENDER
-static bool AddRenderingToWorld( Engine::ECS::World& world )
+static bool AddRenderingModuleToWorld( Engine::Game& game )
 {
 	// In order to enable Server-side rendering with SDL we need to also enable SDL inputs and add a dummy input
 	// gathering system so Windows doesn't think the program has freezed. I know, it's a bit werid...
@@ -137,12 +146,13 @@ static bool AddRenderingToWorld( Engine::ECS::World& world )
 		SDL_InitSubSystem( SDL_INIT_EVENTS );
 	}
 
+	Engine::ECS::World& world = game.GetActiveWorld();
 	Engine::ECS::SystemCoordinator* dummyInputsHandlerSystemCoordinator =
 	    new Engine::ECS::SystemCoordinator( Engine::ECS::ExecutionStage::INPUT_HANDLING );
 	dummyInputsHandlerSystemCoordinator->AddSystemToTail( new ServerDummyInputHandlerSystem() );
 	world.AddSystem( dummyInputsHandlerSystemCoordinator );
 
-	const bool result = Engine::AddRenderingToWorld( world );
+	const bool result = Engine::AddRenderingToWorld( game );
 
 	return result;
 }
@@ -253,17 +263,26 @@ static bool AddGameplayToWorld( Engine::ECS::World& world )
 	return true;
 }
 
-static bool CreateSystemsAndGlobalEntities( Engine::ECS::World& world )
+static bool CreateSystemsAndGlobalEntities( Engine::Game& game )
 {
 	// Populate systems
 	// TODO Create a system storage in order to be able to free them at the end
+	Engine::ECS::World& world = game.GetActiveWorld();
 
-	bool result = false;
+	/////////////////////
+	// ASSET MANAGEMENT
+	/////////////////////
+	bool result = AddAssetManagementToWorld( world );
+	if ( !result )
+	{
+		LOG_ERROR( "Can't initialize asset management" );
+	}
+
 #ifdef SERVER_RENDER
 	//////////////
 	// RENDERING
 	//////////////
-	result = AddRenderingToWorld( world );
+	result = AddRenderingModuleToWorld( game );
 	if ( !result )
 	{
 		LOG_ERROR( "Can't initialize rendering" );
@@ -309,8 +328,9 @@ static bool CreateGameEntities( Engine::ECS::World& world )
 	return true;
 }
 
-void ServerWorldInitializer::SetUpWorld( Engine::ECS::World& world )
+void ServerWorldInitializer::SetUpWorld( Engine::Game& game )
 {
+	Engine::ECS::World& world = game.GetActiveWorld();
 	RegisterComponents( world );
 	RegisterArchetypes( world );
 	RegisterPrefabs( world );
@@ -321,7 +341,7 @@ void ServerWorldInitializer::SetUpWorld( Engine::ECS::World& world )
 	world.SubscribeToOnEntityConfigure( std::bind( &ServerWorldInitializer::ConfigureHealthComponent, this,
 	                                               std::placeholders::_1, std::placeholders::_2 ) );
 
-	CreateSystemsAndGlobalEntities( world );
+	CreateSystemsAndGlobalEntities( game );
 	CreateGameEntities( world );
 }
 
