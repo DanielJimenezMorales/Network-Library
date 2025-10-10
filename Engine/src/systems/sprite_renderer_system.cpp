@@ -118,9 +118,6 @@ namespace Engine
 		    _assetManager->GetAsset( sprite_renderer_config.texturePath, AssetType::TEXTURE );
 		const TextureAsset* texture =
 		    _assetManager->GetRawAsset< TextureAsset >( sprite_renderer.textureHandler, AssetType::TEXTURE );
-		/*sprite_renderer.textureHandler =
-		    _textureResourceHandler.LoadTexture( sprite_renderer_config.texturePath.c_str() );
-		const Texture* texture = _textureResourceHandler.TryGetTextureFromHandler( sprite_renderer.textureHandler );*/
 		assert( texture != nullptr );
 		sprite_renderer.type = sprite_renderer_config.type;
 		sprite_renderer.width = texture->GetWidth();
