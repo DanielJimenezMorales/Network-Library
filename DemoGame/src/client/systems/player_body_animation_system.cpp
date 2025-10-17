@@ -11,6 +11,8 @@
 
 #include "transform/transform_hierarchy_helper_functions.h"
 
+#include "animation/animation_component_proxy.h"
+
 #include "shared/components/player_controller_component.h"
 
 #include "client/components/player_body_animation_tag_component.h"
@@ -54,25 +56,6 @@ static std::string GetAnimationNameBasedOnState( bool is_walking, const Vec2f& f
 	return newAnimationName;
 }
 
-static void ApplyAnimationName( Engine::AnimationComponent& animation, const std::string& targetAnimationName )
-{
-	if ( animation.currentAnimation->name != targetAnimationName )
-	{
-		if ( animation.animations.find( targetAnimationName ) != animation.animations.end() )
-		{
-			const Engine::AnimationClip* newAnimationClip = &animation.animations[ targetAnimationName ];
-			animation.currentAnimation = newAnimationClip;
-			animation.currentFrame = 0;
-			animation.timeAccumulator = 0.f;
-		}
-		else
-		{
-			LOG_ERROR( "[%s] Animation Clip with name %s couldn't be found", THIS_FUNCTION_NAME,
-			           targetAnimationName.c_str() );
-		}
-	}
-}
-
 static bool TryGetIdleEquivalentAnimationName( const std::string& animation_name, std::string& idle_equivalent_name )
 {
 	bool foundIdleEquivalent = true;
@@ -101,12 +84,15 @@ static bool TryGetIdleEquivalentAnimationName( const std::string& animation_name
 
 static void ApplyIdleEquivalentAnimation( Engine::AnimationComponent& animation )
 {
-	if ( animation.currentAnimation != nullptr )
+	Engine::AnimationComponentProxy animationProxy;
+
+	if ( animationProxy.IsPlaying( animation ) )
 	{
 		std::string idleEquivalentName;
-		if ( TryGetIdleEquivalentAnimationName( animation.currentAnimation->name, idleEquivalentName ) )
+		const Engine::AnimationClip* currentAnimation = animationProxy.GetCurrentAnimation( animation );
+		if ( TryGetIdleEquivalentAnimationName( currentAnimation->name, idleEquivalentName ) )
 		{
-			ApplyAnimationName( animation, idleEquivalentName );
+			animationProxy.PlayAnimationIfNotBeingPlayed( animation, idleEquivalentName );
 		}
 	}
 }
@@ -115,6 +101,8 @@ static void UpdateAnimationComponent( Engine::ECS::GameEntity& entity,
                                       const PlayerControllerComponent& player_controller,
                                       const Vec2f& weapon_forward_direction )
 {
+	Engine::AnimationComponentProxy animationProxy;
+
 	Engine::AnimationComponent& animation = entity.GetComponent< Engine::AnimationComponent >();
 
 	// If the player is aiming or walking, update the animation based on the direction
@@ -127,7 +115,8 @@ static void UpdateAnimationComponent( Engine::ECS::GameEntity& entity,
 
 		const std::string targetAnimationName =
 		    GetAnimationNameBasedOnState( player_controller.isWalking, forwardDirection );
-		ApplyAnimationName( animation, targetAnimationName );
+
+		animationProxy.PlayAnimationIfNotBeingPlayed( animation, targetAnimationName );
 	}
 	// Otherwise, transition to the idle animation equivalent if applicable
 	else

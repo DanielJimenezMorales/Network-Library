@@ -22,6 +22,7 @@ namespace Engine
 			    , numberOfFrames( number_of_frames )
 			    , frameRate( frame_rate )
 			    , flipX( flip_x )
+			    , isLoop( true )
 			{
 				assert( frame_width > 0 );
 				assert( frame_height > 0 );
@@ -39,6 +40,7 @@ namespace Engine
 			uint32 GetNumberOfFrames() const { return numberOfFrames; }
 			uint32 GetFrameRate() const { return frameRate; }
 			bool IsFlippedX() const { return flipX; }
+			bool IsLoop() const { return isLoop; }
 
 		private:
 			std::string spriteSheetPath;
@@ -49,5 +51,6 @@ namespace Engine
 			uint32 numberOfFrames;
 			uint32 frameRate;
 			bool flipX;
+			bool isLoop;
 	};
 } // namespace Engine

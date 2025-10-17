@@ -40,10 +40,13 @@ namespace Engine
 			{
 			}
 
+		private:
 			std::unordered_map< std::string, AnimationClip > animations;
 			const AnimationClip* currentAnimation;
 
 			uint32 currentFrame;
 			float32 timeAccumulator;
+
+			friend class AnimationComponentProxy;
 	};
 } // namespace Engine

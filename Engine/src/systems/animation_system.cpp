@@ -15,6 +15,7 @@
 #include "asset_manager/asset_handle.h"
 
 #include "animation/animation_asset.h"
+#include "animation/animation_component_proxy.h"
 
 #include "render/texture_asset.h"
 
@@ -29,30 +30,23 @@ namespace Engine
 
 	void AnimationSystem::Execute( ECS::World& world, float32 elapsed_time )
 	{
+		AnimationComponentProxy animationProxy;
+
 		std::vector< ECS::GameEntity > entities = world.GetEntitiesOfType< AnimationComponent >();
 		auto it = entities.begin();
 		for ( ; it != entities.end(); ++it )
 		{
 			AnimationComponent& animation = it->GetComponent< AnimationComponent >();
-			if ( animation.currentAnimation != nullptr )
+			if ( animationProxy.IsPlaying( animation ) )
 			{
-				const AnimationAsset* currentAnimationAsset = _assetManager->GetRawAsset< AnimationAsset >(
-				    animation.currentAnimation->assetHandle, AssetType::ANIMATION );
-				assert( currentAnimationAsset != nullptr );
-
-				// Calculate current animation frame
-				animation.timeAccumulator += elapsed_time;
-				const float32 frameDuration = 1.f / currentAnimationAsset->GetFrameRate();
-				if ( animation.timeAccumulator >= frameDuration )
-				{
-					const uint32 numberOfFramesToAdvance =
-					    static_cast< uint32 >( animation.timeAccumulator / frameDuration );
-					animation.currentFrame = ( animation.currentFrame + numberOfFramesToAdvance ) %
-					                         currentAnimationAsset->GetNumberOfFrames();
-					animation.timeAccumulator -= numberOfFramesToAdvance * frameDuration;
-				}
+				animationProxy.AdvanceAnimation( animation, elapsed_time, *_assetManager );
 
 				SpriteRendererComponent& spriteRenderer = it->GetComponent< SpriteRendererComponent >();
+
+				const AnimationClip* currentAnimationClip = animationProxy.GetCurrentAnimation( animation );
+				const AnimationAsset* currentAnimationAsset = _assetManager->GetRawAsset< AnimationAsset >(
+				    currentAnimationClip->assetHandle, AssetType::ANIMATION );
+				assert( currentAnimationAsset != nullptr );
 
 				// TODO We shouldn't be touching like this the texture, width and height variables from sprite renderer
 				// components. It is very error prone
@@ -73,7 +67,7 @@ namespace Engine
 				// pixel, frame width and height
 				const uint32 startCurrentFrameXPixel =
 				    currentAnimationAsset->GetStartX() +
-				    ( currentAnimationAsset->GetFrameWidth() * animation.currentFrame );
+				    ( currentAnimationAsset->GetFrameWidth() * animationProxy.GetCurrentAnimationFrame( animation ) );
 				const uint32 startCurrentFrameYPixel = currentAnimationAsset->GetStartY();
 				spriteRenderer.uv0.X( static_cast< float32 >( startCurrentFrameXPixel ) / spriteRenderer.width );
 				spriteRenderer.uv0.Y( static_cast< float32 >( startCurrentFrameYPixel ) / spriteRenderer.height );
@@ -106,24 +100,23 @@ namespace Engine
 		    static_cast< const AnimationComponentConfiguration& >( *component_config_found->second );
 		AnimationComponent& animation = entity.GetComponent< AnimationComponent >();
 
+		AnimationComponentProxy animationProxy;
+
 		auto cit = animation_config.animations.cbegin();
 		for ( ; cit != animation_config.animations.cend(); ++cit )
 		{
-			if ( animation.animations.find( cit->name ) == animation.animations.end() )
-			{
-				AssetHandle animationHandle = _assetManager->GetAsset( cit->path, AssetType::ANIMATION );
-				assert( animationHandle.IsValid() );
-				animation.animations[ cit->name ] = AnimationClip( cit->name, animationHandle );
-			}
-			else
+			AssetHandle animationHandle = _assetManager->GetAsset( cit->path, AssetType::ANIMATION );
+			assert( animationHandle.IsValid() );
+
+			const bool addedSuccessfully = animationProxy.AddAnimationClip(
+			    animation, AnimationClip( cit->name, _assetManager->GetAsset( cit->path, AssetType::ANIMATION ) ) );
+			if ( !addedSuccessfully )
 			{
 				LOG_WARNING( "Animation clip with name %s is duplicate in prefab %s. Skipping this clip.",
 				             cit->name.c_str(), prefab.name.c_str() );
 			}
 		}
 
-		animation.currentAnimation = &animation.animations[ animation_config.initialAnimationName ];
-		animation.currentFrame = 0;
-		animation.timeAccumulator = 0.f;
+		animationProxy.PlayAnimation( animation, animation_config.initialAnimationName );
 	}
 } // namespace Engine
