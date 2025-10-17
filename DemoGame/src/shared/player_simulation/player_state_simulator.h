@@ -4,6 +4,7 @@
 #include "shared/player_simulation/simulation_events_handler.h"
 #include "shared/player_simulation/player_movement_controller.h"
 #include "shared/player_simulation/player_rotation_controller.h"
+#include "shared/player_simulation/player_aiming_controller.h"
 #include "shared/player_simulation/player_shooting_controller.h"
 
 #include <vector>
@@ -39,6 +40,7 @@ namespace PlayerSimulation
 		private:
 			PlayerMovementController _movementController;
 			PlayerRotationController _rotationController;
+			PlayerAimingController _aimingController;
 			PlayerShootingController _shootingController;
 
 			SimulationEventsHandler _simulationEventsHandler;

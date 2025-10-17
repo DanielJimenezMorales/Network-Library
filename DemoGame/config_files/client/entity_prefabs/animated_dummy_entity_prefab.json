@@ -3,92 +3,73 @@
 	"archetype": "animated_dummy",
 	"component_configs": [
 		{
-			"name": "SpriteRenderer",
-			"texture_path": "sprites/PlayerSprites/player_idle_sheet.png",
-			"type": "SPRITE_SHEET"
-		},
-		{
 			"name": "Animation",
 			"animations": [
 				{
 					"name": "IDLE_FRONT",
-					"start_frame_x_pixel": 0,
-					"start_frame_y_pixel": 0,
-					"frame_width_pixels": 16,
-					"frame_height_pixels": 16,
-					"number_of_frames": 4,
-					"frame_rate": 8,
-					"flip_x": false
+					"path": "animations/player/player_idle_front.json"
 				},
 				{
 					"name": "IDLE_FRONT_LEFT",
-					"start_frame_x_pixel": 0,
-					"start_frame_y_pixel": 16,
-					"frame_width_pixels": 16,
-					"frame_height_pixels": 16,
-					"number_of_frames": 4,
-					"frame_rate": 8,
-					"flip_x": false
+					"path": "animations/player/player_idle_front_left.json"
 				},
 				{
 					"name": "IDLE_LEFT",
-					"start_frame_x_pixel": 0,
-					"start_frame_y_pixel": 32,
-					"frame_width_pixels": 16,
-					"frame_height_pixels": 16,
-					"number_of_frames": 4,
-					"frame_rate": 8,
-					"flip_x": false
+					"path": "animations/player/player_idle_left.json"
 				},
 				{
 					"name": "IDLE_BACK_LEFT",
-					"start_frame_x_pixel": 0,
-					"start_frame_y_pixel": 48,
-					"frame_width_pixels": 16,
-					"frame_height_pixels": 16,
-					"number_of_frames": 4,
-					"frame_rate": 8,
-					"flip_x": false
+					"path": "animations/player/player_idle_back_left.json"
 				},
 				{
 					"name": "IDLE_BACK",
-					"start_frame_x_pixel": 0,
-					"start_frame_y_pixel": 64,
-					"frame_width_pixels": 16,
-					"frame_height_pixels": 16,
-					"number_of_frames": 4,
-					"frame_rate": 8,
-					"flip_x": false
+					"path": "animations/player/player_idle_back.json"
 				},
 				{
 					"name": "IDLE_FRONT_RIGHT",
-					"start_frame_x_pixel": 0,
-					"start_frame_y_pixel": 16,
-					"frame_width_pixels": 16,
-					"frame_height_pixels": 16,
-					"number_of_frames": 4,
-					"frame_rate": 8,
-					"flip_x": true
+					"path": "animations/player/player_idle_front_right.json"
 				},
 				{
 					"name": "IDLE_RIGHT",
-					"start_frame_x_pixel": 0,
-					"start_frame_y_pixel": 32,
-					"frame_width_pixels": 16,
-					"frame_height_pixels": 16,
-					"number_of_frames": 4,
-					"frame_rate": 8,
-					"flip_x": true
+					"path": "animations/player/player_idle_right.json"
 				},
 				{
 					"name": "IDLE_BACK_RIGHT",
-					"start_frame_x_pixel": 0,
-					"start_frame_y_pixel": 48,
-					"frame_width_pixels": 16,
-					"frame_height_pixels": 16,
-					"number_of_frames": 4,
-					"frame_rate": 8,
-					"flip_x": true
+					"path": "animations/player/player_idle_back_right.json"
+				},
+
+
+				{
+					"name": "WALK_FRONT",
+					"path": "animations/player/player_walk_front.json"
+				},
+				{
+					"name": "WALK_FRONT_LEFT",
+					"path": "animations/player/player_walk_front_left.json"
+				},
+				{
+					"name": "WALK_LEFT",
+					"path": "animations/player/player_walk_left.json"
+				},
+				{
+					"name": "WALK_BACK_LEFT",
+					"path": "animations/player/player_walk_back_left.json"
+				},
+				{
+					"name": "WALK_BACK",
+					"path": "animations/player/player_walk_back.json"
+				},
+				{
+					"name": "WALK_FRONT_RIGHT",
+					"path": "animations/player/player_walk_front_right.json"
+				},
+				{
+					"name": "WALK_RIGHT",
+					"path": "animations/player/player_walk_right.json"
+				},
+				{
+					"name": "WALK_BACK_RIGHT",
+					"path": "animations/player/player_walk_back_right.json"
 				}
 			],
 			"initial_animation_name": "IDLE_FRONT_LEFT"

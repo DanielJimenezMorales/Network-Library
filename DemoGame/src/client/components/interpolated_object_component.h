@@ -1,7 +1,12 @@
 #pragma once
-
 #include "numeric_types.h"
 
+#include "ecs/game_entity.hpp"
+
+/// <summary>
+/// This component is used to mark objects that should have their position and orientation interpolated in order to
+/// mimic another entity's position and orientation (called Ghost Entity)
+/// </summary>
 struct InterpolatedObjectComponent
 {
 		InterpolatedObjectComponent()

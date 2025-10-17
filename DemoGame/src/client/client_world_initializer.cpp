@@ -12,6 +12,7 @@
 #include "transform/transform_hierarchy_helper_functions.h"
 
 #include "global_components/input_handler_global_component.h"
+#include "global_components/asset_management_global_component.h"
 
 #include "ecs/system_coordinator.h"
 #include "ecs/world.h"
@@ -23,7 +24,11 @@
 
 #include "render/rendering_inicialization_utils.h"
 
+#include "animation/animation_initialization_utils.h"
+
 #include "systems/animation_system.h"
+
+#include "game.h"
 
 // Network library
 #include "core/client.h"
@@ -47,6 +52,9 @@
 #include "client/components/interpolated_object_component.h"
 #include "client/components/virtual_mouse_component.h"
 #include "client/components/crosshair_component.h"
+#include "client/components/player_aim_component.h"
+#include "client/components/player_visual_weapon_tag_component.h"
+#include "client/components/player_body_animation_tag_component.h"
 
 #include "client/systems/crosshair_follow_mouse_system.h"
 #include "client/systems/client_local_player_server_reconciliator_system.h"
@@ -54,6 +62,9 @@
 #include "client/systems/client_local_player_predictor_system.h"
 #include "client/systems/remote_player_controller_system.h"
 #include "client/systems/interpolated_player_objects updater_system.h"
+#include "client/systems/player_weapon_flip_system.h"
+#include "client/systems/player_body_animation_system.h"
+#include "client/systems/player_weapon_visibility_system.h"
 
 #include "client/client_network_entity_creator.h"
 //---
@@ -100,6 +111,9 @@ static void RegisterComponents( Engine::ECS::World& world )
 	world.RegisterComponent< InterpolatedObjectReferenceComponent >( "InterpolatedObjectReference" );
 	world.RegisterComponent< InterpolatedObjectComponent >( "InterpolatedObject" );
 	world.RegisterComponent< ClientSidePredictionComponent >( "ClientSidePrediction" );
+	world.RegisterComponent< PlayerAimComponent >( "PlayerAim" );
+	world.RegisterComponent< PlayerVisualWeaponTagComponent >( "PlayerVisualWeaponTag" );
+	world.RegisterComponent< PlayerBodyAnimationTagComponent >( "PlayerBodyAnimationTag" );
 }
 
 static void RegisterArchetypes( Engine::ECS::World& world )
@@ -128,6 +142,12 @@ static void RegisterPrefabs( Engine::ECS::World& world )
 	}
 }
 
+static bool AddAssetManagementToWorld( Engine::ECS::World& world )
+{
+	world.AddGlobalComponent< Engine::AssetManagementGlobalComponent >();
+	return true;
+}
+
 static bool AddInputsToWorld( Engine::ECS::World& world )
 {
 	bool result = Engine::AddInputsToWorld( world );
@@ -148,28 +168,29 @@ static bool AddInputsToWorld( Engine::ECS::World& world )
 	inputHandlerGlobalComponent.controllers[ std::string( KEYBOARD_NAME ) ] = keyboard;
 
 	Engine::MouseController* mouse = new Engine::MouseController();
-	const Engine::InputButton mouse_shoot_button( SHOOT_BUTTON, SDL_BUTTON_LEFT );
-	mouse->AddButtonMap( mouse_shoot_button );
+	const Engine::InputButton mouseShootButton( SHOOT_BUTTON, SDL_BUTTON_LEFT );
+	mouse->AddButtonMap( mouseShootButton );
+	const Engine::InputButton mouseAimButton( AIM_BUTTON, SDL_BUTTON_RIGHT );
+	mouse->AddButtonMap( mouseAimButton );
 	inputHandlerGlobalComponent.cursors[ std::string( MOUSE_NAME ) ] = mouse;
 
 	return true;
 }
 
-static bool AddRenderingToWorld( Engine::ECS::World& world )
+static bool AddAnimationModuleToWorld( Engine::Game& game )
 {
-	// Add Animation system
-	// TODO move the Animation system to a different function. Evaluate if moving it to an Engine function like
-	// Engine::AddRenderingToWorld
-	Engine::ECS::SystemCoordinator* animation_system_coordinator =
-	    new Engine::ECS::SystemCoordinator( Engine::ECS::ExecutionStage::UPDATE );
-	Engine::AnimationSystem* animationSystem = new Engine::AnimationSystem();
-	animation_system_coordinator->AddSystemToTail( animationSystem );
-	auto on_configure_animation_callback = std::bind( &Engine::AnimationSystem::ConfigureAnimationComponent,
-	                                                  animationSystem, std::placeholders::_1, std::placeholders::_2 );
-	world.SubscribeToOnEntityConfigure( on_configure_animation_callback );
-	world.AddSystem( animation_system_coordinator );
+	bool result = Engine::AddAnimationToWorld( game );
+	if ( !result )
+	{
+		return false;
+	}
 
-	bool result = Engine::AddRenderingToWorld( world );
+	return true;
+}
+
+static bool AddRenderingModuleToWorld( Engine::Game& game )
+{
+	bool result = Engine::AddRenderingToWorld( game );
 	if ( !result )
 	{
 		return false;
@@ -245,6 +266,21 @@ static bool AddGameplayToWorld( Engine::ECS::World& world )
 	interpolated_player_objects_system_coordinator->AddSystemToTail( interpolated_player_objects_system );
 	world.AddSystem( interpolated_player_objects_system_coordinator );
 
+	Engine::ECS::SystemCoordinator* player_body_animation_system_coordinator =
+	    new Engine::ECS::SystemCoordinator( Engine::ECS::ExecutionStage::UPDATE );
+	player_body_animation_system_coordinator->AddSystemToTail( new PlayerBodyAnimationSystem() );
+	world.AddSystem( player_body_animation_system_coordinator );
+
+	Engine::ECS::SystemCoordinator* player_weapon_flip_system_coordinator =
+	    new Engine::ECS::SystemCoordinator( Engine::ECS::ExecutionStage::UPDATE );
+	player_weapon_flip_system_coordinator->AddSystemToTail( new PlayerWeaponFlipSystem() );
+	world.AddSystem( player_weapon_flip_system_coordinator );
+
+	Engine::ECS::SystemCoordinator* player_weapon_visibility_system_coordinator =
+	    new Engine::ECS::SystemCoordinator( Engine::ECS::ExecutionStage::UPDATE );
+	player_weapon_visibility_system_coordinator->AddSystemToTail( new PlayerWeaponVisibilitySystem() );
+	world.AddSystem( player_weapon_visibility_system_coordinator );
+
 	// Add Client-side player controller system
 	Engine::ECS::SystemCoordinator* client_player_controller_system_coordinator =
 	    new Engine::ECS::SystemCoordinator( Engine::ECS::ExecutionStage::TICK );
@@ -278,21 +314,41 @@ static bool AddGameplayToWorld( Engine::ECS::World& world )
 	return true;
 }
 
-static bool CreateSystemsAndGlobalEntities( Engine::ECS::World& world )
+static bool CreateSystemsAndGlobalEntities( Engine::Game& game )
 {
+	Engine::ECS::World& world = game.GetActiveWorld();
+
+	/////////////////////
+	// ASSET MANAGEMENT
+	/////////////////////
+	bool result = AddAssetManagementToWorld( world );
+	if ( !result )
+	{
+		LOG_ERROR( "Can't initialize asset management" );
+	}
+
 	///////////////////
 	// INPUT HANDLING
 	///////////////////
-	bool result = AddInputsToWorld( world );
+	result = AddInputsToWorld( world );
 	if ( !result )
 	{
 		LOG_ERROR( "Can't initialize input handling" );
 	}
 
 	//////////////
+	// ANIMATION
+	//////////////
+	result = AddAnimationModuleToWorld( game );
+	if ( !result )
+	{
+		LOG_ERROR( "Can't initialize animation" );
+	}
+
+	//////////////
 	// RENDERING
 	//////////////
-	result = AddRenderingToWorld( world );
+	result = AddRenderingModuleToWorld( game );
 	if ( !result )
 	{
 		LOG_ERROR( "Can't initialize rendering" );
@@ -332,17 +388,12 @@ static bool CreateGameEntities( Engine::ECS::World& world )
 	// Add virtual mouse entity
 	world.CreateGameEntity( "VirtualMouse", Vec2f( 0, 0 ) );
 
-	// Add animated dummy
-	auto entity = world.CreateGameEntity( "AnimatedDummy", Vec2f( -5.f, 0.f ) );
-	Engine::TransformComponent& animatedDummyTransform = entity.GetComponent< Engine::TransformComponent >();
-	const Engine::TransformComponentProxy transformComponentProxy;
-	transformComponentProxy.SetGlobalRotationAngle( animatedDummyTransform, 0.f );
-
 	return true;
 }
 
-void ClientWorldInitializer::SetUpWorld( Engine::ECS::World& world )
+void ClientWorldInitializer::SetUpWorld( Engine::Game& game )
 {
+	Engine::ECS::World& world = game.GetActiveWorld();
 	RegisterComponents( world );
 	RegisterArchetypes( world );
 	RegisterPrefabs( world );
@@ -356,7 +407,7 @@ void ClientWorldInitializer::SetUpWorld( Engine::ECS::World& world )
 	world.SubscribeToOnEntityConfigure( std::bind( &ClientWorldInitializer::ConfigureHealthComponent, this,
 	                                               std::placeholders::_1, std::placeholders::_2 ) );
 
-	CreateSystemsAndGlobalEntities( world );
+	CreateSystemsAndGlobalEntities( game );
 	CreateGameEntities( world );
 }
 

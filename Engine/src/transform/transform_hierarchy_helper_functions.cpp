@@ -16,8 +16,7 @@ namespace Engine
 		return transform._position;
 	}
 
-	void TransformComponentProxy::SetGlobalPosition( TransformComponent& transform,
-	                                                           const Vec2f& new_position ) const
+	void TransformComponentProxy::SetGlobalPosition( TransformComponent& transform, const Vec2f& new_position ) const
 	{
 		if ( transform._isDirty )
 		{
@@ -44,7 +43,7 @@ namespace Engine
 	}
 
 	void TransformComponentProxy::SetLocalPosition( TransformComponent& transform,
-	                                                          const Vec2f& new_local_position ) const
+	                                                const Vec2f& new_local_position ) const
 	{
 		if ( HasParent( transform ) )
 		{
@@ -69,8 +68,7 @@ namespace Engine
 		return transform._rotationAngle;
 	}
 
-	void TransformComponentProxy::SetGlobalRotationAngle( TransformComponent& transform,
-	                                                                float32 new_angle ) const
+	void TransformComponentProxy::SetGlobalRotationAngle( TransformComponent& transform, float32 new_angle ) const
 	{
 		if ( transform._isDirty )
 		{
@@ -101,8 +99,7 @@ namespace Engine
 		return result;
 	}
 
-	void TransformComponentProxy::SetLocalRotationAngle( TransformComponent& transform,
-	                                                               float32 new_local_angle ) const
+	void TransformComponentProxy::SetLocalRotationAngle( TransformComponent& transform, float32 new_local_angle ) const
 	{
 		if ( HasParent( transform ) )
 		{
@@ -126,8 +123,7 @@ namespace Engine
 		SetChildrenDirty( transform );
 	}
 
-	void TransformComponentProxy::SetRotationLookAt( TransformComponent& transform,
-	                                                           Vec2f look_at_direction ) const
+	void TransformComponentProxy::SetRotationLookAt( TransformComponent& transform, Vec2f look_at_direction ) const
 	{
 		look_at_direction.Normalize();
 
@@ -190,8 +186,7 @@ namespace Engine
 		return transform._scale;
 	}
 
-	void TransformComponentProxy::SetGlobalScale( TransformComponent& transform,
-	                                                        const Vec2f& new_scale ) const
+	void TransformComponentProxy::SetGlobalScale( TransformComponent& transform, const Vec2f& new_scale ) const
 	{
 		if ( transform._isDirty )
 		{
@@ -217,8 +212,7 @@ namespace Engine
 		return result;
 	}
 
-	void TransformComponentProxy::SetLocalScale( TransformComponent& transform,
-	                                                       const Vec2f& new_local_scale ) const
+	void TransformComponentProxy::SetLocalScale( TransformComponent& transform, const Vec2f& new_local_scale ) const
 	{
 		if ( HasParent( transform ) )
 		{
@@ -233,8 +227,7 @@ namespace Engine
 		SetChildrenDirty( transform );
 	}
 
-	void TransformComponentProxy::RemoveParent( TransformComponent& transform,
-	                                                      ECS::GameEntity& transform_entity ) const
+	void TransformComponentProxy::RemoveParent( TransformComponent& transform, ECS::GameEntity& transform_entity ) const
 	{
 		assert( transform_entity.IsValid() );
 
@@ -269,7 +262,7 @@ namespace Engine
 	}
 
 	void TransformComponentProxy::SetParent( TransformComponent& transform, ECS::GameEntity& transform_entity,
-	                                                   ECS::GameEntity& parent_entity ) const
+	                                         ECS::GameEntity& parent_entity ) const
 	{
 		assert( transform_entity.IsValid() );
 		assert( parent_entity.IsValid() );
@@ -293,6 +286,7 @@ namespace Engine
 
 		// Set parent as current parent
 		transform._parent = parent_entity;
+		transform._initialParentRotationAngle = GetGlobalRotation( parentTransform );
 
 		// If parent is dirty, resolve it
 		if ( parentTransform._isDirty )
@@ -311,13 +305,17 @@ namespace Engine
 		return transform._parent.IsValid();
 	}
 
+	ECS::GameEntity TransformComponentProxy::GetParent( const TransformComponent& transform ) const
+	{
+		return transform._parent;
+	}
+
 	bool TransformComponentProxy::HasChildren( const TransformComponent& transform ) const
 	{
 		return !transform._children.empty();
 	}
 
-	std::vector< ECS::GameEntity > TransformComponentProxy::GetChildren(
-	    const TransformComponent& transform ) const
+	std::vector< ECS::GameEntity > TransformComponentProxy::GetChildren( const TransformComponent& transform ) const
 	{
 		return transform._children;
 	}
@@ -349,6 +347,19 @@ namespace Engine
 		{
 			ResolveDirty( parentTransform );
 		}
+
+		// Recalculate local position as it might have been affected by the parent's rotation
+		const float32 parentRotationAngleInRadians =
+		    ( GetGlobalRotation( parentTransform ) - transform._initialParentRotationAngle ) * ( PI / 180.f );
+		const Vec2f localPosition = GetLocalPosition( transform );
+		Vec2f newLocalPosition;
+		newLocalPosition.X( ( localPosition.X() * cosf( parentRotationAngleInRadians ) ) -
+		                    ( localPosition.Y() * sinf( parentRotationAngleInRadians ) ) );
+		newLocalPosition.Y( ( localPosition.X() * sinf( parentRotationAngleInRadians ) ) +
+		                    ( localPosition.Y() * cosf( parentRotationAngleInRadians ) ) );
+
+		transform._localPosition = newLocalPosition;
+		transform._initialParentRotationAngle = GetGlobalRotation( parentTransform );
 
 		// Recalculate global transform based on local transform and parent's global transform
 		transform._position = GetGlobalPosition( parentTransform ) + GetLocalPosition( transform );

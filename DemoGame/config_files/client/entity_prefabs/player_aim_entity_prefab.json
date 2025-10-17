@@ -1,0 +1,16 @@
+{
+	"name": "PlayerAim",
+	"archetype": "player_aim",
+	"component_configs": [
+	],
+	"children_prefabs": [
+		{
+			"name": "PlayerWeaponHolder",
+			"local_position_x": 4,
+			"local_position_y": 0,
+			"local_rotation": 0,
+			"local_scale_x": 2,
+			"local_scale_y": 2
+		}
+	]
+}

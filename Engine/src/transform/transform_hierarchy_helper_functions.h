@@ -40,6 +40,7 @@ namespace Engine
 			void SetParent( TransformComponent& transform, ECS::GameEntity& transform_entity,
 			                ECS::GameEntity& parent_entity ) const;
 			bool HasParent( const TransformComponent& transform ) const;
+			ECS::GameEntity GetParent( const TransformComponent& transform ) const;
 			bool HasChildren( const TransformComponent& transform ) const;
 			std::vector< ECS::GameEntity > GetChildren( const TransformComponent& transform ) const;
 

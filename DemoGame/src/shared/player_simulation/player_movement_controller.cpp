@@ -31,12 +31,17 @@ namespace PlayerSimulation
 	                                         const PlayerStateConfiguration& configuration,
 	                                         SimulationEventsHandler& simulation_events_handler ) const
 	{
+		result_state.movementDirection = inputs.movement;
+		result_state.movementDirection.Normalize();
+
 		if ( IsMoving( inputs ) )
 		{
+			result_state.isWalking = true;
 			UpdatePosition( inputs, current_state, result_state, elapsed_time, configuration );
 		}
 		else
 		{
+			result_state.isWalking = false;
 			result_state.position = current_state.position;
 		}
 

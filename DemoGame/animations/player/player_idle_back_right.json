@@ -1,0 +1,10 @@
+{
+	"spritesheet": "sprites/PlayerSprites/player_idle_sheet.png",
+	"start_x_pixel": 0,
+	"start_y_pixel": 48,
+	"frame_width_pixels": 16,
+	"frame_height_pixels": 16,
+	"number_of_frames": 4,
+	"frame_rate": 8,
+	"flip_x": true
+}

@@ -1,7 +1,6 @@
 #include "sprite_renderer_system.h"
 
 #include "coordinates_conversion_utils.h"
-#include "texture.h"
 #include "vec2f.h"
 #include "logger.h"
 
@@ -19,12 +18,16 @@
 
 #include "component_configurations/sprite_renderer_component_configuration.h"
 
+#include "asset_manager/asset_manager.h"
+
+#include "render/texture_asset.h"
+
 #include <cassert>
 
 namespace Engine
 {
-	SpriteRendererSystem::SpriteRendererSystem( SDL_Renderer* renderer )
-	    : _textureResourceHandler( renderer )
+	SpriteRendererSystem::SpriteRendererSystem( SDL_Renderer* renderer, AssetManager* asset_manager )
+	    : _assetManager( asset_manager )
 	{
 	}
 
@@ -43,15 +46,14 @@ namespace Engine
 		{
 			// auto [spriteRenderer, transform] = view.get<SpriteRendererComponent, TransformComponent>(entity);
 			const SpriteRendererComponent& spriteRenderer = it->GetComponent< SpriteRendererComponent >();
-			TransformComponent& transform = it->GetComponent< TransformComponent >();
-
-			const Vec2f screenPosition = ConvertFromWorldPositionToScreenPosition(
-			    transformComponentProxy.GetGlobalPosition( transform ), camera, cameraTransform );
-			const Texture* texture = _textureResourceHandler.TryGetTextureFromHandler( spriteRenderer.textureHandler );
-			if ( texture == nullptr )
+			if ( !spriteRenderer.textureHandler.IsValid() || spriteRenderer.isDisabled )
 			{
 				continue;
 			}
+
+			const TextureAsset* texture =
+			    _assetManager->GetRawAsset< TextureAsset >( spriteRenderer.textureHandler, AssetType::TEXTURE );
+			assert( texture != nullptr );
 
 			SDL_Rect srcRect;
 			srcRect.x = static_cast< int32 >( spriteRenderer.uv0.X() * texture->GetWidth() );
@@ -61,6 +63,10 @@ namespace Engine
 			srcRect.h =
 			    static_cast< int32 >( ( spriteRenderer.uv1.Y() - spriteRenderer.uv0.Y() ) * texture->GetHeight() );
 
+			TransformComponent& transform = it->GetComponent< TransformComponent >();
+			const Vec2f screenPosition = ConvertFromWorldPositionToScreenPosition(
+			    transformComponentProxy.GetGlobalPosition( transform ), camera, cameraTransform );
+
 			SDL_Rect destRect;
 			destRect.x = static_cast< int >( screenPosition.X() - ( texture->GetWidth() / 2.f ) );
 			destRect.y = static_cast< int >( screenPosition.Y() - ( texture->GetHeight() / 2.f ) );
@@ -69,13 +75,26 @@ namespace Engine
 			destRect.h =
 			    static_cast< int >( texture->GetHeight() * transformComponentProxy.GetGlobalScale( transform ).Y() );
 
-			const SDL_RendererFlip flip =
-			    spriteRenderer.flipX ? SDL_RendererFlip::SDL_FLIP_HORIZONTAL : SDL_RendererFlip::SDL_FLIP_NONE;
+			SDL_Point center;
+			center.x = texture->GetWidth() / 2;
+			center.y = texture->GetHeight() / 2;
+
+			// TODO So far, this doesn't support FLIP X and Y at the same time. If both are set, FLIP Y will only be
+			// applied
+			SDL_RendererFlip flip = SDL_RendererFlip::SDL_FLIP_NONE;
+			if ( spriteRenderer.flipX )
+			{
+				flip = SDL_RendererFlip::SDL_FLIP_HORIZONTAL;
+			}
+			else if ( spriteRenderer.flipY )
+			{
+				flip = SDL_RendererFlip::SDL_FLIP_VERTICAL;
+			}
 
 			// SDL Rotates clockwise (the opposite as the engine that does it anti-clockwise), so we need to invert it.
 			const float64 rotationAngle = 360 - transformComponentProxy.GetGlobalRotation( transform );
 			SDL_RenderCopyEx( render_global_component.renderer, texture->GetRaw(), &srcRect, &destRect, rotationAngle,
-			                  nullptr, flip );
+			                  &center, flip );
 		}
 	}
 
@@ -96,8 +115,9 @@ namespace Engine
 		    static_cast< const SpriteRendererComponentConfiguration& >( *component_config_found->second );
 		SpriteRendererComponent& sprite_renderer = entity.GetComponent< SpriteRendererComponent >();
 		sprite_renderer.textureHandler =
-		    _textureResourceHandler.LoadTexture( sprite_renderer_config.texturePath.c_str() );
-		const Texture* texture = _textureResourceHandler.TryGetTextureFromHandler( sprite_renderer.textureHandler );
+		    _assetManager->GetAsset( sprite_renderer_config.texturePath, AssetType::TEXTURE );
+		const TextureAsset* texture =
+		    _assetManager->GetRawAsset< TextureAsset >( sprite_renderer.textureHandler, AssetType::TEXTURE );
 		assert( texture != nullptr );
 		sprite_renderer.type = sprite_renderer_config.type;
 		sprite_renderer.width = texture->GetWidth();

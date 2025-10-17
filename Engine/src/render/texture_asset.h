@@ -1,21 +1,27 @@
 #pragma once
-#include <SDL_image.h>
+#include "asset_manager/asset.h"
 
+#include "numeric_types.h"
+
+#include <SDL_image.h>
 #include <cassert>
 
 namespace Engine
 {
-	class Texture
+	class TextureAsset : public Asset
 	{
 		public:
-			Texture( SDL_Texture* texture, int32 width, int32 height )
-			    : _texture( texture )
+			TextureAsset( const std::string& path, SDL_Texture* texture, int32 width, int32 height )
+			    : Asset( path )
+			    , _texture( texture )
 			    , _pixelWidth( width )
 			    , _pixelHeight( height )
 			{
 				assert( _pixelWidth > 0 );
 				assert( _pixelHeight > 0 );
 			}
+
+			AssetType GetType() const override { return AssetType::TEXTURE; }
 
 			int32 GetWidth() const { return _pixelWidth; }
 			int32 GetHeight() const { return _pixelHeight; }

@@ -78,7 +78,7 @@ namespace Engine
 
 		GameEntity World::CreateGameEntity( const std::string& prefab_name, const Vec2f& position )
 		{
-			return CreateGameEntity( prefab_name, position, Vec2f( 0, -1 ) );
+			return CreateGameEntity( prefab_name, position, Vec2f( 1, 0 ) );
 		}
 
 		GameEntity World::CreateGameEntity( const std::string& prefab_name, const Vec2f& position,

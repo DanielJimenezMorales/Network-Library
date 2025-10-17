@@ -14,7 +14,7 @@ InputState::InputState()
 
 int32 InputState::GetSize() const
 {
-	return ( 1 * sizeof( uint32 ) ) + ( 5 * sizeof( float32 ) ) + ( 1 * sizeof( uint8 ) );
+	return ( 1 * sizeof( uint32 ) ) + ( 5 * sizeof( float32 ) ) + ( 2 * sizeof( uint8 ) );
 }
 
 void InputState::Serialize( NetLib::Buffer& buffer ) const
@@ -28,6 +28,7 @@ void InputState::Serialize( NetLib::Buffer& buffer ) const
 	buffer.WriteFloat( virtualMousePosition.X() );
 	buffer.WriteFloat( virtualMousePosition.Y() );
 
+	buffer.WriteByte( isAiming ? 1 : 0 );
 	buffer.WriteByte( isShooting ? 1 : 0 );
 }
 
@@ -41,6 +42,9 @@ void InputState::Deserialize( NetLib::Buffer& buffer )
 
 	virtualMousePosition.X( buffer.ReadFloat() );
 	virtualMousePosition.Y( buffer.ReadFloat() );
+
+	const uint8 isAimingByte = buffer.ReadByte();
+	isAiming = ( isAimingByte == 1 ) ? true : false;
 
 	const uint8 isShootingByte = buffer.ReadByte();
 	isShooting = ( isShootingByte == 1 ) ? true : false;

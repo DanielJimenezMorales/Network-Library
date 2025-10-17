@@ -61,7 +61,7 @@ int main()
 		worldInitializer = new ClientWorldInitializer();
 	}
 
-	Game game;
+	Engine::Game game;
 	if ( !game.Init( worldInitializer ) )
 	{
 		return EXIT_FAILURE;

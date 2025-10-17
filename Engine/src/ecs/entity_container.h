@@ -138,8 +138,18 @@ namespace Engine
 		inline T& EntityContainer::AddComponentToEntity( const GameEntity& gameEntity, Params&&... params )
 		{
 			assert( !HasEntityComponent< T >( gameEntity ) );
-			return _entities.emplace< T >( static_cast< entt::entity >( gameEntity._ecsEntityId ),
-			                               std::forward< Params >( params )... );
+			if constexpr ( sizeof...( Params ) > 0 )
+			{
+				return _entities.emplace< T >( static_cast< entt::entity >( gameEntity._ecsEntityId ),
+				                               std::forward< Params >( params )... );
+			}
+			else
+			{
+				// This else is for supporting Tag components with no data inside
+				_entities.emplace< T >( static_cast< entt::entity >( gameEntity._ecsEntityId ) );
+				static T dummy;
+				return dummy;
+			}
 		}
 
 		template < typename T >

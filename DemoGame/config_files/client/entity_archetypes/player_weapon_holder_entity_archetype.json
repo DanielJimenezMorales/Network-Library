@@ -1,0 +1,8 @@
+{
+	"name": "player_weapon_holder",
+	"components": [
+		"Transform",
+		"SpriteRenderer",
+		"PlayerVisualWeaponTag"
+	]
+}

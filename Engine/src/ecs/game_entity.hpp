@@ -11,7 +11,6 @@ namespace Engine
 {
 	namespace ECS
 	{
-		// TODO improve GameEntity
 		class GameEntity
 		{
 			public:
@@ -72,6 +71,12 @@ namespace Engine
 
 				template < typename T >
 				void RemoveComponent();
+
+				// TODO Add a function called GetFirstParentWithComponent<T> that returns the first parent found in the
+				// hierarchy, if any, with component T attached
+
+				// TODO Add a function called GetFirstChildWithComponent<T> that returns the first child found in the
+				// hierarchy, if any, with component T attached
 
 			private:
 				EntityId _ecsEntityId;

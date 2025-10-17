@@ -25,6 +25,9 @@ namespace PlayerSimulation
 		playerState.rotationAngle = transformComponentProxy.GetGlobalRotation( transform );
 
 		const PlayerControllerComponent& playerController = player_entity.GetComponent< PlayerControllerComponent >();
+		playerState.movementDirection = playerController.movementDirection;
+		playerState.isWalking = playerController.isWalking;
+		playerState.isAiming = playerController.isAiming;
 		playerState.timeLeftUntilNextShot = playerController.timeLeftUntilNextShot;
 
 		return playerState;
@@ -40,6 +43,9 @@ namespace PlayerSimulation
 
 		// Update Player Controller
 		PlayerControllerComponent& playerController = player_entity.GetComponent< PlayerControllerComponent >();
+		playerController.movementDirection = player_state.movementDirection;
+		playerController.isWalking = player_state.isWalking;
+		playerController.isAiming = player_state.isAiming;
 		playerController.timeLeftUntilNextShot = player_state.timeLeftUntilNextShot;
 	}
 
@@ -50,6 +56,14 @@ namespace PlayerSimulation
 		buffer.WriteFloat( player_state.position.Y() );
 
 		buffer.WriteFloat( player_state.rotationAngle );
+		buffer.WriteFloat( player_state.timeLeftUntilNextShot );
+
+		buffer.WriteFloat( player_state.movementDirection.X() );
+		buffer.WriteFloat( player_state.movementDirection.Y() );
+
+		// TODO Serialize this in a more efficient way to fit multiple bools in one byte
+		buffer.WriteInteger( player_state.isWalking ? 1 : 0 );
+		buffer.WriteInteger( player_state.isAiming ? 1 : 0 );
 	}
 
 	PlayerState DeserializePlayerStateFromBuffer( NetLib::Buffer& buffer )
@@ -61,6 +75,14 @@ namespace PlayerSimulation
 		playerState.position.Y( buffer.ReadFloat() );
 
 		playerState.rotationAngle = buffer.ReadFloat();
+		playerState.timeLeftUntilNextShot = buffer.ReadFloat();
+
+		playerState.movementDirection.X( buffer.ReadFloat() );
+		playerState.movementDirection.Y( buffer.ReadFloat() );
+
+		// TODO Serialize this in a more efficient way to fit multiple bools in one byte
+		playerState.isWalking = buffer.ReadInteger() == 1 ? true : false;
+		playerState.isAiming = buffer.ReadInteger() == 1 ? true : false;
 
 		return playerState;
 	}

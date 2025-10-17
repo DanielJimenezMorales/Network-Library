@@ -20,6 +20,7 @@ class InputState : public NetLib::IInputState
 
 		// Body fields
 		Vec2f movement;
+		bool isAiming;
 		bool isShooting;
 		Vec2f virtualMousePosition;
 };
