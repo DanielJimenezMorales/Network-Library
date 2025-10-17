@@ -8,6 +8,7 @@ struct PlayerControllerComponent
 	public:
 		PlayerControllerComponent()
 		    : stateConfiguration( 0, 0 )
+		    , movementDirection( 0.f, 0.f )
 		    , isWalking( false )
 		    , isAiming( false )
 		    , timeLeftUntilNextShot( 0.f )
@@ -16,6 +17,7 @@ struct PlayerControllerComponent
 
 		PlayerSimulation::PlayerStateConfiguration stateConfiguration;
 
+		Vec2f movementDirection;
 		bool isWalking;
 		bool isAiming;
 		float32 timeLeftUntilNextShot;

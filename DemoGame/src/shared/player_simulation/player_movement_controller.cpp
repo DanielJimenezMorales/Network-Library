@@ -31,6 +31,9 @@ namespace PlayerSimulation
 	                                         const PlayerStateConfiguration& configuration,
 	                                         SimulationEventsHandler& simulation_events_handler ) const
 	{
+		result_state.movementDirection = inputs.movement;
+		result_state.movementDirection.Normalize();
+
 		if ( IsMoving( inputs ) )
 		{
 			result_state.isWalking = true;

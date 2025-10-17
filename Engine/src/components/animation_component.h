@@ -26,6 +26,9 @@ namespace Engine
 			AssetHandle assetHandle;
 	};
 
+	// TODO Create a proxy class for this component as I did for the transform component to avoid direct manipulation of
+	// the struct data. Multiple systems are going to need to touch it and we should provide a secure wrapper for
+	// manipulating the component
 	struct AnimationComponent
 	{
 		public:

@@ -19,9 +19,8 @@
 #include <cassert>
 #include <string>
 
-static void UpdateAnimationComponent( Engine::ECS::GameEntity& entity, bool is_walking, const Vec2f& forward_direction )
+static std::string GetAnimationNameBasedOnState( bool is_walking, const Vec2f& forward_direction )
 {
-	Engine::AnimationComponent& animation = entity.GetComponent< Engine::AnimationComponent >();
 	std::string newAnimationName;
 
 	// Get angle in radians (-π to π)
@@ -52,12 +51,16 @@ static void UpdateAnimationComponent( Engine::ECS::GameEntity& entity, bool is_w
 	else // < 337.5f
 		newAnimationName = is_walking ? "WALK_FRONT_RIGHT" : "IDLE_FRONT_RIGHT";
 
-	if ( animation.currentAnimation->name != newAnimationName )
+	return newAnimationName;
+}
+
+static void ApplyAnimationName( Engine::AnimationComponent& animation, const std::string& targetAnimationName )
+{
+	if ( animation.currentAnimation->name != targetAnimationName )
 	{
-		LOG_WARNING( "(%.4f, %.4f)", forward_direction.X(), forward_direction.Y() );
-		if ( animation.animations.find( newAnimationName ) != animation.animations.end() )
+		if ( animation.animations.find( targetAnimationName ) != animation.animations.end() )
 		{
-			const Engine::AnimationClip* newAnimationClip = &animation.animations[ newAnimationName ];
+			const Engine::AnimationClip* newAnimationClip = &animation.animations[ targetAnimationName ];
 			animation.currentAnimation = newAnimationClip;
 			animation.currentFrame = 0;
 			animation.timeAccumulator = 0.f;
@@ -65,12 +68,71 @@ static void UpdateAnimationComponent( Engine::ECS::GameEntity& entity, bool is_w
 		else
 		{
 			LOG_ERROR( "[%s] Animation Clip with name %s couldn't be found", THIS_FUNCTION_NAME,
-			           newAnimationName.c_str() );
+			           targetAnimationName.c_str() );
 		}
 	}
+}
+
+static bool TryGetIdleEquivalentAnimationName( const std::string& animation_name, std::string& idle_equivalent_name )
+{
+	bool foundIdleEquivalent = true;
+
+	if ( animation_name == "WALK_RIGHT" )
+		idle_equivalent_name = "IDLE_RIGHT";
+	else if ( animation_name == "WALK_BACK_RIGHT" )
+		idle_equivalent_name = "IDLE_BACK_RIGHT";
+	else if ( animation_name == "WALK_BACK" )
+		idle_equivalent_name = "IDLE_BACK";
+	else if ( animation_name == "WALK_BACK_LEFT" )
+		idle_equivalent_name = "IDLE_BACK_LEFT";
+	else if ( animation_name == "WALK_LEFT" )
+		idle_equivalent_name = "IDLE_LEFT";
+	else if ( animation_name == "WALK_FRONT_LEFT" )
+		idle_equivalent_name = "IDLE_FRONT_LEFT";
+	else if ( animation_name == "WALK_FRONT" )
+		idle_equivalent_name = "IDLE_FRONT";
+	else if ( animation_name == "WALK_FRONT_RIGHT" )
+		idle_equivalent_name = "IDLE_FRONT_RIGHT";
+	else
+		foundIdleEquivalent = false;
+
+	return foundIdleEquivalent;
+}
+
+static void ApplyIdleEquivalentAnimation( Engine::AnimationComponent& animation )
+{
+	if ( animation.currentAnimation != nullptr )
+	{
+		std::string idleEquivalentName;
+		if ( TryGetIdleEquivalentAnimationName( animation.currentAnimation->name, idleEquivalentName ) )
+		{
+			ApplyAnimationName( animation, idleEquivalentName );
+		}
+	}
+}
+
+static void UpdateAnimationComponent( Engine::ECS::GameEntity& entity,
+                                      const PlayerControllerComponent& player_controller,
+                                      const Vec2f& weapon_forward_direction )
+{
+	Engine::AnimationComponent& animation = entity.GetComponent< Engine::AnimationComponent >();
+
+	// If the player is aiming or walking, update the animation based on the direction
+	if ( player_controller.isAiming || player_controller.isWalking )
+	{
+		// When aiming, use the weapon's forward direction for animation selection, otherwise use the movement
+		// direction.
+		const Vec2f forwardDirection =
+		    ( player_controller.isAiming ) ? weapon_forward_direction : player_controller.movementDirection;
+
+		const std::string targetAnimationName =
+		    GetAnimationNameBasedOnState( player_controller.isWalking, forwardDirection );
+		ApplyAnimationName( animation, targetAnimationName );
+	}
+	// Otherwise, transition to the idle animation equivalent if applicable
 	else
 	{
-		bool a = true;
+		ApplyIdleEquivalentAnimation( animation );
 	}
 }
 
@@ -104,8 +166,8 @@ void PlayerBodyAnimationSystem::Execute( Engine::ECS::World& world, float32 elap
 		const PlayerControllerComponent& playerController = ghostEntity.GetComponent< PlayerControllerComponent >();
 		const Engine::TransformComponent& rotationEntityTransform =
 		    childIt->GetComponent< Engine::TransformComponent >();
-		const bool isWalking = playerController.isWalking;
-		const Vec2f forwardDirection = transformComponentProxy.GetForwardVector( rotationEntityTransform );
-		UpdateAnimationComponent( *it, isWalking, forwardDirection );
+
+		UpdateAnimationComponent( *it, playerController,
+		                          transformComponentProxy.GetForwardVector( rotationEntityTransform ) );
 	}
 }
