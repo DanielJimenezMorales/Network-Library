@@ -1,12 +1,12 @@
 #pragma once
-#include "gizmos/gizmo_renderer.h"
+#include "render/gizmo_renderer.h"
 
 namespace Engine
 {
-	class CircleGizmoRenderer : public GizmoRenderer
+	class RayGizmoRenderer : public GizmoRenderer
 	{
 		public:
-			CircleGizmoRenderer();
+			RayGizmoRenderer();
 
 			void Render( const Gizmo& gizmo, const CameraComponent& camera, const TransformComponent& camera_transform,
 			             const TransformComponent& transform, SDL_Renderer* renderer ) const override;

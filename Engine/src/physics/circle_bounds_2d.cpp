@@ -1,9 +1,8 @@
 #include "circle_bounds_2d.h"
 
-#include "gizmos/circle_gizmo.h"
+#include "render/circle_gizmo.h"
 
-#include "components/transform_component.h"
-
+#include "transform/transform_component.h"
 #include "transform/transform_hierarchy_helper_functions.h"
 
 namespace Engine

@@ -6,18 +6,16 @@
 #include "ecs/game_entity.hpp"
 #include "ecs/prefab.h"
 
-#include "components/animation_component.h"
-#include "components/sprite_renderer_component.h"
-
-#include "component_configurations/animation_component_configuration.h"
-
-#include "asset_manager/asset_manager.h"
-#include "asset_manager/asset_handle.h"
-
+#include "animation/animation_component.h"
+#include "animation/animation_component_configuration.h"
 #include "animation/animation_asset.h"
 #include "animation/animation_component_proxy.h"
 
+#include "render/sprite_renderer_component.h"
 #include "render/texture_asset.h"
+
+#include "asset_manager/asset_manager.h"
+#include "asset_manager/asset_handle.h"
 
 namespace Engine
 {

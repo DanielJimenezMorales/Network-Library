@@ -1,34 +1,36 @@
 #include "client_world_initializer.h"
 
 // Engine
-#include "components/transform_component.h"
-#include "components/sprite_renderer_component.h"
-#include "components/camera_component.h"
-#include "components/collider_2d_component.h"
-#include "components/gizmo_renderer_component.h"
-#include "components/raycast_component.h"
-#include "components/animation_component.h"
-
+#include "transform/transform_component.h"
 #include "transform/transform_hierarchy_helper_functions.h"
 
-#include "global_components/input_handler_global_component.h"
-#include "global_components/asset_management_global_component.h"
+#include "render/sprite_renderer_component.h"
+#include "render/gizmo_renderer_component.h"
+#include "render/rendering_inicialization_utils.h"
+#include "render/sprite_renderer_component_configuration.h"
+
+#include "physics/collider_2d_component.h"
+#include "physics/raycast_component.h"
+#include "physics/collider_2d_component_configuration.h"
+
+#include "asset_manager/asset_management_global_component.h"
 
 #include "ecs/system_coordinator.h"
 #include "ecs/world.h"
 #include "ecs/game_entity.hpp"
 
+#include "inputs/input_handler_global_component.h"
 #include "inputs/inputs_initialization_utils.h"
 #include "inputs/keyboard_controller.h"
 #include "inputs/mouse_controller.h"
 
-#include "render/rendering_inicialization_utils.h"
-
+#include "animation/animation_component.h"
 #include "animation/animation_initialization_utils.h"
-
-#include "systems/animation_system.h"
+#include "animation/animation_system.h"
 
 #include "game.h"
+#include "camera_component.h"
+#include "camera_component_configuration.h"
 
 // Network library
 #include "core/client.h"
@@ -73,9 +75,6 @@
 #include "shared/ITextureLoader.h"
 #include "shared/InputStateFactory.h"
 
-#include "component_configurations/sprite_renderer_component_configuration.h"
-#include "component_configurations/collider_2d_component_configuration.h"
-#include "component_configurations/camera_component_configuration.h"
 #include "shared/component_configurations/player_controller_component_configuration.h"
 #include "shared/component_configurations/health_component_configuration.h"
 

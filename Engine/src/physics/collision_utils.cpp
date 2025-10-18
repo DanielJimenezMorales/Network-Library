@@ -2,8 +2,7 @@
 
 #include "math_utils.h"
 
-#include "components/transform_component.h"
-
+#include "transform/transform_component.h"
 #include "transform/transform_hierarchy_helper_functions.h"
 
 #include <cassert>

@@ -1,9 +1,8 @@
 #pragma once
 #include "numeric_types.h"
 
-#include "gizmos/gizmo.h"
-
-#include "resource_handlers/gizmo_pool.h"
+#include "render/gizmo.h"
+#include "render/gizmo_pool.h"
 
 #include <unordered_map>
 

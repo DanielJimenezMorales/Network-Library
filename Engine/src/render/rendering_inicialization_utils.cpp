@@ -1,15 +1,13 @@
 #include "rendering_inicialization_utils.h"
 
-#include "global_components/render_global_component.h"
-
-#include "systems/render_clear_system.h"
-#include "systems/render_present_system.h"
-#include "systems/sprite_renderer_system.h"
-#include "systems/gizmo_renderer_system.h"
+#include "render/render_global_component.h"
+#include "render/render_clear_system.h"
+#include "render/render_present_system.h"
+#include "render/sprite_renderer_system.h"
+#include "render/gizmo_renderer_system.h"
+#include "render/texture_asset_loader.h"
 
 #include "asset_manager/asset_manager.h"
-
-#include "render/texture_asset_loader.h"
 
 #include "ecs/world.h"
 

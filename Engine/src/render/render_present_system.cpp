@@ -1,6 +1,6 @@
 #include "render_present_system.h"
 
-#include "global_components/render_global_component.h"
+#include "render/render_global_component.h"
 
 #include "ecs/world.h"
 

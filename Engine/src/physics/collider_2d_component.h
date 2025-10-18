@@ -1,7 +1,7 @@
 #pragma once
 #include "vec2f.h"
 
-#include "collisions/bounds_2d.h"
+#include "physics/bounds_2d.h"
 
 #include <cstdint>
 #include <vector>

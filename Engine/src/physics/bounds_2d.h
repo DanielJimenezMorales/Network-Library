@@ -2,7 +2,7 @@
 #include "vec2f.h"
 #include "numeric_types.h"
 
-#include "gizmos/gizmo.h"
+#include "render/gizmo.h"
 
 #include <vector>
 #include <memory>

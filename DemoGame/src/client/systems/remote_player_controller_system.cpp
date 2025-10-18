@@ -3,7 +3,7 @@
 #include "ecs/game_entity.hpp"
 #include "ecs/world.h"
 
-#include "components/transform_component.h"
+#include "transform/transform_component.h"
 
 #include "client/components/remote_player_controller_component.h"
 

@@ -1,9 +1,8 @@
 #pragma once
 #include "ecs/component_configuration.h"
 
-#include "components/collider_2d_component.h"
-
-#include "collisions/bounds_2d.h"
+#include "physics/collider_2d_component.h"
+#include "physics/bounds_2d.h"
 
 namespace Engine
 {

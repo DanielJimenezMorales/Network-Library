@@ -5,8 +5,7 @@
 #include "ecs/world.h"
 #include "ecs/game_entity.hpp"
 
-#include "components/transform_component.h"
-
+#include "transform/transform_component.h"
 #include "transform/transform_hierarchy_helper_functions.h"
 
 #include "server/hit_reg/shot_entry.h"

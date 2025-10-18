@@ -3,18 +3,18 @@
 #include "ecs/world.h"
 #include "ecs/game_entity.hpp"
 
-#include "gizmos/ray_gizmo.h"
-#include "gizmos/circle_gizmo_renderer.h"
-#include "gizmos/ray_gizmo_renderer.h"
+#include "render/ray_gizmo.h"
+#include "render/circle_gizmo_renderer.h"
+#include "render/ray_gizmo_renderer.h"
+#include "render/render_global_component.h"
+#include "render/gizmo_renderer_component.h"
 
-#include "global_components/render_global_component.h"
+#include "camera_component.h"
 
-#include "components/gizmo_renderer_component.h"
-#include "components/camera_component.h"
-#include "components/transform_component.h"
+#include "transform/transform_component.h"
 
-#include "components/collider_2d_component.h"
-#include "components/raycast_component.h"
+#include "physics/collider_2d_component.h"
+#include "physics/raycast_component.h"
 
 namespace Engine
 {

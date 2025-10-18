@@ -6,15 +6,13 @@
 #include "vec2f.h"
 #include "coordinates_conversion_utils.h"
 #include "math_utils.h"
+#include "camera_component.h"
 
-#include "components/camera_component.h"
-
-#include "components/transform_component.h"
-
+#include "transform/transform_component.h"
 #include "transform/transform_hierarchy_helper_functions.h"
 
-#include "gizmos/gizmo.h"
-#include "gizmos/circle_gizmo.h"
+#include "render/gizmo.h"
+#include "render/circle_gizmo.h"
 
 namespace Engine
 {

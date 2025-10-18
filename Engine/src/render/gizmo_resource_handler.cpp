@@ -1,7 +1,7 @@
 #include "gizmo_resource_handler.h"
 
-#include "gizmos/circle_gizmo.h"
-#include "gizmos/ray_gizmo.h"
+#include "render/circle_gizmo.h"
+#include "render/ray_gizmo.h"
 
 #include <cassert>
 

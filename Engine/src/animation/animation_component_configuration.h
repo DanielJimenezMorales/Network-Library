@@ -3,7 +3,7 @@
 
 #include "ecs/component_configuration.h"
 
-#include "components/animation_component.h"
+#include "animation/animation_component.h"
 
 #include <vector>
 #include <string>

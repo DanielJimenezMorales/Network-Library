@@ -8,7 +8,7 @@
 #include "ecs/prefab.h"
 #include "ecs/world.h"
 
-#include "components/transform_component.h"
+#include "transform/transform_component.h"
 
 #include "shared/components/player_controller_component.h"
 #include "shared/components/network_entity_component.h"

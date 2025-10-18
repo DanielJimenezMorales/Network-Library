@@ -2,20 +2,22 @@
 
 #include "inputs/i_input_controller.h"
 #include "inputs/i_cursor.h"
+#include "inputs/input_handler_global_component.h"
 
-#include "vec2f.h"
-#include "raycaster.h"
-#include "shared/InputActionIdsConfiguration.h"
-#include "shared/InputState.h"
+#include "physics/raycaster.h"
+#include "physics/collider_2d_component.h"
+
+#include "transform/transform_component.h"
+#include "transform/transform_hierarchy_helper_functions.h"
 
 #include "ecs/game_entity.hpp"
 #include "ecs/prefab.h"
 #include "ecs/world.h"
 
-#include "components/collider_2d_component.h"
-#include "components/transform_component.h"
+#include "vec2f.h"
 
-#include "transform/transform_hierarchy_helper_functions.h"
+#include "shared/InputActionIdsConfiguration.h"
+#include "shared/InputState.h"
 
 #include "shared/components/player_controller_component.h"
 #include "shared/components/health_component.h"
@@ -24,7 +26,6 @@
 #include "client/components/client_side_prediction_component.h"
 
 #include "shared/global_components/network_peer_global_component.h"
-#include "global_components/input_handler_global_component.h"
 
 #include "shared/player_simulation/player_state_utils.h"
 

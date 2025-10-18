@@ -4,8 +4,7 @@
 
 #include "ecs/game_entity.hpp"
 
-#include "components/transform_component.h"
-
+#include "transform/transform_component.h"
 #include "transform/transform_hierarchy_helper_functions.h"
 
 #include "shared/components/player_controller_component.h"

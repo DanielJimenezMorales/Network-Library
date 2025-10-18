@@ -4,23 +4,21 @@
 #include "vec2f.h"
 #include "logger.h"
 
+#include "camera_component.h"
+
 #include "ecs/game_entity.hpp"
 #include "ecs/world.h"
 #include "ecs/prefab.h"
 
-#include "global_components/render_global_component.h"
+#include "render/render_global_component.h"
+#include "render/sprite_renderer_component.h"
+#include "render/sprite_renderer_component_configuration.h"
+#include "render/texture_asset.h"
 
-#include "components/sprite_renderer_component.h"
-#include "components/camera_component.h"
-#include "components/transform_component.h"
-
+#include "transform/transform_component.h"
 #include "transform/transform_hierarchy_helper_functions.h"
 
-#include "component_configurations/sprite_renderer_component_configuration.h"
-
 #include "asset_manager/asset_manager.h"
-
-#include "render/texture_asset.h"
 
 #include <cassert>
 

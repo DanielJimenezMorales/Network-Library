@@ -1,13 +1,12 @@
 #include "raycaster.h"
 
-#include "components/collider_2d_component.h"
-#include "components/transform_component.h"
-
-#include "transform/transform_hierarchy_helper_functions.h"
-
-#include "collisions/circle_bounds_2d.h"
-
 #include "logger.h"
+
+#include "physics/collider_2d_component.h"
+#include "physics/circle_bounds_2d.h"
+
+#include "transform/transform_component.h"
+#include "transform/transform_hierarchy_helper_functions.h"
 
 #include <cassert>
 

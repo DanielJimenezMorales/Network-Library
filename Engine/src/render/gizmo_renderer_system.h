@@ -1,11 +1,10 @@
 #pragma once
 #include "ecs/i_simple_system.h"
 
-#include "resource_handlers/gizmo_resource_handler.h"
+#include "render/gizmo_resource_handler.h"
+#include "render/gizmo.h"
 
 #include <unordered_map>
-
-#include "gizmos/gizmo.h"
 
 namespace Engine
 {

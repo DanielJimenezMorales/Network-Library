@@ -1,5 +1,5 @@
 #pragma once
-#include "gizmos/gizmo.h"
+#include "render/gizmo.h"
 
 namespace Engine
 {

@@ -1,7 +1,7 @@
 #include "collider_2d_component.h"
 
 // TODO remove this
-#include "collisions/circle_bounds_2d.h"
+#include "physics/circle_bounds_2d.h"
 
 #include "logger.h"
 

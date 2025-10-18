@@ -1,16 +1,14 @@
 #include "collision_detection_system.h"
 
-#include "collisions/collision_utils.h"
-#include "collisions/circle_bounds_2d.h"
-
 #include "logger.h"
 
-#include "components/collider_2d_component.h"
-#include "components/transform_component.h"
+#include "physics/collision_utils.h"
+#include "physics/circle_bounds_2d.h"
+#include "physics/collider_2d_component.h"
+#include "physics/collider_2d_component_configuration.h"
 
+#include "transform/transform_component.h"
 #include "transform/transform_hierarchy_helper_functions.h"
-
-#include "component_configurations/collider_2d_component_configuration.h"
 
 #include "ecs/game_entity.hpp"
 #include "ecs/world.h"

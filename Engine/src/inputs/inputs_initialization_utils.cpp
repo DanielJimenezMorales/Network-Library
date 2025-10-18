@@ -1,8 +1,7 @@
 #include "inputs_initialization_utils.h"
 
-#include "global_components/input_handler_global_component.h"
-
-#include "systems/input_handler_system.h"
+#include "inputs/input_handler_global_component.h"
+#include "inputs/input_handler_system.h"
 
 #include "ecs/world.h"
 

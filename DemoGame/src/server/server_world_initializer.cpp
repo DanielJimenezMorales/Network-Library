@@ -3,22 +3,27 @@
 #define SERVER_RENDER
 
 // Engine
-#include "components/transform_component.h"
-#include "components/sprite_renderer_component.h"
-#include "components/camera_component.h"
-#include "components/collider_2d_component.h"
-#include "components/gizmo_renderer_component.h"
-#include "components/raycast_component.h"
+#include "transform/transform_component.h"
 
-#include "global_components/input_handler_global_component.h"
-#include "global_components/asset_management_global_component.h"
+#include "render/sprite_renderer_component.h"
+#include "render/gizmo_renderer_component.h"
+#include "render/sprite_renderer_component_configuration.h"
+
+#include "physics/collider_2d_component.h"
+#include "physics/raycast_component.h"
+#include "physics/collision_detection_system.h"
+#include "physics/collider_2d_component_configuration.h"
+
+#include "inputs/input_handler_global_component.h"
+
+#include "asset_manager/asset_management_global_component.h"
 
 #include "ecs/system_coordinator.h"
 #include "ecs/world.h"
 #include "ecs/game_entity.hpp"
 
-#include "systems/collision_detection_system.h"
-
+#include "camera_component.h"
+#include "camera_component_configuration.h"
 #include "game.h"
 
 #ifdef SERVER_RENDER
@@ -61,9 +66,6 @@
 
 #include "shared/component_configurations/player_controller_component_configuration.h"
 #include "shared/component_configurations/health_component_configuration.h"
-#include "component_configurations/sprite_renderer_component_configuration.h"
-#include "component_configurations/collider_2d_component_configuration.h"
-#include "component_configurations/camera_component_configuration.h"
 
 #include "shared/global_components/network_peer_global_component.h"
 

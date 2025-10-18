@@ -3,13 +3,11 @@
 #include <cassert>
 
 #include "logger.h"
-
 #include "vec2f.h"
 
 #include "ecs/game_entity.hpp"
 
-#include "components/transform_component.h"
-
+#include "transform/transform_component.h"
 #include "transform/transform_hierarchy_helper_functions.h"
 
 namespace Engine

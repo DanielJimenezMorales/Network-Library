@@ -1,13 +1,12 @@
 #include "gtest/gtest.h"
 
-#include "raycaster.h"
-
 #include "ecs/world.h"
 
-#include "components/transform_component.h"
-#include "components/collider_2d_component.h"
+#include "physics/raycaster.h"
+#include "physics/collider_2d_component.h"
+#include "physics/circle_bounds_2d.h"
 
-#include "collisions/circle_bounds_2d.h"
+#include "transform/transform_component.h"
 
 namespace
 {

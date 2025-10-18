@@ -1,7 +1,7 @@
 #pragma once
 #include "ecs/component_configuration.h"
 
-#include "components/sprite_renderer_component.h"
+#include "render/sprite_renderer_component.h"
 
 namespace Engine
 {

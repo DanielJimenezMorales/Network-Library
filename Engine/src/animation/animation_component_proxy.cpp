@@ -1,11 +1,10 @@
 #include "animation_component_proxy.h"
 #include "logger.h"
 
-#include "components/animation_component.h"
+#include "animation/animation_component.h"
+#include "animation/animation_asset.h"
 
 #include "asset_manager/asset_manager.h"
-
-#include "animation/animation_asset.h"
 
 #include <cassert>
 

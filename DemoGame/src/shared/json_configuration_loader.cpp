@@ -4,20 +4,22 @@
 
 #include "logger.h"
 
+#include "camera_component_configuration.h"
+
 #include "ecs/prefab.h"
 #include "ecs/component_configuration.h"
 
-#include "component_configurations/sprite_renderer_component_configuration.h"
-#include "component_configurations/camera_component_configuration.h"
-#include "component_configurations/collider_2d_component_configuration.h"
-#include "component_configurations/animation_component_configuration.h"
+#include "render/sprite_renderer_component_configuration.h"
+
+#include "physics/collider_2d_component_configuration.h"
+#include "physics/circle_bounds_2d.h"
+#include "physics/collision_utils.h"
+
+#include "animation/animation_component_configuration.h"
 
 #include "shared/component_configurations/player_controller_component_configuration.h"
 #include "shared/component_configurations/temporary_lifetime_component_configuration.h"
 #include "shared/component_configurations/health_component_configuration.h"
-
-#include "collisions/circle_bounds_2d.h"
-#include "collisions/collision_utils.h"
 
 #include <string>
 #include <fstream>
