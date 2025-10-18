@@ -1,6 +1,7 @@
 #include "server_world_initializer.h"
 
 #define SERVER_RENDER
+#define SERVER_ANIMATION
 
 // Engine
 #include "transform/transform_component.h"
@@ -28,6 +29,10 @@
 
 #ifdef SERVER_RENDER
 	#include "render/rendering_inicialization_utils.h"
+#endif
+
+#ifdef SERVER_ANIMATION
+	#include "animation/animation_initialization_utils.h"
 #endif
 
 // Network library
@@ -160,6 +165,19 @@ static bool AddRenderingModuleToWorld( Engine::Game& game )
 }
 #endif
 
+#ifdef SERVER_ANIMATION
+static bool AddAnimationModuleToWorld( Engine::Game& game )
+{
+	bool result = Engine::AddAnimationToWorld( game );
+	if ( !result )
+	{
+		return false;
+	}
+
+	return true;
+}
+#endif
+
 static bool AddNetworkToWorld( Engine::ECS::World& world )
 {
 	// Add network peer global component
@@ -288,6 +306,17 @@ static bool CreateSystemsAndGlobalEntities( Engine::Game& game )
 	if ( !result )
 	{
 		LOG_ERROR( "Can't initialize rendering" );
+	}
+#endif
+
+#ifdef SERVER_ANIMATION
+	//////////////
+	// ANIMATION
+	//////////////
+	result = AddAnimationModuleToWorld( game );
+	if ( !result )
+	{
+		LOG_ERROR( "Can't initialize animation" );
 	}
 #endif
 
