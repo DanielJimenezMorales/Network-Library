@@ -15,6 +15,8 @@
 
 #include "asset_manager/asset_management_global_component.h"
 
+#include "configuration_assets/configuration_assets_initialization_utils.h"
+
 #include "ecs/system_coordinator.h"
 #include "ecs/world.h"
 #include "ecs/game_entity.hpp"
@@ -142,6 +144,17 @@ static void RegisterPrefabs( Engine::ECS::World& world )
 static bool AddAssetManagementToWorld( Engine::ECS::World& world )
 {
 	world.AddGlobalComponent< Engine::AssetManagementGlobalComponent >();
+	return true;
+}
+
+static bool AddConfigurationAssetsModuleToWorld( Engine::Game& game )
+{
+	bool result = Engine::AddConfigurationAssetsToWorld( game );
+	if ( !result )
+	{
+		return false;
+	}
+
 	return true;
 }
 
@@ -300,6 +313,15 @@ static bool CreateSystemsAndGlobalEntities( Engine::Game& game )
 	if ( !result )
 	{
 		LOG_ERROR( "Can't initialize asset management" );
+	}
+
+	/////////////////////////
+	// CONFIGURATION ASSETS
+	/////////////////////////
+	result = AddConfigurationAssetsModuleToWorld( game );
+	if ( !result )
+	{
+		LOG_ERROR( "Can't initialize configuration assets" );
 	}
 
 	///////////////////

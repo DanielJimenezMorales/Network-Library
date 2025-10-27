@@ -5,7 +5,7 @@
 
 #include "ecs/game_entity.hpp"
 
-#include "client/components/player_interpolated_state_component.h"
+#include "client/player_interpolation/player_interpolated_state_component.h"
 
 void PlayerInterpolationPositionAndRotationApplier::Execute( Engine::ECS::GameEntity& position_entity,
                                                              Engine::ECS::GameEntity& rotation_entity,
