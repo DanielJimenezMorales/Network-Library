@@ -1,4 +1,4 @@
-#include "player_interpolated_object_state_applier.h"
+#include "player_interpolated_object_state_applier_system.h"
 
 #include "ecs/world.h"
 #include "ecs/game_entity.hpp"

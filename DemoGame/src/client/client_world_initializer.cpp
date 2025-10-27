@@ -49,7 +49,6 @@
 // Client game
 #include "client/components/ghost_object_component.h"
 #include "client/components/interpolated_object_reference_component.h"
-#include "client/components/remote_player_controller_component.h"
 #include "client/components/client_side_prediction_component.h"
 #include "client/components/interpolated_object_component.h"
 #include "client/components/virtual_mouse_component.h"
@@ -63,10 +62,8 @@
 #include "client/systems/client_local_player_server_reconciliator_system.h"
 #include "client/systems/virtual_mouse_system.h"
 #include "client/systems/client_local_player_predictor_system.h"
-#include "client/systems/remote_player_controller_system.h"
-#include "client/systems/interpolated_player_objects updater_system.h"
 #include "client/systems/local_player_interpolated_object_state_updater_system.h"
-#include "client/systems/player_interpolated_object_state_applier.h"
+#include "client/systems/player_interpolated_object_state_applier_system.h"
 
 #include "client/client_network_entity_creator.h"
 //---
@@ -103,7 +100,6 @@ static void RegisterComponents( Engine::ECS::World& world )
 	world.RegisterComponent< HealthComponent >( "HealthComponent" );
 
 	// Client game
-	world.RegisterComponent< RemotePlayerControllerComponent >( "RemotePlayerController" );
 	world.RegisterComponent< VirtualMouseComponent >( "VirtualMouse" );
 	world.RegisterComponent< CrosshairComponent >( "Crosshair" );
 	world.RegisterComponent< GhostObjectComponent >( "GhostObject" );
@@ -287,14 +283,7 @@ static bool AddGameplayToWorld( Engine::ECS::World& world )
 	    std::bind( &ClientLocalPlayerPredictorSystem::ConfigureClientSidePredictorComponent,
 	               client_local_player_predictor_system, std::placeholders::_1, std::placeholders::_2 );
 	world.SubscribeToOnEntityConfigure( on_configure_client_side_predictor_callback );
-
 	world.AddSystem( client_player_controller_system_coordinator );
-
-	// Add Client-side remote player controller system
-	Engine::ECS::SystemCoordinator* client_remote_player_controller_system_coordinator =
-	    new Engine::ECS::SystemCoordinator( Engine::ECS::ExecutionStage::TICK );
-	client_player_controller_system_coordinator->AddSystemToTail( new RemotePlayerControllerSystem() );
-	world.AddSystem( client_remote_player_controller_system_coordinator );
 
 	return true;
 }

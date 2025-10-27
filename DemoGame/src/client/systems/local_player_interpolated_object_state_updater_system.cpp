@@ -67,9 +67,10 @@ void LocalPlayerInterpolatedObjectStateUpdaterSystem::Execute( Engine::ECS::Worl
 
 	for ( auto it = entities.begin(); it != entities.end(); ++it )
 	{
+		// TODO This looks pretty vague and I don't like it. Maybe using tags for this would be better?
 		if ( it->HasComponent< NetworkEntityComponent >() )
 		{
-		    continue;
+			continue;
 		}
 
 		PlayerInterpolatedStateComponent& interpolatedStateComponent =
