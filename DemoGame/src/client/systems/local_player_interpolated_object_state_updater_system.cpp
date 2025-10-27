@@ -69,7 +69,7 @@ void LocalPlayerInterpolatedObjectStateUpdaterSystem::Execute( Engine::ECS::Worl
 	{
 		if ( it->HasComponent< NetworkEntityComponent >() )
 		{
-			continue;
+		    continue;
 		}
 
 		PlayerInterpolatedStateComponent& interpolatedStateComponent =

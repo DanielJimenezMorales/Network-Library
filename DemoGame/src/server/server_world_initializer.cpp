@@ -351,7 +351,6 @@ static bool CreateSystemsAndGlobalEntities( Engine::Game& game )
 
 static bool CreateGameEntities( Engine::ECS::World& world )
 {
-	LOG_ERROR("FAILURE!!");
 	world.CreateGameEntity( "Camera", Vec2f( 0, 0 ) );
 
 	// Add dummy collider entity

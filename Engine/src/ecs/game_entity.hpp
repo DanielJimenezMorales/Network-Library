@@ -1,8 +1,8 @@
 #pragma once
-#include <cassert>
 #include <vector>
 
 #include "safe_pointer.hpp"
+#include "asserts.h"
 
 // TODO This can be removed
 #include "entt.hpp"
@@ -95,34 +95,35 @@ namespace Engine
 		template < typename T, typename... Params >
 		inline T& GameEntity::AddComponent( Params&&... params )
 		{
-			assert( IsValid() );
+			ASSERT( IsValid(), "Can't add a component to an invalid entity." );
 			return _entityContainer->AddComponentToEntity< T >( *this, std::forward< Params >( params )... );
 		};
 
 		template < typename T >
 		inline bool GameEntity::HasComponent() const
 		{
-			assert( IsValid() );
+			ASSERT( IsValid(), "Can't query a component from an invalid entity." );
 			return _entityContainer->HasEntityComponent< T >( *this );
 		};
 
 		template < typename T >
 		inline T& GameEntity::GetComponent()
 		{
-			assert( IsValid() );
+			ASSERT( IsValid(), "Can't get a component from an invalid entity." );
 			return _entityContainer->GetComponentFromEntity< T >( *this );
 		}
+
 		template < typename T >
 		inline const T& GameEntity::GetComponent() const
 		{
-			assert( IsValid() );
+			ASSERT( IsValid(), "Can't get a component from an invalid entity." );
 			return _entityContainer->GetComponentFromEntity< T >( *this );
 		}
 
 		template < typename T >
 		inline GameEntity GameEntity::GetFirstChildWithComponent() const
 		{
-			assert( IsValid() );
+			ASSERT( IsValid(), "Can't access children entities from an invalid entity." );
 			TransformComponentProxy transformProxy;
 			const TransformComponent& transform = GetComponent< TransformComponent >();
 			std::vector< GameEntity > childrenToCheck = transformProxy.GetChildren( transform );
@@ -147,14 +148,14 @@ namespace Engine
 				}
 			}
 
-			assert( found );
+			ASSERT( found, "Child with component not found." );
 			return childrenToCheck.front();
 		}
 
 		template < typename T >
 		inline void GameEntity::RemoveComponent()
 		{
-			assert( IsValid() );
+			ASSERT( IsValid(), "Can't remove a component from an invalid entity." );
 			_entityContainer->RemoveComponentFromEntity( *this );
 		};
 	} // namespace ECS

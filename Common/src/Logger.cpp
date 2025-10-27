@@ -3,10 +3,22 @@
 #include "dbg.h"
 
 #include <cstdarg>
+#include <string>
 
-#ifdef LOG_ENABLED
+#ifdef DEBUG
 namespace Common
 {
+	static constexpr char* INFO_PREFIX = "Info";
+	static constexpr char* WARNING_PREFIX = "Warn";
+	static constexpr char* ERROR_PREFIX = "Error";
+	static constexpr char* FATAL_PREFIX = "Fatal";
+
+	static constexpr char* RESET_COLOR_CODE = "\033[0m";
+	static constexpr char* INFO_COLOR_CODE = "\033[37m";
+	static constexpr char* WARNING_COLOR_CODE = "\033[33m";
+	static constexpr char* ERROR_COLOR_CODE = "\033[91m";
+	static constexpr char* FATAL_COLOR_CODE = "\033[91m";
+
 	static void GetPrefixFromLevel( LogLevel level, std::string& prefix_buffer )
 	{
 		switch ( level )
@@ -19,6 +31,9 @@ namespace Common
 				break;
 			case LogLevel::Error:
 				prefix_buffer.assign( ERROR_PREFIX );
+				break;
+			case LogLevel::Fatal:
+				prefix_buffer.assign( FATAL_PREFIX );
 				break;
 			default:
 				prefix_buffer.assign( "UNKNOWN" );
@@ -38,6 +53,9 @@ namespace Common
 				break;
 			case LogLevel::Error:
 				color_code_buffer.assign( ERROR_COLOR_CODE );
+				break;
+			case LogLevel::Fatal:
+				color_code_buffer.assign( FATAL_COLOR_CODE );
 				break;
 			default:
 				color_code_buffer.assign( RESET_COLOR_CODE );
@@ -64,6 +82,7 @@ namespace Common
 		switch ( level )
 		{
 			case LogLevel::Error:
+			case LogLevel::Fatal:
 				uint8 numberOfLogFuncCallsToSkip = 2;
 				const auto& stackTrace = dbg::stack_trace();
 				for ( const auto& funcCall : stackTrace )
@@ -102,5 +121,13 @@ namespace Common
 		Print( LogLevel::Error, filePath, line, format, args );
 		va_end( args );
 	}
+
+	void LogFatal( const char* filePath, const char* line, const char* format, ... )
+	{
+		va_list args;
+		va_start( args, format );
+		Print( LogLevel::Fatal, filePath, line, format, args );
+		va_end( args );
+	}
 } // namespace Common
-#endif // LOG_ENABLED
+#endif // DEBUG

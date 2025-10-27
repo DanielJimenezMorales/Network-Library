@@ -4,7 +4,7 @@
 #include <vector>
 
 #include "numeric_types.h"
-#include <cassert>
+#include "asserts.h"
 
 namespace Engine
 {
@@ -102,7 +102,7 @@ namespace Engine
 		template < typename T, typename... Params >
 		inline T& EntityContainer::AddGlobalComponent( Params&&... params )
 		{
-			assert( !HasGlobalComponent< T >() );
+			ASSERT( !HasGlobalComponent< T >(), "Can't add a global component that already exists." );
 			return _entities.emplace< T >( static_cast< entt::entity >( _globalEntityId ),
 			                               std::forward< Params >( params )... );
 		}
@@ -110,21 +110,21 @@ namespace Engine
 		template < typename T >
 		inline const T& EntityContainer::GetGlobalComponent() const
 		{
-			assert( HasGlobalComponent< T >() );
+			ASSERT( HasGlobalComponent< T >(), "Global component not found." );
 			return _entities.get< T >( static_cast< entt::entity >( _globalEntityId ) );
 		}
 
 		template < typename T >
 		inline T& EntityContainer::GetGlobalComponent()
 		{
-			assert( HasGlobalComponent< T >() );
+			ASSERT( HasGlobalComponent< T >(), "Global component not found." );
 			return _entities.get< T >( static_cast< entt::entity >( _globalEntityId ) );
 		}
 
 		template < typename T >
 		inline void EntityContainer::RemoveGlobalComponent()
 		{
-			assert( HasGlobalComponent< T >() );
+			ASSERT( HasGlobalComponent< T >(), "Global component not found." );
 			_entities.remove< T >( static_cast< entt::entity >( _globalEntityId ) );
 		}
 
@@ -137,7 +137,8 @@ namespace Engine
 		template < typename T, typename... Params >
 		inline T& EntityContainer::AddComponentToEntity( const GameEntity& gameEntity, Params&&... params )
 		{
-			assert( !HasEntityComponent< T >( gameEntity ) );
+			ASSERT( !HasEntityComponent< T >( gameEntity ),
+			        "Can't add a component to an entity that is already attached." );
 			if constexpr ( sizeof...( Params ) > 0 )
 			{
 				return _entities.emplace< T >( static_cast< entt::entity >( gameEntity._ecsEntityId ),
@@ -155,21 +156,21 @@ namespace Engine
 		template < typename T >
 		inline T& EntityContainer::GetComponentFromEntity( const GameEntity& gameEntity )
 		{
-			assert( HasEntityComponent< T >( gameEntity ) );
+			ASSERT( HasEntityComponent< T >( gameEntity ), "Component not found." );
 			return _entities.get< T >( static_cast< entt::entity >( gameEntity._ecsEntityId ) );
 		}
 
 		template < typename T >
 		inline const T& EntityContainer::GetComponentFromEntity( const GameEntity& gameEntity ) const
 		{
-			assert( HasEntityComponent< T >( gameEntity ) );
+			ASSERT( HasEntityComponent< T >( gameEntity ), "Component not found." );
 			return _entities.get< T >( static_cast< entt::entity >( gameEntity._ecsEntityId ) );
 		}
 
 		template < typename T >
 		inline void EntityContainer::RemoveComponentFromEntity( const GameEntity& gameEntity )
 		{
-			assert( HasEntityComponent< T >( gameEntity ) );
+			ASSERT( HasEntityComponent< T >( gameEntity ), "Component not found." );
 			_entities.remove< T >( static_cast< entt::entity >( gameEntity._ecsEntityId ) );
 		}
 
@@ -220,7 +221,7 @@ namespace Engine
 		inline const GameEntity EntityContainer::GetFirstEntityOfType() const
 		{
 			auto& view = _entities.view< T >();
-			assert( !view.empty() );
+			ASSERT( !view.empty(), "No entities with component found." );
 			return GameEntity( static_cast< EntityId >( *view.begin() ), const_cast< EntityContainer* >( this ) );
 		}
 

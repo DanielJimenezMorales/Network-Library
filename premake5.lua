@@ -99,7 +99,7 @@ workspace (WORKSPACE_DATA.NAME)
 	filter "configurations:Debug"
 		defines
 		{
-			"LOG_ENABLED"
+			"DEBUG"
 		}
 		symbols "On" -- Enable symbols for more debugging info
 		--optimize "Off"
