@@ -42,17 +42,17 @@ namespace Engine
 			AssetType GetType() const override { return AssetType::CONFIGURATION; }
 
 			template < typename T >
-			const T& GetValue( const std::string& name );
+			const T& GetValue( const std::string& name ) const;
 
 		private:
 			std::unordered_map< std::string, ConfigurationValue > _configurationValues;
 	};
 
 	template < typename T >
-	inline const T& ConfigurationAsset::GetValue( const std::string& name )
+	inline const T& ConfigurationAsset::GetValue( const std::string& name ) const
 	{
 		auto found = _configurationValues.find( name );
-		ASSERT( found == _configurationValues.end(), "Configuration value with name: %s doesn't exist in %s",
+		ASSERT( found != _configurationValues.end(), "Configuration value with name: %s doesn't exist in %s",
 		        name.c_str(), GetPath().c_str() );
 
 		return std::get< T >( found->second.value );

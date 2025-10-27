@@ -1,5 +1,7 @@
 #include "client_local_player_predictor_system.h"
 
+#include "asserts.h"
+
 #include "inputs/i_input_controller.h"
 #include "inputs/i_cursor.h"
 #include "inputs/input_handler_global_component.h"
@@ -9,6 +11,10 @@
 
 #include "transform/transform_component.h"
 #include "transform/transform_hierarchy_helper_functions.h"
+
+#include "asset_manager/asset_type.h"
+
+#include "configuration_assets/configuration_asset.h"
 
 #include "ecs/game_entity.hpp"
 #include "ecs/prefab.h"
@@ -33,13 +39,19 @@
 
 #include "core/client.h"
 
-ClientLocalPlayerPredictorSystem::ClientLocalPlayerPredictorSystem( Engine::ECS::World* world )
+ClientLocalPlayerPredictorSystem::ClientLocalPlayerPredictorSystem( Engine::ECS::World* world,
+                                                                    const Engine::AssetManager* asset_manager )
     : Engine::ECS::ISimpleSystem()
     , _world( world )
+    , _assetManager( asset_manager )
     , _nextInputStateId( 0 )
     , _playerStateSimulator()
     , _simulationEventsProcessor()
+    , _playerConfigurationAssetHandle( Engine::AssetHandle::GetInvalid() )
 {
+	_playerConfigurationAssetHandle =
+	    _assetManager->GetAsset( "configs/player_configuration.json", Engine::AssetType::CONFIGURATION );
+	ASSERT( _playerConfigurationAssetHandle.IsValid(), "Can't load Player Configuration asset." );
 }
 
 static void ProcessInputs( Engine::ECS::World& world, InputState& outInputState )
@@ -99,9 +111,12 @@ void ClientLocalPlayerPredictorSystem::ExecuteLocalPrediction( Engine::ECS::Game
 	const PlayerSimulation::PlayerState currentState =
 	    PlayerSimulation::GetPlayerStateFromPlayerEntity( entity, input_state.tick );
 
-	PlayerControllerComponent& localPlayerController = entity.GetComponent< PlayerControllerComponent >();
-	const PlayerSimulation::PlayerStateConfiguration& playerStateConfiguration =
-	    localPlayerController.stateConfiguration;
+	const Engine::ConfigurationAsset* playerConfigAsset = _assetManager->GetRawAsset< Engine::ConfigurationAsset >(
+	    _playerConfigurationAssetHandle, Engine::AssetType::CONFIGURATION );
+	const PlayerSimulation::PlayerStateConfiguration playerStateConfiguration(
+	    playerConfigAsset->GetValue< int32 >( "movementSpeed" ),
+	    playerConfigAsset->GetValue< float32 >( "aimingMovementSpeedMultiplier" ),
+	    playerConfigAsset->GetValue< int32 >( "fireRatePerSecond" ) );
 
 	// Simulate the player logic locally and get the resulted simulation state
 	const PlayerSimulation::PlayerState resultPlayerState =

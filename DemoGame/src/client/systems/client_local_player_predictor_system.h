@@ -5,6 +5,9 @@
 
 #include "numeric_types.h"
 
+#include "asset_manager/asset_manager.h"
+#include "asset_manager/asset_handle.h"
+
 #include "shared/player_simulation/player_state_simulator.h"
 #include "shared/player_simulation/player_state.h"
 
@@ -31,7 +34,7 @@ struct ClientSidePredictionComponent;
 class ClientLocalPlayerPredictorSystem : public Engine::ECS::ISimpleSystem
 {
 	public:
-		ClientLocalPlayerPredictorSystem( Engine::ECS::World* world );
+		ClientLocalPlayerPredictorSystem( Engine::ECS::World* world, const Engine::AssetManager* asset_manager );
 
 		void Execute( Engine::ECS::World& world, float32 elapsed_time ) override;
 
@@ -48,6 +51,8 @@ class ClientLocalPlayerPredictorSystem : public Engine::ECS::ISimpleSystem
 
 		uint64 _nextInputStateId;
 
+		const Engine::AssetManager* _assetManager;
+		Engine::AssetHandle _playerConfigurationAssetHandle;
 		PlayerSimulation::PlayerStateSimulator _playerStateSimulator;
 		ClientPlayerSimulationEventsProcessor _simulationEventsProcessor;
 };

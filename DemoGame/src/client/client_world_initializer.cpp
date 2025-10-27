@@ -243,7 +243,7 @@ static bool AddNetworkToWorld( Engine::ECS::World& world )
 	return true;
 }
 
-static bool AddGameplayToWorld( Engine::ECS::World& world )
+static bool AddGameplayToWorld( Engine::ECS::World& world, Engine::Game& game )
 {
 	// Add virtual mouse system
 	Engine::ECS::SystemCoordinator* virtual_mouse_system_coordinator =
@@ -287,7 +287,7 @@ static bool AddGameplayToWorld( Engine::ECS::World& world )
 
 	// Predictor
 	ClientLocalPlayerPredictorSystem* client_local_player_predictor_system =
-	    new ClientLocalPlayerPredictorSystem( &world );
+	    new ClientLocalPlayerPredictorSystem( &world, &game.GetAssetManager() );
 	client_player_controller_system_coordinator->AddSystemToTail( client_local_player_predictor_system );
 	auto on_configure_player_controller_callback =
 	    std::bind( &ClientLocalPlayerPredictorSystem::ConfigurePlayerControllerComponent,
@@ -363,7 +363,7 @@ static bool CreateSystemsAndGlobalEntities( Engine::Game& game )
 	/////////////////////////
 	// CLIENT-SIDE GAMEPLAY
 	/////////////////////////
-	result = AddGameplayToWorld( world );
+	result = AddGameplayToWorld( world, game );
 	if ( !result )
 	{
 		LOG_ERROR( "Can't initialize client-side gameplay" );
