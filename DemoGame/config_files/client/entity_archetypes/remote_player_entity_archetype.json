@@ -2,9 +2,8 @@
 	"name": "remote_player",
 	"components": [
 		"Transform",
-		"SpriteRenderer",
 		"Collider2D",
 		"NetworkEntity",
-		"RemotePlayerController"
+		"PlayerInterpolatedState"
 	]
 }

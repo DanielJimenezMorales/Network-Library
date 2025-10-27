@@ -3,11 +3,6 @@
 	"archetype": "remote_player",
 	"component_configs": [
 		{
-			"name": "SpriteRenderer",
-			"texture_path": "sprites/PlayerSprites/playerHead.png",
-			"type": "SINGLE"
-		},
-		{
 			"name": "Collider2D",
 			"collision_response_type": "Dynamic",
 			"is_trigger": false,
@@ -15,6 +10,24 @@
 				"type": "Circle",
 				"radius": 5
 			}
+		}
+	],
+	"children_prefabs": [
+		{
+			"name": "AnimatedDummy",
+			"local_position_x": 0,
+			"local_position_y": 0,
+			"local_rotation": 0,
+			"local_scale_x": 1,
+			"local_scale_y": 1
+		},
+		{
+			"name": "PlayerAim",
+			"local_position_x": 0,
+			"local_position_y": 0,
+			"local_rotation": 0,
+			"local_scale_x": 1,
+			"local_scale_y": 1
 		}
 	]
 }
