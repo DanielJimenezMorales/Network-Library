@@ -25,6 +25,8 @@
 #include "client/components/virtual_mouse_component.h"
 #include "client/components/client_side_prediction_component.h"
 
+#include "shared/component_configurations/player_controller_component_configuration.h"
+
 #include "shared/global_components/network_peer_global_component.h"
 
 #include "shared/player_simulation/player_state_utils.h"
@@ -171,7 +173,7 @@ void ClientLocalPlayerPredictorSystem::ConfigurePlayerControllerComponent( Engin
 	PlayerControllerComponent& player_controller = entity.GetComponent< PlayerControllerComponent >();
 	player_controller.stateConfiguration = playerStateConfig;
 
-	player_controller.timeLeftUntilNextShot = 0.f;
+	player_controller.state.ZeroOut();
 }
 
 void ClientLocalPlayerPredictorSystem::ConfigureClientSidePredictorComponent( Engine::ECS::GameEntity& entity,

@@ -24,10 +24,10 @@ namespace PlayerSimulation
 		playerState.rotationAngle = transformComponentProxy.GetGlobalRotation( transform );
 
 		const PlayerControllerComponent& playerController = player_entity.GetComponent< PlayerControllerComponent >();
-		playerState.movementDirection = playerController.movementDirection;
-		playerState.isWalking = playerController.isWalking;
-		playerState.isAiming = playerController.isAiming;
-		playerState.timeLeftUntilNextShot = playerController.timeLeftUntilNextShot;
+		playerState.movementDirection = playerController.state.movementDirection;
+		playerState.isWalking = playerController.state.isWalking;
+		playerState.isAiming = playerController.state.isAiming;
+		playerState.timeLeftUntilNextShot = playerController.state.timeLeftUntilNextShot;
 
 		return playerState;
 	}
@@ -42,10 +42,7 @@ namespace PlayerSimulation
 
 		// Update Player Controller
 		PlayerControllerComponent& playerController = player_entity.GetComponent< PlayerControllerComponent >();
-		playerController.movementDirection = player_state.movementDirection;
-		playerController.isWalking = player_state.isWalking;
-		playerController.isAiming = player_state.isAiming;
-		playerController.timeLeftUntilNextShot = player_state.timeLeftUntilNextShot;
+		playerController.state = player_state;
 	}
 
 	void SerializePlayerStateToBuffer( const PlayerState& player_state, NetLib::Buffer& buffer )

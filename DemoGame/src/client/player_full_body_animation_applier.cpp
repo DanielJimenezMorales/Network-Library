@@ -1,4 +1,4 @@
-﻿#include "player_body_animation_system.h"
+﻿#include "player_full_body_animation_applier.h"
 
 #include "logger.h"
 #include "math_utils.h"
@@ -16,6 +16,7 @@
 
 #include "client/components/player_body_animation_tag_component.h"
 #include "client/components/ghost_object_component.h"
+#include "client/components/player_interpolated_state_component.h"
 
 #include <cassert>
 #include <string>
@@ -96,24 +97,24 @@ static void ApplyIdleEquivalentAnimation( Engine::AnimationComponent& animation 
 	}
 }
 
-static void UpdateAnimationComponent( Engine::ECS::GameEntity& entity,
-                                      const PlayerSimulation::PlayerState& player_state,
-                                      const Vec2f& weapon_forward_direction )
+static void UpdateAnimationComponent( Engine::ECS::GameEntity& entity, const PlayerInterpolatedState& state )
 {
 	Engine::AnimationComponentProxy animationProxy;
 
 	Engine::AnimationComponent& animation = entity.GetComponent< Engine::AnimationComponent >();
 
 	// If the player is aiming or walking, update the animation based on the direction
-	if ( player_state.isAiming || player_state.isWalking )
+	if ( state.isAiming || state.isWalking )
 	{
 		// When aiming, use the weapon's forward direction for animation selection, otherwise use the movement
 		// direction.
-		const Vec2f forwardDirection =
-		    ( player_state.isAiming ) ? weapon_forward_direction : player_state.movementDirection;
+		const Engine::TransformComponent transform( state.position, state.rotationAngle );
+		const Engine::TransformComponentProxy transformProxy;
+		const Vec2f weaponForwardDirection = transformProxy.GetForwardVector( transform );
 
-		const std::string targetAnimationName =
-		    GetAnimationNameBasedOnState( player_state.isWalking, forwardDirection );
+		const Vec2f forwardDirection = ( state.isAiming ) ? weaponForwardDirection : state.movementDirection;
+
+		const std::string targetAnimationName = GetAnimationNameBasedOnState( state.isWalking, forwardDirection );
 
 		animationProxy.PlayAnimationIfNotBeingPlayed( animation, targetAnimationName );
 	}
@@ -124,38 +125,8 @@ static void UpdateAnimationComponent( Engine::ECS::GameEntity& entity,
 	}
 }
 
-void PlayerBodyAnimationSystem::Execute( Engine::ECS::World& world, float32 elapsed_time )
+void PlayerFullBodyAnimationApplier::Execute( Engine::ECS::GameEntity& entity, const PlayerInterpolatedState& state,
+                                              float32 elapsed_time )
 {
-	const Engine::TransformComponentProxy transformComponentProxy;
-
-	std::vector< Engine::ECS::GameEntity > playerEntities =
-	    world.GetEntitiesOfType< PlayerBodyAnimationTagComponent >();
-	for ( auto it = playerEntities.begin(); it != playerEntities.end(); ++it )
-	{
-		const Engine::TransformComponent& transform = it->GetComponent< Engine::TransformComponent >();
-		const Engine::ECS::GameEntity parentEntity = transformComponentProxy.GetParent( transform );
-		assert( parentEntity.IsValid() );
-
-		const GhostObjectComponent& ghostObject = parentEntity.GetComponent< GhostObjectComponent >();
-		const Engine::ECS::GameEntity& ghostEntity = ghostObject.entity;
-		assert( ghostEntity.IsValid() );
-
-		const Engine::TransformComponent& parentTransform = parentEntity.GetComponent< Engine::TransformComponent >();
-		const std::vector< Engine::ECS::GameEntity > children = transformComponentProxy.GetChildren( parentTransform );
-		auto childIt = children.cbegin();
-		for ( ; childIt != children.cend(); ++childIt )
-		{
-			if ( *childIt != *it )
-			{
-				break;
-			}
-		}
-
-		const PlayerControllerComponent& playerController = ghostEntity.GetComponent< PlayerControllerComponent >();
-		const Engine::TransformComponent& rotationEntityTransform =
-		    childIt->GetComponent< Engine::TransformComponent >();
-
-		UpdateAnimationComponent( *it, playerController.state,
-		                          transformComponentProxy.GetForwardVector( rotationEntityTransform ) );
-	}
+	UpdateAnimationComponent( entity, state );
 }

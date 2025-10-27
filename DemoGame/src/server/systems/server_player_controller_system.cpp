@@ -16,6 +16,8 @@
 #include "server/components/server_player_state_storage_component.h"
 #include "server/components/server_transform_history_component.h"
 
+#include "shared/component_configurations/player_controller_component_configuration.h"
+
 #include "shared/global_components/network_peer_global_component.h"
 
 #include "shared/player_simulation/player_state.h"
@@ -142,5 +144,5 @@ void ServerPlayerControllerSystem::ConfigurePlayerControllerComponent( Engine::E
 	PlayerControllerComponent& player_controller = entity.GetComponent< PlayerControllerComponent >();
 	player_controller.stateConfiguration = playerStateConfig;
 
-	player_controller.timeLeftUntilNextShot = 0.f;
+	player_controller.state.ZeroOut();
 }

@@ -2,6 +2,7 @@
 #include "replication/network_variable.hpp"
 #include "replication/network_variable_changes_handler.h"
 
+// TODO Remove this as it is not being used anywhere
 struct RemotePlayerControllerComponent
 {
 	public:

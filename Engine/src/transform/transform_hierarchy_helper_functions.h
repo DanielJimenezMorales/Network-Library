@@ -2,12 +2,16 @@
 #include "numeric_types.h"
 
 #include "Vec2f.h"
-#include "ecs/game_entity.hpp"
 
 #include <vector>
 namespace Engine
 {
 	struct TransformComponent;
+
+	namespace ECS
+	{
+		class GameEntity;
+	}
 
 	class TransformComponentProxy
 	{

@@ -1,11 +1,15 @@
 #pragma once
 #include <cassert>
+#include <vector>
 
 #include "safe_pointer.hpp"
 
+// TODO This can be removed
 #include "entt.hpp"
 
 #include "ecs/entity_container.h"
+
+#include "transform/transform_hierarchy_helper_functions.h"
 
 namespace Engine
 {
@@ -70,6 +74,9 @@ namespace Engine
 				const T& GetComponent() const;
 
 				template < typename T >
+				GameEntity GetFirstChildWithComponent() const;
+
+				template < typename T >
 				void RemoveComponent();
 
 				// TODO Add a function called GetFirstParentWithComponent<T> that returns the first parent found in the
@@ -80,7 +87,6 @@ namespace Engine
 
 			private:
 				EntityId _ecsEntityId;
-
 				SafePointer< EntityContainer > _entityContainer;
 
 				friend class EntityContainer;
@@ -111,6 +117,38 @@ namespace Engine
 		{
 			assert( IsValid() );
 			return _entityContainer->GetComponentFromEntity< T >( *this );
+		}
+
+		template < typename T >
+		inline GameEntity GameEntity::GetFirstChildWithComponent() const
+		{
+			assert( IsValid() );
+			TransformComponentProxy transformProxy;
+			const TransformComponent& transform = GetComponent< TransformComponent >();
+			std::vector< GameEntity > childrenToCheck = transformProxy.GetChildren( transform );
+			bool found = false;
+			while ( !childrenToCheck.empty() && !found )
+			{
+				const GameEntity currentChild = childrenToCheck.front();
+				if ( currentChild.HasComponent< T >() )
+				{
+					found = true;
+				}
+				else
+				{
+					// Remove current child from the vector
+					childrenToCheck.erase( childrenToCheck.begin() );
+
+					// Add grand children to the vector
+					const TransformComponent& childTransform = currentChild.GetComponent< TransformComponent >();
+					std::vector< GameEntity > newChildrenToCheck = transformProxy.GetChildren( childTransform );
+					childrenToCheck.insert( childrenToCheck.end(), newChildrenToCheck.begin(),
+					                        newChildrenToCheck.end() );
+				}
+			}
+
+			assert( found );
+			return childrenToCheck.front();
 		}
 
 		template < typename T >

@@ -57,6 +57,7 @@
 #include "client/components/player_aim_component.h"
 #include "client/components/player_visual_weapon_tag_component.h"
 #include "client/components/player_body_animation_tag_component.h"
+#include "client/components/player_interpolated_state_component.h"
 
 #include "client/systems/crosshair_follow_mouse_system.h"
 #include "client/systems/client_local_player_server_reconciliator_system.h"
@@ -64,9 +65,8 @@
 #include "client/systems/client_local_player_predictor_system.h"
 #include "client/systems/remote_player_controller_system.h"
 #include "client/systems/interpolated_player_objects updater_system.h"
-#include "client/systems/player_weapon_flip_system.h"
-#include "client/systems/player_body_animation_system.h"
-#include "client/systems/player_weapon_visibility_system.h"
+#include "client/systems/local_player_interpolated_object_state_updater_system.h"
+#include "client/systems/player_interpolated_object_state_applier.h"
 
 #include "client/client_network_entity_creator.h"
 //---
@@ -113,6 +113,7 @@ static void RegisterComponents( Engine::ECS::World& world )
 	world.RegisterComponent< PlayerAimComponent >( "PlayerAim" );
 	world.RegisterComponent< PlayerVisualWeaponTagComponent >( "PlayerVisualWeaponTag" );
 	world.RegisterComponent< PlayerBodyAnimationTagComponent >( "PlayerBodyAnimationTag" );
+	world.RegisterComponent< PlayerInterpolatedStateComponent >( "PlayerInterpolatedState" );
 }
 
 static void RegisterArchetypes( Engine::ECS::World& world )
@@ -260,25 +261,10 @@ static bool AddGameplayToWorld( Engine::ECS::World& world )
 	// Add interpolated player objects system
 	Engine::ECS::SystemCoordinator* interpolated_player_objects_system_coordinator =
 	    new Engine::ECS::SystemCoordinator( Engine::ECS::ExecutionStage::UPDATE );
-	InterpolatedPlayerObjectUpdaterSystem* interpolated_player_objects_system =
-	    new InterpolatedPlayerObjectUpdaterSystem();
-	interpolated_player_objects_system_coordinator->AddSystemToTail( interpolated_player_objects_system );
+	interpolated_player_objects_system_coordinator->AddSystemToTail(
+	    new LocalPlayerInterpolatedObjectStateUpdaterSystem() );
+	interpolated_player_objects_system_coordinator->AddSystemToTail( new PlayerInterpolatedObjectStateApplierSystem() );
 	world.AddSystem( interpolated_player_objects_system_coordinator );
-
-	Engine::ECS::SystemCoordinator* player_body_animation_system_coordinator =
-	    new Engine::ECS::SystemCoordinator( Engine::ECS::ExecutionStage::UPDATE );
-	player_body_animation_system_coordinator->AddSystemToTail( new PlayerBodyAnimationSystem() );
-	world.AddSystem( player_body_animation_system_coordinator );
-
-	Engine::ECS::SystemCoordinator* player_weapon_flip_system_coordinator =
-	    new Engine::ECS::SystemCoordinator( Engine::ECS::ExecutionStage::UPDATE );
-	player_weapon_flip_system_coordinator->AddSystemToTail( new PlayerWeaponFlipSystem() );
-	world.AddSystem( player_weapon_flip_system_coordinator );
-
-	Engine::ECS::SystemCoordinator* player_weapon_visibility_system_coordinator =
-	    new Engine::ECS::SystemCoordinator( Engine::ECS::ExecutionStage::UPDATE );
-	player_weapon_visibility_system_coordinator->AddSystemToTail( new PlayerWeaponVisibilitySystem() );
-	world.AddSystem( player_weapon_visibility_system_coordinator );
 
 	// Add Client-side player controller system
 	Engine::ECS::SystemCoordinator* client_player_controller_system_coordinator =

@@ -34,6 +34,6 @@ void PlayerWeaponVisibilitySystem::Execute( Engine::ECS::World& world, float32 e
 		    playerGhostEntity.GetComponent< PlayerControllerComponent >();
 
 		Engine::SpriteRendererComponent& spriteRenderer = it->GetComponent< Engine::SpriteRendererComponent >();
-		spriteRenderer.isDisabled = !playerController.isAiming;
+		spriteRenderer.isDisabled = !playerController.state.isAiming;
 	}
 }
