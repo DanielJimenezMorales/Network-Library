@@ -167,8 +167,9 @@ void ClientLocalPlayerPredictorSystem::ConfigurePlayerControllerComponent( Engin
 	const PlayerControllerComponentConfiguration& player_controller_config =
 	    static_cast< const PlayerControllerComponentConfiguration& >( *component_config_found->second );
 
-	const PlayerSimulation::PlayerStateConfiguration playerStateConfig( player_controller_config.movementSpeed,
-	                                                                    player_controller_config.fireRatePerSecond );
+	const PlayerSimulation::PlayerStateConfiguration playerStateConfig(
+	    player_controller_config.movementSpeed, player_controller_config.aimingMovementSpeedMultiplier,
+	    player_controller_config.fireRatePerSecond );
 
 	PlayerControllerComponent& player_controller = entity.GetComponent< PlayerControllerComponent >();
 	player_controller.stateConfiguration = playerStateConfig;

@@ -78,8 +78,10 @@ static void ParseComponentConfiguration( const nlohmann::json& json_data,
 	else if ( component_name == "PlayerController" )
 	{
 		const uint32 movement_speed = json_data[ "movement_speed" ];
+		const float32 aiming_movement_speed_multiplier = json_data[ "aiming_movement_speed_multiplier" ];
 		const uint32 fire_rate_per_second = json_data[ "fire_rate_per_second" ];
-		out_component_config = new PlayerControllerComponentConfiguration( movement_speed, fire_rate_per_second );
+		out_component_config = new PlayerControllerComponentConfiguration(
+		    movement_speed, aiming_movement_speed_multiplier, fire_rate_per_second );
 	}
 	else if ( component_name == "TemporaryLifetime" )
 	{

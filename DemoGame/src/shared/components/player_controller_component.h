@@ -6,7 +6,7 @@ struct PlayerControllerComponent
 {
 	public:
 		PlayerControllerComponent()
-		    : stateConfiguration( 0, 0 )
+		    : stateConfiguration( 0, 0.f, 0 )
 		    , state()
 		{
 		}
