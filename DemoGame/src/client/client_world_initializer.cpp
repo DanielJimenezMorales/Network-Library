@@ -50,20 +50,21 @@
 #include "client/components/ghost_object_component.h"
 #include "client/components/interpolated_object_reference_component.h"
 #include "client/components/client_side_prediction_component.h"
-#include "client/components/interpolated_object_component.h"
 #include "client/components/virtual_mouse_component.h"
 #include "client/components/crosshair_component.h"
 #include "client/components/player_aim_component.h"
 #include "client/components/player_visual_weapon_tag_component.h"
 #include "client/components/player_body_animation_tag_component.h"
-#include "client/components/player_interpolated_state_component.h"
+
+#include "client/player_interpolation/interpolated_object_component.h"
+#include "client/player_interpolation/player_interpolated_state_component.h"
+#include "client/player_interpolation/local_player_interpolated_object_state_updater_system.h"
+#include "client/player_interpolation/player_interpolated_object_state_applier_system.h"
 
 #include "client/systems/crosshair_follow_mouse_system.h"
 #include "client/systems/client_local_player_server_reconciliator_system.h"
 #include "client/systems/virtual_mouse_system.h"
 #include "client/systems/client_local_player_predictor_system.h"
-#include "client/systems/local_player_interpolated_object_state_updater_system.h"
-#include "client/systems/player_interpolated_object_state_applier_system.h"
 
 #include "client/client_network_entity_creator.h"
 //---

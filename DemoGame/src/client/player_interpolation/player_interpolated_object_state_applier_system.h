@@ -1,10 +1,10 @@
 #pragma once
 #include "ecs/i_simple_system.h"
 
-#include "client/player_full_body_animation_applier.h"
-#include "client/player_interpolated_position_and_rotation_applier.h"
-#include "client/player_weapon_flip_applier.h"
-#include "client/player_weapon_visibility_applier.h"
+#include "client/player_interpolation/player_full_body_animation_applier.h"
+#include "client/player_interpolation/player_interpolated_position_and_rotation_applier.h"
+#include "client/player_interpolation/player_weapon_flip_applier.h"
+#include "client/player_interpolation/player_weapon_visibility_applier.h"
 
 class PlayerInterpolatedObjectStateApplierSystem : public Engine::ECS::ISimpleSystem
 {

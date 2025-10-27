@@ -8,9 +8,10 @@
 #include "transform/transform_component.h"
 #include "transform/transform_hierarchy_helper_functions.h"
 
-#include "client/components/player_interpolated_state_component.h"
 #include "client/components/ghost_object_component.h"
-#include "client/components/interpolated_object_component.h"
+
+#include "client/player_interpolation/player_interpolated_state_component.h"
+#include "client/player_interpolation/interpolated_object_component.h"
 
 #include "shared/components/player_controller_component.h"
 #include "shared/components/network_entity_component.h"

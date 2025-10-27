@@ -10,7 +10,8 @@
 #include "math_utils.h"
 
 #include "client/components/player_visual_weapon_tag_component.h"
-#include "client/components/player_interpolated_state_component.h"
+
+#include "client/player_interpolation/player_interpolated_state_component.h"
 
 void PlayerWeaponFlipApplier::Execute( Engine::ECS::GameEntity& entity, const PlayerInterpolatedState& state,
                                        float32 elapsed_time )

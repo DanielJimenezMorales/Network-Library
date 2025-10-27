@@ -5,13 +5,11 @@
 #include "ecs/game_entity.hpp"
 #include "ecs/world.h"
 
-#include "transform/transform_component.h"
-#include "transform/transform_hierarchy_helper_functions.h"
-
 #include "server/components/server_player_state_storage_component.h"
 
 #include "client/components/client_side_prediction_component.h"
-#include "client/components/player_interpolated_state_component.h"
+
+#include "client/player_interpolation/player_interpolated_state_component.h"
 
 #include "shared/global_components/network_peer_global_component.h"
 
@@ -55,9 +53,6 @@ void DeserializeForOwner( Engine::ECS::GameEntity& entity, NetLib::Buffer& buffe
 
 void DeserializeForNonOwner( Engine::ECS::GameEntity& entity, NetLib::Buffer& buffer )
 {
-	const Engine::TransformComponentProxy transformComponentProxy;
-	Engine::TransformComponent& transform = entity.GetComponent< Engine::TransformComponent >();
-
 	PlayerInterpolatedStateComponent& interpolatedStateComponent =
 	    entity.GetComponent< PlayerInterpolatedStateComponent >();
 

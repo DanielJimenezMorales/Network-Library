@@ -16,7 +16,8 @@
 
 #include "client/components/player_body_animation_tag_component.h"
 #include "client/components/ghost_object_component.h"
-#include "client/components/player_interpolated_state_component.h"
+
+#include "client/player_interpolation/player_interpolated_state_component.h"
 
 #include <cassert>
 #include <string>

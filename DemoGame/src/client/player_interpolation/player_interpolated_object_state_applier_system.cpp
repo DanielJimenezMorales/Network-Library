@@ -6,7 +6,8 @@
 #include "transform/transform_component.h"
 #include "transform/transform_hierarchy_helper_functions.h"
 
-#include "client/components/player_interpolated_state_component.h"
+#include "client/player_interpolation/player_interpolated_state_component.h"
+
 #include "client/components/player_aim_component.h"
 #include "client/components/player_body_animation_tag_component.h"
 #include "client/components/player_visual_weapon_tag_component.h"
