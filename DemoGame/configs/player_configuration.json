@@ -1,19 +1,5 @@
 {
-	"values": [
-		{
-			"name": "movementSpeed",
-			"value": 25,
-			"type": "INT32"
-		},
-		{
-			"name": "aimingMovementSpeedMultiplier",
-			"value": 0.6,
-			"type": "FLOAT32"
-		},
-		{
-			"name": "fireRatePerSecond",
-			"value": 10,
-			"type": "INT32"
-		}
-	]
+	"movementSpeed": 25,
+	"aimingMovementSpeedMultiplier": 0.6,
+	"fireRatePerSecond": 10
 }

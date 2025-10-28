@@ -24,38 +24,35 @@ namespace Engine
 			if ( inputStream.is_open() )
 			{
 				nlohmann::json data = nlohmann::json::parse( inputStream );
-
 				std::vector< ConfigurationValue > values;
-				auto jsonValues = data[ "values" ];
-				values.reserve( jsonValues.size() );
-				for ( auto valuesCit = jsonValues.cbegin(); valuesCit != jsonValues.cend(); ++valuesCit )
+
+				for ( auto& [ key, value ] : data.items() )
 				{
 					ConfigurationValue configValue;
-					const std::string typeString( ( *valuesCit )[ "type" ] );
-
-					if ( typeString == "FLOAT32" )
-					{
-						configValue.type = ConfigurationValueType::FLOAT32;
-						configValue.value.emplace< float32 >( ( *valuesCit )[ "value" ] );
-					}
-					else if ( typeString == "INT32" )
+					if ( value.is_number_integer() )
 					{
 						configValue.type = ConfigurationValueType::INT32;
-						configValue.value.emplace< int32 >( ( *valuesCit )[ "value" ] );
+						configValue.value.emplace< int32 >( value.get< int32 >() );
 					}
-					else if ( typeString == "STRING" )
+					else if ( value.is_number_float() )
+					{
+						configValue.type = ConfigurationValueType::FLOAT32;
+						configValue.value.emplace< float32 >( value.get< float32 >() );
+					}
+					else if ( value.is_string() )
 					{
 						configValue.type = ConfigurationValueType::STRING;
-						configValue.value.emplace< std::string >( ( *valuesCit )[ "value" ] );
+						configValue.value.emplace< std::string >( value.get< std::string >() );
 					}
 					else
 					{
-						LOG_ERROR( "Can't read configuration value of type %s because it is not supported." );
+						LOG_ERROR( "Can't read configuration value of key %s because its type is not supported.",
+						           key.c_str() );
+						continue;
 					}
 
-					configValue.name = ( *valuesCit )[ "name" ];
-
-					values.push_back( std::move( configValue ) );
+					configValue.name = key;
+					values.push_back(std::move(configValue));
 				}
 
 				ConfigurationAsset* configurationAsset = new ConfigurationAsset( path, std::move( values ) );

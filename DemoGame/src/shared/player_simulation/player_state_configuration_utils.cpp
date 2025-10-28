@@ -21,8 +21,8 @@ namespace PlayerSimulation
 		    playerConfigAssetHandle, Engine::AssetType::CONFIGURATION );
 
 		return PlayerSimulation::PlayerStateConfiguration(
-		    playerConfigAsset->GetValue< int32 >( "movementSpeed" ),
-		    playerConfigAsset->GetValue< float32 >( "aimingMovementSpeedMultiplier" ),
-		    playerConfigAsset->GetValue< int32 >( "fireRatePerSecond" ) );
+		    playerConfigAsset->GetInt( "movementSpeed" ),
+		    playerConfigAsset->GetFloat( "aimingMovementSpeedMultiplier" ),
+		    playerConfigAsset->GetInt( "fireRatePerSecond" ) );
 	}
 }
