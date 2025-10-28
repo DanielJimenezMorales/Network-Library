@@ -77,11 +77,7 @@ static void ParseComponentConfiguration( const nlohmann::json& json_data,
 	}
 	else if ( component_name == "PlayerController" )
 	{
-		const uint32 movement_speed = json_data[ "movement_speed" ];
-		const float32 aiming_movement_speed_multiplier = json_data[ "aiming_movement_speed_multiplier" ];
-		const uint32 fire_rate_per_second = json_data[ "fire_rate_per_second" ];
-		out_component_config = new PlayerControllerComponentConfiguration(
-		    movement_speed, aiming_movement_speed_multiplier, fire_rate_per_second );
+		out_component_config = new PlayerControllerComponentConfiguration();
 	}
 	else if ( component_name == "TemporaryLifetime" )
 	{
@@ -163,8 +159,16 @@ bool JsonConfigurationLoader::LoadPrefabs( std::vector< Engine::ECS::Prefab >& o
 			{
 				Engine::ECS::ComponentConfiguration* component_config = nullptr;
 				ParseComponentConfiguration( *components_cit, component_config );
-				assert( component_config != nullptr );
-				prefab.componentConfigurations[ component_config->name ] = component_config;
+				if ( component_config != nullptr )
+				{
+					prefab.componentConfigurations[ component_config->name ] = component_config;
+				}
+				else
+				{
+					LOG_ERROR( "[%s] Failed to parse component configuration with name %s in prefab %s",
+					           THIS_FUNCTION_NAME, ( *components_cit )[ "name" ].get< std::string >().c_str(),
+					           prefab.name.c_str() );
+				}
 			}
 		}
 

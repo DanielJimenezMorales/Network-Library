@@ -17,10 +17,7 @@
 			}
 		},
 		{
-			"name": "PlayerController",
-			"movement_speed": 25,
-			"aiming_movement_speed_multiplier": 0.6,
-			"fire_rate_per_second": 10
+			"name": "PlayerController"
 		},
 		{
 			"name": "Health",
