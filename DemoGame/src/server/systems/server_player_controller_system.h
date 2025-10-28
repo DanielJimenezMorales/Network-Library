@@ -4,6 +4,7 @@
 #include "numeric_types.h"
 
 #include "shared/player_simulation/player_state_simulator.h"
+#include "shared/player_simulation/player_state_configuration.h"
 
 #include "server/player_simulation/server_player_simulation_events_processor.h"
 
@@ -13,6 +14,8 @@ namespace Engine
 	{
 		class Prefab;
 	}
+
+	class AssetManager;
 }
 
 class InputState;
@@ -20,7 +23,7 @@ class InputState;
 class ServerPlayerControllerSystem : public Engine::ECS::ISimpleSystem
 {
 	public:
-		ServerPlayerControllerSystem();
+		ServerPlayerControllerSystem( const Engine::AssetManager* asset_manager );
 
 		void Execute( Engine::ECS::World& world, float32 elapsed_time ) override;
 
@@ -30,6 +33,7 @@ class ServerPlayerControllerSystem : public Engine::ECS::ISimpleSystem
 		void ExecutePlayerSimulation( Engine::ECS::World& world, Engine::ECS::GameEntity& entity,
 		                              const InputState& input_state, float32 elapsed_time, uint32 remote_peer_id );
 
+		const Engine::AssetManager* _assetManager;
 		PlayerSimulation::PlayerStateSimulator _playerStateSimulator;
 		ServerPlayerSimulationEventsProcessor _eventsProcessor;
 };

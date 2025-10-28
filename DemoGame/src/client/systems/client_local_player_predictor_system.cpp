@@ -13,45 +13,42 @@
 #include "transform/transform_hierarchy_helper_functions.h"
 
 #include "asset_manager/asset_type.h"
+#include "asset_manager/asset_manager.h"
+#include "asset_manager/asset_handle.h"
 
 #include "configuration_assets/configuration_asset.h"
 
 #include "ecs/game_entity.hpp"
-#include "ecs/prefab.h"
 #include "ecs/world.h"
+#include "ecs/prefab.h"
 
 #include "vec2f.h"
 
 #include "shared/InputActionIdsConfiguration.h"
 #include "shared/InputState.h"
 
-#include "shared/components/player_controller_component.h"
-#include "shared/components/health_component.h"
-
 #include "client/components/virtual_mouse_component.h"
 #include "client/components/client_side_prediction_component.h"
+
+#include "shared/components/player_controller_component.h"
 
 #include "shared/component_configurations/player_controller_component_configuration.h"
 
 #include "shared/global_components/network_peer_global_component.h"
 
 #include "shared/player_simulation/player_state_utils.h"
+#include "shared/player_simulation/player_state_configuration.h"
+#include "shared/player_simulation/player_state_configuration_utils.h"
 
 #include "core/client.h"
 
-ClientLocalPlayerPredictorSystem::ClientLocalPlayerPredictorSystem( Engine::ECS::World* world,
-                                                                    const Engine::AssetManager* asset_manager )
+ClientLocalPlayerPredictorSystem::ClientLocalPlayerPredictorSystem( const Engine::AssetManager* asset_manager )
     : Engine::ECS::ISimpleSystem()
-    , _world( world )
     , _assetManager( asset_manager )
     , _nextInputStateId( 0 )
     , _playerStateSimulator()
     , _simulationEventsProcessor()
-    , _playerConfigurationAssetHandle( Engine::AssetHandle::GetInvalid() )
 {
-	_playerConfigurationAssetHandle =
-	    _assetManager->GetAsset( "configs/player_configuration.json", Engine::AssetType::CONFIGURATION );
-	ASSERT( _playerConfigurationAssetHandle.IsValid(), "Can't load Player Configuration asset." );
 }
 
 static void ProcessInputs( Engine::ECS::World& world, InputState& outInputState )
@@ -104,23 +101,20 @@ static void SendInputsToServer( Engine::ECS::World& world, const InputState& inp
 	networkClient.SendInputs( inputState );
 }
 
-void ClientLocalPlayerPredictorSystem::ExecuteLocalPrediction( Engine::ECS::GameEntity& entity,
+void ClientLocalPlayerPredictorSystem::ExecuteLocalPrediction( Engine::ECS::World& world,
+                                                               Engine::ECS::GameEntity& entity,
                                                                const InputState& input_state, float32 elapsed_time )
 {
 	// Get the current state and the configuration for the predicted entity
 	const PlayerSimulation::PlayerState currentState =
 	    PlayerSimulation::GetPlayerStateFromPlayerEntity( entity, input_state.tick );
 
-	const Engine::ConfigurationAsset* playerConfigAsset = _assetManager->GetRawAsset< Engine::ConfigurationAsset >(
-	    _playerConfigurationAssetHandle, Engine::AssetType::CONFIGURATION );
-	const PlayerSimulation::PlayerStateConfiguration playerStateConfiguration(
-	    playerConfigAsset->GetValue< int32 >( "movementSpeed" ),
-	    playerConfigAsset->GetValue< float32 >( "aimingMovementSpeedMultiplier" ),
-	    playerConfigAsset->GetValue< int32 >( "fireRatePerSecond" ) );
+	const PlayerControllerComponent& playerController = entity.GetComponent< PlayerControllerComponent >();
+	const PlayerSimulation::PlayerStateConfiguration& playerConfiguration = playerController.stateConfiguration;
 
 	// Simulate the player logic locally and get the resulted simulation state
 	const PlayerSimulation::PlayerState resultPlayerState =
-	    _playerStateSimulator.Simulate( input_state, currentState, playerStateConfiguration, elapsed_time );
+	    _playerStateSimulator.Simulate( input_state, currentState, playerConfiguration, elapsed_time );
 
 	// Store the data in the prediction buffer in case we need to reconcile with the server later.
 	ClientSidePredictionComponent& clientSidePredictionComponent =
@@ -131,7 +125,7 @@ void ClientLocalPlayerPredictorSystem::ExecuteLocalPrediction( Engine::ECS::Game
 	PlayerSimulation::ApplyPlayerStateToPlayerEntity( entity, resultPlayerState );
 
 	// Fire simulation events
-	_playerStateSimulator.ProcessLastSimulationEvents( *_world, entity, &_simulationEventsProcessor );
+	_playerStateSimulator.ProcessLastSimulationEvents( world, entity, &_simulationEventsProcessor );
 }
 
 void ClientLocalPlayerPredictorSystem::Execute( Engine::ECS::World& world, float32 elapsed_time )
@@ -161,7 +155,7 @@ void ClientLocalPlayerPredictorSystem::Execute( Engine::ECS::World& world, float
 	// Predict the next simulation state based on the inputs for each predicted entity
 	for ( auto it = localPredictedEntities.begin(); it != localPredictedEntities.end(); ++it )
 	{
-		ExecuteLocalPrediction( *it, inputState, elapsed_time );
+		ExecuteLocalPrediction( world, *it, inputState, elapsed_time );
 	}
 }
 
@@ -187,7 +181,9 @@ void ClientLocalPlayerPredictorSystem::ConfigurePlayerControllerComponent( Engin
 	    player_controller_config.fireRatePerSecond );
 
 	PlayerControllerComponent& player_controller = entity.GetComponent< PlayerControllerComponent >();
-	player_controller.stateConfiguration = playerStateConfig;
+	player_controller.stateConfiguration =
+	    PlayerSimulation::InitializePlayerConfigFromAsset( "configs/player_configuration.json", *_assetManager );
+	;
 
 	player_controller.state.ZeroOut();
 }

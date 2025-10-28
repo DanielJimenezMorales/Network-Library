@@ -287,7 +287,7 @@ static bool AddGameplayToWorld( Engine::ECS::World& world, Engine::Game& game )
 
 	// Predictor
 	ClientLocalPlayerPredictorSystem* client_local_player_predictor_system =
-	    new ClientLocalPlayerPredictorSystem( &world, &game.GetAssetManager() );
+	    new ClientLocalPlayerPredictorSystem( &game.GetAssetManager() );
 	client_player_controller_system_coordinator->AddSystemToTail( client_local_player_predictor_system );
 	auto on_configure_player_controller_callback =
 	    std::bind( &ClientLocalPlayerPredictorSystem::ConfigurePlayerControllerComponent,

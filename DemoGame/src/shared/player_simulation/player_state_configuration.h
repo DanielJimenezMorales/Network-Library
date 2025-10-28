@@ -5,6 +5,7 @@ namespace PlayerSimulation
 {
 	struct PlayerStateConfiguration
 	{
+			PlayerStateConfiguration() = default;
 			PlayerStateConfiguration( uint32 movement_speed, float32 aiming_movement_speed_multiplier,
 			                          uint32 fire_rate_per_second )
 			    : _movementSpeed( movement_speed )

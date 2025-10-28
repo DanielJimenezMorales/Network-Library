@@ -247,7 +247,7 @@ static bool AddCollisionsToWorld( Engine::ECS::World& world )
 	return true;
 }
 
-static bool AddGameplayToWorld( Engine::ECS::World& world )
+static bool AddGameplayToWorld( Engine::ECS::World& world, Engine::Game& game )
 {
 	// Add temporary lifetime objects system
 	Engine::ECS::SystemCoordinator* temporary_lifetime_objects_system_coordinator =
@@ -265,7 +265,8 @@ static bool AddGameplayToWorld( Engine::ECS::World& world )
 
 	Engine::ECS::SystemCoordinator* server_player_controller_and_hit_registration_system_coordinator =
 	    new Engine::ECS::SystemCoordinator( Engine::ECS::ExecutionStage::TICK );
-	ServerPlayerControllerSystem* server_player_controller_system = new ServerPlayerControllerSystem();
+	ServerPlayerControllerSystem* server_player_controller_system =
+	    new ServerPlayerControllerSystem( &game.GetAssetManager() );
 	server_player_controller_and_hit_registration_system_coordinator->AddSystemToTail(
 	    server_player_controller_system );
 	auto on_configure_player_controller_callback =
@@ -363,7 +364,7 @@ static bool CreateSystemsAndGlobalEntities( Engine::Game& game )
 	/////////////////////////
 	// SERVER-SIDE GAMEPLAY
 	/////////////////////////
-	result = AddGameplayToWorld( world );
+	result = AddGameplayToWorld( world, game );
 	if ( !result )
 	{
 		LOG_ERROR( "Can't initialize server-side gameplay" );
