@@ -12,6 +12,7 @@
 #include "shared/global_components/network_peer_global_component.h"
 #include "shared/components/network_entity_component.h"
 #include "shared/player_network_entity_serialization_callbacks.h"
+#include "shared/networked_entity_types.h"
 
 #include "client/components/ghost_object_component.h"
 #include "client/components/interpolated_object_reference_component.h"
@@ -29,8 +30,11 @@ uint32 ClientNetworkEntityCreator::OnNetworkEntityCreate( const NetLib::OnNetwor
 	static const std::string PLAYER_INTERPOLATED_PREFAB_NAME = "ClientPlayerInterpolated";
 	static const std::string REMOTE_PLAYER_PREFAB_NAME = "RemotePlayer";
 
+	// TODO Add networked entity factories as so far we are only supporting Player networked entity
+	ASSERT( config.entityType == PLAYER_NETWORKED_ENTITY_TYPE,
+	        "ClientNetworkEntityCreator only supports player entity type creation at the moment." );
+
 	_config = config;
-	// TODO Add support for more entity types and do not hardcode for player only. Check config.entityType
 	// Calculate the prefab name of the player it is being created (Local player or remote player)
 	const NetworkPeerGlobalComponent& network_peer = _world->GetGlobalComponent< NetworkPeerGlobalComponent >();
 	const NetLib::Client* client = network_peer.GetPeerAsClient();

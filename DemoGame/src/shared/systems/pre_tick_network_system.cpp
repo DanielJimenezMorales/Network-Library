@@ -4,6 +4,7 @@
 #include "ecs/world.h"
 
 #include "shared/global_components/network_peer_global_component.h"
+#include "shared/networked_entity_types.h"
 
 PreTickNetworkSystem::PreTickNetworkSystem( const std::string& ip, uint32 port )
     : Engine::ECS::ISimpleSystem()
@@ -17,7 +18,7 @@ static void Server_SpawnRemotePeerConnect( Engine::ECS::World& world, uint32 rem
 	// Spawn its local player entity:
 	NetworkPeerGlobalComponent& networkPeerComponent = world.GetGlobalComponent< NetworkPeerGlobalComponent >();
 	NetLib::Server* serverPeer = networkPeerComponent.GetPeerAsServer();
-	serverPeer->CreateNetworkEntity( 10, remotePeerId, 0.f, 0.f );
+	serverPeer->CreateNetworkEntity( PLAYER_NETWORKED_ENTITY_TYPE, remotePeerId, 0.f, 0.f );
 }
 
 void PreTickNetworkSystem::Execute( Engine::ECS::World& world, float32 elapsed_time )
