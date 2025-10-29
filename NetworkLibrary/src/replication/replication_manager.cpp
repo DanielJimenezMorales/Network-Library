@@ -85,6 +85,7 @@ namespace NetLib
 		replicationMessage->replicationAction = static_cast< uint8 >( ReplicationActionType::UPDATE );
 		replicationMessage->networkEntityId = networkEntityId;
 		replicationMessage->controlledByPeerId = controlledByPeerId;
+		replicationMessage->replicatedClassId = entityType;
 		// TODO Use some write stream here instead of manual buffer
 		replicationMessage->dataSize = buffer.GetAccessIndex();
 		replicationMessage->data = new uint8[ replicationMessage->dataSize ];
