@@ -1,6 +1,8 @@
 #pragma once
 #include "numeric_types.h"
 
+#include "render/color.h"
+
 namespace Engine
 {
 	enum class GizmoType : uint32
@@ -14,7 +16,7 @@ namespace Engine
 	{
 			virtual ~GizmoConfiguration() {}
 
-			uint8 r, g, b, a;
+			Color color;
 			GizmoType type;
 	};
 
@@ -27,10 +29,7 @@ namespace Engine
 			Gizmo& operator=( Gizmo&& other ) noexcept = default;
 
 			GizmoType GetType() const { return _type; }
-			uint8 GetR() const { return r; }
-			uint8 GetG() const { return g; }
-			uint8 GetB() const { return b; }
-			uint8 GetA() const { return a; }
+			const Color& GetColor() const { return _color; }
 
 			void Configure( const GizmoConfiguration* configuration );
 
@@ -38,22 +37,19 @@ namespace Engine
 
 		protected:
 			Gizmo( const GizmoConfiguration* configuration )
-			    : r( configuration->r )
-			    , g( configuration->g )
-			    , b( configuration->b )
-			    , a( configuration->a )
+			    : _color( configuration->color )
 			    , _type( configuration->type )
 			{
 			}
 
-			Gizmo( uint8 r, uint8 g, uint8 b, uint8 a, GizmoType type );
+			Gizmo( const Color& color, GizmoType type );
 			Gizmo( const Gizmo& other ) = default;
 			Gizmo( Gizmo&& other ) noexcept = default;
 
 			virtual void ConfigureConcrete( const GizmoConfiguration* configuration ) = 0;
 
 		private:
-			uint8 r, g, b, a;
+			Color _color;
 			GizmoType _type;
 	};
 } // namespace Engine

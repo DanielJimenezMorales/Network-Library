@@ -1,5 +1,6 @@
 #pragma once
 #include "render/gizmo.h"
+#include "render/color.h"
 
 namespace Engine
 {
@@ -12,13 +13,13 @@ namespace Engine
 	{
 		public:
 			RayGizmo()
-			    : Gizmo( 0, 0, 0, 255, GizmoType::RAY )
+			    : Gizmo( Color::WHITE(), GizmoType::RAY )
 			    , _length( 0 )
 			{
 			}
 
 			RayGizmo( float32 length )
-			    : Gizmo( 0, 255, 0, 255, GizmoType::RAY )
+			    : Gizmo( Color::WHITE(), GizmoType::RAY )
 			    , _length( length )
 			{
 			}

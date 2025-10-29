@@ -11,6 +11,7 @@
 
 #include "render/gizmo.h"
 #include "render/ray_gizmo.h"
+#include "render/color.h"
 
 namespace Engine
 {
@@ -39,7 +40,8 @@ namespace Engine
 		const Vec2f screen_end_position =
 		    ConvertFromWorldPositionToScreenPosition( end_position, camera, camera_transform );
 
-		SDL_SetRenderDrawColor( renderer, ray_gizmo.GetR(), ray_gizmo.GetG(), ray_gizmo.GetB(), ray_gizmo.GetA() );
+		const Color& color = ray_gizmo.GetColor();
+		SDL_SetRenderDrawColor( renderer, color.R(), color.G(), color.B(), color.A() );
 		SDL_RenderDrawLine( renderer, static_cast< int32 >( screen_start_position.X() ),
 		                    static_cast< int32 >( screen_start_position.Y() ),
 		                    static_cast< int32 >( screen_end_position.X() ),

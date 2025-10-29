@@ -1,6 +1,7 @@
 #include "circle_bounds_2d.h"
 
 #include "render/circle_gizmo.h"
+#include "render/color.h"
 
 #include "transform/transform_component.h"
 #include "transform/transform_hierarchy_helper_functions.h"
@@ -59,10 +60,7 @@ namespace Engine
 	std::unique_ptr< GizmoConfiguration > CircleBounds2D::GetGizmo() const
 	{
 		CircleGizmoConfiguration config;
-		config.r = 0;
-		config.g = 255;
-		config.b = 0;
-		config.a = 255;
+		config.color = Color::WHITE();
 		config.type = GizmoType::CIRCLE2D;
 		config.radius = _radius;
 		return std::unique_ptr< GizmoConfiguration >( new CircleGizmoConfiguration( config ) );

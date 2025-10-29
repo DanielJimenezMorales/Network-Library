@@ -58,9 +58,6 @@ namespace Engine
 				assert( gizmo_renderer != nullptr );
 				gizmo_renderer->Render( *gizmo, camera, cameraTransform, transform, render_global_component.renderer );
 			}
-
-			// TODO cache the color in a variable so I dont need to hardcode it in different places of the code
-			SDL_SetRenderDrawColor( render_global_component.renderer, 255, 0, 0, 255 );
 		}
 	}
 
@@ -73,6 +70,7 @@ namespace Engine
 			const RaycastComponent& raycast = entity.GetComponent< RaycastComponent >();
 			RayGizmoConfiguration ray_gizmo_config;
 			ray_gizmo_config.type = GizmoType::RAY;
+			ray_gizmo_config.color = Color::WHITE();
 			ray_gizmo_config.length = raycast.distance;
 
 			const GizmoHandler gizmo_handler = _gizmoResourceHandler.CreateGizmo( &ray_gizmo_config );

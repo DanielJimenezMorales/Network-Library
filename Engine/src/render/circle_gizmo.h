@@ -12,13 +12,13 @@ namespace Engine
 	{
 		public:
 			CircleGizmo()
-			    : Gizmo( 0, 0, 0, 255, GizmoType::CIRCLE2D )
+			    : Gizmo( Color::WHITE(), GizmoType::CIRCLE2D )
 			    , _radius( 0 )
 			{
 			}
 
 			CircleGizmo( float32 radius )
-			    : Gizmo( 0, 255, 0, 255, GizmoType::CIRCLE2D )
+			    : Gizmo( Color::GREEN(), GizmoType::CIRCLE2D )
 			    , _radius( radius )
 			{
 			}

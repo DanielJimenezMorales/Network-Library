@@ -38,8 +38,8 @@ namespace Engine
 		// Decision parameter (initial value)
 		float32 decisionOver2 = 1 - x;
 
-		SDL_SetRenderDrawColor( renderer, circle_gizmo.GetR(), circle_gizmo.GetG(), circle_gizmo.GetB(),
-		                        circle_gizmo.GetA() );
+		const Color& color = circle_gizmo.GetColor();
+		SDL_SetRenderDrawColor( renderer, color.R(), color.G(), color.B(), color.A() );
 
 		// We loop until x < y, covering one octant
 		while ( y <= x )

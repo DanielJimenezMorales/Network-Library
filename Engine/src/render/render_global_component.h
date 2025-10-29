@@ -1,5 +1,6 @@
 #pragma once
 #include "SDL.h"
+#include "render/color.h"
 
 namespace Engine
 {
@@ -7,5 +8,6 @@ namespace Engine
 	{
 			SDL_Window* window;
 			SDL_Renderer* renderer;
+			Color clearColor;
 	};
 }
