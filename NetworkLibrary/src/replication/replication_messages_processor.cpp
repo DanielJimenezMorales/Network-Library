@@ -2,6 +2,7 @@
 
 #include "numeric_types.h"
 #include "logger.h"
+#include "asserts.h"
 
 #include "core/buffer.h"
 
@@ -49,51 +50,56 @@ namespace NetLib
 	void ReplicationMessagesProcessor::ProcessReceivedCreateReplicationMessage(
 	    const ReplicationMessage& replicationMessage )
 	{
-		uint32 networkEntityId = replicationMessage.networkEntityId;
+		const uint32 networkEntityId = replicationMessage.networkEntityId;
 		if ( _networkEntitiesStorage.HasNetworkEntityId( networkEntityId ) )
 		{
 			LOG_INFO( "Replication: Trying to create a network entity that is already created. Entity ID: %u. Ignoring "
 			          "message...",
 			          networkEntityId );
-			return;
 		}
+		else
+		{
+			NetworkEntityData* new_entity_data = _networkEntitiesStorage.AddNetworkEntity(
+			    replicationMessage.replicatedClassId, networkEntityId, replicationMessage.controlledByPeerId );
 
-		NetworkEntityData& new_entity_data = _networkEntitiesStorage.AddNetworkEntity(
-		    replicationMessage.replicatedClassId, networkEntityId, replicationMessage.controlledByPeerId );
+			ASSERT( new_entity_data != nullptr,
+			        "Failed to create new network entity data for entity type %u with network entity id %u",
+			        replicationMessage.replicatedClassId, networkEntityId );
 
-		// Create network entity through its custom factory
-		Buffer buffer( replicationMessage.data, replicationMessage.dataSize );
-		LOG_INFO( "DATA SIZE: %hu", replicationMessage.dataSize );
-		const float32 posX = buffer.ReadFloat();
-		const float32 posY = buffer.ReadFloat();
+			// Create network entity through its custom factory
+			Buffer buffer( replicationMessage.data, replicationMessage.dataSize );
+			LOG_INFO( "DATA SIZE: %hu", replicationMessage.dataSize );
+			const float32 posX = buffer.ReadFloat();
+			const float32 posY = buffer.ReadFloat();
 
-		OnNetworkEntityCreateConfig network_entity_create_config;
-		network_entity_create_config.entityType = replicationMessage.replicatedClassId;
-		network_entity_create_config.entityId = replicationMessage.networkEntityId;
-		network_entity_create_config.controlledByPeerId = replicationMessage.controlledByPeerId;
-		network_entity_create_config.positionX = posX;
-		network_entity_create_config.positionY = posY;
-		network_entity_create_config.communicationCallbacks = &new_entity_data.communicationCallbacks;
-		// TODO Also evaluate if we need inGameId for something
-		const int32 gameEntity = _onNetworkEntityCreate( network_entity_create_config );
+			OnNetworkEntityCreateConfig network_entity_create_config;
+			network_entity_create_config.entityType = replicationMessage.replicatedClassId;
+			network_entity_create_config.entityId = replicationMessage.networkEntityId;
+			network_entity_create_config.controlledByPeerId = replicationMessage.controlledByPeerId;
+			network_entity_create_config.positionX = posX;
+			network_entity_create_config.positionY = posY;
+			network_entity_create_config.communicationCallbacks = &new_entity_data->communicationCallbacks;
 
-		assert( gameEntity != -1 );
-
-		new_entity_data.inGameId = static_cast< uint32 >( gameEntity );
+			_onNetworkEntityCreate( network_entity_create_config );
+		}
 	}
 
 	void ReplicationMessagesProcessor::ProcessReceivedUpdateReplicationMessage(
 	    const ReplicationMessage& replicationMessage )
 	{
-		uint32 networkEntityId = replicationMessage.networkEntityId;
+		const uint32 networkEntityId = replicationMessage.networkEntityId;
 		if ( !_networkEntitiesStorage.HasNetworkEntityId( networkEntityId ) )
 		{
 			LOG_INFO( "Replication: Trying to update a network entity that doesn't exist. Entity ID: %u. Creating a "
 			          "new entity...",
 			          networkEntityId );
 
-			NetworkEntityData& new_entity_data = _networkEntitiesStorage.AddNetworkEntity(
+			NetworkEntityData* new_entity_data = _networkEntitiesStorage.AddNetworkEntity(
 			    replicationMessage.replicatedClassId, networkEntityId, replicationMessage.controlledByPeerId );
+
+			ASSERT( new_entity_data != nullptr,
+			        "Failed to create new network entity data for entity type %u with network entity id %u",
+			        replicationMessage.replicatedClassId, networkEntityId );
 
 			// If not found create a new one and update it
 			OnNetworkEntityCreateConfig network_entity_create_config;
@@ -102,29 +108,26 @@ namespace NetLib
 			network_entity_create_config.controlledByPeerId = replicationMessage.controlledByPeerId;
 			network_entity_create_config.positionX = 0.f;
 			network_entity_create_config.positionY = 0.f;
-			network_entity_create_config.communicationCallbacks = &new_entity_data.communicationCallbacks;
-			// TODO Also evaluate if we need inGameId for something
-			const int32 gameEntity = _onNetworkEntityCreate( network_entity_create_config );
+			network_entity_create_config.communicationCallbacks = &new_entity_data->communicationCallbacks;
 
-			assert( gameEntity != -1 );
-
-			new_entity_data.inGameId = static_cast< uint32 >( gameEntity );
-			return;
-		}
-
-		NetworkEntityData* entity_data = _networkEntitiesStorage.TryGetNetworkEntityFromId( networkEntityId );
-		assert( entity_data != nullptr );
-
-		// TODO Pass entity state to target entity
-		Buffer buffer( replicationMessage.data, replicationMessage.dataSize );
-
-		if ( entity_data->controlledByPeerId == _localPeerId )
-		{
-			entity_data->communicationCallbacks.OnUnserializeEntityStateForOwner.Execute( buffer );
+			_onNetworkEntityCreate( network_entity_create_config );
 		}
 		else
 		{
-			entity_data->communicationCallbacks.OnUnserializeEntityStateForNonOwner.Execute( buffer );
+			NetworkEntityData* entity_data = _networkEntitiesStorage.TryGetNetworkEntityFromId( networkEntityId );
+			assert( entity_data != nullptr );
+
+			// TODO Pass entity state to target entity
+			Buffer buffer( replicationMessage.data, replicationMessage.dataSize );
+
+			if ( entity_data->controlledByPeerId == _localPeerId )
+			{
+				entity_data->communicationCallbacks.OnUnserializeEntityStateForOwner.Execute( buffer );
+			}
+			else
+			{
+				entity_data->communicationCallbacks.OnUnserializeEntityStateForNonOwner.Execute( buffer );
+			}
 		}
 	}
 
@@ -138,16 +141,17 @@ namespace NetLib
 	void ReplicationMessagesProcessor::RemoveNetworkEntity( uint32 networkEntityId )
 	{
 		// Get game entity Id from network entity Id
-		const NetworkEntityData* gameEntity = _networkEntitiesStorage.TryGetNetworkEntityFromId( networkEntityId );
-		if ( gameEntity == nullptr )
+		const NetworkEntityData* networkEntity = _networkEntitiesStorage.TryGetNetworkEntityFromId( networkEntityId );
+		if ( networkEntity == nullptr )
 		{
 			LOG_INFO( "Replication: Trying to remove a network entity that doesn't exist. Network entity ID: %u. "
 			          "Ignoring it...",
 			          networkEntityId );
-			return;
 		}
-
-		// Destroy object
-		_onNetworkEntityDestroy( gameEntity->inGameId );
+		else
+		{
+			// Destroy object
+			_onNetworkEntityDestroy( networkEntity->id );
+		}
 	}
 } // namespace NetLib

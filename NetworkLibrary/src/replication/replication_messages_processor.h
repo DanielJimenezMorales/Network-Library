@@ -29,7 +29,7 @@ namespace NetLib
 			void RemoveNetworkEntity( uint32 networkEntityId );
 
 			NetworkEntityStorage _networkEntitiesStorage;
-			std::function< uint32_t( const OnNetworkEntityCreateConfig& ) > _onNetworkEntityCreate;
+			std::function< void( const OnNetworkEntityCreateConfig& ) > _onNetworkEntityCreate;
 			std::function< void( uint32 ) > _onNetworkEntityDestroy;
 
 			uint32 _localPeerId;

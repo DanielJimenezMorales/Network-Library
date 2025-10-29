@@ -24,7 +24,7 @@ ClientNetworkEntityCreator::ClientNetworkEntityCreator( Engine::ECS::World* worl
 	assert( _world != nullptr );
 }
 
-uint32 ClientNetworkEntityCreator::OnNetworkEntityCreate( const NetLib::OnNetworkEntityCreateConfig& config )
+void ClientNetworkEntityCreator::OnNetworkEntityCreate( const NetLib::OnNetworkEntityCreateConfig& config )
 {
 	static const std::string PLAYER_GHOST_PREFAB_NAME = "ClientPlayerGhost";
 	static const std::string PLAYER_INTERPOLATED_PREFAB_NAME = "ClientPlayerInterpolated";
@@ -57,29 +57,37 @@ uint32 ClientNetworkEntityCreator::OnNetworkEntityCreate( const NetLib::OnNetwor
 		    entity.GetComponent< InterpolatedObjectReferenceComponent >();
 		interpolatedObjectReference.entity = interpolatedEntity;
 	}
-
-	return entity.GetId();
 }
 
-void ClientNetworkEntityCreator::OnNetworkEntityDestroy( uint32 in_game_id )
+void ClientNetworkEntityCreator::OnNetworkEntityDestroy( uint32 network_entity_id )
 {
 	// If the entity being destroyed is a Client-side player ghost object, do not forget to also remove its interpolated
 	// object.
 	// TODO Think of a way of making this entire class more flexible and clean. At the moment to many things are
 	// hardcoded. Maybe using entity factories to track creation and destruction of entities? Maybe using a new
 	// component to identify the type of each entity for easier destruction?
-	const Engine::ECS::GameEntity entity = _world->GetEntityFromId( in_game_id );
-	if ( entity.HasComponent< InterpolatedObjectReferenceComponent >() )
+	std::vector< Engine::ECS::GameEntity > networkEntities = _world->GetEntitiesOfType< NetworkEntityComponent >();
+	auto cit = networkEntities.cbegin();
+	for ( ; cit != networkEntities.cend(); ++cit )
+	{
+		const NetworkEntityComponent& networkEntityComponent = cit->GetComponent< NetworkEntityComponent >();
+		if ( networkEntityComponent.networkEntityId == network_entity_id )
+		{
+			break;
+		}
+	}
+
+	if ( cit->HasComponent< InterpolatedObjectReferenceComponent >() )
 	{
 		const InterpolatedObjectReferenceComponent& interpolatedObjectReference =
-		    entity.GetComponent< InterpolatedObjectReferenceComponent >();
+		    cit->GetComponent< InterpolatedObjectReferenceComponent >();
 		if ( interpolatedObjectReference.entity.IsValid() )
 		{
 			_world->DestroyGameEntity( interpolatedObjectReference.entity );
 		}
 	}
 
-	_world->DestroyGameEntity( in_game_id );
+	_world->DestroyGameEntity( *cit );
 }
 
 void ClientNetworkEntityCreator::OnNetworkEntityComponentConfigure( Engine::ECS::GameEntity& entity,
