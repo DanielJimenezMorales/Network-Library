@@ -5,13 +5,11 @@
 #include "ecs/game_entity.hpp"
 #include "ecs/world.h"
 
-#include "components/transform_component.h"
-
-#include "transform/transform_hierarchy_helper_functions.h"
-
 #include "server/components/server_player_state_storage_component.h"
 
 #include "client/components/client_side_prediction_component.h"
+
+#include "client/player_interpolation/player_interpolated_state_component.h"
 
 #include "shared/global_components/network_peer_global_component.h"
 
@@ -29,12 +27,18 @@ void SerializeForOwner( const Engine::ECS::World& world, const Engine::ECS::Game
 
 void SerializeForNonOwner( const Engine::ECS::GameEntity& entity, NetLib::Buffer& buffer )
 {
-	const Engine::TransformComponentProxy transformComponentProxy;
-	const Engine::TransformComponent& transform = entity.GetComponent< Engine::TransformComponent >();
-	const Vec2f position = transformComponentProxy.GetGlobalPosition( transform );
-	buffer.WriteFloat( position.X() );
-	buffer.WriteFloat( position.Y() );
-	buffer.WriteFloat( transformComponentProxy.GetGlobalRotation( transform ) );
+	const ServerPlayerStateStorageComponent& serverPlayerStateStorage =
+	    entity.GetComponent< ServerPlayerStateStorageComponent >();
+
+	buffer.WriteFloat( serverPlayerStateStorage.lastPlayerStateSimulated.position.X() );
+	buffer.WriteFloat( serverPlayerStateStorage.lastPlayerStateSimulated.position.Y() );
+	buffer.WriteFloat( serverPlayerStateStorage.lastPlayerStateSimulated.rotationAngle );
+	buffer.WriteFloat( serverPlayerStateStorage.lastPlayerStateSimulated.movementDirection.X() );
+	buffer.WriteFloat( serverPlayerStateStorage.lastPlayerStateSimulated.movementDirection.Y() );
+
+	// TODO Serialize this in a more efficient way to fit multiple bools in one byte
+	buffer.WriteInteger( serverPlayerStateStorage.lastPlayerStateSimulated.isWalking ? 1 : 0 );
+	buffer.WriteInteger( serverPlayerStateStorage.lastPlayerStateSimulated.isAiming ? 1 : 0 );
 }
 
 void DeserializeForOwner( Engine::ECS::GameEntity& entity, NetLib::Buffer& buffer )
@@ -49,14 +53,19 @@ void DeserializeForOwner( Engine::ECS::GameEntity& entity, NetLib::Buffer& buffe
 
 void DeserializeForNonOwner( Engine::ECS::GameEntity& entity, NetLib::Buffer& buffer )
 {
-	const Engine::TransformComponentProxy transformComponentProxy;
-	Engine::TransformComponent& transform = entity.GetComponent< Engine::TransformComponent >();
-	Vec2f position;
-	position.X( buffer.ReadFloat() );
-	position.Y( buffer.ReadFloat() );
+	PlayerInterpolatedStateComponent& interpolatedStateComponent =
+	    entity.GetComponent< PlayerInterpolatedStateComponent >();
 
-	transformComponentProxy.SetGlobalPosition( transform, position );
+	PlayerInterpolatedState newState;
+	newState.position.X( buffer.ReadFloat() );
+	newState.position.Y( buffer.ReadFloat() );
+	newState.rotationAngle = buffer.ReadFloat();
+	newState.movementDirection.X( buffer.ReadFloat() );
+	newState.movementDirection.Y( buffer.ReadFloat() );
 
-	const float32 rotation_angle = buffer.ReadFloat();
-	transformComponentProxy.SetGlobalRotationAngle( transform, rotation_angle );
+	// TODO Serialize this in a more efficient way to fit multiple bools in one byte
+	newState.isWalking = buffer.ReadInteger() == 1 ? true : false;
+	newState.isAiming = buffer.ReadInteger() == 1 ? true : false;
+
+	interpolatedStateComponent.state = newState;
 }

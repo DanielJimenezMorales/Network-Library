@@ -17,7 +17,11 @@ namespace PlayerSimulation
 	static void UpdatePosition( const InputState& inputs, const PlayerState& current_state, PlayerState& result_state,
 	                            float32 elapsed_time, const PlayerStateConfiguration& configuration )
 	{
-		const float32 movement_speed_multiplied_by_elapsed_time = configuration.GetMovementSpeed() * elapsed_time;
+		float32 movement_speed_multiplied_by_elapsed_time = configuration.GetMovementSpeed() * elapsed_time;
+		if ( current_state.isAiming )
+		{
+			movement_speed_multiplied_by_elapsed_time *= configuration.GetAimingMovementSpeedMultiplier();
+		}
 
 		Vec2f position_delta( 0.f, 0.f );
 		position_delta.X( inputs.movement.X() * movement_speed_multiplied_by_elapsed_time );

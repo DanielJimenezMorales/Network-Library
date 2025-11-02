@@ -3,6 +3,7 @@
 	"components": [
 		"Transform",
 		"GhostObject",
-		"InterpolatedObject"
+		"InterpolatedObject",
+		"PlayerInterpolatedState"
 	]
 }

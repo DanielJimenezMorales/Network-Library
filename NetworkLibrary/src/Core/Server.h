@@ -28,7 +28,7 @@ namespace NetLib
 
 			bool StartServer( uint32 port );
 
-			uint32 CreateNetworkEntity( uint32 entityType, uint32 controlledByPeerId, float32 posX, float32 posY );
+			bool CreateNetworkEntity( uint32 entityType, uint32 controlledByPeerId, float32 posX, float32 posY );
 			void DestroyNetworkEntity( uint32 entityId );
 			// TODO Create a method for destroying all network entities controlled by a remote peer
 

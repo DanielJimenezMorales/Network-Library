@@ -2,6 +2,7 @@
 #include <cassert>
 
 #include "vec2f.h"
+#include "asserts.h"
 
 #include "ecs/world.h"
 #include "ecs/game_entity.hpp"
@@ -10,6 +11,7 @@
 
 #include "shared/components/network_entity_component.h"
 #include "shared/player_network_entity_serialization_callbacks.h"
+#include "shared/networked_entity_types.h"
 
 ServerNetworkEntityCreator::ServerNetworkEntityCreator( Engine::ECS::World* world )
     : _world( world )
@@ -18,24 +20,33 @@ ServerNetworkEntityCreator::ServerNetworkEntityCreator( Engine::ECS::World* worl
 	assert( _world != nullptr );
 }
 
-uint32 ServerNetworkEntityCreator::OnNetworkEntityCreate( const NetLib::OnNetworkEntityCreateConfig& config )
+void ServerNetworkEntityCreator::OnNetworkEntityCreate( const NetLib::OnNetworkEntityCreateConfig& config )
 {
 	_config = config;
+
+	ASSERT( config.entityType == PLAYER_NETWORKED_ENTITY_TYPE,
+	        "ServerNetworkEntityCreator only supports player entity type creation at the moment." );
 
 	// Create the game entity
 	const Engine::ECS::GameEntity entity =
 	    _world->CreateGameEntity( "Player", Vec2f( config.positionX, config.positionY ) );
-
-	return entity.GetId();
 }
 
-void ServerNetworkEntityCreator::OnNetworkEntityDestroy( uint32 in_game_id )
+void ServerNetworkEntityCreator::OnNetworkEntityDestroy( uint32 network_entity_id )
 {
-	const Engine::ECS::GameEntity entity = _world->GetEntityFromId( in_game_id );
-	const NetworkEntityComponent& networkEntityComponent = entity.GetComponent< NetworkEntityComponent >();
+	std::vector< Engine::ECS::GameEntity > networkEntities = _world->GetEntitiesOfType< NetworkEntityComponent >();
+	auto cit = networkEntities.cbegin();
+	for ( ; cit != networkEntities.cend(); ++cit )
+	{
+		const NetworkEntityComponent& networkEntityComponent = cit->GetComponent< NetworkEntityComponent >();
+		if ( networkEntityComponent.networkEntityId == network_entity_id )
+		{
+			break;
+		}
+	}
 
 	// Remove the game entity
-	_world->DestroyGameEntity( in_game_id );
+	_world->DestroyGameEntity( *cit );
 }
 
 void ServerNetworkEntityCreator::OnNetworkEntityComponentConfigure( Engine::ECS::GameEntity& entity,

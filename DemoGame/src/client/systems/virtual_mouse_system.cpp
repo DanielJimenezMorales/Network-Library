@@ -1,18 +1,17 @@
 #include "virtual_mouse_system.h"
 
 #include "inputs/i_cursor.h"
+#include "inputs/input_handler_global_component.h"
 
 #include "ecs/game_entity.hpp"
 #include "ecs/world.h"
 
-#include "components/camera_component.h"
-#include "components/transform_component.h"
+#include "camera_component.h"
 
+#include "transform/transform_component.h"
 #include "transform/transform_hierarchy_helper_functions.h"
 
 #include "client/components/virtual_mouse_component.h"
-
-#include "global_components/input_handler_global_component.h"
 
 #include "shared/InputActionIdsConfiguration.h"
 

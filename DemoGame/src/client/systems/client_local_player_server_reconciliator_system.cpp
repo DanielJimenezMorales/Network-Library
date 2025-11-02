@@ -11,6 +11,7 @@
 
 #include "shared/player_simulation/player_state_simulator.h"
 #include "shared/player_simulation/player_state_utils.h"
+#include "shared/player_simulation/player_state_configuration.h"
 
 #include "logger.h"
 

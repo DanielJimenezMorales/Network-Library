@@ -16,7 +16,7 @@ class ServerNetworkEntityCreator
 	public:
 		ServerNetworkEntityCreator( Engine::ECS::World* world );
 
-		uint32 OnNetworkEntityCreate( const NetLib::OnNetworkEntityCreateConfig& config );
+		void OnNetworkEntityCreate( const NetLib::OnNetworkEntityCreateConfig& config );
 		void OnNetworkEntityDestroy( uint32 in_game_id );
 		void OnNetworkEntityComponentConfigure( Engine::ECS::GameEntity& entity, const Engine::ECS::Prefab& prefab );
 

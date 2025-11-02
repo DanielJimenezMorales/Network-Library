@@ -10,19 +10,9 @@ namespace NetLib
 	struct NetworkEntityData
 	{
 			NetworkEntityData() = default;
-			NetworkEntityData( uint32 entityType, uint32 id, uint32 gameEntityId, uint32 controlledByPeerId )
-			    : entityType( entityType )
-			    , id( id )
-			    , inGameId( gameEntityId )
-			    , controlledByPeerId( controlledByPeerId )
-			    , communicationCallbacks()
-			{
-			}
-
 			NetworkEntityData( uint32 entityType, uint32 id, uint32 controlledByPeerId )
 			    : entityType( entityType )
 			    , id( id )
-			    , inGameId( 0 )
 			    , controlledByPeerId( controlledByPeerId )
 			    , communicationCallbacks()
 			{
@@ -30,7 +20,6 @@ namespace NetLib
 
 			uint32 entityType;
 			uint32 id;
-			uint32 inGameId;
 			uint32 controlledByPeerId;
 			NetworkEntityCommunicationCallbacks communicationCallbacks;
 	};
@@ -51,9 +40,7 @@ namespace NetLib
 			/// If found, returns the data associated with a network entity based on its ID.
 			/// </summary>
 			NetworkEntityData* TryGetNetworkEntityFromId( uint32 entityId );
-			bool AddNetworkEntity( uint32 entityType, uint32 networkEntityId, uint32 controlledByPeerId,
-			                       uint32 gameEntityId );
-			NetworkEntityData& AddNetworkEntity( uint32 entityType, uint32 networkEntityId, uint32 controlledByPeerId );
+			NetworkEntityData* AddNetworkEntity( uint32 entityType, uint32 networkEntityId, uint32 controlledByPeerId );
 			bool RemoveNetworkEntity( uint32 networkEntityId );
 			std::unordered_map< uint32, NetworkEntityData >::iterator GetNetworkEntities();
 			const std::unordered_map< uint32, NetworkEntityData >& GetNetworkEntitiess() const;

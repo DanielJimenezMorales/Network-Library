@@ -1,16 +1,11 @@
 #pragma once
 #include "ecs/i_simple_system.h"
 
-#include "ecs/game_entity.hpp"
-
 #include "numeric_types.h"
 
 #include "shared/player_simulation/player_state_simulator.h"
-#include "shared/player_simulation/player_state.h"
 
 #include "client/player_simulation/client_player_simulation_events_processor.h"
-
-#include <vector>
 
 namespace Engine
 {
@@ -18,6 +13,8 @@ namespace Engine
 	{
 		class Prefab;
 	}
+
+	class AssetManager;
 }
 
 class InputState;
@@ -31,7 +28,7 @@ struct ClientSidePredictionComponent;
 class ClientLocalPlayerPredictorSystem : public Engine::ECS::ISimpleSystem
 {
 	public:
-		ClientLocalPlayerPredictorSystem( Engine::ECS::World* world );
+		ClientLocalPlayerPredictorSystem( const Engine::AssetManager* asset_manager );
 
 		void Execute( Engine::ECS::World& world, float32 elapsed_time ) override;
 
@@ -40,14 +37,12 @@ class ClientLocalPlayerPredictorSystem : public Engine::ECS::ISimpleSystem
 		                                            const Engine::ECS::Prefab& prefab );
 
 	private:
-		void ExecuteLocalPrediction( Engine::ECS::GameEntity& entity, const InputState& input_state,
-		                             float32 elapsed_time );
-
-		// TODO Remove this world dependency asap
-		Engine::ECS::World* _world;
+		void ExecuteLocalPrediction( Engine::ECS::World& world, Engine::ECS::GameEntity& entity,
+		                             const InputState& input_state, float32 elapsed_time );
 
 		uint64 _nextInputStateId;
 
+		const Engine::AssetManager* _assetManager;
 		PlayerSimulation::PlayerStateSimulator _playerStateSimulator;
 		ClientPlayerSimulationEventsProcessor _simulationEventsProcessor;
 };

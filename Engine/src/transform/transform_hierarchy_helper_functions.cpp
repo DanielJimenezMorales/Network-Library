@@ -1,6 +1,7 @@
 #include "transform_hierarchy_helper_functions.h"
 
-#include "components/transform_component.h"
+#include "transform/transform_component.h"
+#include "ecs/game_entity.hpp"
 
 #include "math_utils.h"
 

@@ -6,6 +6,7 @@
 #include "server/global_components/server_dead_players_to_revive_global_component.h"
 
 #include "shared/global_components/network_peer_global_component.h"
+#include "shared/networked_entity_types.h"
 
 void ServerReviveDeadPlayersSystem::Execute( Engine::ECS::World& world, float32 elapsed_time )
 {
@@ -35,7 +36,7 @@ void ServerReviveDeadPlayersSystem::Execute( Engine::ECS::World& world, float32 
 			const NetLib::RemotePeerState remotePeerState = server->GetRemotePeerState( remotePeerId );
 			if ( remotePeerState == NetLib::RemotePeerState::Connected )
 			{
-				server->CreateNetworkEntity( 10, remotePeerId, 0.f, 0.f );
+				server->CreateNetworkEntity( PLAYER_NETWORKED_ENTITY_TYPE, remotePeerId, 0.f, 0.f );
 				// TODO Move this to a network player factory
 				server->EnableInputBufferForRemotePeer( remotePeerId );
 			}

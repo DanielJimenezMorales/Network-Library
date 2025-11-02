@@ -21,7 +21,7 @@ namespace NetLib
 		public:
 			ReplicationManager();
 
-			uint32 CreateNetworkEntity( uint32 entityType, uint32 controlledByPeerId, float32 posX, float32 posY );
+			void CreateNetworkEntity( uint32 entityType, uint32 controlledByPeerId, float32 posX, float32 posY );
 			void RemoveNetworkEntity( uint32 networkEntityId );
 
 			void Server_ReplicateWorldState(
@@ -38,8 +38,8 @@ namespace NetLib
 			uint32 SubscribeToOnNetworkEntityDestroy( Functor&& functor );
 
 		private:
-			NetworkEntityData& SpawnNewNetworkEntity( uint32 replicated_class_id, uint32 network_entity_id,
-			                                          uint32 controlled_by_peer_id, float32 pos_x, float32 pos_y );
+			void SpawnNewNetworkEntity( uint32 replicated_class_id, uint32 network_entity_id,
+			                            uint32 controlled_by_peer_id, float32 pos_x, float32 pos_y );
 
 			std::unique_ptr< ReplicationMessage > CreateCreateReplicationMessage( uint32 entityType,
 			                                                                      uint32 controlledByPeerId,
@@ -59,7 +59,7 @@ namespace NetLib
 
 			uint32 _nextNetworkEntityId;
 
-			std::function< uint32_t( const OnNetworkEntityCreateConfig& ) > _onNetworkEntityCreate;
+			std::function< void( const OnNetworkEntityCreateConfig& ) > _onNetworkEntityCreate;
 			std::function< void( uint32 ) > _onNetworkEntityDestroy;
 	};
 

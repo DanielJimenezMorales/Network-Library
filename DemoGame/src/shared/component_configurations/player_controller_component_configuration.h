@@ -5,11 +5,8 @@
 
 struct PlayerControllerComponentConfiguration : public Engine::ECS::ComponentConfiguration
 {
+		// TODO I don't like having a component config with no data members
 		PlayerControllerComponentConfiguration();
-		PlayerControllerComponentConfiguration( uint32 movement_speed, uint32 fire_rate_per_second );
 
 		PlayerControllerComponentConfiguration* Clone() const override;
-
-		uint32 movementSpeed;
-		uint32 fireRatePerSecond;
 };

@@ -1,34 +1,38 @@
 #include "client_world_initializer.h"
 
 // Engine
-#include "components/transform_component.h"
-#include "components/sprite_renderer_component.h"
-#include "components/camera_component.h"
-#include "components/collider_2d_component.h"
-#include "components/gizmo_renderer_component.h"
-#include "components/raycast_component.h"
-#include "components/animation_component.h"
-
+#include "transform/transform_component.h"
 #include "transform/transform_hierarchy_helper_functions.h"
 
-#include "global_components/input_handler_global_component.h"
-#include "global_components/asset_management_global_component.h"
+#include "render/sprite_renderer_component.h"
+#include "render/gizmo_renderer_component.h"
+#include "render/rendering_inicialization_utils.h"
+#include "render/sprite_renderer_component_configuration.h"
+
+#include "physics/collider_2d_component.h"
+#include "physics/raycast_component.h"
+#include "physics/collider_2d_component_configuration.h"
+
+#include "asset_manager/asset_management_global_component.h"
+
+#include "configuration_assets/configuration_assets_initialization_utils.h"
 
 #include "ecs/system_coordinator.h"
 #include "ecs/world.h"
 #include "ecs/game_entity.hpp"
 
+#include "inputs/input_handler_global_component.h"
 #include "inputs/inputs_initialization_utils.h"
 #include "inputs/keyboard_controller.h"
 #include "inputs/mouse_controller.h"
 
-#include "render/rendering_inicialization_utils.h"
-
+#include "animation/animation_component.h"
 #include "animation/animation_initialization_utils.h"
-
-#include "systems/animation_system.h"
+#include "animation/animation_system.h"
 
 #include "game.h"
+#include "camera_component.h"
+#include "camera_component_configuration.h"
 
 // Network library
 #include "core/client.h"
@@ -47,24 +51,22 @@
 // Client game
 #include "client/components/ghost_object_component.h"
 #include "client/components/interpolated_object_reference_component.h"
-#include "client/components/remote_player_controller_component.h"
 #include "client/components/client_side_prediction_component.h"
-#include "client/components/interpolated_object_component.h"
 #include "client/components/virtual_mouse_component.h"
 #include "client/components/crosshair_component.h"
 #include "client/components/player_aim_component.h"
 #include "client/components/player_visual_weapon_tag_component.h"
 #include "client/components/player_body_animation_tag_component.h"
 
+#include "client/player_interpolation/interpolated_object_component.h"
+#include "client/player_interpolation/player_interpolated_state_component.h"
+#include "client/player_interpolation/local_player_interpolated_object_state_updater_system.h"
+#include "client/player_interpolation/player_interpolated_object_state_applier_system.h"
+
 #include "client/systems/crosshair_follow_mouse_system.h"
 #include "client/systems/client_local_player_server_reconciliator_system.h"
 #include "client/systems/virtual_mouse_system.h"
 #include "client/systems/client_local_player_predictor_system.h"
-#include "client/systems/remote_player_controller_system.h"
-#include "client/systems/interpolated_player_objects updater_system.h"
-#include "client/systems/player_weapon_flip_system.h"
-#include "client/systems/player_body_animation_system.h"
-#include "client/systems/player_weapon_visibility_system.h"
 
 #include "client/client_network_entity_creator.h"
 //---
@@ -73,9 +75,6 @@
 #include "shared/ITextureLoader.h"
 #include "shared/InputStateFactory.h"
 
-#include "component_configurations/sprite_renderer_component_configuration.h"
-#include "component_configurations/collider_2d_component_configuration.h"
-#include "component_configurations/camera_component_configuration.h"
 #include "shared/component_configurations/player_controller_component_configuration.h"
 #include "shared/component_configurations/health_component_configuration.h"
 
@@ -104,7 +103,6 @@ static void RegisterComponents( Engine::ECS::World& world )
 	world.RegisterComponent< HealthComponent >( "HealthComponent" );
 
 	// Client game
-	world.RegisterComponent< RemotePlayerControllerComponent >( "RemotePlayerController" );
 	world.RegisterComponent< VirtualMouseComponent >( "VirtualMouse" );
 	world.RegisterComponent< CrosshairComponent >( "Crosshair" );
 	world.RegisterComponent< GhostObjectComponent >( "GhostObject" );
@@ -114,6 +112,7 @@ static void RegisterComponents( Engine::ECS::World& world )
 	world.RegisterComponent< PlayerAimComponent >( "PlayerAim" );
 	world.RegisterComponent< PlayerVisualWeaponTagComponent >( "PlayerVisualWeaponTag" );
 	world.RegisterComponent< PlayerBodyAnimationTagComponent >( "PlayerBodyAnimationTag" );
+	world.RegisterComponent< PlayerInterpolatedStateComponent >( "PlayerInterpolatedState" );
 }
 
 static void RegisterArchetypes( Engine::ECS::World& world )
@@ -145,6 +144,17 @@ static void RegisterPrefabs( Engine::ECS::World& world )
 static bool AddAssetManagementToWorld( Engine::ECS::World& world )
 {
 	world.AddGlobalComponent< Engine::AssetManagementGlobalComponent >();
+	return true;
+}
+
+static bool AddConfigurationAssetsModuleToWorld( Engine::Game& game )
+{
+	bool result = Engine::AddConfigurationAssetsToWorld( game );
+	if ( !result )
+	{
+		return false;
+	}
+
 	return true;
 }
 
@@ -233,7 +243,7 @@ static bool AddNetworkToWorld( Engine::ECS::World& world )
 	return true;
 }
 
-static bool AddGameplayToWorld( Engine::ECS::World& world )
+static bool AddGameplayToWorld( Engine::ECS::World& world, Engine::Game& game )
 {
 	// Add virtual mouse system
 	Engine::ECS::SystemCoordinator* virtual_mouse_system_coordinator =
@@ -261,25 +271,10 @@ static bool AddGameplayToWorld( Engine::ECS::World& world )
 	// Add interpolated player objects system
 	Engine::ECS::SystemCoordinator* interpolated_player_objects_system_coordinator =
 	    new Engine::ECS::SystemCoordinator( Engine::ECS::ExecutionStage::UPDATE );
-	InterpolatedPlayerObjectUpdaterSystem* interpolated_player_objects_system =
-	    new InterpolatedPlayerObjectUpdaterSystem();
-	interpolated_player_objects_system_coordinator->AddSystemToTail( interpolated_player_objects_system );
+	interpolated_player_objects_system_coordinator->AddSystemToTail(
+	    new LocalPlayerInterpolatedObjectStateUpdaterSystem() );
+	interpolated_player_objects_system_coordinator->AddSystemToTail( new PlayerInterpolatedObjectStateApplierSystem() );
 	world.AddSystem( interpolated_player_objects_system_coordinator );
-
-	Engine::ECS::SystemCoordinator* player_body_animation_system_coordinator =
-	    new Engine::ECS::SystemCoordinator( Engine::ECS::ExecutionStage::UPDATE );
-	player_body_animation_system_coordinator->AddSystemToTail( new PlayerBodyAnimationSystem() );
-	world.AddSystem( player_body_animation_system_coordinator );
-
-	Engine::ECS::SystemCoordinator* player_weapon_flip_system_coordinator =
-	    new Engine::ECS::SystemCoordinator( Engine::ECS::ExecutionStage::UPDATE );
-	player_weapon_flip_system_coordinator->AddSystemToTail( new PlayerWeaponFlipSystem() );
-	world.AddSystem( player_weapon_flip_system_coordinator );
-
-	Engine::ECS::SystemCoordinator* player_weapon_visibility_system_coordinator =
-	    new Engine::ECS::SystemCoordinator( Engine::ECS::ExecutionStage::UPDATE );
-	player_weapon_visibility_system_coordinator->AddSystemToTail( new PlayerWeaponVisibilitySystem() );
-	world.AddSystem( player_weapon_visibility_system_coordinator );
 
 	// Add Client-side player controller system
 	Engine::ECS::SystemCoordinator* client_player_controller_system_coordinator =
@@ -292,7 +287,7 @@ static bool AddGameplayToWorld( Engine::ECS::World& world )
 
 	// Predictor
 	ClientLocalPlayerPredictorSystem* client_local_player_predictor_system =
-	    new ClientLocalPlayerPredictorSystem( &world );
+	    new ClientLocalPlayerPredictorSystem( &game.GetAssetManager() );
 	client_player_controller_system_coordinator->AddSystemToTail( client_local_player_predictor_system );
 	auto on_configure_player_controller_callback =
 	    std::bind( &ClientLocalPlayerPredictorSystem::ConfigurePlayerControllerComponent,
@@ -302,14 +297,7 @@ static bool AddGameplayToWorld( Engine::ECS::World& world )
 	    std::bind( &ClientLocalPlayerPredictorSystem::ConfigureClientSidePredictorComponent,
 	               client_local_player_predictor_system, std::placeholders::_1, std::placeholders::_2 );
 	world.SubscribeToOnEntityConfigure( on_configure_client_side_predictor_callback );
-
 	world.AddSystem( client_player_controller_system_coordinator );
-
-	// Add Client-side remote player controller system
-	Engine::ECS::SystemCoordinator* client_remote_player_controller_system_coordinator =
-	    new Engine::ECS::SystemCoordinator( Engine::ECS::ExecutionStage::TICK );
-	client_player_controller_system_coordinator->AddSystemToTail( new RemotePlayerControllerSystem() );
-	world.AddSystem( client_remote_player_controller_system_coordinator );
 
 	return true;
 }
@@ -325,6 +313,15 @@ static bool CreateSystemsAndGlobalEntities( Engine::Game& game )
 	if ( !result )
 	{
 		LOG_ERROR( "Can't initialize asset management" );
+	}
+
+	/////////////////////////
+	// CONFIGURATION ASSETS
+	/////////////////////////
+	result = AddConfigurationAssetsModuleToWorld( game );
+	if ( !result )
+	{
+		LOG_ERROR( "Can't initialize configuration assets" );
 	}
 
 	///////////////////
@@ -366,7 +363,7 @@ static bool CreateSystemsAndGlobalEntities( Engine::Game& game )
 	/////////////////////////
 	// CLIENT-SIDE GAMEPLAY
 	/////////////////////////
-	result = AddGameplayToWorld( world );
+	result = AddGameplayToWorld( world, game );
 	if ( !result )
 	{
 		LOG_ERROR( "Can't initialize client-side gameplay" );

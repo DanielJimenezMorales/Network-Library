@@ -1,6 +1,7 @@
 #include "server_player_controller_system.h"
 
 #include <cassert>
+#include "asserts.h"
 
 #include "shared/InputState.h"
 
@@ -8,7 +9,7 @@
 #include "ecs/prefab.h"
 #include "ecs/world.h"
 
-#include "components/transform_component.h"
+#include "transform/transform_component.h"
 
 #include "shared/components/player_controller_component.h"
 #include "shared/components/network_entity_component.h"
@@ -16,17 +17,23 @@
 #include "server/components/server_player_state_storage_component.h"
 #include "server/components/server_transform_history_component.h"
 
+#include "shared/component_configurations/player_controller_component_configuration.h"
+
 #include "shared/global_components/network_peer_global_component.h"
 
 #include "shared/player_simulation/player_state.h"
-#include "shared/player_simulation/player_state_configuration.h"
 #include "shared/player_simulation/player_state_utils.h"
+#include "shared/player_simulation/player_state_configuration_utils.h"
 
-ServerPlayerControllerSystem::ServerPlayerControllerSystem()
+#include "asset_manager/asset_manager.h"
+
+ServerPlayerControllerSystem::ServerPlayerControllerSystem( const Engine::AssetManager* asset_manager )
     : Engine::ECS::ISimpleSystem()
+    , _assetManager( asset_manager )
     , _playerStateSimulator()
     , _eventsProcessor()
 {
+	ASSERT( asset_manager != nullptr, "AssetManager is null" );
 }
 
 static uint32 GetRemotePeerId( const Engine::ECS::GameEntity& entity )
@@ -136,11 +143,9 @@ void ServerPlayerControllerSystem::ConfigurePlayerControllerComponent( Engine::E
 	const PlayerControllerComponentConfiguration& player_controller_config =
 	    static_cast< const PlayerControllerComponentConfiguration& >( *component_config_found->second );
 
-	const PlayerSimulation::PlayerStateConfiguration playerStateConfig( player_controller_config.movementSpeed,
-	                                                                    player_controller_config.fireRatePerSecond );
-
 	PlayerControllerComponent& player_controller = entity.GetComponent< PlayerControllerComponent >();
-	player_controller.stateConfiguration = playerStateConfig;
+	player_controller.stateConfiguration =
+	    PlayerSimulation::InitializePlayerConfigFromAsset( "configs/player_configuration.json", *_assetManager );
 
-	player_controller.timeLeftUntilNextShot = 0.f;
+	player_controller.state.ZeroOut();
 }

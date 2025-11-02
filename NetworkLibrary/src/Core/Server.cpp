@@ -32,16 +32,17 @@ namespace NetLib
 		return Start( "0.0.0.0", port );
 	}
 
-	uint32 Server::CreateNetworkEntity( uint32 entityType, uint32 controlledByPeerId, float32 posX, float32 posY )
+	bool Server::CreateNetworkEntity( uint32 entityType, uint32 controlledByPeerId, float32 posX, float32 posY )
 	{
 		if ( GetConnectionState() != PeerConnectionState::PCS_Connected )
 		{
 			LOG_WARNING( "Can't create Network entity of type %d because the server is not connected.",
 			             static_cast< int >( entityType ) );
-			return 0;
+			return false;
 		}
 
-		return _replicationManager.CreateNetworkEntity( entityType, controlledByPeerId, posX, posY );
+		_replicationManager.CreateNetworkEntity( entityType, controlledByPeerId, posX, posY );
+		return true;
 	}
 
 	void Server::DestroyNetworkEntity( uint32 entityId )

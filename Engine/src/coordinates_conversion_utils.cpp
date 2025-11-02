@@ -4,9 +4,9 @@
 
 #include "ecs/game_entity.hpp"
 
-#include "components/camera_component.h"
-#include "components/transform_component.h"
+#include "camera_component.h"
 
+#include "transform/transform_component.h"
 #include "transform/transform_hierarchy_helper_functions.h"
 
 namespace Engine

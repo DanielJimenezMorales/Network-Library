@@ -1,28 +1,40 @@
 #include "server_world_initializer.h"
 
 #define SERVER_RENDER
+#define SERVER_ANIMATION
 
 // Engine
-#include "components/transform_component.h"
-#include "components/sprite_renderer_component.h"
-#include "components/camera_component.h"
-#include "components/collider_2d_component.h"
-#include "components/gizmo_renderer_component.h"
-#include "components/raycast_component.h"
+#include "transform/transform_component.h"
 
-#include "global_components/input_handler_global_component.h"
-#include "global_components/asset_management_global_component.h"
+#include "render/sprite_renderer_component.h"
+#include "render/gizmo_renderer_component.h"
+#include "render/sprite_renderer_component_configuration.h"
+
+#include "physics/collider_2d_component.h"
+#include "physics/raycast_component.h"
+#include "physics/collision_detection_system.h"
+#include "physics/collider_2d_component_configuration.h"
+
+#include "inputs/input_handler_global_component.h"
+
+#include "asset_manager/asset_management_global_component.h"
+
+#include "configuration_assets/configuration_assets_initialization_utils.h"
 
 #include "ecs/system_coordinator.h"
 #include "ecs/world.h"
 #include "ecs/game_entity.hpp"
 
-#include "systems/collision_detection_system.h"
-
+#include "camera_component.h"
+#include "camera_component_configuration.h"
 #include "game.h"
 
 #ifdef SERVER_RENDER
 	#include "render/rendering_inicialization_utils.h"
+#endif
+
+#ifdef SERVER_ANIMATION
+	#include "animation/animation_initialization_utils.h"
 #endif
 
 // Network library
@@ -61,9 +73,6 @@
 
 #include "shared/component_configurations/player_controller_component_configuration.h"
 #include "shared/component_configurations/health_component_configuration.h"
-#include "component_configurations/sprite_renderer_component_configuration.h"
-#include "component_configurations/collider_2d_component_configuration.h"
-#include "component_configurations/camera_component_configuration.h"
 
 #include "shared/global_components/network_peer_global_component.h"
 
@@ -136,6 +145,17 @@ static bool AddAssetManagementToWorld( Engine::ECS::World& world )
 	return true;
 }
 
+static bool AddConfigurationAssetsModuleToWorld( Engine::Game& game )
+{
+	bool result = Engine::AddConfigurationAssetsToWorld( game );
+	if ( !result )
+	{
+		return false;
+	}
+
+	return true;
+}
+
 #ifdef SERVER_RENDER
 static bool AddRenderingModuleToWorld( Engine::Game& game )
 {
@@ -155,6 +175,19 @@ static bool AddRenderingModuleToWorld( Engine::Game& game )
 	const bool result = Engine::AddRenderingToWorld( game );
 
 	return result;
+}
+#endif
+
+#ifdef SERVER_ANIMATION
+static bool AddAnimationModuleToWorld( Engine::Game& game )
+{
+	bool result = Engine::AddAnimationToWorld( game );
+	if ( !result )
+	{
+		return false;
+	}
+
+	return true;
 }
 #endif
 
@@ -214,7 +247,7 @@ static bool AddCollisionsToWorld( Engine::ECS::World& world )
 	return true;
 }
 
-static bool AddGameplayToWorld( Engine::ECS::World& world )
+static bool AddGameplayToWorld( Engine::ECS::World& world, Engine::Game& game )
 {
 	// Add temporary lifetime objects system
 	Engine::ECS::SystemCoordinator* temporary_lifetime_objects_system_coordinator =
@@ -232,7 +265,8 @@ static bool AddGameplayToWorld( Engine::ECS::World& world )
 
 	Engine::ECS::SystemCoordinator* server_player_controller_and_hit_registration_system_coordinator =
 	    new Engine::ECS::SystemCoordinator( Engine::ECS::ExecutionStage::TICK );
-	ServerPlayerControllerSystem* server_player_controller_system = new ServerPlayerControllerSystem();
+	ServerPlayerControllerSystem* server_player_controller_system =
+	    new ServerPlayerControllerSystem( &game.GetAssetManager() );
 	server_player_controller_and_hit_registration_system_coordinator->AddSystemToTail(
 	    server_player_controller_system );
 	auto on_configure_player_controller_callback =
@@ -278,6 +312,15 @@ static bool CreateSystemsAndGlobalEntities( Engine::Game& game )
 		LOG_ERROR( "Can't initialize asset management" );
 	}
 
+	/////////////////////////
+	// CONFIGURATION ASSETS
+	/////////////////////////
+	result = AddConfigurationAssetsModuleToWorld( game );
+	if ( !result )
+	{
+		LOG_ERROR( "Can't initialize configuration assets" );
+	}
+
 #ifdef SERVER_RENDER
 	//////////////
 	// RENDERING
@@ -286,6 +329,17 @@ static bool CreateSystemsAndGlobalEntities( Engine::Game& game )
 	if ( !result )
 	{
 		LOG_ERROR( "Can't initialize rendering" );
+	}
+#endif
+
+#ifdef SERVER_ANIMATION
+	//////////////
+	// ANIMATION
+	//////////////
+	result = AddAnimationModuleToWorld( game );
+	if ( !result )
+	{
+		LOG_ERROR( "Can't initialize animation" );
 	}
 #endif
 
@@ -310,7 +364,7 @@ static bool CreateSystemsAndGlobalEntities( Engine::Game& game )
 	/////////////////////////
 	// SERVER-SIDE GAMEPLAY
 	/////////////////////////
-	result = AddGameplayToWorld( world );
+	result = AddGameplayToWorld( world, game );
 	if ( !result )
 	{
 		LOG_ERROR( "Can't initialize server-side gameplay" );

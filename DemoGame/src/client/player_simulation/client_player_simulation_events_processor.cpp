@@ -1,10 +1,9 @@
 #include "client_player_simulation_events_processor.h"
 
-#include "raycaster.h"
+#include "physics/raycaster.h"
+#include "physics/collider_2d_component.h"
 
-#include "components/collider_2d_component.h"
-#include "components/transform_component.h"
-
+#include "transform/transform_component.h"
 #include "transform/transform_hierarchy_helper_functions.h"
 
 #include "ecs/world.h"

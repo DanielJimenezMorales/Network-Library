@@ -1,15 +1,14 @@
 #include "rendering_inicialization_utils.h"
 
-#include "global_components/render_global_component.h"
-
-#include "systems/render_clear_system.h"
-#include "systems/render_present_system.h"
-#include "systems/sprite_renderer_system.h"
-#include "systems/gizmo_renderer_system.h"
+#include "render/render_global_component.h"
+#include "render/render_clear_system.h"
+#include "render/render_present_system.h"
+#include "render/sprite_renderer_system.h"
+#include "render/gizmo_renderer_system.h"
+#include "render/texture_asset_loader.h"
+#include "render/color.h"
 
 #include "asset_manager/asset_manager.h"
-
-#include "render/texture_asset_loader.h"
 
 #include "ecs/world.h"
 
@@ -38,13 +37,6 @@ namespace Engine
 		if ( result != 0 )
 		{
 			LOG_ERROR( "Error while initializing SDL window. Error code: %s", SDL_GetError() );
-			return false;
-		}
-
-		result = SDL_SetRenderDrawColor( render.renderer, 255, 0, 0, 255 );
-		if ( result != 0 )
-		{
-			LOG_ERROR( "Error while setting SDL render draw color. Error code: %s", SDL_GetError() );
 			return false;
 		}
 
@@ -106,6 +98,8 @@ namespace Engine
 		{
 			return false;
 		}
+
+		renderGlobalComponent.clearColor = Color::RED();
 
 		result = AddRenderingAssetmanagement( game, renderGlobalComponent );
 		if ( !result )

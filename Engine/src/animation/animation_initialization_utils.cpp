@@ -3,11 +3,10 @@
 #include "asset_manager/asset_manager.h"
 
 #include "animation/animation_asset_loader.h"
+#include "animation/animation_system.h"
 
 #include "ecs/world.h"
 #include "ecs/system_coordinator.h"
-
-#include "systems/animation_system.h"
 
 #include "game.h"
 

@@ -23,28 +23,17 @@ namespace NetLib
 		return result;
 	}
 
-	bool NetworkEntityStorage::AddNetworkEntity( uint32 entityType, uint32 networkEntityId, uint32 controlledByPeerId,
-	                                             uint32 gameEntityId )
+	NetworkEntityData* NetworkEntityStorage::AddNetworkEntity( uint32 entityType, uint32 networkEntityId, uint32 controlledByPeerId )
 	{
 		if ( _networkEntityIdToDataMap.find( networkEntityId ) != _networkEntityIdToDataMap.cend() )
 		{
-			return false;
+			return nullptr;
 		}
-
-		_networkEntityIdToDataMap.emplace(
-		    networkEntityId, NetworkEntityData( entityType, networkEntityId, gameEntityId, controlledByPeerId ) );
-		return true;
-	}
-
-	NetworkEntityData& NetworkEntityStorage::AddNetworkEntity( uint32 entityType, uint32 networkEntityId,
-	                                                           uint32 controlledByPeerId )
-	{
-		assert( _networkEntityIdToDataMap.find( networkEntityId ) == _networkEntityIdToDataMap.cend() );
 
 		_networkEntityIdToDataMap.emplace( networkEntityId,
 		                                   NetworkEntityData( entityType, networkEntityId, controlledByPeerId ) );
 
-		return _networkEntityIdToDataMap[ networkEntityId ];
+		return &_networkEntityIdToDataMap[networkEntityId];
 	}
 
 	std::unordered_map< uint32, NetworkEntityData >::iterator NetworkEntityStorage::GetNetworkEntities()

@@ -1,0 +1,5 @@
+{
+	"movementSpeed": 25,
+	"aimingMovementSpeedMultiplier": 0.6,
+	"fireRatePerSecond": 10
+}

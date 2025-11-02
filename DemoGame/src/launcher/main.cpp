@@ -32,9 +32,6 @@ void EnableVTMode()
 }
 #endif
 
-#include "raycaster.h"
-#include "components/transform_component.h"
-
 #include "client/client_world_initializer.h"
 #include "server/server_world_initializer.h"
 

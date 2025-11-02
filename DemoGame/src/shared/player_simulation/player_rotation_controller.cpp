@@ -2,7 +2,7 @@
 
 #include "shared/InputState.h"
 
-#include "components/transform_component.h"
+#include "transform/transform_component.h"
 
 #include "shared/player_simulation/player_state.h"
 #include "shared/player_simulation/player_state_configuration.h"

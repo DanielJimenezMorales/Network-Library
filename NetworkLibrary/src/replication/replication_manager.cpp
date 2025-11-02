@@ -3,6 +3,7 @@
 #include <cassert>
 
 #include "logger.h"
+#include "asserts.h"
 
 #include "communication/message_factory.h"
 
@@ -16,13 +17,16 @@ namespace NetLib
 	{
 	}
 
-	NetworkEntityData& ReplicationManager::SpawnNewNetworkEntity( uint32 replicated_class_id, uint32 network_entity_id,
-	                                                              uint32 controlled_by_peer_id, float32 pos_x,
-	                                                              float32 pos_y )
+	void ReplicationManager::SpawnNewNetworkEntity( uint32 replicated_class_id, uint32 network_entity_id,
+	                                                uint32 controlled_by_peer_id, float32 pos_x, float32 pos_y )
 	{
 		// Create network entity associated data
-		NetworkEntityData& new_entity_data =
+		NetworkEntityData* new_entity_data =
 		    _networkEntitiesStorage.AddNetworkEntity( replicated_class_id, network_entity_id, controlled_by_peer_id );
+
+		ASSERT( new_entity_data != nullptr,
+		        "Failed to create new network entity data for entity type %u with network entity id %u",
+		        replicated_class_id, network_entity_id );
 
 		// Spawn network entity in world
 		OnNetworkEntityCreateConfig network_entity_create_config;
@@ -31,12 +35,9 @@ namespace NetLib
 		network_entity_create_config.controlledByPeerId = controlled_by_peer_id;
 		network_entity_create_config.positionX = pos_x;
 		network_entity_create_config.positionY = pos_y;
-		network_entity_create_config.communicationCallbacks = &new_entity_data.communicationCallbacks;
+		network_entity_create_config.communicationCallbacks = &new_entity_data->communicationCallbacks;
 		// TODO Also evaluate if we need inGameId for something
-		const uint32 gameEntity = _onNetworkEntityCreate( network_entity_create_config );
-
-		new_entity_data.inGameId = gameEntity;
-		return new_entity_data;
+		_onNetworkEntityCreate( network_entity_create_config );
 	}
 
 	std::unique_ptr< ReplicationMessage > ReplicationManager::CreateCreateReplicationMessage( uint32 entityType,
@@ -85,6 +86,7 @@ namespace NetLib
 		replicationMessage->replicationAction = static_cast< uint8 >( ReplicationActionType::UPDATE );
 		replicationMessage->networkEntityId = networkEntityId;
 		replicationMessage->controlledByPeerId = controlledByPeerId;
+		replicationMessage->replicatedClassId = entityType;
 		// TODO Use some write stream here instead of manual buffer
 		replicationMessage->dataSize = buffer.GetAccessIndex();
 		replicationMessage->data = new uint8[ replicationMessage->dataSize ];
@@ -113,11 +115,10 @@ namespace NetLib
 		return std::move( replicationMessage );
 	}
 
-	uint32 ReplicationManager::CreateNetworkEntity( uint32 entityType, uint32 controlledByPeerId, float32 posX,
-	                                                float32 posY )
+	void ReplicationManager::CreateNetworkEntity( uint32 entityType, uint32 controlledByPeerId, float32 posX,
+	                                              float32 posY )
 	{
-		NetworkEntityData& new_entity_data =
-		    SpawnNewNetworkEntity( entityType, _nextNetworkEntityId, controlledByPeerId, posX, posY );
+		SpawnNewNetworkEntity( entityType, _nextNetworkEntityId, controlledByPeerId, posX, posY );
 
 		// Prepare a Create replication message for interested clients
 		uint8* data = new uint8[ 8 ];
@@ -131,33 +132,32 @@ namespace NetLib
 		_createDestroyReplicationMessages.push_back( std::move( createMessage ) );
 
 		CalculateNextNetworkEntityId();
-
-		return new_entity_data.inGameId;
 	}
 
 	void ReplicationManager::RemoveNetworkEntity( uint32 networkEntityId )
 	{
 		// Get game entity Id from network entity Id
-		const NetworkEntityData* gameEntity = _networkEntitiesStorage.TryGetNetworkEntityFromId( networkEntityId );
-		if ( gameEntity == nullptr )
+		const NetworkEntityData* networkEntity = _networkEntitiesStorage.TryGetNetworkEntityFromId( networkEntityId );
+		if ( networkEntity == nullptr )
 		{
 			LOG_INFO( "Replication: Trying to remove a network entity that doesn't exist. Network entity ID: %u. "
 			          "Ignoring it...",
 			          networkEntityId );
-			return;
 		}
+		else
+		{
+			// Destroy object through its custom factory
+			_onNetworkEntityDestroy( networkEntity->id );
 
-		// Destroy object through its custom factory
-		_onNetworkEntityDestroy( gameEntity->inGameId );
+			// Remove network enttiy data
+			_networkEntitiesStorage.RemoveNetworkEntity( networkEntityId );
 
-		// Remove network enttiy data
-		_networkEntitiesStorage.RemoveNetworkEntity( networkEntityId );
+			// Create destroy entity message for remote peers
+			std::unique_ptr< ReplicationMessage > destroyMessage = CreateDestroyReplicationMessage( networkEntityId );
 
-		// Create destroy entity message for remote peers
-		std::unique_ptr< ReplicationMessage > destroyMessage = CreateDestroyReplicationMessage( networkEntityId );
-
-		// Store it into queue before broadcasting it
-		_createDestroyReplicationMessages.push_back( std::move( destroyMessage ) );
+			// Store it into queue before broadcasting it
+			_createDestroyReplicationMessages.push_back( std::move( destroyMessage ) );
+		}
 	}
 
 	void ReplicationManager::Server_ReplicateWorldState(
