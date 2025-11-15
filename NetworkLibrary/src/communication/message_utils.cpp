@@ -8,47 +8,45 @@
 
 namespace NetLib
 {
-	std::unique_ptr< Message > MessageUtils::ReadMessage( Buffer& buffer )
+	std::unique_ptr< Message > MessageUtils::ReadMessage( MessageFactory& message_factory, Buffer& buffer )
 	{
-		MessageFactory& messageFactory = MessageFactory::GetInstance();
-
 		MessageType type = static_cast< MessageType >( buffer.ReadByte() );
 		std::unique_ptr< Message > message = nullptr;
 
 		switch ( type )
 		{
 			case MessageType::ConnectionRequest:
-				message = messageFactory.LendMessage( MessageType::ConnectionRequest );
+				message = message_factory.LendMessage( MessageType::ConnectionRequest );
 				break;
 			case MessageType::ConnectionAccepted:
-				message = messageFactory.LendMessage( MessageType::ConnectionAccepted );
+				message = message_factory.LendMessage( MessageType::ConnectionAccepted );
 				break;
 			case MessageType::ConnectionDenied:
-				message = messageFactory.LendMessage( MessageType::ConnectionDenied );
+				message = message_factory.LendMessage( MessageType::ConnectionDenied );
 				break;
 			case MessageType::ConnectionChallenge:
-				message = messageFactory.LendMessage( MessageType::ConnectionChallenge );
+				message = message_factory.LendMessage( MessageType::ConnectionChallenge );
 				break;
 			case MessageType::ConnectionChallengeResponse:
-				message = messageFactory.LendMessage( MessageType::ConnectionChallengeResponse );
+				message = message_factory.LendMessage( MessageType::ConnectionChallengeResponse );
 				break;
 			case MessageType::Disconnection:
-				message = messageFactory.LendMessage( MessageType::Disconnection );
+				message = message_factory.LendMessage( MessageType::Disconnection );
 				break;
 			case MessageType::TimeRequest:
-				message = messageFactory.LendMessage( MessageType::TimeRequest );
+				message = message_factory.LendMessage( MessageType::TimeRequest );
 				break;
 			case MessageType::TimeResponse:
-				message = messageFactory.LendMessage( MessageType::TimeResponse );
+				message = message_factory.LendMessage( MessageType::TimeResponse );
 				break;
 			case MessageType::Replication:
-				message = messageFactory.LendMessage( MessageType::Replication );
+				message = message_factory.LendMessage( MessageType::Replication );
 				break;
 			case MessageType::Inputs:
-				message = messageFactory.LendMessage( MessageType::Inputs );
+				message = message_factory.LendMessage( MessageType::Inputs );
 				break;
 			case MessageType::PingPong:
-				message = messageFactory.LendMessage( MessageType::PingPong );
+				message = message_factory.LendMessage( MessageType::PingPong );
 				break;
 			default:
 				LOG_WARNING( "Can't read message of type MessageType = %hhu. Ignoring it...", type );

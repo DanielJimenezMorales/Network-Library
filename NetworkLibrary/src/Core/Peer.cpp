@@ -163,9 +163,12 @@ namespace NetLib
 	    , _stopRequestShouldNotifyRemotePeers( false )
 	    , _stopRequestReason( ConnectionFailedReasonType::CFR_UNKNOWN )
 	    , _currentTick( 0 )
+	    , _messageFactory( 3 )
+	    , _networkPacketProcessor()
 	{
 		_receiveBuffer = new uint8[ _receiveBufferSize ];
 		_sendBuffer = new uint8[ _sendBufferSize ];
+		_networkPacketProcessor.Initialize( &_messageFactory );
 	}
 
 	void Peer::SendPacketToAddress( const NetworkPacket& packet, const Address& address ) const
@@ -315,7 +318,7 @@ namespace NetLib
 	{
 		// Read incoming packet
 		NetworkPacket packet = NetworkPacket();
-		packet.Read( buffer );
+		_networkPacketProcessor.ReadPacket( buffer, packet );
 
 		RemotePeer* remotePeer = _remotePeersHandler.GetRemotePeerFromAddress( address );
 		bool isPacketFromRemotePeer = ( remotePeer != nullptr );
@@ -325,14 +328,13 @@ namespace NetLib
 		}
 		else
 		{
-			MessageFactory& messageFactory = MessageFactory::GetInstance();
-			while ( packet.GetNumberOfMessages() > 0 )
+			const std::vector< std::unique_ptr< Message > >& packetMessages = packet.GetAllMessages();
+			for ( auto cit = packetMessages.cbegin(); cit != packetMessages.cend(); ++cit )
 			{
-				std::unique_ptr< Message > message = packet.GetMessages();
-
-				ProcessMessageFromUnknownPeer( *message, address );
-				messageFactory.ReleaseMessage( std::move( message ) );
+				ProcessMessageFromUnknownPeer( **cit, address );
 			}
+
+			_networkPacketProcessor.CleanPacket( packet );
 		}
 	}
 

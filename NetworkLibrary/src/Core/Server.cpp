@@ -298,11 +298,7 @@ namespace NetLib
 		LOG_INFO( "Sending connection denied..." );
 		SendPacketToAddress( packet, address );
 
-		while ( packet.GetNumberOfMessages() > 0 )
-		{
-			std::unique_ptr< Message > messageToReturn = packet.GetMessages();
-			messageFactory.ReleaseMessage( std::move( messageToReturn ) );
-		}
+		_networkPacketProcessor.CleanPacket( packet );
 	}
 
 	void Server::ProcessConnectionChallengeResponse( const ConnectionChallengeResponseMessage& message,

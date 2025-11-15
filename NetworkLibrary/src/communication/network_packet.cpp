@@ -1,5 +1,6 @@
 #include "network_packet.h"
-#include <cassert>
+
+#include "asserts.h"
 
 #include "core/buffer.h"
 
@@ -9,6 +10,13 @@
 
 namespace NetLib
 {
+	NetworkPacket::~NetworkPacket()
+	{
+		ASSERT(
+		    _messages.empty(),
+		    "Before destroying a Network Packet make sure you handle correctly it's packets memory to avoid leaks." );
+	}
+
 	void NetworkPacketHeader::Write( Buffer& buffer ) const
 	{
 		buffer.WriteShort( lastAckedSequenceNumber );
@@ -29,16 +37,6 @@ namespace NetLib
 	{
 	}
 
-	NetworkPacket& NetworkPacket::operator=( NetworkPacket&& other ) noexcept
-	{
-		CleanMessages();
-
-		_header = std::move( other._header );
-		_messages = std::move( other._messages );
-
-		return *this;
-	}
-
 	void NetworkPacket::Write( Buffer& buffer ) const
 	{
 		_header.Write( buffer );
@@ -46,8 +44,7 @@ namespace NetLib
 		const uint8 numberOfMessages = static_cast< uint8 >( _messages.size() );
 		buffer.WriteByte( numberOfMessages );
 
-		for ( std::deque< std::unique_ptr< Message > >::const_iterator cit = _messages.cbegin();
-		      cit != _messages.cend(); ++cit )
+		for ( auto cit = _messages.cbegin(); cit != _messages.cend(); ++cit )
 		{
 			const Message* message = ( *cit ).get();
 			message->Write( buffer );
@@ -58,11 +55,12 @@ namespace NetLib
 	{
 		_header.Read( buffer );
 
-		uint8 numberOfMessages = buffer.ReadByte();
+		const uint8 numberOfMessages = buffer.ReadByte();
+		MessageFactory& messageFactory = MessageFactory::GetInstance();
 
 		for ( uint32 i = 0; i < numberOfMessages; ++i )
 		{
-			std::unique_ptr< Message > message = MessageUtils::ReadMessage( buffer );
+			std::unique_ptr< Message > message = MessageUtils::ReadMessage( messageFactory, buffer );
 			if ( message != nullptr )
 			{
 				AddMessage( std::move( message ) );
@@ -76,7 +74,7 @@ namespace NetLib
 		return true;
 	}
 
-	std::unique_ptr< Message > NetworkPacket::GetMessages()
+	std::unique_ptr< Message > NetworkPacket::TryGetNextMessage()
 	{
 		if ( GetNumberOfMessages() == 0 )
 		{
@@ -84,8 +82,13 @@ namespace NetLib
 		}
 
 		std::unique_ptr< Message > message = std::move( _messages.front() );
-		_messages.pop_front();
+		_messages.erase( _messages.begin() );
 		return std::move( message );
+	}
+
+	const std::vector< std::unique_ptr< Message > >& NetworkPacket::GetAllMessages() const
+	{
+		return _messages;
 	}
 
 	uint32 NetworkPacket::Size() const
@@ -93,7 +96,7 @@ namespace NetLib
 		uint32 packetSize = NetworkPacketHeader::Size();
 		packetSize += 1; // We store in 1 byte the number of messages that this packet contains
 
-		std::deque< std::unique_ptr< Message > >::const_iterator iterator = _messages.cbegin();
+		auto iterator = _messages.cbegin();
 		while ( iterator != _messages.cend() )
 		{
 			packetSize += ( *iterator )->Size();
@@ -106,24 +109,5 @@ namespace NetLib
 	bool NetworkPacket::CanMessageFit( uint32 sizeOfMessagesInBytes ) const
 	{
 		return ( sizeOfMessagesInBytes + Size() < MaxSize() );
-	}
-
-	NetworkPacket::~NetworkPacket()
-	{
-		CleanMessages();
-	}
-
-	void NetworkPacket::CleanMessages()
-	{
-		MessageFactory& messageFactory = MessageFactory::GetInstance();
-
-		std::deque< std::unique_ptr< Message > >::iterator it = _messages.begin();
-		for ( it; it != _messages.end(); ++it )
-		{
-			std::unique_ptr< Message > message = std::move( *it );
-			messageFactory.ReleaseMessage( std::move( message ) );
-		}
-
-		_messages.clear();
 	}
 } // namespace NetLib

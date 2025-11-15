@@ -215,7 +215,7 @@ namespace NetLib
 		MessageFactory& messageFactory = MessageFactory::GetInstance();
 		while ( packet.GetNumberOfMessages() > 0 )
 		{
-			std::unique_ptr< Message > message = packet.GetMessages();
+			std::unique_ptr< Message > message = packet.TryGetNextMessage();
 			AddReceivedMessage( std::move( message ) );
 		}
 

@@ -144,7 +144,7 @@ namespace NetLib
 		// Send messages ownership back to remote peer
 		while ( packet.GetNumberOfMessages() > 0 )
 		{
-			std::unique_ptr< Message > message = packet.GetMessages();
+			std::unique_ptr< Message > message = packet.TryGetNextMessage();
 			AddUnackedMessage( std::move( message ) );
 
 			if ( metrics_handler != nullptr )
