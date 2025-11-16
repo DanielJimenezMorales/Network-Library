@@ -9,8 +9,8 @@ PROJECT_DATA =
 	COMMON =
 	{
 		NAME = "Common",
-		PATH = ROOT_PATH "common/",
-		PREMAKE_PATH = ROOT_PATH "common/common_premake5.lua"
+		PATH = ROOT_PATH "Common/",
+		PREMAKE_PATH = ROOT_PATH "Common/common_premake5.lua"
 	},
 	ENGINE =
 	{
