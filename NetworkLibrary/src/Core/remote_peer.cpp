@@ -16,11 +16,11 @@
 
 namespace NetLib
 {
-	void RemotePeer::InitTransmissionChannels()
+	void RemotePeer::InitTransmissionChannels( MessageFactory* message_factory )
 	{
-		TransmissionChannel* unreliableOrdered = new UnreliableOrderedTransmissionChannel();
-		TransmissionChannel* unreliableUnordered = new UnreliableUnorderedTransmissionChannel();
-		TransmissionChannel* reliableOrdered = new ReliableOrderedChannel();
+		TransmissionChannel* unreliableOrdered = new UnreliableOrderedTransmissionChannel( message_factory );
+		TransmissionChannel* unreliableUnordered = new UnreliableUnorderedTransmissionChannel( message_factory );
+		TransmissionChannel* reliableOrdered = new ReliableOrderedChannel( message_factory );
 
 		_transmissionChannels.push_back( unreliableOrdered );
 		_transmissionChannels.push_back( unreliableUnordered );
@@ -70,17 +70,31 @@ namespace NetLib
 	    , _transmissionChannels()
 	    , _metricsEnabled( false )
 	{
-		InitTransmissionChannels();
+		// InitTransmissionChannels();
+	}
+
+	RemotePeer::RemotePeer( MessageFactory* message_factory )
+	    : _address( Address::GetInvalid() )
+	    , _clientSalt( 0 )
+	    , _serverSalt( 0 )
+	    , _maxInactivityTime( 0 )
+	    , _inactivityTimeLeft( 0 )
+	    , _nextPacketSequenceNumber( 0 )
+	    , _currentState( RemotePeerState::Disconnected )
+	    , _transmissionChannels()
+	    , _metricsEnabled( false )
+	{
+		InitTransmissionChannels( message_factory );
 	}
 
 	RemotePeer::RemotePeer( const Address& address, uint16 id, float32 maxInactivityTime, uint64 clientSalt,
-	                        uint64 serverSalt )
+	                        uint64 serverSalt, MessageFactory* message_factory )
 	    : _address( Address::GetInvalid() )
 	    , _nextPacketSequenceNumber( 0 )
 	    , _currentState( RemotePeerState::Disconnected )
 	    , _metricsEnabled( false )
 	{
-		InitTransmissionChannels();
+		InitTransmissionChannels( message_factory );
 		Connect( address, id, maxInactivityTime, clientSalt, serverSalt );
 	}
 

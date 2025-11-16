@@ -49,14 +49,15 @@ namespace NetLib
 
 			PingPongMessagesSender _pingPongMessagesSender;
 
-			void InitTransmissionChannels();
+			void InitTransmissionChannels( MessageFactory* message_factory );
 			TransmissionChannel* GetTransmissionChannelFromType( TransmissionChannelType channelType );
 			TransmissionChannelType GetTransmissionChannelTypeFromHeader( const MessageHeader& messageHeader ) const;
 
 		public:
 			RemotePeer();
+			RemotePeer( MessageFactory* message_factory );
 			RemotePeer( const Address& address, uint16 id, float32 maxInactivityTime, uint64 clientSalt,
-			            uint64 serverSalt );
+			            uint64 serverSalt, MessageFactory* message_factory );
 			RemotePeer( const RemotePeer& ) = delete;
 			RemotePeer( RemotePeer&& other ) = default; // This must be here since Peer.h has a std::vector<RemotePeer>
 			                                            // and vector<T> requires T to be MoveAssignable

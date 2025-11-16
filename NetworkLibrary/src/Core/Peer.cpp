@@ -157,7 +157,7 @@ namespace NetLib
 	    , _address( Address::GetInvalid() )
 	    , _receiveBufferSize( receiveBufferSize )
 	    , _sendBufferSize( sendBufferSize )
-	    , _remotePeersHandler( maxConnections )
+	    , _remotePeersHandler()
 	    , _onLocalPeerConnect()
 	    , _onLocalPeerDisconnect()
 	    , _isStopRequested( false )
@@ -168,6 +168,7 @@ namespace NetLib
 	{
 		_receiveBuffer = new uint8[ _receiveBufferSize ];
 		_sendBuffer = new uint8[ _sendBufferSize ];
+		_remotePeersHandler.Initialize( maxConnections, &_messageFactory );
 	}
 
 	void Peer::SendPacketToAddress( const NetworkPacket& packet, const Address& address ) const

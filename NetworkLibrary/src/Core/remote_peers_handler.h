@@ -27,7 +27,9 @@ namespace NetLib
 	class RemotePeersHandler
 	{
 		public:
-			RemotePeersHandler( uint32 maxConnections );
+			RemotePeersHandler();
+
+			void Initialize( uint32 max_connections, MessageFactory* message_factory );
 
 			void TickRemotePeers( float32 elapsedTime, MessageFactory& message_factory );
 
@@ -46,14 +48,13 @@ namespace NetLib
 			void RemoveAllRemotePeers();
 			bool RemoveRemotePeer( uint32 remotePeerId );
 
-			~RemotePeersHandler();
-
 		private:
 			int32 GetIndexFromId( uint32 id ) const;
 
-			const uint32 _maxConnections;
+			uint32 _maxConnections;
 			std::vector< bool > _remotePeerSlots;
 			std::vector< RemotePeer > _remotePeers;
 			std::unordered_set< RemotePeer* > _validRemotePeers;
+			bool _isInitialized;
 	};
 } // namespace NetLib

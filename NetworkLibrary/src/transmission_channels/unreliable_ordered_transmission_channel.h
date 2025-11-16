@@ -8,7 +8,7 @@ namespace NetLib
 	class UnreliableOrderedTransmissionChannel : public TransmissionChannel
 	{
 		public:
-			UnreliableOrderedTransmissionChannel();
+			UnreliableOrderedTransmissionChannel( MessageFactory* message_factory );
 			UnreliableOrderedTransmissionChannel( const UnreliableOrderedTransmissionChannel& ) = delete;
 			UnreliableOrderedTransmissionChannel( UnreliableOrderedTransmissionChannel&& other ) noexcept;
 

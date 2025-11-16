@@ -22,8 +22,8 @@
 
 namespace NetLib
 {
-	ReliableOrderedChannel::ReliableOrderedChannel()
-	    : TransmissionChannel( TransmissionChannelType::ReliableOrdered )
+	ReliableOrderedChannel::ReliableOrderedChannel( MessageFactory* message_factory )
+	    : TransmissionChannel( TransmissionChannelType::ReliableOrdered, message_factory )
 	    , _lastAckedMessageSequenceNumber( 0 )
 	    , _nextOrderedMessageSequenceNumber( 1 )
 	    , _reliableMessageEntriesBufferSize( ACK_BITS_SIZE )
@@ -265,8 +265,7 @@ namespace NetLib
 			}
 
 			// Release duplicate message
-			MessageFactory& messageFactory = MessageFactory::GetInstance();
-			messageFactory.ReleaseMessage( std::move( message ) );
+			_messageFactory->ReleaseMessage( std::move( message ) );
 		}
 		else
 		{
@@ -469,8 +468,7 @@ namespace NetLib
 			_unackedMessagesSendTimes.erase( it );
 
 			// Release acked message since we no longer need it
-			MessageFactory& messageFactory = MessageFactory::GetInstance();
-			messageFactory.ReleaseMessage( std::move( message ) );
+			_messageFactory->ReleaseMessage( std::move( message ) );
 			result = true;
 		}
 
@@ -552,13 +550,11 @@ namespace NetLib
 
 	void ReliableOrderedChannel::ClearMessages()
 	{
-		MessageFactory& messageFactory = MessageFactory::GetInstance();
-
 		std::list< std::unique_ptr< Message > >::iterator it = _unackedReliableMessages.begin();
 		while ( it != _unackedReliableMessages.end() )
 		{
 			std::unique_ptr< Message > message( std::move( *it ) );
-			messageFactory.ReleaseMessage( std::move( message ) );
+			_messageFactory->ReleaseMessage( std::move( message ) );
 
 			++it;
 		}
@@ -571,7 +567,7 @@ namespace NetLib
 		while ( it != _unorderedMessagesWaitingForPrevious.end() )
 		{
 			std::unique_ptr< Message > message( std::move( *it ) );
-			messageFactory.ReleaseMessage( std::move( message ) );
+			_messageFactory->ReleaseMessage( std::move( message ) );
 
 			++it;
 		}

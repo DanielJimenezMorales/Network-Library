@@ -16,8 +16,8 @@
 
 namespace NetLib
 {
-	UnreliableOrderedTransmissionChannel::UnreliableOrderedTransmissionChannel()
-	    : TransmissionChannel( TransmissionChannelType::UnreliableOrdered )
+	UnreliableOrderedTransmissionChannel::UnreliableOrderedTransmissionChannel( MessageFactory* message_factory )
+	    : TransmissionChannel( TransmissionChannelType::UnreliableOrdered, message_factory )
 	    , _lastMessageSequenceNumberReceived( 0 )
 	{
 	}
@@ -91,11 +91,10 @@ namespace NetLib
 		}
 
 		// Clean messages
-		MessageFactory& messageFactory = MessageFactory::GetInstance();
 		while ( packet.GetNumberOfMessages() > 0 )
 		{
 			std::unique_ptr< Message > message = packet.TryGetNextMessage();
-			messageFactory.ReleaseMessage( std::move( message ) );
+			_messageFactory->ReleaseMessage( std::move( message ) );
 		}
 
 		delete[] bufferData;
@@ -168,8 +167,7 @@ namespace NetLib
 		}
 		else
 		{
-			MessageFactory& messageFactory = MessageFactory::GetInstance();
-			messageFactory.ReleaseMessage( std::move( message ) );
+			_messageFactory->ReleaseMessage( std::move( message ) );
 		}
 
 		return true;

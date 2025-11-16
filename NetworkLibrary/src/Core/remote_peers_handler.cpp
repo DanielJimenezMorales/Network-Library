@@ -1,15 +1,24 @@
 #include "remote_peers_handler.h"
 
-#include <cassert>
+#include "asserts.h"
 
 #include "core/address.h"
 #include "core/peer.h"
 
 namespace NetLib
 {
-	RemotePeersHandler::RemotePeersHandler( uint32 maxConnections )
-	    : _maxConnections( maxConnections )
+	RemotePeersHandler::RemotePeersHandler()
+	    : _maxConnections( 0 )
+	    , _isInitialized( false )
 	{
+	}
+
+	void RemotePeersHandler::Initialize( uint32 max_connections, MessageFactory* message_factory )
+	{
+		ASSERT( !_isInitialized, "Remote peers handler is already initialized. Deinitialize it first." );
+		ASSERT( max_connections > 0, "The maximum number of connections has to be greater than zero." );
+
+		_maxConnections = max_connections;
 		_remotePeerSlots.reserve( _maxConnections );
 		_remotePeers.reserve( _maxConnections );
 		_validRemotePeers.reserve( _maxConnections );
@@ -17,12 +26,16 @@ namespace NetLib
 		for ( uint32 i = 0; i < _maxConnections; ++i )
 		{
 			_remotePeerSlots.push_back( false ); // You could use vector.resize in these ones.
-			_remotePeers.emplace_back();
+			_remotePeers.emplace_back( message_factory );
 		}
+
+		_isInitialized = true;
 	}
 
 	void RemotePeersHandler::TickRemotePeers( float32 elapsedTime, MessageFactory& message_factory )
 	{
+		ASSERT( _isInitialized, "Remote peers handler is not initialized." );
+
 		for ( uint32 i = 0; i < _maxConnections; ++i )
 		{
 			if ( _remotePeerSlots[ i ] )
@@ -41,6 +54,8 @@ namespace NetLib
 	bool RemotePeersHandler::AddRemotePeer( const Address& addressInfo, uint16 id, uint64 clientSalt,
 	                                        uint64 serverSalt )
 	{
+		ASSERT( _isInitialized, "Remote peers handler is not initialized." );
+
 		// TODO Check for every single possible error scenario. Is already connected? Is it maxConnections full? etc.
 		// Return error code
 		int32 slotIndex = FindFreeRemotePeerSlot();
@@ -60,6 +75,8 @@ namespace NetLib
 
 	RemotePeersHandlerResult RemotePeersHandler::IsRemotePeerAbleToConnect( const Address& address ) const
 	{
+		ASSERT( _isInitialized, "Remote peers handler is not initialized." );
+
 		if ( IsRemotePeerAlreadyConnected( address ) )
 		{
 			return RemotePeersHandlerResult::RPH_ALREADYEXIST;
@@ -75,6 +92,8 @@ namespace NetLib
 
 	int32 RemotePeersHandler::FindFreeRemotePeerSlot() const
 	{
+		ASSERT( _isInitialized, "Remote peers handler is not initialized." );
+
 		int32 freeIndex = -1;
 		for ( uint32 i = 0; i < _maxConnections; ++i )
 		{
@@ -90,6 +109,8 @@ namespace NetLib
 
 	RemotePeer* RemotePeersHandler::GetRemotePeerFromAddress( const Address& address )
 	{
+		ASSERT( _isInitialized, "Remote peers handler is not initialized." );
+
 		RemotePeer* result = nullptr;
 		for ( uint32 i = 0; i < _maxConnections; ++i )
 		{
@@ -110,6 +131,8 @@ namespace NetLib
 
 	RemotePeer* RemotePeersHandler::GetRemotePeerFromId( uint32 id )
 	{
+		ASSERT( _isInitialized, "Remote peers handler is not initialized." );
+
 		RemotePeer* result = nullptr;
 		for ( uint32 i = 0; i < _maxConnections; ++i )
 		{
@@ -130,6 +153,8 @@ namespace NetLib
 
 	const RemotePeer* RemotePeersHandler::GetRemotePeerFromId( uint32 id ) const
 	{
+		ASSERT( _isInitialized, "Remote peers handler is not initialized." );
+
 		const RemotePeer* result = nullptr;
 		for ( uint32 i = 0; i < _maxConnections; ++i )
 		{
@@ -150,6 +175,8 @@ namespace NetLib
 
 	bool RemotePeersHandler::IsRemotePeerAlreadyConnected( const Address& address ) const
 	{
+		ASSERT( _isInitialized, "Remote peers handler is not initialized." );
+
 		bool found = false;
 		for ( uint32 i = 0; i < _maxConnections; ++i )
 		{
@@ -170,6 +197,8 @@ namespace NetLib
 
 	bool RemotePeersHandler::DoesRemotePeerIdExist( uint32 id ) const
 	{
+		ASSERT( _isInitialized, "Remote peers handler is not initialized." );
+
 		bool result = false;
 
 		if ( GetIndexFromId( id ) != -1 )
@@ -182,16 +211,22 @@ namespace NetLib
 
 	std::unordered_set< RemotePeer* >::iterator RemotePeersHandler::GetValidRemotePeersIterator()
 	{
+		ASSERT( _isInitialized, "Remote peers handler is not initialized." );
+
 		return _validRemotePeers.begin();
 	}
 
 	std::unordered_set< RemotePeer* >::iterator RemotePeersHandler::GetValidRemotePeersPastTheEndIterator()
 	{
+		ASSERT( _isInitialized, "Remote peers handler is not initialized." );
+
 		return _validRemotePeers.end();
 	}
 
 	void RemotePeersHandler::RemoveAllRemotePeers()
 	{
+		ASSERT( _isInitialized, "Remote peers handler is not initialized." );
+
 		for ( uint32 i = 0; i < _maxConnections; ++i )
 		{
 			if ( _remotePeerSlots[ i ] )
@@ -203,6 +238,8 @@ namespace NetLib
 
 	bool RemotePeersHandler::RemoveRemotePeer( uint32 remotePeerId )
 	{
+		ASSERT( _isInitialized, "Remote peers handler is not initialized." );
+
 		int32 id = GetIndexFromId( remotePeerId );
 		if ( id != -1 )
 		{
@@ -236,9 +273,5 @@ namespace NetLib
 		}
 
 		return index;
-	}
-
-	RemotePeersHandler::~RemotePeersHandler()
-	{
 	}
 } // namespace NetLib

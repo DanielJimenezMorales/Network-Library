@@ -29,7 +29,7 @@ namespace NetLib
 	class ReliableOrderedChannel : public TransmissionChannel
 	{
 		public:
-			ReliableOrderedChannel();
+			ReliableOrderedChannel( MessageFactory* message_factory );
 			ReliableOrderedChannel( const ReliableOrderedChannel& ) = delete;
 			ReliableOrderedChannel( ReliableOrderedChannel&& other ) noexcept;
 
