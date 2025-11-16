@@ -6,6 +6,7 @@
 #include "communication/network_packet.h"
 #include "communication/message.h"
 #include "communication/message_factory.h"
+#include "communication/network_packet_utils.h"
 
 #include "logger.h"
 
@@ -164,11 +165,9 @@ namespace NetLib
 	    , _stopRequestReason( ConnectionFailedReasonType::CFR_UNKNOWN )
 	    , _currentTick( 0 )
 	    , _messageFactory( 3 )
-	    , _networkPacketProcessor()
 	{
 		_receiveBuffer = new uint8[ _receiveBufferSize ];
 		_sendBuffer = new uint8[ _sendBufferSize ];
-		_networkPacketProcessor.Initialize( &_messageFactory );
 	}
 
 	void Peer::SendPacketToAddress( const NetworkPacket& packet, const Address& address ) const
@@ -316,9 +315,10 @@ namespace NetLib
 
 	void Peer::ProcessDatagram( Buffer& buffer, const Address& address )
 	{
-		// Read incoming packet
+		// TODO Add validation for tampered or corrupted packets so it doesn't crash when a tampered message arrives.
+		//  Read incoming packet
 		NetworkPacket packet = NetworkPacket();
-		_networkPacketProcessor.ReadPacket( buffer, packet );
+		packet.Read( _messageFactory, buffer );
 
 		RemotePeer* remotePeer = _remotePeersHandler.GetRemotePeerFromAddress( address );
 		bool isPacketFromRemotePeer = ( remotePeer != nullptr );
@@ -334,7 +334,7 @@ namespace NetLib
 				ProcessMessageFromUnknownPeer( **cit, address );
 			}
 
-			_networkPacketProcessor.CleanPacket( packet );
+			NetworkPacketUtils::CleanPacket( _messageFactory, packet );
 		}
 	}
 

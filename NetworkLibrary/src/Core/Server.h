@@ -81,7 +81,7 @@ namespace NetLib
 			void CreateConnectionApprovedMessage( RemotePeer& remotePeer );
 			void CreateDisconnectionMessage( RemotePeer& remotePeer );
 			void CreateTimeResponseMessage( RemotePeer& remotePeer, const TimeRequestMessage& timeRequest );
-			void SendConnectionDeniedPacket( const Address& address, ConnectionFailedReasonType reason ) const;
+			void SendConnectionDeniedPacket( const Address& address, ConnectionFailedReasonType reason );
 			void SendPacketToRemotePeer( const RemotePeer& remotePeer, const NetworkPacket& packet ) const;
 
 			void TickReplication();

@@ -11,7 +11,6 @@
 #include "core/socket.h"
 #include "core/remote_peers_handler.h"
 
-#include "communication/network_packet_processor.h"
 #include "communication/message_factory.h"
 
 #include "transmission_channels/transmission_channel.h"
@@ -153,7 +152,7 @@ namespace NetLib
 			void ExecuteOnLocalPeerDisconnect( ConnectionFailedReasonType reason );
 
 			RemotePeersHandler _remotePeersHandler;
-			NetworkPacketProcessor _networkPacketProcessor;
+			MessageFactory _messageFactory;
 
 		private:
 			void ProcessReceivedData();
@@ -197,8 +196,6 @@ namespace NetLib
 			uint8* _sendBuffer;
 
 			uint32 _currentTick;
-
-			MessageFactory _messageFactory;
 
 			// Stop request
 			bool _isStopRequested;

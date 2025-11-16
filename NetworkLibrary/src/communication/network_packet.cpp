@@ -51,16 +51,15 @@ namespace NetLib
 		}
 	}
 
-	void NetworkPacket::Read( Buffer& buffer )
+	void NetworkPacket::Read( MessageFactory& message_factory, Buffer& buffer )
 	{
 		_header.Read( buffer );
 
 		const uint8 numberOfMessages = buffer.ReadByte();
-		MessageFactory& messageFactory = MessageFactory::GetInstance();
 
 		for ( uint32 i = 0; i < numberOfMessages; ++i )
 		{
-			std::unique_ptr< Message > message = MessageUtils::ReadMessage( messageFactory, buffer );
+			std::unique_ptr< Message > message = MessageUtils::ReadMessage( message_factory, buffer );
 			if ( message != nullptr )
 			{
 				AddMessage( std::move( message ) );

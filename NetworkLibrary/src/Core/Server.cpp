@@ -13,6 +13,7 @@
 #include "communication/message.h"
 #include "communication/message_factory.h"
 #include "communication/network_packet.h"
+#include "communication/network_packet_utils.h"
 
 #include "replication/replication_manager.h"
 
@@ -283,7 +284,7 @@ namespace NetLib
 		LOG_INFO( "Connection challenge message created." );
 	}
 
-	void Server::SendConnectionDeniedPacket( const Address& address, ConnectionFailedReasonType reason ) const
+	void Server::SendConnectionDeniedPacket( const Address& address, ConnectionFailedReasonType reason )
 	{
 		MessageFactory& messageFactory = MessageFactory::GetInstance();
 
@@ -298,7 +299,7 @@ namespace NetLib
 		LOG_INFO( "Sending connection denied..." );
 		SendPacketToAddress( packet, address );
 
-		_networkPacketProcessor.CleanPacket( packet );
+		NetworkPacketUtils::CleanPacket( _messageFactory, packet );
 	}
 
 	void Server::ProcessConnectionChallengeResponse( const ConnectionChallengeResponseMessage& message,

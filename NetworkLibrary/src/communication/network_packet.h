@@ -8,6 +8,7 @@ namespace NetLib
 {
 	class Buffer;
 	class Message;
+	class MessageFactory;
 
 	struct NetworkPacketHeader
 	{
@@ -53,7 +54,7 @@ namespace NetLib
 			NetworkPacket& operator=( NetworkPacket&& other ) noexcept = delete;
 
 			void Write( Buffer& buffer ) const;
-			void Read( Buffer& buffer );
+			void Read( MessageFactory& message_factory, Buffer& buffer );
 
 			const NetworkPacketHeader& GetHeader() const { return _header; };
 
