@@ -10,10 +10,9 @@ namespace NetLib
 	{
 	}
 
-	static std::unique_ptr< PingPongMessage > CreatePingPongMessage()
+	static std::unique_ptr< PingPongMessage > CreatePingPongMessage( MessageFactory& message_factory )
 	{
-		MessageFactory& messageFactory = MessageFactory::GetInstance();
-		std::unique_ptr< Message > message = messageFactory.LendMessage( MessageType::PingPong );
+		std::unique_ptr< Message > message = message_factory.LendMessage( MessageType::PingPong );
 
 		std::unique_ptr< PingPongMessage > pingPongMessage( static_cast< PingPongMessage* >( message.release() ) );
 
@@ -24,7 +23,8 @@ namespace NetLib
 		return std::move( pingPongMessage );
 	}
 
-	void PingPongMessagesSender::Update( float32 elapsed_time, RemotePeer& remote_peer )
+	void PingPongMessagesSender::Update( float32 elapsed_time, RemotePeer& remote_peer,
+	                                     MessageFactory& message_factory )
 	{
 		const TransmissionChannel* reliableOrderedChannel =
 		    static_cast< const RemotePeer& >( remote_peer )
@@ -32,7 +32,7 @@ namespace NetLib
 
 		if ( !reliableOrderedChannel->ArePendingMessagesToSend() )
 		{
-			std::unique_ptr< PingPongMessage > pingPongMessage = CreatePingPongMessage();
+			std::unique_ptr< PingPongMessage > pingPongMessage = CreatePingPongMessage( message_factory );
 			remote_peer.AddMessage( std::move( pingPongMessage ) );
 		}
 	}

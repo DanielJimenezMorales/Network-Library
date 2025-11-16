@@ -13,6 +13,7 @@
 namespace NetLib
 {
 	struct OnNetworkEntityCreateConfig;
+	class MessageFactory;
 
 	static constexpr uint32 INVALID_NETWORK_ENTITY_ID = 0;
 
@@ -21,15 +22,17 @@ namespace NetLib
 		public:
 			ReplicationManager();
 
-			void CreateNetworkEntity( uint32 entityType, uint32 controlledByPeerId, float32 posX, float32 posY );
-			void RemoveNetworkEntity( uint32 networkEntityId );
+			void CreateNetworkEntity( MessageFactory& message_factory, uint32 entityType, uint32 controlledByPeerId,
+			                          float32 posX, float32 posY );
+			void RemoveNetworkEntity( MessageFactory& message_factory, uint32 networkEntityId );
 
 			void Server_ReplicateWorldState(
-			    uint32 remote_peer_id, std::vector< std::unique_ptr< ReplicationMessage > >& replication_messages );
+			    MessageFactory& message_factory, uint32 remote_peer_id,
+			    std::vector< std::unique_ptr< ReplicationMessage > >& replication_messages );
 
-			void ClearReplicationMessages();
+			void ClearReplicationMessages( MessageFactory& message_factory );
 
-			void RemoveNetworkEntitiesControllerByPeer( uint32 id );
+			void RemoveNetworkEntitiesControllerByPeer( MessageFactory& message_factory, uint32 id );
 
 			template < typename Functor >
 			uint32 SubscribeToOnNetworkEntityCreate( Functor&& functor );
@@ -41,15 +44,18 @@ namespace NetLib
 			void SpawnNewNetworkEntity( uint32 replicated_class_id, uint32 network_entity_id,
 			                            uint32 controlled_by_peer_id, float32 pos_x, float32 pos_y );
 
-			std::unique_ptr< ReplicationMessage > CreateCreateReplicationMessage( uint32 entityType,
+			std::unique_ptr< ReplicationMessage > CreateCreateReplicationMessage( MessageFactory& message_factory,
+			                                                                      uint32 entityType,
 			                                                                      uint32 controlledByPeerId,
 			                                                                      uint32 networkEntityId,
 			                                                                      const Buffer& dataBuffer );
-			std::unique_ptr< ReplicationMessage > CreateUpdateReplicationMessage( uint32 entityType,
+			std::unique_ptr< ReplicationMessage > CreateUpdateReplicationMessage( MessageFactory& message_factory,
+			                                                                      uint32 entityType,
 			                                                                      uint32 networkEntityId,
 			                                                                      uint32 controlledByPeerId,
 			                                                                      const Buffer& buffer );
-			std::unique_ptr< ReplicationMessage > CreateDestroyReplicationMessage( uint32 networkEntityId );
+			std::unique_ptr< ReplicationMessage > CreateDestroyReplicationMessage( MessageFactory& message_factory,
+			                                                                       uint32 networkEntityId );
 
 			void CalculateNextNetworkEntityId();
 

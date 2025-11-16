@@ -6,6 +6,7 @@
 namespace NetLib
 {
 	class RemotePeer;
+	class MessageFactory;
 	class TimeResponseMessage;
 
 	// This will discard the X biggest and smallest RTTs from the Adjusted RTT in order to get rid of possible outliers.
@@ -34,7 +35,7 @@ namespace NetLib
 			/// <p>Notes: A time request can happen in two cases: 1) If the initial burst is active and 2) If the time
 			/// since the last time request is greater than the request frequency.</p>
 			/// </summary>
-			void Update( float32 elapsed_time, RemotePeer& remote_peer );
+			void Update( float32 elapsed_time, RemotePeer& remote_peer, MessageFactory& message_factory );
 			void ProcessTimeResponse( const TimeResponseMessage& message );
 
 		private:

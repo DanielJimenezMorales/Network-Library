@@ -121,7 +121,7 @@ namespace NetLib
 		_currentState = RemotePeerState::Connecting;
 	}
 
-	void RemotePeer::Tick( float32 elapsedTime )
+	void RemotePeer::Tick( float32 elapsedTime, MessageFactory& message_factory )
 	{
 		_inactivityTimeLeft -= elapsedTime;
 
@@ -140,7 +140,7 @@ namespace NetLib
 		if ( _metricsEnabled )
 		{
 			_metricsHandler.Update( elapsedTime );
-			_pingPongMessagesSender.Update( elapsedTime, *this );
+			_pingPongMessagesSender.Update( elapsedTime, *this, message_factory );
 		}
 	}
 
@@ -212,7 +212,6 @@ namespace NetLib
 		ProcessACKs( acks, lastAckedMessageSequenceNumber, channelType );
 
 		// Process packet messages one by one
-		MessageFactory& messageFactory = MessageFactory::GetInstance();
 		while ( packet.GetNumberOfMessages() > 0 )
 		{
 			std::unique_ptr< Message > message = packet.TryGetNextMessage();

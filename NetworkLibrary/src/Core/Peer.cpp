@@ -240,8 +240,7 @@ namespace NetLib
 		NetworkPacket packet;
 		packet.SetHeaderChannelType( TransmissionChannelType::UnreliableUnordered );
 
-		MessageFactory& messageFactory = MessageFactory::GetInstance();
-		std::unique_ptr< Message > message = messageFactory.LendMessage( MessageType::Disconnection );
+		std::unique_ptr< Message > message = _messageFactory.LendMessage( MessageType::Disconnection );
 
 		std::unique_ptr< DisconnectionMessage > disconenctionMessage(
 		    static_cast< DisconnectionMessage* >( message.release() ) );
@@ -366,7 +365,7 @@ namespace NetLib
 		for ( ; validRemotePeersIt != pastTheEndIt; ++validRemotePeersIt )
 		{
 			RemotePeer& remotePeer = **validRemotePeersIt;
-			remotePeer.Tick( elapsedTime );
+			remotePeer.Tick( elapsedTime, _messageFactory );
 
 			// Start the disconnection process for those ones who are inactive
 			if ( remotePeer.IsInactive() )

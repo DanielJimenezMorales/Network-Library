@@ -19,6 +19,7 @@ namespace NetLib
 	class Message;
 	struct MessageHeader;
 	class Socket;
+	class MessageFactory;
 
 	enum RemotePeerState : uint8
 	{
@@ -80,7 +81,7 @@ namespace NetLib
 
 			void SetConnected() { _currentState = RemotePeerState::Connected; }
 
-			void Tick( float32 elapsedTime );
+			void Tick( float32 elapsedTime, MessageFactory& message_factory );
 
 			void SendData( Socket& socket );
 
@@ -94,7 +95,7 @@ namespace NetLib
 			uint64 GetServerSalt() const { return _serverSalt; }
 			RemotePeerState GeturrentState() const { return _currentState; }
 
-			const TransmissionChannel* GetTransmissionChannelFromType(TransmissionChannelType channelType) const;
+			const TransmissionChannel* GetTransmissionChannelFromType( TransmissionChannelType channelType ) const;
 
 			void SetServerSalt( uint64 newValue ) { _serverSalt = newValue; }
 

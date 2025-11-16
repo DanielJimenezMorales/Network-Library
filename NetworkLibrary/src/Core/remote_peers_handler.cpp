@@ -21,13 +21,13 @@ namespace NetLib
 		}
 	}
 
-	void RemotePeersHandler::TickRemotePeers( float32 elapsedTime )
+	void RemotePeersHandler::TickRemotePeers( float32 elapsedTime, MessageFactory& message_factory )
 	{
 		for ( uint32 i = 0; i < _maxConnections; ++i )
 		{
 			if ( _remotePeerSlots[ i ] )
 			{
-				_remotePeers[ i ].Tick( elapsedTime );
+				_remotePeers[ i ].Tick( elapsedTime, message_factory );
 
 				// Start the disconnection process for those ones who are inactive
 				if ( _remotePeers[ i ].IsInactive() )

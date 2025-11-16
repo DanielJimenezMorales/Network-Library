@@ -10,6 +10,7 @@
 namespace NetLib
 {
 	class Address;
+	class MessageFactory;
 
 	enum RemotePeersHandlerResult : uint8
 	{
@@ -28,7 +29,7 @@ namespace NetLib
 		public:
 			RemotePeersHandler( uint32 maxConnections );
 
-			void TickRemotePeers( float32 elapsedTime );
+			void TickRemotePeers( float32 elapsedTime, MessageFactory& message_factory );
 
 			bool AddRemotePeer( const Address& addressInfo, uint16 id, uint64 clientSalt, uint64 serverSalt );
 			int32 FindFreeRemotePeerSlot() const;
