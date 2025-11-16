@@ -2,6 +2,7 @@
 
 #include <cassert>
 
+#include "communication/message.h"
 #include "communication/message_factory.h"
 
 namespace NetLib
@@ -37,6 +38,40 @@ namespace NetLib
 		_readyToProcessMessages = std::move( other._readyToProcessMessages );
 		_processedMessages = std::move( other._processedMessages );
 		return *this;
+	}
+
+	bool TransmissionChannel::AddMessageToSend( std::unique_ptr< Message > message )
+	{
+		assert( message != nullptr );
+
+		if ( !IsMessageSuitable( message->GetHeader() ) )
+		{
+			return false;
+		}
+
+		_unsentMessages.push_back( std::move( message ) );
+		return true;
+	}
+
+	bool TransmissionChannel::ArePendingReadyToProcessMessages() const
+	{
+		return !_readyToProcessMessages.empty();
+	}
+
+	const Message* TransmissionChannel::GetReadyToProcessMessage()
+	{
+		if ( !ArePendingReadyToProcessMessages() )
+		{
+			return nullptr;
+		}
+
+		std::unique_ptr< Message > message( std::move( _readyToProcessMessages.front() ) );
+		_readyToProcessMessages.pop();
+
+		Message* messageToReturn = message.get();
+		_processedMessages.push( std::move( message ) );
+
+		return messageToReturn;
 	}
 
 	void TransmissionChannel::FreeProcessedMessages()

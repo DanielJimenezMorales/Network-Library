@@ -96,18 +96,7 @@ namespace NetLib
 		return result;
 	}
 
-	bool UnreliableUnorderedTransmissionChannel::AddMessageToSend( std::unique_ptr< Message > message )
-	{
-		assert( message != nullptr );
 
-		if ( !IsMessageSuitable( message->GetHeader() ) )
-		{
-			return false;
-		}
-
-		_unsentMessages.push_back( std::move( message ) );
-		return true;
-	}
 
 	bool UnreliableUnorderedTransmissionChannel::ArePendingMessagesToSend() const
 	{
@@ -156,26 +145,7 @@ namespace NetLib
 		return true;
 	}
 
-	bool UnreliableUnorderedTransmissionChannel::ArePendingReadyToProcessMessages() const
-	{
-		return ( !_readyToProcessMessages.empty() );
-	}
 
-	const Message* UnreliableUnorderedTransmissionChannel::GetReadyToProcessMessage()
-	{
-		if ( !ArePendingReadyToProcessMessages() )
-		{
-			return nullptr;
-		}
-
-		std::unique_ptr< Message > message( std::move( _readyToProcessMessages.front() ) );
-		_readyToProcessMessages.pop();
-
-		Message* messageToReturn = message.get();
-		_processedMessages.push( std::move( message ) );
-
-		return messageToReturn;
-	}
 
 	void UnreliableUnorderedTransmissionChannel::ProcessACKs( uint32 acks, uint16 lastAckedMessageSequenceNumber,
 	                                                          Metrics::MetricsHandler* metrics_handler )

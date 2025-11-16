@@ -39,14 +39,11 @@ namespace NetLib
 			bool CreateAndSendPacket( Socket& socket, const Address& address,
 			                          Metrics::MetricsHandler* metrics_handler ) override;
 
-			bool AddMessageToSend( std::unique_ptr< Message > message ) override;
 			bool ArePendingMessagesToSend() const override;
 			std::unique_ptr< Message > GetMessageToSend( Metrics::MetricsHandler* metrics_handler );
 
 			bool AddReceivedMessage( std::unique_ptr< Message > message,
 			                         Metrics::MetricsHandler* metrics_handler ) override;
-			bool ArePendingReadyToProcessMessages() const override;
-			const Message* GetReadyToProcessMessage() override;
 
 			void ProcessACKs( uint32 acks, uint16 lastAckedMessageSequenceNumber,
 			                  Metrics::MetricsHandler* metrics_handler ) override;
@@ -79,7 +76,7 @@ namespace NetLib
 			/// </summary>
 			/// <param name="header">The header of the message to check.</param>
 			/// <returns>True if it is suitable, False otherwise.</returns>
-			bool IsMessageSuitable( const MessageHeader& header ) const;
+			bool IsMessageSuitable( const MessageHeader& header ) const override;
 
 			//////////
 			// ACKS
