@@ -65,6 +65,14 @@ namespace NetLib
 		_index += 4;
 	}
 
+	void Buffer::WriteData( const uint8* data, uint32 size )
+	{
+		assert( data != nullptr );
+		assert( _index + size <= _size );
+		std::memcpy( _data + _index, data, size );
+		_index += size;
+	}
+
 	uint64 Buffer::ReadLong()
 	{
 		assert( _index + 8 <= _size );
@@ -118,6 +126,15 @@ namespace NetLib
 
 		_index += 4;
 		return value;
+	}
+
+	void Buffer::ReadData( uint8* data, uint32 size )
+	{
+		assert( data != nullptr );
+		assert( _index + size <= _size );
+
+		std::memcpy( data, _data + _index, size );
+		_index += size;
 	}
 
 	void Buffer::ResetAccessIndex()

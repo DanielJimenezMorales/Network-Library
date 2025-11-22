@@ -23,12 +23,14 @@ namespace NetLib
 			void WriteShort( uint16 value );
 			void WriteByte( uint8 value );
 			void WriteFloat( float32 value );
+			void WriteData( const uint8* data, uint32 size );
 
 			uint64 ReadLong();
 			uint32 ReadInteger();
 			uint16 ReadShort();
 			uint8 ReadByte();
 			float32 ReadFloat();
+			void ReadData( uint8* data, uint32 size );
 
 			void ResetAccessIndex();
 

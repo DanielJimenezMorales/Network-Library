@@ -173,11 +173,7 @@ namespace NetLib
 		buffer.WriteInteger( controlledByPeerId );
 		buffer.WriteInteger( replicatedClassId );
 		buffer.WriteShort( dataSize );
-		// TODO Create method called WriteData(data, size) in order to avoid this for loop
-		for ( uint16 i = 0; i < dataSize; ++i )
-		{
-			buffer.WriteByte( data[ i ] );
-		}
+		buffer.WriteData( data, dataSize );
 	}
 
 	void ReplicationMessage::Read( Buffer& buffer )
@@ -194,12 +190,7 @@ namespace NetLib
 		{
 			data = new uint8[ dataSize ];
 		}
-
-		// TODO Create method called ReadData(uint8& data, size) in order to avoid this for loop
-		for ( uint16 i = 0; i < dataSize; ++i )
-		{
-			data[ i ] = buffer.ReadByte();
-		}
+		buffer.ReadData( data, dataSize );
 	}
 
 	uint32 ReplicationMessage::Size() const
@@ -231,11 +222,7 @@ namespace NetLib
 		_header.Write( buffer );
 
 		buffer.WriteShort( dataSize );
-		// TODO Create method called WriteData(data, size) in order to avoid this for loop
-		for ( uint32 i = 0; i < dataSize; ++i )
-		{
-			buffer.WriteByte( data[ i ] );
-		}
+		buffer.WriteData( data, dataSize );
 	}
 
 	void InputStateMessage::Read( Buffer& buffer )
@@ -248,12 +235,7 @@ namespace NetLib
 		{
 			data = new uint8[ dataSize ];
 		}
-
-		// TODO Create method called ReadData(uint8& data, size) in order to avoid this for loop
-		for ( uint16 i = 0; i < dataSize; ++i )
-		{
-			data[ i ] = buffer.ReadByte();
-		}
+		buffer.ReadData( data, dataSize );
 	}
 
 	uint32 InputStateMessage::Size() const
