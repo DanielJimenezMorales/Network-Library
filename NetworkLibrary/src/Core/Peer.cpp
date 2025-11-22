@@ -6,6 +6,7 @@
 #include "communication/network_packet.h"
 #include "communication/message.h"
 #include "communication/message_factory.h"
+#include "communication/network_packet_utils.h"
 
 #include "logger.h"
 
@@ -156,16 +157,18 @@ namespace NetLib
 	    , _address( Address::GetInvalid() )
 	    , _receiveBufferSize( receiveBufferSize )
 	    , _sendBufferSize( sendBufferSize )
-	    , _remotePeersHandler( maxConnections )
+	    , _remotePeersHandler()
 	    , _onLocalPeerConnect()
 	    , _onLocalPeerDisconnect()
 	    , _isStopRequested( false )
 	    , _stopRequestShouldNotifyRemotePeers( false )
 	    , _stopRequestReason( ConnectionFailedReasonType::CFR_UNKNOWN )
 	    , _currentTick( 0 )
+	    , _messageFactory( 3 )
 	{
 		_receiveBuffer = new uint8[ _receiveBufferSize ];
 		_sendBuffer = new uint8[ _sendBufferSize ];
+		_remotePeersHandler.Initialize( maxConnections, &_messageFactory );
 	}
 
 	void Peer::SendPacketToAddress( const NetworkPacket& packet, const Address& address ) const
@@ -238,8 +241,7 @@ namespace NetLib
 		NetworkPacket packet;
 		packet.SetHeaderChannelType( TransmissionChannelType::UnreliableUnordered );
 
-		MessageFactory& messageFactory = MessageFactory::GetInstance();
-		std::unique_ptr< Message > message = messageFactory.LendMessage( MessageType::Disconnection );
+		std::unique_ptr< Message > message = _messageFactory.LendMessage( MessageType::Disconnection );
 
 		std::unique_ptr< DisconnectionMessage > disconenctionMessage(
 		    static_cast< DisconnectionMessage* >( message.release() ) );
@@ -313,9 +315,10 @@ namespace NetLib
 
 	void Peer::ProcessDatagram( Buffer& buffer, const Address& address )
 	{
-		// Read incoming packet
+		// TODO Add validation for tampered or corrupted packets so it doesn't crash when a tampered message arrives.
+		//  Read incoming packet
 		NetworkPacket packet = NetworkPacket();
-		packet.Read( buffer );
+		packet.Read( _messageFactory, buffer );
 
 		RemotePeer* remotePeer = _remotePeersHandler.GetRemotePeerFromAddress( address );
 		bool isPacketFromRemotePeer = ( remotePeer != nullptr );
@@ -325,14 +328,13 @@ namespace NetLib
 		}
 		else
 		{
-			MessageFactory& messageFactory = MessageFactory::GetInstance();
-			while ( packet.GetNumberOfMessages() > 0 )
+			const std::vector< std::unique_ptr< Message > >& packetMessages = packet.GetAllMessages();
+			for ( auto cit = packetMessages.cbegin(); cit != packetMessages.cend(); ++cit )
 			{
-				std::unique_ptr< Message > message = packet.GetMessages();
-
-				ProcessMessageFromUnknownPeer( *message, address );
-				messageFactory.ReleaseMessage( std::move( message ) );
+				ProcessMessageFromUnknownPeer( **cit, address );
 			}
+
+			NetworkPacketUtils::CleanPacket( _messageFactory, packet );
 		}
 	}
 
@@ -364,7 +366,7 @@ namespace NetLib
 		for ( ; validRemotePeersIt != pastTheEndIt; ++validRemotePeersIt )
 		{
 			RemotePeer& remotePeer = **validRemotePeersIt;
-			remotePeer.Tick( elapsedTime );
+			remotePeer.Tick( elapsedTime, _messageFactory );
 
 			// Start the disconnection process for those ones who are inactive
 			if ( remotePeer.IsInactive() )

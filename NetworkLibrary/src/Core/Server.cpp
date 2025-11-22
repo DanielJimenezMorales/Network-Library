@@ -13,6 +13,7 @@
 #include "communication/message.h"
 #include "communication/message_factory.h"
 #include "communication/network_packet.h"
+#include "communication/network_packet_utils.h"
 
 #include "replication/replication_manager.h"
 
@@ -41,7 +42,7 @@ namespace NetLib
 			return false;
 		}
 
-		_replicationManager.CreateNetworkEntity( entityType, controlledByPeerId, posX, posY );
+		_replicationManager.CreateNetworkEntity( _messageFactory, entityType, controlledByPeerId, posX, posY );
 		return true;
 	}
 
@@ -54,7 +55,7 @@ namespace NetLib
 			return;
 		}
 
-		_replicationManager.RemoveNetworkEntity( entityId );
+		_replicationManager.RemoveNetworkEntity( _messageFactory, entityId );
 	}
 
 	void Server::RegisterInputStateFactory( IInputStateFactory* factory )
@@ -226,9 +227,7 @@ namespace NetLib
 
 	void Server::CreateDisconnectionMessage( RemotePeer& remotePeer )
 	{
-		MessageFactory& messageFactory = MessageFactory::GetInstance();
-
-		std::unique_ptr< Message > message = messageFactory.LendMessage( MessageType::Disconnection );
+		std::unique_ptr< Message > message = _messageFactory.LendMessage( MessageType::Disconnection );
 		if ( message == nullptr )
 		{
 			LOG_ERROR(
@@ -247,8 +246,7 @@ namespace NetLib
 
 	void Server::CreateTimeResponseMessage( RemotePeer& remotePeer, const TimeRequestMessage& timeRequest )
 	{
-		MessageFactory& messageFactory = MessageFactory::GetInstance();
-		std::unique_ptr< Message > message( messageFactory.LendMessage( MessageType::TimeResponse ) );
+		std::unique_ptr< Message > message( _messageFactory.LendMessage( MessageType::TimeResponse ) );
 
 		std::unique_ptr< TimeResponseMessage > timeResponseMessage(
 		    static_cast< TimeResponseMessage* >( message.release() ) );
@@ -264,9 +262,7 @@ namespace NetLib
 
 	void Server::CreateConnectionChallengeMessage( RemotePeer& remotePeer )
 	{
-		MessageFactory& messageFactory = MessageFactory::GetInstance();
-
-		std::unique_ptr< Message > message = messageFactory.LendMessage( MessageType::ConnectionChallenge );
+		std::unique_ptr< Message > message = _messageFactory.LendMessage( MessageType::ConnectionChallenge );
 		if ( message == nullptr )
 		{
 			LOG_ERROR( "Can't create new Connection Challenge Message because the MessageFactory has returned a null "
@@ -283,11 +279,9 @@ namespace NetLib
 		LOG_INFO( "Connection challenge message created." );
 	}
 
-	void Server::SendConnectionDeniedPacket( const Address& address, ConnectionFailedReasonType reason ) const
+	void Server::SendConnectionDeniedPacket( const Address& address, ConnectionFailedReasonType reason )
 	{
-		MessageFactory& messageFactory = MessageFactory::GetInstance();
-
-		std::unique_ptr< Message > message = messageFactory.LendMessage( MessageType::ConnectionDenied );
+		std::unique_ptr< Message > message = _messageFactory.LendMessage( MessageType::ConnectionDenied );
 		std::unique_ptr< ConnectionDeniedMessage > connectionDeniedMessage(
 		    static_cast< ConnectionDeniedMessage* >( message.release() ) );
 		connectionDeniedMessage->reason = reason;
@@ -298,11 +292,7 @@ namespace NetLib
 		LOG_INFO( "Sending connection denied..." );
 		SendPacketToAddress( packet, address );
 
-		while ( packet.GetNumberOfMessages() > 0 )
-		{
-			std::unique_ptr< Message > messageToReturn = packet.GetMessages();
-			messageFactory.ReleaseMessage( std::move( messageToReturn ) );
-		}
+		NetworkPacketUtils::CleanPacket( _messageFactory, packet );
 	}
 
 	void Server::ProcessConnectionChallengeResponse( const ConnectionChallengeResponseMessage& message,
@@ -383,8 +373,7 @@ namespace NetLib
 
 	void Server::CreateConnectionApprovedMessage( RemotePeer& remotePeer )
 	{
-		MessageFactory& messageFactory = MessageFactory::GetInstance();
-		std::unique_ptr< Message > message = messageFactory.LendMessage( MessageType::ConnectionAccepted );
+		std::unique_ptr< Message > message = _messageFactory.LendMessage( MessageType::ConnectionAccepted );
 		if ( message == nullptr )
 		{
 			LOG_ERROR(
@@ -412,7 +401,7 @@ namespace NetLib
 		for ( ; validRemotePeersIt != pastTheEndIt; ++validRemotePeersIt )
 		{
 			std::vector< std::unique_ptr< ReplicationMessage > > replication_messages;
-			_replicationManager.Server_ReplicateWorldState( ( *validRemotePeersIt )->GetClientIndex(),
+			_replicationManager.Server_ReplicateWorldState( _messageFactory, ( *validRemotePeersIt )->GetClientIndex(),
 			                                                replication_messages );
 
 			auto it = replication_messages.begin();
@@ -422,12 +411,12 @@ namespace NetLib
 			}
 		}
 
-		_replicationManager.ClearReplicationMessages();
+		_replicationManager.ClearReplicationMessages( _messageFactory );
 	}
 
 	void Server::RemoveReplicationEntitiesControlledByPeer( uint32 id )
 	{
-		_replicationManager.RemoveNetworkEntitiesControllerByPeer( id );
+		_replicationManager.RemoveNetworkEntitiesControllerByPeer( _messageFactory, id );
 	}
 
 	bool Server::StopConcrete()

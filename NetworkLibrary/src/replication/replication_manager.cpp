@@ -40,14 +40,12 @@ namespace NetLib
 		_onNetworkEntityCreate( network_entity_create_config );
 	}
 
-	std::unique_ptr< ReplicationMessage > ReplicationManager::CreateCreateReplicationMessage( uint32 entityType,
-	                                                                                          uint32 controlledByPeerId,
-	                                                                                          uint32 networkEntityId,
-	                                                                                          const Buffer& dataBuffer )
+	std::unique_ptr< ReplicationMessage > ReplicationManager::CreateCreateReplicationMessage(
+	    MessageFactory& message_factory, uint32 entityType, uint32 controlledByPeerId, uint32 networkEntityId,
+	    const Buffer& dataBuffer )
 	{
 		// Get message from message factory
-		MessageFactory& messageFactory = MessageFactory::GetInstance();
-		std::unique_ptr< Message > message = messageFactory.LendMessage( MessageType::Replication );
+		std::unique_ptr< Message > message = message_factory.LendMessage( MessageType::Replication );
 
 		// Set reliability and order
 		message->SetOrdered( true );
@@ -67,14 +65,12 @@ namespace NetLib
 	}
 
 	// TODO Do we need the entity_type here too in case we need to create the entity from the update?
-	std::unique_ptr< ReplicationMessage > ReplicationManager::CreateUpdateReplicationMessage( uint32 entityType,
-	                                                                                          uint32 networkEntityId,
-	                                                                                          uint32 controlledByPeerId,
-	                                                                                          const Buffer& buffer )
+	std::unique_ptr< ReplicationMessage > ReplicationManager::CreateUpdateReplicationMessage(
+	    MessageFactory& message_factory, uint32 entityType, uint32 networkEntityId, uint32 controlledByPeerId,
+	    const Buffer& buffer )
 	{
 		// Get message from message factory
-		MessageFactory& messageFactory = MessageFactory::GetInstance();
-		std::unique_ptr< Message > message = messageFactory.LendMessage( MessageType::Replication );
+		std::unique_ptr< Message > message = message_factory.LendMessage( MessageType::Replication );
 
 		// Set reliability and order
 		message->SetOrdered( true );
@@ -95,11 +91,11 @@ namespace NetLib
 		return std::move( replicationMessage );
 	}
 
-	std::unique_ptr< ReplicationMessage > ReplicationManager::CreateDestroyReplicationMessage( uint32 networkEntityId )
+	std::unique_ptr< ReplicationMessage > ReplicationManager::CreateDestroyReplicationMessage(
+	    MessageFactory& message_factory, uint32 networkEntityId )
 	{
 		// Get message from message factory
-		MessageFactory& messageFactory = MessageFactory::GetInstance();
-		std::unique_ptr< Message > message = messageFactory.LendMessage( MessageType::Replication );
+		std::unique_ptr< Message > message = message_factory.LendMessage( MessageType::Replication );
 
 		// Set reliability and order
 		message->SetOrdered( true );
@@ -115,8 +111,8 @@ namespace NetLib
 		return std::move( replicationMessage );
 	}
 
-	void ReplicationManager::CreateNetworkEntity( uint32 entityType, uint32 controlledByPeerId, float32 posX,
-	                                              float32 posY )
+	void ReplicationManager::CreateNetworkEntity( MessageFactory& message_factory, uint32 entityType,
+	                                              uint32 controlledByPeerId, float32 posX, float32 posY )
 	{
 		SpawnNewNetworkEntity( entityType, _nextNetworkEntityId, controlledByPeerId, posX, posY );
 
@@ -125,8 +121,8 @@ namespace NetLib
 		Buffer buffer( data, 8 );
 		buffer.WriteFloat( posX );
 		buffer.WriteFloat( posY );
-		std::unique_ptr< ReplicationMessage > createMessage =
-		    CreateCreateReplicationMessage( entityType, controlledByPeerId, _nextNetworkEntityId, buffer );
+		std::unique_ptr< ReplicationMessage > createMessage = CreateCreateReplicationMessage(
+		    message_factory, entityType, controlledByPeerId, _nextNetworkEntityId, buffer );
 
 		// Store it into queue before broadcasting it
 		_createDestroyReplicationMessages.push_back( std::move( createMessage ) );
@@ -134,7 +130,7 @@ namespace NetLib
 		CalculateNextNetworkEntityId();
 	}
 
-	void ReplicationManager::RemoveNetworkEntity( uint32 networkEntityId )
+	void ReplicationManager::RemoveNetworkEntity( MessageFactory& message_factory, uint32 networkEntityId )
 	{
 		// Get game entity Id from network entity Id
 		const NetworkEntityData* networkEntity = _networkEntitiesStorage.TryGetNetworkEntityFromId( networkEntityId );
@@ -153,7 +149,8 @@ namespace NetLib
 			_networkEntitiesStorage.RemoveNetworkEntity( networkEntityId );
 
 			// Create destroy entity message for remote peers
-			std::unique_ptr< ReplicationMessage > destroyMessage = CreateDestroyReplicationMessage( networkEntityId );
+			std::unique_ptr< ReplicationMessage > destroyMessage =
+			    CreateDestroyReplicationMessage( message_factory, networkEntityId );
 
 			// Store it into queue before broadcasting it
 			_createDestroyReplicationMessages.push_back( std::move( destroyMessage ) );
@@ -161,15 +158,15 @@ namespace NetLib
 	}
 
 	void ReplicationManager::Server_ReplicateWorldState(
-	    uint32 remote_peer_id, std::vector< std::unique_ptr< ReplicationMessage > >& replication_messages )
+	    MessageFactory& message_factory, uint32 remote_peer_id,
+	    std::vector< std::unique_ptr< ReplicationMessage > >& replication_messages )
 	{
-		MessageFactory& messageFactory = MessageFactory::GetInstance();
 		auto cit = _createDestroyReplicationMessages.cbegin();
 		for ( ; cit != _createDestroyReplicationMessages.cend(); ++cit )
 		{
 			const ReplicationMessage* source_replication_message = cit->get();
 
-			std::unique_ptr< Message > message = messageFactory.LendMessage( MessageType::Replication );
+			std::unique_ptr< Message > message = message_factory.LendMessage( MessageType::Replication );
 			std::unique_ptr< ReplicationMessage > replicationMessage(
 			    static_cast< ReplicationMessage* >( message.release() ) );
 
@@ -214,7 +211,7 @@ namespace NetLib
 				networkEntityData.communicationCallbacks.OnSerializeEntityStateForNonOwner.Execute( buffer );
 			}
 
-			std::unique_ptr< ReplicationMessage > message = CreateUpdateReplicationMessage(
+			std::unique_ptr< ReplicationMessage > message = CreateUpdateReplicationMessage(message_factory,
 			    networkEntityData.entityType, networkEntityData.id, networkEntityData.controlledByPeerId, buffer );
 			replication_messages.push_back( std::move( message ) );
 
@@ -224,19 +221,17 @@ namespace NetLib
 		delete[] data;
 	}
 
-	void ReplicationManager::ClearReplicationMessages()
+	void ReplicationManager::ClearReplicationMessages( MessageFactory& message_factory )
 	{
-		MessageFactory& messageFactory = MessageFactory::GetInstance();
-
 		auto it = _createDestroyReplicationMessages.begin();
 		for ( ; it != _createDestroyReplicationMessages.end(); ++it )
 		{
-			messageFactory.ReleaseMessage( std::move( *it ) );
+			message_factory.ReleaseMessage( std::move( *it ) );
 		}
 		_createDestroyReplicationMessages.clear();
 	}
 
-	void ReplicationManager::RemoveNetworkEntitiesControllerByPeer( uint32 id )
+	void ReplicationManager::RemoveNetworkEntitiesControllerByPeer(MessageFactory& message_factory,uint32 id )
 	{
 		std::vector< uint32 > network_entity_ids_to_remove;
 		const std::unordered_map< uint32, NetworkEntityData >& network_entities =
@@ -255,7 +250,7 @@ namespace NetLib
 		auto ids_to_remove_cit = network_entity_ids_to_remove.cbegin();
 		for ( ; ids_to_remove_cit != network_entity_ids_to_remove.cend(); ++ids_to_remove_cit )
 		{
-			RemoveNetworkEntity( *ids_to_remove_cit );
+			RemoveNetworkEntity(message_factory ,*ids_to_remove_cit );
 		}
 	}
 

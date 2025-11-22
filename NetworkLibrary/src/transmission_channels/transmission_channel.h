@@ -27,7 +27,7 @@ namespace NetLib
 	class TransmissionChannel
 	{
 		public:
-			TransmissionChannel( TransmissionChannelType type );
+			TransmissionChannel( TransmissionChannelType type, MessageFactory* message_factory );
 			TransmissionChannel( const TransmissionChannel& ) = delete;
 			TransmissionChannel( TransmissionChannel&& other ) noexcept;
 
@@ -90,6 +90,8 @@ namespace NetLib
 			// Collection of messages that have been processed and are waiting to be released (Used for memory
 			// management purposes)
 			std::queue< std::unique_ptr< Message > > _processedMessages;
+
+			MessageFactory* _messageFactory;
 
 			uint16 GetNextMessageSequenceNumber() const { return _nextMessageSequenceNumber; }
 			void IncreaseMessageSequenceNumber() { ++_nextMessageSequenceNumber; };

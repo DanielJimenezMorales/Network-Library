@@ -18,10 +18,9 @@ namespace NetLib
 	{
 	}
 
-	static std::unique_ptr< TimeRequestMessage > CreateTimeRequestMessage()
+	static std::unique_ptr< TimeRequestMessage > CreateTimeRequestMessage( MessageFactory& message_factory )
 	{
-		MessageFactory& messageFactory = MessageFactory::GetInstance();
-		std::unique_ptr< Message > lendMessage( messageFactory.LendMessage( MessageType::TimeRequest ) );
+		std::unique_ptr< Message > lendMessage( message_factory.LendMessage( MessageType::TimeRequest ) );
 
 		std::unique_ptr< TimeRequestMessage > timeRequestMessage(
 		    static_cast< TimeRequestMessage* >( lendMessage.release() ) );
@@ -34,7 +33,7 @@ namespace NetLib
 		return std::move( timeRequestMessage );
 	}
 
-	void TimeSyncer::Update( float32 elapsed_time, RemotePeer& remote_peer )
+	void TimeSyncer::Update( float32 elapsed_time, RemotePeer& remote_peer, MessageFactory& message_factory )
 	{
 		_timeSinceLastTimeRequest += elapsed_time;
 
@@ -45,7 +44,7 @@ namespace NetLib
 				--_numberOfInitialTimeRequestBurstLeft;
 			}
 
-			std::unique_ptr< TimeRequestMessage > timeRequestMessage = CreateTimeRequestMessage();
+			std::unique_ptr< TimeRequestMessage > timeRequestMessage = CreateTimeRequestMessage( message_factory );
 			remote_peer.AddMessage( std::move( timeRequestMessage ) );
 		}
 	}
@@ -67,7 +66,7 @@ namespace NetLib
 
 		// Get RTT to adjust server's clock elapsed time
 		uint32 meanRTT = 0;
-		if ( static_cast<uint32>(_timeRequestRTTs.size()) == TIME_REQUEST_RTT_BUFFER_SIZE )
+		if ( static_cast< uint32 >( _timeRequestRTTs.size() ) == TIME_REQUEST_RTT_BUFFER_SIZE )
 		{
 			// Sort RTTs and remove the smallest and biggest values (They are considered outliers!)
 			std::list< uint32 > sortedTimeRequestRTTs = _timeRequestRTTs;

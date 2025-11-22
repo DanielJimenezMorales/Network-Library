@@ -44,8 +44,7 @@ namespace NetLib
 			return;
 		}
 
-		MessageFactory& messageFactory = MessageFactory::GetInstance();
-		std::unique_ptr< Message > message = messageFactory.LendMessage( MessageType::Inputs );
+		std::unique_ptr< Message > message = _messageFactory.LendMessage( MessageType::Inputs );
 		message->SetOrdered( false );
 		message->SetReliability( false );
 		std::unique_ptr< InputStateMessage > inputsMessage( static_cast< InputStateMessage* >( message.release() ) );
@@ -198,7 +197,7 @@ namespace NetLib
 			}
 			else
 			{
-				_timeSyncer.Update( elapsedTime, *serverRemotePeer );
+				_timeSyncer.Update( elapsedTime, *serverRemotePeer, _messageFactory );
 			}
 		}
 	}
@@ -295,8 +294,7 @@ namespace NetLib
 	void Client::CreateConnectionRequestMessage( RemotePeer& remotePeer )
 	{
 		// Get a connection request message
-		MessageFactory& messageFactory = MessageFactory::GetInstance();
-		std::unique_ptr< Message > message = messageFactory.LendMessage( MessageType::ConnectionRequest );
+		std::unique_ptr< Message > message = _messageFactory.LendMessage( MessageType::ConnectionRequest );
 
 		if ( message == nullptr )
 		{
@@ -320,8 +318,7 @@ namespace NetLib
 	void Client::CreateConnectionChallengeResponse( RemotePeer& remotePeer )
 	{
 		// Get a connection challenge message
-		MessageFactory& messageFactory = MessageFactory::GetInstance();
-		std::unique_ptr< Message > message = messageFactory.LendMessage( MessageType::ConnectionChallengeResponse );
+		std::unique_ptr< Message > message = _messageFactory.LendMessage( MessageType::ConnectionChallengeResponse );
 		if ( message == nullptr )
 		{
 			LOG_ERROR( "Can't create new Connection Challenge Response Message because the MessageFactory has returned "

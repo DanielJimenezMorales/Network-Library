@@ -11,6 +11,8 @@
 #include "core/socket.h"
 #include "core/remote_peers_handler.h"
 
+#include "communication/message_factory.h"
+
 #include "transmission_channels/transmission_channel.h"
 
 class Buffer;
@@ -150,6 +152,7 @@ namespace NetLib
 			void ExecuteOnLocalPeerDisconnect( ConnectionFailedReasonType reason );
 
 			RemotePeersHandler _remotePeersHandler;
+			MessageFactory _messageFactory;
 
 		private:
 			void ProcessReceivedData();

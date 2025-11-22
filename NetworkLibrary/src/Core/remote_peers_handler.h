@@ -10,6 +10,7 @@
 namespace NetLib
 {
 	class Address;
+	class MessageFactory;
 
 	enum RemotePeersHandlerResult : uint8
 	{
@@ -26,9 +27,11 @@ namespace NetLib
 	class RemotePeersHandler
 	{
 		public:
-			RemotePeersHandler( uint32 maxConnections );
+			RemotePeersHandler();
 
-			void TickRemotePeers( float32 elapsedTime );
+			void Initialize( uint32 max_connections, MessageFactory* message_factory );
+
+			void TickRemotePeers( float32 elapsedTime, MessageFactory& message_factory );
 
 			bool AddRemotePeer( const Address& addressInfo, uint16 id, uint64 clientSalt, uint64 serverSalt );
 			int32 FindFreeRemotePeerSlot() const;
@@ -45,14 +48,13 @@ namespace NetLib
 			void RemoveAllRemotePeers();
 			bool RemoveRemotePeer( uint32 remotePeerId );
 
-			~RemotePeersHandler();
-
 		private:
 			int32 GetIndexFromId( uint32 id ) const;
 
-			const uint32 _maxConnections;
+			uint32 _maxConnections;
 			std::vector< bool > _remotePeerSlots;
 			std::vector< RemotePeer > _remotePeers;
 			std::unordered_set< RemotePeer* > _validRemotePeers;
+			bool _isInitialized;
 	};
 } // namespace NetLib

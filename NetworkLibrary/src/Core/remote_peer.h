@@ -19,6 +19,7 @@ namespace NetLib
 	class Message;
 	struct MessageHeader;
 	class Socket;
+	class MessageFactory;
 
 	enum RemotePeerState : uint8
 	{
@@ -48,14 +49,15 @@ namespace NetLib
 
 			PingPongMessagesSender _pingPongMessagesSender;
 
-			void InitTransmissionChannels();
+			void InitTransmissionChannels( MessageFactory* message_factory );
 			TransmissionChannel* GetTransmissionChannelFromType( TransmissionChannelType channelType );
 			TransmissionChannelType GetTransmissionChannelTypeFromHeader( const MessageHeader& messageHeader ) const;
 
 		public:
 			RemotePeer();
+			RemotePeer( MessageFactory* message_factory );
 			RemotePeer( const Address& address, uint16 id, float32 maxInactivityTime, uint64 clientSalt,
-			            uint64 serverSalt );
+			            uint64 serverSalt, MessageFactory* message_factory );
 			RemotePeer( const RemotePeer& ) = delete;
 			RemotePeer( RemotePeer&& other ) = default; // This must be here since Peer.h has a std::vector<RemotePeer>
 			                                            // and vector<T> requires T to be MoveAssignable
@@ -80,7 +82,7 @@ namespace NetLib
 
 			void SetConnected() { _currentState = RemotePeerState::Connected; }
 
-			void Tick( float32 elapsedTime );
+			void Tick( float32 elapsedTime, MessageFactory& message_factory );
 
 			void SendData( Socket& socket );
 
@@ -94,7 +96,7 @@ namespace NetLib
 			uint64 GetServerSalt() const { return _serverSalt; }
 			RemotePeerState GeturrentState() const { return _currentState; }
 
-			const TransmissionChannel* GetTransmissionChannelFromType(TransmissionChannelType channelType) const;
+			const TransmissionChannel* GetTransmissionChannelFromType( TransmissionChannelType channelType ) const;
 
 			void SetServerSalt( uint64 newValue ) { _serverSalt = newValue; }
 

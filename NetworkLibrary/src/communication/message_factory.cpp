@@ -1,28 +1,10 @@
 #include "message_factory.h"
 
-#include <cassert>
-
+#include "asserts.h"
 #include "logger.h"
 
 namespace NetLib
 {
-	MessageFactory* MessageFactory::_instance = nullptr;
-
-	void MessageFactory::CreateInstance( uint32 size )
-	{
-		if ( _instance != nullptr )
-		{
-			return;
-		}
-
-		_instance = new MessageFactory( size );
-	}
-
-	MessageFactory& MessageFactory::GetInstance()
-	{
-		return *_instance;
-	}
-
 	MessageFactory::MessageFactory( uint32 size )
 	{
 		_initialSize = size;
@@ -32,7 +14,7 @@ namespace NetLib
 
 	std::unique_ptr< Message > MessageFactory::LendMessage( MessageType messageType )
 	{
-		assert( _isInitialized == true );
+		ASSERT( _isInitialized, "MessageFactory is not initialized." );
 
 		std::unique_ptr< Message > message = nullptr;
 
@@ -56,16 +38,13 @@ namespace NetLib
 			message = CreateMessage( messageType );
 		}
 
-		assert( message != nullptr );
-		assert( message->GetHeader().type == messageType );
-
 		return std::move( message );
 	}
 
 	void MessageFactory::ReleaseMessage( std::unique_ptr< Message > message )
 	{
-		assert( _isInitialized == true );
-		assert( message != nullptr );
+		ASSERT( _isInitialized, "MessageFactory is not initialized." );
+		ASSERT( message != nullptr, "Can't release a nullptr message" );
 
 		message->Reset();
 
@@ -75,17 +54,6 @@ namespace NetLib
 		{
 			pool->push( std::move( message ) );
 		}
-	}
-
-	void MessageFactory::DeleteInstance()
-	{
-		if ( _instance == nullptr )
-		{
-			return;
-		}
-
-		delete _instance;
-		_instance = nullptr;
 	}
 
 	MessageFactory::~MessageFactory()
@@ -142,9 +110,6 @@ namespace NetLib
 		for ( uint32 i = 0; i < _initialSize; ++i )
 		{
 			std::unique_ptr< Message > message = CreateMessage( messageType );
-			assert( message != nullptr );
-			assert( message->GetHeader().type == messageType );
-
 			pool.push( std::move( message ) );
 		}
 	}
@@ -207,6 +172,8 @@ namespace NetLib
 				break;
 		}
 
+		ASSERT( resultMessage != nullptr, "Message not created properly." );
+		ASSERT( resultMessage->GetHeader().type == messageType, "Incorrect message header." );
 		return std::move( resultMessage );
 	}
 

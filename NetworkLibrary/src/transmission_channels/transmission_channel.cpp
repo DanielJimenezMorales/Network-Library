@@ -1,20 +1,23 @@
 #include "transmission_channel.h"
 
-#include <cassert>
+#include "asserts.h"
 
 #include "communication/message_factory.h"
 
 namespace NetLib
 {
-	TransmissionChannel::TransmissionChannel( TransmissionChannelType type )
+	TransmissionChannel::TransmissionChannel( TransmissionChannelType type, MessageFactory* message_factory )
 	    : _type( type )
+	    , _messageFactory( message_factory )
 	    , _nextMessageSequenceNumber( 1 )
 	{
+		ASSERT( _messageFactory != nullptr, "The Message Factory is nullptr" );
 		_unsentMessages.reserve( 5 );
 	}
 
 	TransmissionChannel::TransmissionChannel( TransmissionChannel&& other ) noexcept
 	    : _type( std::move( other._type ) )
+	    , _messageFactory( std::exchange( other._messageFactory, nullptr ) )
 	    , // unnecessary move, just in case I change that type
 	    _nextMessageSequenceNumber( std::move( other._nextMessageSequenceNumber ) )
 	    , // unnecessary move, just in case I change that type
@@ -31,6 +34,7 @@ namespace NetLib
 
 		// Move data from other to this
 		_type = std::move( other._type ); // unnecessary move, just in case I change that type
+		_messageFactory = std::exchange( other._messageFactory, nullptr );
 		_nextMessageSequenceNumber =
 		    std::move( other._nextMessageSequenceNumber ); // unnecessary move, just in case I change that type
 		_unsentMessages = std::move( other._unsentMessages );
@@ -41,14 +45,12 @@ namespace NetLib
 
 	void TransmissionChannel::FreeProcessedMessages()
 	{
-		MessageFactory& messageFactory = MessageFactory::GetInstance();
-
 		while ( !_processedMessages.empty() )
 		{
 			std::unique_ptr< Message > message( std::move( _processedMessages.front() ) );
 			_processedMessages.pop();
 
-			messageFactory.ReleaseMessage( std::move( message ) );
+			_messageFactory->ReleaseMessage( std::move( message ) );
 		}
 	}
 
@@ -65,14 +67,14 @@ namespace NetLib
 
 	void TransmissionChannel::ClearMessages()
 	{
-		MessageFactory& messageFactory = MessageFactory::GetInstance();
+		ASSERT( _messageFactory != nullptr, "The Message Factory is nullptr" );
 
 		while ( !_readyToProcessMessages.empty() )
 		{
 			std::unique_ptr< Message > message( std::move( _readyToProcessMessages.front() ) );
 			_readyToProcessMessages.pop();
 
-			messageFactory.ReleaseMessage( std::move( message ) );
+			_messageFactory->ReleaseMessage( std::move( message ) );
 		}
 
 		while ( !_processedMessages.empty() )
@@ -80,14 +82,14 @@ namespace NetLib
 			std::unique_ptr< Message > message( std::move( _processedMessages.front() ) );
 			_processedMessages.pop();
 
-			messageFactory.ReleaseMessage( std::move( message ) );
+			_messageFactory->ReleaseMessage( std::move( message ) );
 		}
 
 		for ( std::vector< std::unique_ptr< Message > >::iterator it = _unsentMessages.begin();
 		      it != _unsentMessages.end(); ++it )
 		{
 			std::unique_ptr< Message > message( std::move( *it ) );
-			messageFactory.ReleaseMessage( std::move( message ) );
+			_messageFactory->ReleaseMessage( std::move( message ) );
 			*it = nullptr;
 		}
 

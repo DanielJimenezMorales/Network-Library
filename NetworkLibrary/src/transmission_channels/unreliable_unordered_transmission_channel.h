@@ -12,7 +12,7 @@ namespace NetLib
 	class UnreliableUnorderedTransmissionChannel : public TransmissionChannel
 	{
 		public:
-			UnreliableUnorderedTransmissionChannel();
+			UnreliableUnorderedTransmissionChannel( MessageFactory* message_factory );
 			UnreliableUnorderedTransmissionChannel( const UnreliableUnorderedTransmissionChannel& ) = delete;
 			UnreliableUnorderedTransmissionChannel( UnreliableUnorderedTransmissionChannel&& other ) noexcept;
 
