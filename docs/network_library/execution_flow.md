@@ -14,7 +14,7 @@ This ensures predictable behavior, easier debugging, and a clearer architecture.
 Initialize the peer and all required internal systems in preparation for the network loop.  
 This phase is executed **once**, before the first tick.
 
-The start phase contains the following subphases:
+The start phase contains the following **subphases**:
 1. [Set connection state to `Connecting`](#1.-Set-connection-state-to-Connecting)
 2. [Start socket](#2.-Start-socket)
 3. [Start peer-type specific logic](#3.-Start-peer-type-specific-logic)
@@ -53,10 +53,11 @@ Initialize simulation tick counter to `1`.
 
 ## PreTick Phase
 Receive network data, validate it, build packets, and place messages into transmission channels and process them.
+
 This phase **does NOT**:
 - Send any data.
 
-The pre-tick phase contains the following subphases:
+The pre-tick phase contains the following **subphases**:
 1. [Read received data](#1.-Read-received-data)
 2. [Process received data](#2.-Process-received-data)
 
@@ -85,10 +86,11 @@ Description of the **procedure**:
 
 ## Tick Phase
 Advance internal systems, update peer state, build outgoing data, send packets, and handle disconnections.
+
 This phase **does NOT**:
 - Read incoming socket data
 
-The tick phase contains the following subphases:
+The tick phase contains the following **subphases**:
 1. [Update remote peers](#1.-Update-remote-peers)
 2. [Update peer-type specific logic](#2.-Update-peer-type-specific-logic)
 3. [Finish disconnecting remote peers](#3.-Finish-disconnecting-remote-peers)
@@ -147,7 +149,7 @@ If a stop has been requested during this tick, transition the system toward the 
 ## Stop Phase
 Shut down the peer and release all network resources.
 
-The stop phase contains the following subphases:
+The stop phase contains the following **subphases**:
 1. [Stop peer-type specific logic](#1.-Stop-peer-type-specific-logic)
 2. [Disconnect remote peers](#2.-Disconnect-remote-peers)
 3. [Close socket](#3.-Close-socket)
