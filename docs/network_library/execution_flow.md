@@ -186,7 +186,7 @@ Mark the peer as fully disconnected by setting the connection state to `Disconne
 ## Sum up
 | Phase name | What it does | What it does NOT | When it is called |
 |------------|---------|------------------|-------------------|
-| Start|Initialize socket and systems|Read data, Send data|Once before PreTick|
-| PreTick|Read data, Process data|Send data|Once in a fixed update loop|
-| Tick|Update logic, Send data|Read data|Once in a fixed update loop|
-| Stop|Cleanup socket and systems|Read data|Once after Tick|
+| Start|Initialize socket and systems|Read data, Send data|Once|
+| PreTick|Read data, Process data|Send data|Each fixed tick|
+| Tick|Update logic, Send data|Read data|Each fixed tick|
+| Stop|Cleanup socket and systems|Read data|Once|
