@@ -27,7 +27,7 @@ namespace NetLib
 			}
 
 			void Write( Buffer& buffer ) const;
-			void Read( Buffer& buffer );
+			bool Read( Buffer& buffer );
 
 			static uint32 Size() { return sizeof( uint16 ) + sizeof( uint32 ) + sizeof( uint8 ); };
 
@@ -38,6 +38,8 @@ namespace NetLib
 			uint16 lastAckedSequenceNumber;
 			uint32 ackBits;
 			uint8 channelType;
+
+			static constexpr uint32 SIZE = sizeof( uint16 ) + sizeof( uint32 ) + sizeof( uint8 );
 	};
 
 	class NetworkPacket
@@ -54,11 +56,12 @@ namespace NetLib
 			NetworkPacket& operator=( NetworkPacket&& other ) noexcept = delete;
 
 			void Write( Buffer& buffer ) const;
-			void Read( MessageFactory& message_factory, Buffer& buffer );
+			bool Read( MessageFactory& message_factory, Buffer& buffer );
 
 			const NetworkPacketHeader& GetHeader() const { return _header; };
 
 			bool AddMessage( std::unique_ptr< Message > message );
+			bool AddMessages( std::vector< std::unique_ptr< Message > >& messages );
 			std::unique_ptr< Message > TryGetNextMessage();
 			const std::vector< std::unique_ptr< Message > >& GetAllMessages() const;
 			uint32 GetNumberOfMessages() const { return static_cast< uint32 >( _messages.size() ); }

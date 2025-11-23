@@ -1,5 +1,7 @@
 #include "buffer.h"
 
+#include "Logger.h"
+
 #include <cassert>
 #include <cmath>
 #include <cstring>
@@ -83,6 +85,20 @@ namespace NetLib
 		return value;
 	}
 
+	bool Buffer::ReadLong( uint64& value )
+	{
+		if ( _index + 8 <= _size )
+		{
+			value = *( ( uint64* ) ( _data + _index ) );
+			_index += 8;
+			return true;
+		}
+		else
+		{
+			return false;
+		}
+	}
+
 	uint32 Buffer::ReadInteger()
 	{
 		assert( _index + 4 <= _size );
@@ -91,6 +107,21 @@ namespace NetLib
 
 		_index += 4;
 		return value;
+	}
+
+	bool Buffer::ReadInteger( uint32& value )
+	{
+		if ( _index + 4 <= _size )
+		{
+			value = *( ( uint32* ) ( _data + _index ) );
+
+			_index += 4;
+			return true;
+		}
+		else
+		{
+			return false;
+		}
 	}
 
 	uint16 Buffer::ReadShort()
@@ -105,6 +136,20 @@ namespace NetLib
 		return value;
 	}
 
+	bool Buffer::ReadShort( uint16& value )
+	{
+		if ( _index + 2 <= _size )
+		{
+			value = *( ( uint16* ) ( _data + _index ) );
+			_index += 2;
+			return true;
+		}
+		else
+		{
+			return false;
+		}
+	}
+
 	uint8 Buffer::ReadByte()
 	{
 		assert( _index + 1 <= _size );
@@ -115,6 +160,20 @@ namespace NetLib
 		++_index;
 
 		return value;
+	}
+
+	bool Buffer::ReadByte( uint8& value )
+	{
+		if ( _index + 1 <= _size )
+		{
+			value = *( ( uint8* ) ( _data + _index ) );
+			++_index;
+			return true;
+		}
+		else
+		{
+			return false;
+		}
 	}
 
 	float32 Buffer::ReadFloat()
@@ -128,13 +187,19 @@ namespace NetLib
 		return value;
 	}
 
-	void Buffer::ReadData( uint8* data, uint32 size )
+	bool Buffer::ReadData( uint8* data, uint32 size )
 	{
 		assert( data != nullptr );
-		assert( _index + size <= _size );
-
-		std::memcpy( data, _data + _index, size );
-		_index += size;
+		if ( _index + size <= _size )
+		{
+			std::memcpy( data, _data + _index, size );
+			_index += size;
+			return true;
+		}
+		else
+		{
+			return false;
+		}
 	}
 
 	void Buffer::ResetAccessIndex()

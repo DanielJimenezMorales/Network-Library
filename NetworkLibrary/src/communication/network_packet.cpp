@@ -1,12 +1,14 @@
 #include "network_packet.h"
 
 #include "asserts.h"
+#include "Logger.h"
 
 #include "core/buffer.h"
 
 #include "communication/message.h"
 #include "communication/message_utils.h"
 #include "communication/message_factory.h"
+#include "communication/network_packet_utils.h"
 
 namespace NetLib
 {
@@ -24,11 +26,24 @@ namespace NetLib
 		buffer.WriteByte( channelType );
 	}
 
-	void NetworkPacketHeader::Read( Buffer& buffer )
+	bool NetworkPacketHeader::Read( Buffer& buffer )
 	{
-		lastAckedSequenceNumber = buffer.ReadShort();
-		ackBits = buffer.ReadInteger();
-		channelType = buffer.ReadByte();
+		if ( !buffer.ReadShort( lastAckedSequenceNumber ) )
+		{
+			return false;
+		}
+
+		if ( !buffer.ReadInteger( ackBits ) )
+		{
+			return false;
+		}
+
+		if ( !buffer.ReadByte( channelType ) )
+		{
+			return false;
+		}
+
+		return true;
 	}
 
 	NetworkPacket::NetworkPacket()
@@ -51,12 +66,25 @@ namespace NetLib
 		}
 	}
 
-	void NetworkPacket::Read( MessageFactory& message_factory, Buffer& buffer )
+	bool NetworkPacket::Read( MessageFactory& message_factory, Buffer& buffer )
 	{
-		_header.Read( buffer );
+		// Read header
+		if ( !_header.Read( buffer ) )
+		{
+			LOG_ERROR( "Error reading Network Packet header." );
+			return false;
+		}
 
-		const uint8 numberOfMessages = buffer.ReadByte();
+		// Read number of messages
+		uint8 numberOfMessages;
+		if ( !buffer.ReadByte( numberOfMessages ) )
+		{
+			LOG_ERROR( "Error reading number of messages in Network Packet." );
+			return false;
+		}
 
+		// Read messages
+		bool allMessagesReadSuccesfully = true;
 		for ( uint32 i = 0; i < numberOfMessages; ++i )
 		{
 			std::unique_ptr< Message > message = MessageUtils::ReadMessage( message_factory, buffer );
@@ -64,12 +92,38 @@ namespace NetLib
 			{
 				AddMessage( std::move( message ) );
 			}
+			else
+			{
+				LOG_ERROR( "Error reading Network Packet message %u/%u.", i + 1, numberOfMessages );
+				allMessagesReadSuccesfully = false;
+				break;
+			}
 		}
+
+		// If not all messages were read succesfully, release the ones that were read
+		if ( !allMessagesReadSuccesfully )
+		{
+			NetworkPacketUtils::CleanPacket( message_factory, *this );
+			return false;
+		}
+
+		return true;
 	}
 
 	bool NetworkPacket::AddMessage( std::unique_ptr< Message > message )
 	{
 		_messages.push_back( std::move( message ) );
+		return true;
+	}
+
+	bool NetworkPacket::AddMessages( std::vector< std::unique_ptr< Message > >& messages )
+	{
+		for ( auto it = messages.begin(); it != messages.end(); ++it )
+		{
+			AddMessage( std::move( *it ) );
+		}
+
+		messages.clear();
 		return true;
 	}
 

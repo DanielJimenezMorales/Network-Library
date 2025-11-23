@@ -317,8 +317,16 @@ namespace NetLib
 	{
 		// TODO Add validation for tampered or corrupted packets so it doesn't crash when a tampered message arrives.
 		//  Read incoming packet
-		NetworkPacket packet = NetworkPacket();
-		packet.Read( _messageFactory, buffer );
+		NetworkPacket packet;
+		const bool readSuccessfully = NetworkPacketUtils::ReadNetworkPacket( buffer, _messageFactory, packet );
+		if ( !readSuccessfully )
+		{
+			std::string ip_and_port;
+			address.GetFull( ip_and_port );
+			LOG_WARNING( "Received corrupted or invalid packet from %s. Discarding packet.",
+			             ip_and_port.c_str() );
+			return;
+		}
 
 		RemotePeer* remotePeer = _remotePeersHandler.GetRemotePeerFromAddress( address );
 		bool isPacketFromRemotePeer = ( remotePeer != nullptr );

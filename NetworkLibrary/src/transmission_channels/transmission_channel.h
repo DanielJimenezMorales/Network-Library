@@ -21,7 +21,8 @@ namespace NetLib
 	{
 		UnreliableOrdered = 0,
 		ReliableOrdered = 1,
-		UnreliableUnordered = 2
+		UnreliableUnordered = 2,
+		Count = 3
 	};
 
 	class TransmissionChannel

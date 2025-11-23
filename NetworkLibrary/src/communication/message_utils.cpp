@@ -10,7 +10,13 @@ namespace NetLib
 {
 	std::unique_ptr< Message > MessageUtils::ReadMessage( MessageFactory& message_factory, Buffer& buffer )
 	{
-		MessageType type = static_cast< MessageType >( buffer.ReadByte() );
+		uint8 messageType;
+		if ( !buffer.ReadByte( messageType ) )
+		{
+			return nullptr;
+		}
+
+		const MessageType type = static_cast< MessageType >( messageType );
 		std::unique_ptr< Message > message = nullptr;
 
 		switch ( type )
@@ -54,7 +60,10 @@ namespace NetLib
 
 		if ( message != nullptr )
 		{
-			message->Read( buffer );
+			if ( !message->Read( buffer ) )
+			{
+				return nullptr;
+			}
 		}
 
 		return std::move( message );
