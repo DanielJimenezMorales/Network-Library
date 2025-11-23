@@ -52,7 +52,7 @@ Description of the **procedure** for the **client**:
 Initialize simulation tick counter to `1`.
 
 ## PreTick Phase
-Receive network data, validate it, build packets, and place messages into transmission channels and process them.
+Receive network data, validate it, build packets, and place messages into transmission channels and process them. This phase is executed inside a **fixed update loop** and always before the Tick phase.
 
 This phase **does NOT**:
 - Send any data.
@@ -85,7 +85,7 @@ Description of the **procedure**:
 	    - Process message.
 
 ## Tick Phase
-Advance internal systems, update peer state, build outgoing data, send packets, and handle disconnections.
+Advance internal systems, update peer state, build outgoing data, send packets, and handle disconnections. This phase is executed inside a **fixed update loop** and always after the Pre-tick phase.
 
 This phase **does NOT**:
 - Read incoming socket data
@@ -147,7 +147,7 @@ Description of the **procedure**:
 If a stop has been requested during this tick, transition the system toward the Stop phase.
 
 ## Stop Phase
-Shut down the peer and release all network resources.
+Shut down the peer and release all network resources. This phase is executed **once**, after the last Tick.
 
 The stop phase contains the following **subphases**:
 1. [Stop peer-type specific logic](#1-Stop-peer-type-specific-logic)
@@ -182,3 +182,11 @@ Description of the **procedure**:
 
 ### 4 Set connection state to Disconnected
 Mark the peer as fully disconnected by setting the connection state to `Disconnected`
+
+## Sum up
+| Phase name | What it does | What it does NOT | When it is called |
+|------------|---------|------------------|-------------------|
+| Start|Initialize socket and systems|Read data, Send data|Once before PreTick|
+| PreTick|Read data, Process data|Send data|Once in a fixed update loop|
+| Tick|Update logic, Send data|Read data|Once in a fixed update loop|
+| Stop|Cleanup socket and systems|Read data|Once after Tick|
