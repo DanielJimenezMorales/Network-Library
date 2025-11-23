@@ -7,8 +7,6 @@
 
 #include "communication/message.h"
 #include "communication/message_utils.h"
-#include "communication/message_factory.h"
-#include "communication/network_packet_utils.h"
 
 namespace NetLib
 {
@@ -24,26 +22,6 @@ namespace NetLib
 		buffer.WriteShort( lastAckedSequenceNumber );
 		buffer.WriteInteger( ackBits );
 		buffer.WriteByte( channelType );
-	}
-
-	bool NetworkPacketHeader::Read( Buffer& buffer )
-	{
-		if ( !buffer.ReadShort( lastAckedSequenceNumber ) )
-		{
-			return false;
-		}
-
-		if ( !buffer.ReadInteger( ackBits ) )
-		{
-			return false;
-		}
-
-		if ( !buffer.ReadByte( channelType ) )
-		{
-			return false;
-		}
-
-		return true;
 	}
 
 	NetworkPacket::NetworkPacket()
@@ -64,50 +42,6 @@ namespace NetLib
 			const Message* message = ( *cit ).get();
 			message->Write( buffer );
 		}
-	}
-
-	bool NetworkPacket::Read( MessageFactory& message_factory, Buffer& buffer )
-	{
-		// Read header
-		if ( !_header.Read( buffer ) )
-		{
-			LOG_ERROR( "Error reading Network Packet header." );
-			return false;
-		}
-
-		// Read number of messages
-		uint8 numberOfMessages;
-		if ( !buffer.ReadByte( numberOfMessages ) )
-		{
-			LOG_ERROR( "Error reading number of messages in Network Packet." );
-			return false;
-		}
-
-		// Read messages
-		bool allMessagesReadSuccesfully = true;
-		for ( uint32 i = 0; i < numberOfMessages; ++i )
-		{
-			std::unique_ptr< Message > message = MessageUtils::ReadMessage( message_factory, buffer );
-			if ( message != nullptr )
-			{
-				AddMessage( std::move( message ) );
-			}
-			else
-			{
-				LOG_ERROR( "Error reading Network Packet message %u/%u.", i + 1, numberOfMessages );
-				allMessagesReadSuccesfully = false;
-				break;
-			}
-		}
-
-		// If not all messages were read succesfully, release the ones that were read
-		if ( !allMessagesReadSuccesfully )
-		{
-			NetworkPacketUtils::CleanPacket( message_factory, *this );
-			return false;
-		}
-
-		return true;
 	}
 
 	bool NetworkPacket::AddMessage( std::unique_ptr< Message > message )
@@ -146,7 +80,7 @@ namespace NetLib
 
 	uint32 NetworkPacket::Size() const
 	{
-		uint32 packetSize = NetworkPacketHeader::Size();
+		uint32 packetSize = NetworkPacketHeader::SIZE;
 		packetSize += 1; // We store in 1 byte the number of messages that this packet contains
 
 		auto iterator = _messages.cbegin();

@@ -8,7 +8,6 @@ namespace NetLib
 {
 	class Buffer;
 	class Message;
-	class MessageFactory;
 
 	struct NetworkPacketHeader
 	{
@@ -27,9 +26,6 @@ namespace NetLib
 			}
 
 			void Write( Buffer& buffer ) const;
-			bool Read( Buffer& buffer );
-
-			static uint32 Size() { return sizeof( uint16 ) + sizeof( uint32 ) + sizeof( uint8 ); };
 
 			void SetACKs( uint32 acks ) { ackBits = acks; };
 			void SetHeaderLastAcked( uint16 lastAckedMessage ) { lastAckedSequenceNumber = lastAckedMessage; };
@@ -56,7 +52,6 @@ namespace NetLib
 			NetworkPacket& operator=( NetworkPacket&& other ) noexcept = delete;
 
 			void Write( Buffer& buffer ) const;
-			bool Read( MessageFactory& message_factory, Buffer& buffer );
 
 			const NetworkPacketHeader& GetHeader() const { return _header; };
 
