@@ -4,7 +4,7 @@ A Network Library for competitive realtime multiplayer games.
 >_**NOTE:** Beginning January 1st, 2026, no further updates will be publicly released for this project in order to comply with my employer’s policies. I apologize for any inconvenience this may cause._
 
 This repository contains four different projects:
-1. Network library
+1. Network library [Docs](docs/network_library/network_library_index.md)
 2. Demo game. [Docs](docs/demo_game/demo_game_index.md)
 3. Engine [Docs](docs/engine/engine_index.md)
 4. Common (Shared files between Demo game and Network Library projects)
