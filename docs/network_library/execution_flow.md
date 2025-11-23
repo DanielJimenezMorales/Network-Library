@@ -3,7 +3,7 @@ This library operates through four well-defined phases: **Start → PreTick → 
 Each phase has a specific responsibility and must not perform tasks belonging to other phases.  
 This ensures predictable behavior, easier debugging, and a clearer architecture.
 
-![fff](network_library_flow_diagram.png)
+![Execution flow diagram](./images/network_library_flow_diagram.png)
 ## Start
 ### Purpose (WHAT)
 Initialize the peer and all required internal systems in preparation for the network loop.  
