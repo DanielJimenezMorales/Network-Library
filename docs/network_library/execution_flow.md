@@ -2,7 +2,7 @@
 This library operates through four well-defined phases: **Start → PreTick → Tick → Stop**.
 Each phase has a specific responsibility and must not perform tasks belonging to other phases.  
 This ensures predictable behavior, easier debugging, and a clearer architecture.
-![Execution flow diagram](./images/network_library_flow_diagram.png)
+![Execution flow diagram](./images/full_execution_flow_diagram.png)
 
 ## Index:
 - [Start Phase](#Start-Phase)
