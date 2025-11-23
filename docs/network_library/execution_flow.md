@@ -14,15 +14,21 @@ This ensures predictable behavior, easier debugging, and a clearer architecture.
 Initialize the peer and all required internal systems in preparation for the network loop.  
 This phase is executed **once**, before the first tick.
 
+The start phase contains the following subphases:
+1. [Set connection state to `Connecting`](#1.-Set-connection-state-to-Connecting)
+2. [Start socket](#2.-Start-socket)
+3. [Start peer-type specific logic](#3.-Start-peer-type-specific-logic)
+4. [Set current tick](#4.-Set-current-tick)
+
 ### 1. Set connection state to Connecting
 Transition the peer's connection state from `Disconnected` to `Connecting`.
 
 Description of the **procedure**:
 - Set local peer state to `Connecting`.
 
-**Notes**:    
-    - **Server**: promoted later to `Connected` inside this Start process.
-    -  **Client**: remains in `Connecting` until receiving either _ConnectionAccepted_ or _ConnectionDenied_ from the server.
+**Notes**:
+- **Server**: promoted later to `Connected` inside this Start process.
+- **Client**: remains in `Connecting` until receiving either _ConnectionAccepted_ or _ConnectionDenied_ from the server.
 
 ### 2. Start socket
 Create and initialize the underlying network socket.
@@ -49,6 +55,10 @@ Initialize simulation tick counter to `1`.
 Receive network data, validate it, build packets, and place messages into transmission channels and process them.
 This phase **does NOT**:
 - Send any data.
+
+The pre-tick phase contains the following subphases:
+1. [Read received data](#1.-Read-received-data)
+2. [Process received data](#2.-Process-received-data)
 
 ### 1. Read received data
 Read incoming datagrams and convert them into `NetworkPacket` objects. Then stores them within the transmission channels to be ready for being processed. This receive pipeline does not process messages yet.
@@ -77,6 +87,13 @@ Description of the **procedure**:
 Advance internal systems, update peer state, build outgoing data, send packets, and handle disconnections.
 This phase **does NOT**:
 - Read incoming socket data
+
+The tick phase contains the following subphases:
+1. [Update remote peers](#1.-Update-remote-peers)
+2. [Update peer-type specific logic](#2.-Update-peer-type-specific-logic)
+3. [Finish disconnecting remote peers](#3.-Finish-disconnecting-remote-peers)
+4. [Send pending data](#4.-Send-pending-data)
+5. [Stop peer, if requested](#5.-Stop-peer,-if-requested)
 
 ### 1. Update remote peers
 Update systems that belong to remote peers.
@@ -129,6 +146,13 @@ If a stop has been requested during this tick, transition the system toward the 
 
 ## Stop Phase
 Shut down the peer and release all network resources.
+
+The stop phase contains the following subphases:
+1. [Stop peer-type specific logic](#1.-Stop-peer-type-specific-logic)
+2. [Disconnect remote peers](#2.-Disconnect-remote-peers)
+3. [Close socket](#3.-Close-socket)
+4. [Send pending data](#4.-Send-pending-data)
+5. [Set connection state to Disconnected](#5.-Set-connection-state-to-Disconnected)
 
 ### 1. Stop peer-type specific logic
 Shutdown logic specific to client or server.
