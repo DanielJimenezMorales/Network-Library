@@ -155,9 +155,25 @@ namespace NetLib
 			MessageFactory _messageFactory;
 
 		private:
+			/// <summary>
+			/// Reads all the incoming received data from the socket
+			/// </summary>
+			void ReadReceivedData();
+
+			/// <summary>
+			/// Reads an incoming datagram received from the specified address
+			/// </summary>
+			void ReadDatagram( Buffer& buffer, const Address& address );
+
+			/// <summary>
+			/// Stores all the messages from a network packet into the corresponding transmission channels
+			/// </summary>
+			void StoreReceivedMessages( NetworkPacket& packet, const Address& address );
+
+			/// <summary>
+			/// Process all the pending received data from all the remote peers
+			/// </summary>
 			void ProcessReceivedData();
-			void ProcessDatagram( Buffer& buffer, const Address& address );
-			void ProcessNewRemotePeerMessages();
 
 			void SetConnectionState( PeerConnectionState state );
 

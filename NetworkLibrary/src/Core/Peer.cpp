@@ -49,10 +49,11 @@ namespace NetLib
 	{
 		if ( _connectionState == PeerConnectionState::PCS_Disconnected )
 		{
-			LOG_WARNING( "You are trying to call Peer::PreTick on a Peer that is disconnected" );
+			LOG_WARNING( "You are trying to call PreTick on a Peer that is disconnected" );
 			return false;
 		}
 
+		ReadReceivedData();
 		ProcessReceivedData();
 
 		return true;
@@ -276,7 +277,7 @@ namespace NetLib
 		return _onLocalPeerDisconnect.DeleteSubscriber( handler );
 	}
 
-	void Peer::ProcessReceivedData()
+	void Peer::ReadReceivedData()
 	{
 		Address remoteAddress = Address::GetInvalid();
 		uint32 numberOfBytesRead = 0;
@@ -291,7 +292,7 @@ namespace NetLib
 			{
 				// Data read succesfully. Keep going!
 				Buffer buffer = Buffer( _receiveBuffer, numberOfBytesRead );
-				ProcessDatagram( buffer, remoteAddress );
+				ReadDatagram( buffer, remoteAddress );
 			}
 			else if ( result == SocketResult::SOKT_ERR || result == SocketResult::SOKT_WOULDBLOCK )
 			{
@@ -309,44 +310,48 @@ namespace NetLib
 				}
 			}
 		} while ( arePendingDatagramsToRead );
-
-		ProcessNewRemotePeerMessages();
 	}
 
-	void Peer::ProcessDatagram( Buffer& buffer, const Address& address )
+	void Peer::ReadDatagram( Buffer& buffer, const Address& address )
 	{
 		// TODO Add validation for tampered or corrupted packets so it doesn't crash when a tampered message arrives.
 		//  Read incoming packet
+		// Read Network packet
 		NetworkPacket packet;
 		const bool readSuccessfully = NetworkPacketUtils::ReadNetworkPacket( buffer, _messageFactory, packet );
 		if ( !readSuccessfully )
 		{
 			std::string ip_and_port;
 			address.GetFull( ip_and_port );
-			LOG_WARNING( "Received corrupted or invalid packet from %s. Discarding packet.",
-			             ip_and_port.c_str() );
+			LOG_WARNING( "Received corrupted or invalid packet from %s. Discarding packet.", ip_and_port.c_str() );
 			return;
 		}
 
-		RemotePeer* remotePeer = _remotePeersHandler.GetRemotePeerFromAddress( address );
-		bool isPacketFromRemotePeer = ( remotePeer != nullptr );
-		if ( isPacketFromRemotePeer )
+		// Store messages within transmission channels for being processed
+		StoreReceivedMessages(packet, address);
+	}
+
+	void Peer::StoreReceivedMessages(NetworkPacket& packet, const Address& address)
+	{
+		RemotePeer* remotePeer = _remotePeersHandler.GetRemotePeerFromAddress(address);
+		bool isPacketFromRemotePeer = (remotePeer != nullptr);
+		if (isPacketFromRemotePeer)
 		{
-			remotePeer->ProcessPacket( packet );
+			remotePeer->ProcessPacket(packet);
 		}
 		else
 		{
 			const std::vector< std::unique_ptr< Message > >& packetMessages = packet.GetAllMessages();
-			for ( auto cit = packetMessages.cbegin(); cit != packetMessages.cend(); ++cit )
+			for (auto cit = packetMessages.cbegin(); cit != packetMessages.cend(); ++cit)
 			{
-				ProcessMessageFromUnknownPeer( **cit, address );
+				ProcessMessageFromUnknownPeer(**cit, address);
 			}
 
-			NetworkPacketUtils::CleanPacket( _messageFactory, packet );
+			NetworkPacketUtils::CleanPacket(_messageFactory, packet);
 		}
 	}
 
-	void Peer::ProcessNewRemotePeerMessages()
+	void Peer::ProcessReceivedData()
 	{
 		auto validRemotePeersIt = _remotePeersHandler.GetValidRemotePeersIterator();
 		auto pastTheEndIt = _remotePeersHandler.GetValidRemotePeersPastTheEndIterator();
