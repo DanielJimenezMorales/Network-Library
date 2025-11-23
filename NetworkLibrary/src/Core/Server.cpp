@@ -345,8 +345,15 @@ namespace NetLib
 			assert( inputState != nullptr );
 
 			Buffer buffer( message.data, message.dataSize );
-			inputState->Deserialize( buffer );
-			_remotePeerInputsHandler.AddInputState( inputState, remotePeer.GetClientIndex() );
+			if ( !inputState->Deserialize( buffer ) )
+			{
+				LOG_ERROR( "Server::%s, Failed to deserialize input state from remote peer %u. Ignoring input...",
+				           THIS_FUNCTION_NAME, remotePeer.GetClientIndex() );
+			}
+			else
+			{
+				_remotePeerInputsHandler.AddInputState( inputState, remotePeer.GetClientIndex() );
+			}
 		}
 		else
 		{

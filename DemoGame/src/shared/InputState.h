@@ -12,7 +12,9 @@ class InputState : public NetLib::IInputState
 
 		int32 GetSize() const override;
 		void Serialize( NetLib::Buffer& buffer ) const override;
-		void Deserialize( NetLib::Buffer& buffer ) override;
+		bool Deserialize( NetLib::Buffer& buffer ) override;
+
+		static constexpr float32 MAXIMUM_MOVEMENT_VALUE = 10.f;
 
 		// Header fields
 		uint32 tick;
