@@ -11,6 +11,7 @@
 #include "core/ping_pong_messages_sender.h"
 
 #include "metrics/metrics_handler.h"
+#include "metrics/metric_types.h"
 
 #include "transmission_channels/transmission_channel.h"
 
@@ -114,7 +115,7 @@ namespace NetLib
 			std::vector< TransmissionChannelType > GetAvailableTransmissionChannelTypes() const;
 			uint32 GetNumberOfTransmissionChannels() const;
 
-			uint32 GetMetric( const std::string& metric_name, const std::string& value_type ) const;
+			uint32 GetMetric( Metrics::MetricType metric_type, Metrics::ValueType value_type ) const;
 
 			/// <summary>
 			/// Disconnect and reset the remote client

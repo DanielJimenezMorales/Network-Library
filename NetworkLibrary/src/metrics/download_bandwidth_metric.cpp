@@ -2,8 +2,6 @@
 
 #include "logger.h"
 
-#include "metrics/metric_names.h"
-
 namespace NetLib
 {
 	namespace Metrics
@@ -17,26 +15,26 @@ namespace NetLib
 		{
 		}
 
-		void DownloadBandwidthMetric::GetName( std::string& out_name_buffer ) const
+		MetricType DownloadBandwidthMetric::GetType() const
 		{
-			out_name_buffer.assign( DOWNLOAD_BANDWIDTH_METRIC );
+			return MetricType::DOWNLOAD_BANDWIDTH;
 		}
 
-		uint32 DownloadBandwidthMetric::GetValue( const std::string& value_type ) const
+		uint32 DownloadBandwidthMetric::GetValue( ValueType value_type ) const
 		{
 			uint32 result = 0;
 
-			if ( value_type == "MAX" )
+			if ( value_type == ValueType::MAX )
 			{
 				result = _maxValue;
 			}
-			else if ( value_type == "CURRENT" )
+			else if ( value_type == ValueType::CURRENT )
 			{
 				result = _currentValue;
 			}
 			else
 			{
-				LOG_WARNING( "Unknown value type '%s' for UploadBandwidthMetric", value_type.c_str() );
+				LOG_WARNING( "Unknown value type '%u' for UploadBandwidthMetric", static_cast< uint8 >( value_type ) );
 			}
 
 			return result;

@@ -11,8 +11,8 @@
 #include "core/socket.h"
 #include "core/address.h"
 
-#include "metrics/metric_names.h"
 #include "metrics/metrics_handler.h"
+#include "metrics/metric_types.h"
 
 namespace NetLib
 {
@@ -87,7 +87,7 @@ namespace NetLib
 		// TODO See what happens when the socket couldn't send the packet
 		if ( metrics_handler != nullptr )
 		{
-			metrics_handler->AddValue( Metrics::UPLOAD_BANDWIDTH_METRIC, packet.Size() );
+			metrics_handler->AddValue( Metrics::MetricType::UPLOAD_BANDWIDTH, packet.Size() );
 		}
 
 		// Clean messages

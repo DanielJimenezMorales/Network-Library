@@ -14,8 +14,8 @@
 #include "core/socket.h"
 #include "core/address.h"
 
-#include "metrics/metric_names.h"
 #include "metrics/metrics_handler.h"
+#include "metrics/metric_types.h"
 
 #include "logger.h"
 #include "AlgorithmUtils.h"
@@ -136,7 +136,7 @@ namespace NetLib
 		// TODO See what happens when the socket couldn't send the packet
 		if ( metrics_handler != nullptr )
 		{
-			metrics_handler->AddValue( Metrics::UPLOAD_BANDWIDTH_METRIC, packet.Size() );
+			metrics_handler->AddValue( Metrics::MetricType::UPLOAD_BANDWIDTH, packet.Size() );
 		}
 
 		_areUnsentACKs = false;
@@ -149,7 +149,7 @@ namespace NetLib
 
 			if ( metrics_handler != nullptr )
 			{
-				metrics_handler->AddValue( Metrics::PACKET_LOSS_METRIC, 1, "SENT" );
+				metrics_handler->AddValue( Metrics::MetricType::PACKET_LOSS, 1, "SENT" );
 			}
 		}
 
@@ -196,7 +196,7 @@ namespace NetLib
 			message = TryGetUnackedMessageToResend();
 			if ( message != nullptr && metrics_handler != nullptr )
 			{
-				metrics_handler->AddValue( Metrics::RETRANSMISSION_METRIC, 1 );
+				metrics_handler->AddValue( Metrics::MetricType::RETRANSMISSIONS, 1 );
 			}
 		}
 
@@ -261,7 +261,7 @@ namespace NetLib
 			// Submit duplicate message metric
 			if ( metrics_handler != nullptr )
 			{
-				metrics_handler->AddValue( Metrics::DUPLICATE_METRIC, 1 );
+				metrics_handler->AddValue( Metrics::MetricType::DUPLICATE_MESSAGES, 1 );
 			}
 
 			// Release duplicate message
@@ -430,7 +430,7 @@ namespace NetLib
 		AddUnorderedMessage( std::move( message ) );
 		if ( metrics_handler != nullptr )
 		{
-			metrics_handler->AddValue( Metrics::OUT_OF_ORDER_METRIC, 1 );
+			metrics_handler->AddValue( Metrics::MetricType::OUT_OF_ORDER_MESSAGES, 1 );
 		}
 	}
 
@@ -457,8 +457,8 @@ namespace NetLib
 			if ( metrics_handler != nullptr )
 			{
 				const uint32 latency = messageRTT / 2;
-				metrics_handler->AddValue( Metrics::LATENCY_METRIC, latency );
-				metrics_handler->AddValue( Metrics::JITTER_METRIC, latency );
+				metrics_handler->AddValue( Metrics::MetricType::LATENCY, latency );
+				metrics_handler->AddValue( Metrics::MetricType::JITTER, latency );
 			}
 
 			// Remove message from buffers
@@ -652,7 +652,7 @@ namespace NetLib
 			{
 				if ( metrics_handler != nullptr )
 				{
-					metrics_handler->AddValue( Metrics::PACKET_LOSS_METRIC, 1, "LOST" );
+					metrics_handler->AddValue( Metrics::MetricType::PACKET_LOSS, 1, "LOST" );
 				}
 				timeout = 0;
 			}

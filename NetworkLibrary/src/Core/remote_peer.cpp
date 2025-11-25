@@ -10,7 +10,7 @@
 #include "transmission_channels/unreliable_unordered_transmission_channel.h"
 #include "transmission_channels/reliable_ordered_channel.h"
 
-#include "metrics/metric_names.h"
+#include "metrics/metric_types.h"
 
 #include "core/Socket.h"
 
@@ -114,13 +114,41 @@ namespace NetLib
 
 	void RemotePeer::ActivateNetworkStatistics()
 	{
-		_metricsEnabled = true;
-		_metricsHandler.Configure( 1.f );
+		if ( _metricsEnabled )
+		{
+			LOG_ERROR( "[RemotePeer.%s] Metrics are already active for remote peer %u.", THIS_FUNCTION_NAME, _id );
+			return;
+		}
+
+		// TODO Add here the list of metrics or metrics data we can to enable for this remote peer
+		if ( _metricsHandler.StartUp( 1.f, Metrics::MetricsEnableConfig::ENABLE_ALL ) )
+		{
+			_metricsEnabled = true;
+		}
+		else
+		{
+			LOG_ERROR( "[RemotePeer.%s] Failed to start up metrics handler for remote peer %u.", THIS_FUNCTION_NAME,
+			           _id );
+		}
 	}
 
 	void RemotePeer::DeactivateNetworkStatistics()
 	{
-		_metricsEnabled = false;
+		if ( !_metricsEnabled )
+		{
+			LOG_ERROR( "[RemotePeer.%s] Metrics are already deactivated for remote peer %u.", THIS_FUNCTION_NAME, _id );
+			return;
+		}
+
+		if ( _metricsHandler.ShutDown() )
+		{
+			_metricsEnabled = false;
+		}
+		else
+		{
+			LOG_ERROR( "[RemotePeer.%s] Failed to shut down metrics handler for remote peer %u.", THIS_FUNCTION_NAME,
+			           _id );
+		}
 	}
 
 	void RemotePeer::Connect( const Address& address, uint16 id, float32 maxInactivityTime, uint64 clientSalt,
@@ -234,7 +262,7 @@ namespace NetLib
 
 		if ( _metricsEnabled )
 		{
-			_metricsHandler.AddValue( Metrics::DOWNLOAD_BANDWIDTH_METRIC, packet_size );
+			_metricsHandler.AddValue( Metrics::MetricType::DOWNLOAD_BANDWIDTH, packet_size );
 		}
 	}
 
@@ -321,12 +349,12 @@ namespace NetLib
 		return static_cast< uint32 >( _transmissionChannels.size() );
 	}
 
-	uint32 RemotePeer::GetMetric( const std::string& metric_name, const std::string& value_type ) const
+	uint32 RemotePeer::GetMetric( Metrics::MetricType metric_type, Metrics::ValueType value_type ) const
 	{
 		uint32 result = 0;
 		if ( _metricsEnabled )
 		{
-			result = _metricsHandler.GetValue( metric_name, value_type );
+			result = _metricsHandler.GetValue( metric_type, value_type );
 		}
 		else
 		{

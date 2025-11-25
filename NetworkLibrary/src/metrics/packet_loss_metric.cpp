@@ -1,6 +1,6 @@
 #include "packet_loss_metric.h"
 
-#include "metrics/metric_names.h"
+#include "metrics/metric_types.h"
 
 #include "logger.h"
 
@@ -18,26 +18,26 @@ namespace NetLib
 		{
 		}
 
-		void PacketLossMetric::GetName( std::string& out_name_buffer ) const
+		MetricType PacketLossMetric::GetType() const
 		{
-			out_name_buffer.assign( PACKET_LOSS_METRIC );
+			return MetricType::PACKET_LOSS;
 		}
 
-		uint32 PacketLossMetric::GetValue( const std::string& value_type ) const
+		uint32 PacketLossMetric::GetValue( ValueType value_type ) const
 		{
 			uint32 result = 0;
 
-			if ( value_type == "MAX" )
+			if ( value_type == ValueType::MAX )
 			{
 				result = _maxValue;
 			}
-			else if ( value_type == "CURRENT" )
+			else if ( value_type == ValueType::CURRENT )
 			{
 				result = _currentValue;
 			}
 			else
 			{
-				LOG_WARNING( "Unknown value type '%s' for PacketLossMetric", value_type.c_str() );
+				LOG_WARNING( "Unknown value type '%u' for PacketLossMetric", static_cast< uint8 >( value_type ) );
 			}
 
 			return result;

@@ -66,6 +66,7 @@ namespace NetLib
 
 		_remotePeerSlots[ slotIndex ] = true;
 		_remotePeers[ slotIndex ].Connect( addressInfo, id, REMOTE_PEER_INACTIVITY_TIME, clientSalt, serverSalt );
+		//TODO Make this to be called in RemotePeer.StartUp with a flag or a config telling it to start up metrics, and then you can de-initialize it here.
 		_remotePeers[ slotIndex ].ActivateNetworkStatistics();
 
 		auto it = _validRemotePeers.insert( &( _remotePeers[ slotIndex ] ) );

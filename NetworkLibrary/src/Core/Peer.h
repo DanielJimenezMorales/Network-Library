@@ -88,12 +88,12 @@ namespace NetLib
 			/// value of 0 is returned.
 			/// </summary>
 			/// <param name="remote_peer_id">The remote peer id</param>
-			/// <param name="metric_name">The name of the metric. See metrics/metric_names.h for more info</param>
-			/// <param name="value_type">The type of value you want to get. See metrics/metric_names.h for more
+			/// <param name="metric_type">The type of the metric. See metrics/metric_types.h for more info</param>
+			/// <param name="value_type">The type of value you want to get. See metrics/metric_types.h for more
 			/// info</param>
 			/// <returns>The metric value on success or 0 on failure</returns>
-			uint32 GetMetric( uint32 remote_peer_id, const std::string& metric_name,
-			                  const std::string& value_type ) const;
+			uint32 GetMetric( uint32 remote_peer_id, Metrics::MetricType metric_type,
+			                  Metrics::ValueType value_type ) const;
 
 			float64 GetLocalTime() const;
 			float64 GetServerTime() const;

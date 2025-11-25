@@ -104,13 +104,14 @@ namespace NetLib
 		return result;
 	}
 
-	uint32 Peer::GetMetric( uint32 remote_peer_id, const std::string& metric_name, const std::string& value_type ) const
+	uint32 Peer::GetMetric( uint32 remote_peer_id, Metrics::MetricType metric_type,
+	                        Metrics::ValueType value_type ) const
 	{
 		uint32 result = 0;
 		const RemotePeer* remotePeer = _remotePeersHandler.GetRemotePeerFromId( remote_peer_id );
 		if ( remotePeer != nullptr )
 		{
-			result = remotePeer->GetMetric( metric_name, value_type );
+			result = remotePeer->GetMetric( metric_type, value_type );
 		}
 		else
 		{
@@ -328,26 +329,26 @@ namespace NetLib
 		}
 
 		// Store messages within transmission channels for being processed
-		StoreReceivedMessages(packet, address);
+		StoreReceivedMessages( packet, address );
 	}
 
-	void Peer::StoreReceivedMessages(NetworkPacket& packet, const Address& address)
+	void Peer::StoreReceivedMessages( NetworkPacket& packet, const Address& address )
 	{
-		RemotePeer* remotePeer = _remotePeersHandler.GetRemotePeerFromAddress(address);
-		bool isPacketFromRemotePeer = (remotePeer != nullptr);
-		if (isPacketFromRemotePeer)
+		RemotePeer* remotePeer = _remotePeersHandler.GetRemotePeerFromAddress( address );
+		bool isPacketFromRemotePeer = ( remotePeer != nullptr );
+		if ( isPacketFromRemotePeer )
 		{
-			remotePeer->ProcessPacket(packet);
+			remotePeer->ProcessPacket( packet );
 		}
 		else
 		{
 			const std::vector< std::unique_ptr< Message > >& packetMessages = packet.GetAllMessages();
-			for (auto cit = packetMessages.cbegin(); cit != packetMessages.cend(); ++cit)
+			for ( auto cit = packetMessages.cbegin(); cit != packetMessages.cend(); ++cit )
 			{
-				ProcessMessageFromUnknownPeer(**cit, address);
+				ProcessMessageFromUnknownPeer( **cit, address );
 			}
 
-			NetworkPacketUtils::CleanPacket(_messageFactory, packet);
+			NetworkPacketUtils::CleanPacket( _messageFactory, packet );
 		}
 	}
 
