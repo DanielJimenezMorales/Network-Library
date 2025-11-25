@@ -159,18 +159,7 @@ namespace NetLib
 		return result;
 	}
 
-	bool ReliableOrderedChannel::AddMessageToSend( std::unique_ptr< Message > message )
-	{
-		assert( message != nullptr );
 
-		if ( !IsMessageSuitable( message->GetHeader() ) )
-		{
-			return false;
-		}
-
-		_unsentMessages.push_back( std::move( message ) );
-		return true;
-	}
 
 	bool ReliableOrderedChannel::ArePendingMessagesToSend() const
 	{
@@ -284,26 +273,7 @@ namespace NetLib
 		return true;
 	}
 
-	bool ReliableOrderedChannel::ArePendingReadyToProcessMessages() const
-	{
-		return !_readyToProcessMessages.empty();
-	}
 
-	const Message* ReliableOrderedChannel::GetReadyToProcessMessage()
-	{
-		if ( !ArePendingReadyToProcessMessages() )
-		{
-			return nullptr;
-		}
-
-		std::unique_ptr< Message > message( std::move( _readyToProcessMessages.front() ) );
-		_readyToProcessMessages.pop();
-
-		Message* messageToReturn = message.get();
-		_processedMessages.push( std::move( message ) );
-
-		return messageToReturn;
-	}
 
 	bool ReliableOrderedChannel::AreUnackedMessagesToResend() const
 	{

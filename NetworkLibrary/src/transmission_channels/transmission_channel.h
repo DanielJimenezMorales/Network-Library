@@ -8,6 +8,7 @@
 namespace NetLib
 {
 	class Message;
+	struct MessageHeader;
 	class MessageFactory;
 	class Socket;
 	class Address;
@@ -53,7 +54,7 @@ namespace NetLib
 			/// </summary>
 			/// <param name="message">The message pending to be sent.</param>
 			/// <returns>True if the message was stored correclt, False otherwise.</returns>
-			virtual bool AddMessageToSend( std::unique_ptr< Message > message ) = 0;
+			bool AddMessageToSend( std::unique_ptr< Message > message );
 
 			/// <summary>
 			/// Checks if there are any messages pending to be sent through the network.
@@ -69,8 +70,8 @@ namespace NetLib
 			/// <returns>True if the message was stored correclt, False otherwise.</returns>
 			virtual bool AddReceivedMessage( std::unique_ptr< Message > message,
 			                                 Metrics::MetricsHandler* metrics_handler ) = 0;
-			virtual bool ArePendingReadyToProcessMessages() const = 0;
-			virtual const Message* GetReadyToProcessMessage() = 0;
+			bool ArePendingReadyToProcessMessages() const;
+			const Message* GetReadyToProcessMessage();
 			void FreeProcessedMessages();
 
 			virtual void ProcessACKs( uint32 acks, uint16 lastAckedMessageSequenceNumber,
@@ -95,6 +96,14 @@ namespace NetLib
 
 			uint16 GetNextMessageSequenceNumber() const { return _nextMessageSequenceNumber; }
 			void IncreaseMessageSequenceNumber() { ++_nextMessageSequenceNumber; };
+
+			/// <summary>
+			/// Checks if a message is suitable for this transmission channel type.
+			/// Must be implemented by derived classes to validate message properties.
+			/// </summary>
+			/// <param name="header">The message header to validate.</param>
+			/// <returns>True if the message is suitable for this channel, False otherwise.</returns>
+			virtual bool IsMessageSuitable( const MessageHeader& header ) const = 0;
 
 		private:
 			TransmissionChannelType _type;
