@@ -16,23 +16,23 @@ namespace NetLib
 			UnreliableOrderedTransmissionChannel& operator=( UnreliableOrderedTransmissionChannel&& other ) noexcept;
 
 			bool CreateAndSendPacket( Socket& socket, const Address& address,
-			                          Metrics::MetricsHandler* metrics_handler ) override;
+			                          Metrics::MetricsHandler& metrics_handler ) override;
 
 			bool AddMessageToSend( std::unique_ptr< Message > message ) override;
 			bool ArePendingMessagesToSend() const override;
-			std::unique_ptr< Message > GetMessageToSend( Metrics::MetricsHandler* metrics_handler );
+			std::unique_ptr< Message > GetMessageToSend( Metrics::MetricsHandler& metrics_handler );
 			uint32 GetSizeOfNextUnsentMessage() const;
 
 			bool AddReceivedMessage( std::unique_ptr< Message > message,
-			                         Metrics::MetricsHandler* metrics_handler ) override;
+			                         Metrics::MetricsHandler& metrics_handler ) override;
 			bool ArePendingReadyToProcessMessages() const override;
 			const Message* GetReadyToProcessMessage() override;
 
 			void ProcessACKs( uint32 acks, uint16 lastAckedMessageSequenceNumber,
-			                  Metrics::MetricsHandler* metrics_handler ) override;
+			                  Metrics::MetricsHandler& metrics_handler ) override;
 			bool IsMessageDuplicated( uint16 messageSequenceNumber ) const;
 
-			void Update( float32 deltaTime, Metrics::MetricsHandler* metrics_handler ) override;
+			void Update( float32 deltaTime, Metrics::MetricsHandler& metrics_handler ) override;
 
 			void Reset() override;
 

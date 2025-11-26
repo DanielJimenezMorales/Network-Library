@@ -82,7 +82,7 @@ namespace NetLib
 	}
 
 	bool ReliableOrderedChannel::CreateAndSendPacket( Socket& socket, const Address& address,
-	                                                  Metrics::MetricsHandler* metrics_handler )
+	                                                  Metrics::MetricsHandler& metrics_handler )
 	{
 		bool result = false;
 
@@ -134,9 +134,9 @@ namespace NetLib
 		socket.SendTo( buffer.GetData(), buffer.GetSize(), address );
 
 		// TODO See what happens when the socket couldn't send the packet
-		if ( metrics_handler != nullptr )
+		if ( metrics_handler.HasMetric( Metrics::MetricType::UPLOAD_BANDWIDTH ) )
 		{
-			metrics_handler->AddValue( Metrics::MetricType::UPLOAD_BANDWIDTH, packet.Size() );
+			metrics_handler.AddValue( Metrics::MetricType::UPLOAD_BANDWIDTH, packet.Size() );
 		}
 
 		_areUnsentACKs = false;
@@ -147,9 +147,9 @@ namespace NetLib
 			std::unique_ptr< Message > message = packet.TryGetNextMessage();
 			AddUnackedMessage( std::move( message ) );
 
-			if ( metrics_handler != nullptr )
+			if ( metrics_handler.HasMetric( Metrics::MetricType::PACKET_LOSS ) )
 			{
-				metrics_handler->AddValue( Metrics::MetricType::PACKET_LOSS, 1, "SENT" );
+				metrics_handler.AddValue( Metrics::MetricType::PACKET_LOSS, 1, "SENT" );
 			}
 		}
 
@@ -177,7 +177,7 @@ namespace NetLib
 		return ( !_unsentMessages.empty() || AreUnackedMessagesToResend() );
 	}
 
-	std::unique_ptr< Message > ReliableOrderedChannel::GetMessageToSend( Metrics::MetricsHandler* metrics_handler )
+	std::unique_ptr< Message > ReliableOrderedChannel::GetMessageToSend( Metrics::MetricsHandler& metrics_handler )
 	{
 		std::unique_ptr< Message > message = nullptr;
 		if ( !_unsentMessages.empty() )
@@ -194,9 +194,9 @@ namespace NetLib
 		else
 		{
 			message = TryGetUnackedMessageToResend();
-			if ( message != nullptr && metrics_handler != nullptr )
+			if ( message != nullptr && metrics_handler.HasMetric( Metrics::MetricType::RETRANSMISSIONS ) )
 			{
-				metrics_handler->AddValue( Metrics::MetricType::RETRANSMISSIONS, 1 );
+				metrics_handler.AddValue( Metrics::MetricType::RETRANSMISSIONS, 1 );
 			}
 		}
 
@@ -244,7 +244,7 @@ namespace NetLib
 	}
 
 	bool ReliableOrderedChannel::AddReceivedMessage( std::unique_ptr< Message > message,
-	                                                 Metrics::MetricsHandler* metrics_handler )
+	                                                 Metrics::MetricsHandler& metrics_handler )
 	{
 		assert( message != nullptr );
 
@@ -259,9 +259,9 @@ namespace NetLib
 			LOG_INFO( "The message with ID = %hu is duplicated. Ignoring it...", messageSequenceNumber );
 
 			// Submit duplicate message metric
-			if ( metrics_handler != nullptr )
+			if ( metrics_handler.HasMetric( Metrics::MetricType::DUPLICATE_MESSAGES ) )
 			{
-				metrics_handler->AddValue( Metrics::MetricType::DUPLICATE_MESSAGES, 1 );
+				metrics_handler.AddValue( Metrics::MetricType::DUPLICATE_MESSAGES, 1 );
 			}
 
 			// Release duplicate message
@@ -425,12 +425,12 @@ namespace NetLib
 	}
 
 	void ReliableOrderedChannel::ProcessUnorderedMessage( std::unique_ptr< Message > message,
-	                                                      Metrics::MetricsHandler* metrics_handler )
+	                                                      Metrics::MetricsHandler& metrics_handler )
 	{
 		AddUnorderedMessage( std::move( message ) );
-		if ( metrics_handler != nullptr )
+		if ( metrics_handler.HasMetric( Metrics::MetricType::OUT_OF_ORDER_MESSAGES ) )
 		{
-			metrics_handler->AddValue( Metrics::MetricType::OUT_OF_ORDER_MESSAGES, 1 );
+			metrics_handler.AddValue( Metrics::MetricType::OUT_OF_ORDER_MESSAGES, 1 );
 		}
 	}
 
@@ -440,7 +440,7 @@ namespace NetLib
 	}
 
 	bool ReliableOrderedChannel::TryRemoveAckedMessageFromUnacked( uint16 sequence_number,
-	                                                               Metrics::MetricsHandler* metrics_handler )
+	                                                               Metrics::MetricsHandler& metrics_handler )
 	{
 		bool result = false;
 
@@ -454,11 +454,14 @@ namespace NetLib
 			UpdateRTT( messageRTT );
 
 			// Submit latency and jitter metrics
-			if ( metrics_handler != nullptr )
+			const uint32 latency = messageRTT / 2;
+			if ( metrics_handler.HasMetric( Metrics::MetricType::LATENCY ) )
 			{
-				const uint32 latency = messageRTT / 2;
-				metrics_handler->AddValue( Metrics::MetricType::LATENCY, latency );
-				metrics_handler->AddValue( Metrics::MetricType::JITTER, latency );
+				metrics_handler.AddValue( Metrics::MetricType::LATENCY, latency );
+			}
+			if ( metrics_handler.HasMetric( Metrics::MetricType::JITTER ) )
+			{
+				metrics_handler.AddValue( Metrics::MetricType::JITTER, latency );
 			}
 
 			// Remove message from buffers
@@ -607,7 +610,7 @@ namespace NetLib
 	}
 
 	void ReliableOrderedChannel::ProcessACKs( uint32 acks, uint16 lastAckedMessageSequenceNumber,
-	                                          Metrics::MetricsHandler* metrics_handler )
+	                                          Metrics::MetricsHandler& metrics_handler )
 	{
 		LOG_INFO( "Last acked from client = %hu", lastAckedMessageSequenceNumber );
 
@@ -639,7 +642,7 @@ namespace NetLib
 		return result;
 	}
 
-	void ReliableOrderedChannel::Update( float32 deltaTime, Metrics::MetricsHandler* metrics_handler )
+	void ReliableOrderedChannel::Update( float32 deltaTime, Metrics::MetricsHandler& metrics_handler )
 	{
 		// Update unacked message timeouts
 		std::list< float32 >::iterator it = _unackedReliableMessageTimeouts.begin();
@@ -650,9 +653,9 @@ namespace NetLib
 
 			if ( timeout <= 0 )
 			{
-				if ( metrics_handler != nullptr )
+				if ( metrics_handler.HasMetric( Metrics::MetricType::PACKET_LOSS ) )
 				{
-					metrics_handler->AddValue( Metrics::MetricType::PACKET_LOSS, 1, "LOST" );
+					metrics_handler.AddValue( Metrics::MetricType::PACKET_LOSS, 1, "LOST" );
 				}
 				timeout = 0;
 			}

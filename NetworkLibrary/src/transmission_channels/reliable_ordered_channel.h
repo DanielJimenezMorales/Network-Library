@@ -37,21 +37,21 @@ namespace NetLib
 			ReliableOrderedChannel& operator=( ReliableOrderedChannel&& other ) noexcept;
 
 			bool CreateAndSendPacket( Socket& socket, const Address& address,
-			                          Metrics::MetricsHandler* metrics_handler ) override;
+			                          Metrics::MetricsHandler& metrics_handler ) override;
 
 			bool AddMessageToSend( std::unique_ptr< Message > message ) override;
 			bool ArePendingMessagesToSend() const override;
-			std::unique_ptr< Message > GetMessageToSend( Metrics::MetricsHandler* metrics_handler );
+			std::unique_ptr< Message > GetMessageToSend( Metrics::MetricsHandler& metrics_handler );
 
 			bool AddReceivedMessage( std::unique_ptr< Message > message,
-			                         Metrics::MetricsHandler* metrics_handler ) override;
+			                         Metrics::MetricsHandler& metrics_handler ) override;
 			bool ArePendingReadyToProcessMessages() const override;
 			const Message* GetReadyToProcessMessage() override;
 
 			void ProcessACKs( uint32 acks, uint16 lastAckedMessageSequenceNumber,
-			                  Metrics::MetricsHandler* metrics_handler ) override;
+			                  Metrics::MetricsHandler& metrics_handler ) override;
 
-			void Update( float32 deltaTime, Metrics::MetricsHandler* metrics_handler ) override;
+			void Update( float32 deltaTime, Metrics::MetricsHandler& metrics_handler ) override;
 
 			void Reset() override;
 
@@ -146,7 +146,7 @@ namespace NetLib
 			/// <param name="metrics_handler">A pointer to the metrics handler to update LATENCY and JITTER
 			/// metrics.</param>
 			/// <returns>True if the acked message was removed from _unackedReliableMessages, False otherwise.</returns>
-			bool TryRemoveAckedMessageFromUnacked( uint16 sequence_number, Metrics::MetricsHandler* metrics_handler );
+			bool TryRemoveAckedMessageFromUnacked( uint16 sequence_number, Metrics::MetricsHandler& metrics_handler );
 
 			/// <summary>
 			/// Gets, if available, from the _unackedReliableMessages buffer the unacked message index associated to
@@ -190,7 +190,7 @@ namespace NetLib
 			/// <param name="message">The unordered message received</param>
 			/// <param name="metrics_handler">The metrics handler to update out of order metric metric</param>
 			void ProcessUnorderedMessage( std::unique_ptr< Message > message,
-			                              Metrics::MetricsHandler* metrics_handler );
+			                              Metrics::MetricsHandler& metrics_handler );
 
 			/// <summary>
 			/// Adds an unordered message to the _unorderedMessagesWaitingForPrevious buffer until you get them in the

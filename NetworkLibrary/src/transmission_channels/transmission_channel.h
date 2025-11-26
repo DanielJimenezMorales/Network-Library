@@ -46,7 +46,7 @@ namespace NetLib
 			/// bandwidth.</param>
 			/// <returns>True if the packet was created and sent, False otherwise.</returns>
 			virtual bool CreateAndSendPacket( Socket& socket, const Address& address,
-			                                  Metrics::MetricsHandler* metrics_handler ) = 0;
+			                                  Metrics::MetricsHandler& metrics_handler ) = 0;
 
 			/// <summary>
 			/// Adds to the channel a message pending to be sent through the network. The header of the message must be
@@ -69,15 +69,15 @@ namespace NetLib
 			/// <param name="message">The message received to be processed.</param>
 			/// <returns>True if the message was stored correclt, False otherwise.</returns>
 			virtual bool AddReceivedMessage( std::unique_ptr< Message > message,
-			                                 Metrics::MetricsHandler* metrics_handler ) = 0;
+			                                 Metrics::MetricsHandler& metrics_handler ) = 0;
 			virtual bool ArePendingReadyToProcessMessages() const = 0;
 			virtual const Message* GetReadyToProcessMessage() = 0;
 			void FreeProcessedMessages();
 
 			virtual void ProcessACKs( uint32 acks, uint16 lastAckedMessageSequenceNumber,
-			                          Metrics::MetricsHandler* metrics_handler ) = 0;
+			                          Metrics::MetricsHandler& metrics_handler ) = 0;
 
-			virtual void Update( float32 deltaTime, Metrics::MetricsHandler* metrics_handler ) = 0;
+			virtual void Update( float32 deltaTime, Metrics::MetricsHandler& metrics_handler ) = 0;
 
 			virtual void Reset();
 

@@ -45,9 +45,11 @@ namespace NetLib
 				/// </summary>
 				bool AddValue( MetricType metric_type, uint32 value, const std::string& sample_type = "NONE" );
 
+				bool HasMetric( MetricType type ) const;
+
 			private:
 				bool AddMetrics( float32 update_rate, const std::vector< MetricType >& metrics );
-				bool AddEntry( IMetric* entry );
+				bool AddEntry( IMetric* metric );
 
 				bool _isStartedUp;
 				std::unordered_map< MetricType, IMetric* > _entries;

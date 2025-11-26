@@ -42,6 +42,13 @@ namespace NetLib
 
 			for ( auto cit = metrics.cbegin(); cit != metrics.cend(); ++cit )
 			{
+				if ( HasMetric( *cit ) )
+				{
+					LOG_WARNING( "[MetricsHandler.%s] Metric of type %u already exists. Ignoring it.",
+					             THIS_FUNCTION_NAME, static_cast< uint8 >( *cit ) );
+					continue;
+				}
+
 				switch ( *cit )
 				{
 					case MetricType::LATENCY:
@@ -77,6 +84,11 @@ namespace NetLib
 			}
 
 			return result;
+		}
+
+		bool MetricsHandler::HasMetric( MetricType type ) const
+		{
+			return _entries.find( type ) != _entries.end();
 		}
 
 		bool MetricsHandler::StartUp( float32 update_rate, MetricsEnableConfig enable_config,
@@ -152,22 +164,22 @@ namespace NetLib
 			    GetValue( MetricType::DUPLICATE_MESSAGES, ValueType::CURRENT ) );
 		}
 
-		bool MetricsHandler::AddEntry( IMetric* entry )
+		bool MetricsHandler::AddEntry( IMetric* metric )
 		{
-			ASSERT( entry != nullptr, "[MetricsHandler.%s] entry is nullptr.", THIS_FUNCTION_NAME );
+			ASSERT( metric != nullptr, "[MetricsHandler.%s] entry is nullptr.", THIS_FUNCTION_NAME );
 
 			bool result = false;
 
-			const MetricType entryType = entry->GetType();
-			if ( _entries.find( entry->GetType() ) == _entries.end() )
+			const MetricType metricType = metric->GetType();
+			if ( !HasMetric( metricType ) )
 			{
-				_entries[ entryType ] = entry;
+				_entries[ metricType ] = metric;
 				result = true;
 			}
 			else
 			{
-				LOG_WARNING( "Network statistic entry of type '%u' already exists, ignoring the new one",
-				             static_cast< uint8 >( entryType ) );
+				LOG_WARNING( "Network statistic metric of type '%u' already exists, ignoring the new one",
+				             static_cast< uint8 >( metricType ) );
 			}
 
 			return result;

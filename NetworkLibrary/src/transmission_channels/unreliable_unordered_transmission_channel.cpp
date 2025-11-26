@@ -35,7 +35,7 @@ namespace NetLib
 	}
 
 	bool UnreliableUnorderedTransmissionChannel::CreateAndSendPacket( Socket& socket, const Address& address,
-	                                                                  Metrics::MetricsHandler* metrics_handler )
+	                                                                  Metrics::MetricsHandler& metrics_handler )
 	{
 		bool result = false;
 
@@ -77,9 +77,9 @@ namespace NetLib
 		socket.SendTo( buffer.GetData(), buffer.GetSize(), address );
 
 		// TODO See what happens when the socket couldn't send the packet
-		if ( metrics_handler != nullptr )
+		if ( metrics_handler.HasMetric( Metrics::MetricType::UPLOAD_BANDWIDTH ) )
 		{
-			metrics_handler->AddValue( Metrics::MetricType::UPLOAD_BANDWIDTH, packet.Size() );
+			metrics_handler.AddValue( Metrics::MetricType::UPLOAD_BANDWIDTH, packet.Size() );
 		}
 
 		// Send messages ownership back to remote peer
@@ -114,7 +114,7 @@ namespace NetLib
 	}
 
 	std::unique_ptr< Message > UnreliableUnorderedTransmissionChannel::GetMessageToSend(
-	    Metrics::MetricsHandler* metrics_handler )
+	    Metrics::MetricsHandler& metrics_handler )
 	{
 		if ( !ArePendingMessagesToSend() )
 		{
@@ -142,7 +142,7 @@ namespace NetLib
 	}
 
 	bool UnreliableUnorderedTransmissionChannel::AddReceivedMessage( std::unique_ptr< Message > message,
-	                                                                 Metrics::MetricsHandler* metrics_handler )
+	                                                                 Metrics::MetricsHandler& metrics_handler )
 	{
 		assert( message != nullptr );
 
@@ -177,7 +177,7 @@ namespace NetLib
 	}
 
 	void UnreliableUnorderedTransmissionChannel::ProcessACKs( uint32 acks, uint16 lastAckedMessageSequenceNumber,
-	                                                          Metrics::MetricsHandler* metrics_handler )
+	                                                          Metrics::MetricsHandler& metrics_handler )
 	{
 	}
 
@@ -186,7 +186,7 @@ namespace NetLib
 		return false;
 	}
 
-	void UnreliableUnorderedTransmissionChannel::Update( float32 deltaTime, Metrics::MetricsHandler* metrics_handler )
+	void UnreliableUnorderedTransmissionChannel::Update( float32 deltaTime, Metrics::MetricsHandler& metrics_handler )
 	{
 	}
 

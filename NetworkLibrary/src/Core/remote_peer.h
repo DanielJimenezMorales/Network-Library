@@ -45,7 +45,6 @@ namespace NetLib
 
 			std::vector< TransmissionChannel* > _transmissionChannels;
 
-			bool _metricsEnabled;
 			Metrics::MetricsHandler _metricsHandler;
 
 			PingPongMessagesSender _pingPongMessagesSender;
@@ -65,9 +64,6 @@ namespace NetLib
 
 			RemotePeer& operator=( const RemotePeer& ) = delete;
 			~RemotePeer();
-
-			void ActivateNetworkStatistics();
-			void DeactivateNetworkStatistics();
 
 			/// <summary>
 			/// Initializes all the internal systems. You must call this method before performing any other operation.
