@@ -8,7 +8,11 @@
 #include "communication/message_factory.h"
 #include "communication/network_packet_utils.h"
 
+#include "connection/client_connection_pipeline.h"
+#include "connection/server_connection_pipeline.h"
+
 #include "logger.h"
+#include "asserts.h"
 
 #include "core/buffer.h"
 #include "core/remote_peer.h"
@@ -29,6 +33,26 @@ namespace NetLib
 		if ( _socket.Start() != SocketResult::SOKT_SUCCESS )
 		{
 			LOG_ERROR( "Error while starting peer, aborting operation..." );
+			SetConnectionState( PeerConnectionState::PCS_Disconnected );
+			return false;
+		}
+
+		// TODO, This is hardcoded
+		ConnectionConfiguration connectionConfiguration;
+		connectionConfiguration.canStartConnections = ( _type == PeerType::CLIENT );
+		connectionConfiguration.maxPendingConnections = ( _type == PeerType::CLIENT ) ? 1 : 10;
+		if ( _type == PeerType::CLIENT )
+		{
+			connectionConfiguration.connectionPipeline = new ClientConnectionPipeline();
+		}
+		else if ( _type == PeerType::SERVER )
+		{
+			connectionConfiguration.connectionPipeline = new ServerConnectionPipeline();
+		}
+
+		if ( !_connectionManager.StartUp( connectionConfiguration, &_messageFactory ) )
+		{
+			LOG_ERROR( "Error while starting peer connection manager, aborting operation..." );
 			SetConnectionState( PeerConnectionState::PCS_Disconnected );
 			return false;
 		}
@@ -67,11 +91,14 @@ namespace NetLib
 			return false;
 		}
 
+		TickPendingConnections( elapsedTime );
 		TickRemotePeers( elapsedTime );
 		TickConcrete( elapsedTime );
 		FinishRemotePeersDisconnection();
 
+		SendDataToPendingConnections();
 		SendDataToRemotePeers();
+		ConvertSuccessfulConnectionsInRemotePeers();
 
 		if ( _isStopRequested )
 		{
@@ -167,6 +194,7 @@ namespace NetLib
 	    , _stopRequestReason( ConnectionFailedReasonType::CFR_UNKNOWN )
 	    , _currentTick( 0 )
 	    , _messageFactory( 3 )
+	    , _connectionManager()
 	{
 		_receiveBuffer = new uint8[ _receiveBufferSize ];
 		_sendBuffer = new uint8[ _sendBufferSize ];
@@ -191,7 +219,7 @@ namespace NetLib
 	void Peer::ConnectRemotePeer( RemotePeer& remotePeer )
 	{
 		remotePeer.SetConnected();
-		InternalOnRemotePeerConnect( remotePeer );
+		InternalOnRemotePeerConnect( remotePeer, 0 );
 		ExecuteOnRemotePeerConnect( remotePeer.GetClientIndex() );
 	}
 
@@ -342,13 +370,19 @@ namespace NetLib
 		}
 		else
 		{
-			const std::vector< std::unique_ptr< Message > >& packetMessages = packet.GetAllMessages();
-			for ( auto cit = packetMessages.cbegin(); cit != packetMessages.cend(); ++cit )
+			while ( packet.GetNumberOfMessages() > 0 )
 			{
-				ProcessMessageFromUnknownPeer( **cit, address );
+				std::unique_ptr< Message > message = packet.TryGetNextMessage();
+				_connectionManager.AddIncomingMessageToPendingConnection( address, std::move( message ) );
 			}
 
-			NetworkPacketUtils::CleanPacket( _messageFactory, packet );
+			// const std::vector< std::unique_ptr< Message > >& packetMessages = packet.GetAllMessages();
+			// for ( auto cit = packetMessages.cbegin(); cit != packetMessages.cend(); ++cit )
+			//{
+			//	ProcessMessageFromUnknownPeer( **cit, address );
+			// }
+
+			// NetworkPacketUtils::CleanPacket( _messageFactory, packet );
 		}
 	}
 
@@ -370,6 +404,35 @@ namespace NetLib
 
 			remotePeer.FreeProcessedMessages();
 		}
+	}
+
+	void Peer::TickPendingConnections( float32 elapsed_time )
+	{
+		_connectionManager.Tick( elapsed_time );
+	}
+
+	void Peer::ConvertSuccessfulConnectionsInRemotePeers()
+	{
+		std::vector< PendingConnectionData > successfulConnections;
+		_connectionManager.GetConnectedPendingConnectionsData( successfulConnections );
+
+		for ( auto& cit = successfulConnections.cbegin(); cit != successfulConnections.cend(); ++cit )
+		{
+			// TODO Change this and get rid of both salts in remote peer. Just keep the data prefix
+			if ( AddRemotePeer( cit->address, cit->id, cit->dataPrefix, 0 ) )
+			{
+				RemotePeer* remotePeer = _remotePeersHandler.GetRemotePeerFromId( cit->id );
+				ASSERT( remotePeer != nullptr, "Remote peer cannot be nullptr after its creation" );
+				InternalOnRemotePeerConnect( *remotePeer, cit->clientSideId );
+				ExecuteOnRemotePeerConnect( cit->id );
+			}
+			else
+			{
+				LOG_ERROR( "%s Error while adding new remote peer after successful connection", THIS_FUNCTION_NAME );
+			}
+		}
+
+		_connectionManager.ClearConnectedPendingConnections();
 	}
 
 	void Peer::TickRemotePeers( float32 elapsedTime )
@@ -400,6 +463,11 @@ namespace NetLib
 		{
 			( *validRemotePeersIt )->SendData( _socket );
 		}
+	}
+
+	void Peer::SendDataToPendingConnections()
+	{
+		_connectionManager.SendDataToPendingConnections( _socket );
 	}
 
 	void Peer::SendDataToAddress( const Buffer& buffer, const Address& address ) const

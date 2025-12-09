@@ -11,6 +11,8 @@ namespace NetLib
 	static std::unique_ptr< Message > CreateConnectionChallengeResponseMessage( MessageFactory& message_factory,
 	                                                                            uint64 data_prefix )
 	{
+		LOG_INFO( "%s Creating connection challenge response message for pending connection", THIS_FUNCTION_NAME );
+
 		// Get a connection challenge message
 		std::unique_ptr< Message > message = message_factory.LendMessage( MessageType::ConnectionChallengeResponse );
 		if ( message == nullptr )
@@ -82,8 +84,9 @@ namespace NetLib
 			return;
 		}
 
-		pending_connection.GenerateDataPrefix();
 		pending_connection.SetCurrentState( PendingConnectionState::Completed );
+		pending_connection.SetId( 0 );
+		pending_connection.SetClientSideId( message.clientIndexAssigned );
 	}
 
 	static void ProcessConnectionDenied( PendingConnection& pending_connection, const ConnectionDeniedMessage& message )

@@ -60,7 +60,7 @@ namespace NetLib
 			void TickConcrete( float32 elapsedTime ) override;
 			bool StopConcrete() override;
 
-			void InternalOnRemotePeerConnect( RemotePeer& remote_peer ) override {};
+			void InternalOnRemotePeerConnect( RemotePeer& remote_peer, uint16 client_side_id ) override;
 			void InternalOnRemotePeerDisconnect( const RemotePeer& remote_peer ) override {};
 
 		private:

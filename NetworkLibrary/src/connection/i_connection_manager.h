@@ -9,6 +9,7 @@
 namespace NetLib
 {
 	class IConnectionPipeline;
+	class Socket;
 
 	struct ConnectionConfiguration
 	{
@@ -19,24 +20,26 @@ namespace NetLib
 
 	struct PendingConnectionData
 	{
-			PendingConnectionData( const Address& address, uint16 id, uint64 data_prefix )
+			PendingConnectionData( const Address& address, uint16 id, uint16 client_side_id, uint64 data_prefix )
 			    : address( address )
 			    , id( id )
+			    , clientSideId( client_side_id )
 			    , dataPrefix( data_prefix )
 			{
 			}
 
 			Address address;
 			uint16 id;
+			uint16 clientSideId;
 			uint64 dataPrefix;
 	};
 
 	class ConnectionManager
 	{
 		public:
-			ConnectionManager( MessageFactory* message_factory );
+			ConnectionManager();
 
-			bool StartUp( ConnectionConfiguration& configuration );
+			bool StartUp( ConnectionConfiguration& configuration, MessageFactory* message_factory );
 			bool ShutDown();
 
 			/*>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>
@@ -89,6 +92,8 @@ namespace NetLib
 			    std::vector< PendingConnectionData >& out_connected_pending_connections );
 
 			void ClearConnectedPendingConnections();
+
+			void SendDataToPendingConnections( Socket& socket );
 
 		private:
 			bool _isStartedUp;

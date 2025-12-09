@@ -13,6 +13,8 @@
 
 #include "communication/message_factory.h"
 
+#include "connection/i_connection_manager.h"
+
 #include "transmission_channels/transmission_channel.h"
 
 class Buffer;
@@ -146,13 +148,15 @@ namespace NetLib
 			/// Called during OnRemotePeerConnect. This function is used for events happening inside the network library
 			/// code. This function will be called before teh OnRemotePeerConnect Delegate
 			/// </summary>
-			virtual void InternalOnRemotePeerConnect( RemotePeer& remote_peer ) = 0;
+			virtual void InternalOnRemotePeerConnect( RemotePeer& remote_peer, uint16 client_side_id ) = 0;
 			virtual void InternalOnRemotePeerDisconnect( const RemotePeer& remote_peer ) = 0;
 			void ExecuteOnLocalPeerConnect();
 			void ExecuteOnLocalPeerDisconnect( ConnectionFailedReasonType reason );
 
 			RemotePeersHandler _remotePeersHandler;
 			MessageFactory _messageFactory;
+
+			ConnectionManager _connectionManager;
 
 		private:
 			/// <summary>
@@ -177,6 +181,9 @@ namespace NetLib
 
 			void SetConnectionState( PeerConnectionState state );
 
+			void TickPendingConnections( float32 elapsed_time );
+			void ConvertSuccessfulConnectionsInRemotePeers();
+
 			// Remote peer related
 			void TickRemotePeers( float32 elapsedTime );
 			void DisconnectAllRemotePeers( bool shouldNotify, ConnectionFailedReasonType reason );
@@ -189,6 +196,7 @@ namespace NetLib
 			/// Sends pending data to all the connected remote peers
 			/// </summary>
 			void SendDataToRemotePeers();
+			void SendDataToPendingConnections();
 
 			void SendDataToAddress( const Buffer& buffer, const Address& address ) const;
 

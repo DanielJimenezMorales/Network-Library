@@ -78,8 +78,9 @@ namespace NetLib
 
 		_currentState = ClientState::CS_SendingConnectionRequest;
 
-		uint64 clientSalt = GenerateClientSaltNumber();
-		AddRemotePeer( _serverAddress, 0, clientSalt, 0 );
+		_connectionManager.StartConnectingToAddress( _serverAddress );
+		// uint64 clientSalt = GenerateClientSaltNumber();
+		// AddRemotePeer( _serverAddress, 0, clientSalt, 0 );
 
 		SubscribeToOnRemotePeerDisconnect(
 		    [ this ]( uint32 )
@@ -173,7 +174,7 @@ namespace NetLib
 
 	void Client::TickConcrete( float32 elapsedTime )
 	{
-		if ( _currentState == ClientState::CS_SendingConnectionRequest ||
+		/*if ( _currentState == ClientState::CS_SendingConnectionRequest ||
 		     _currentState == ClientState::CS_SendingConnectionChallengeResponse )
 		{
 			RemotePeer* remotePeer = _remotePeersHandler.GetRemotePeerFromAddress( _serverAddress );
@@ -186,7 +187,7 @@ namespace NetLib
 			}
 
 			CreateConnectionRequestMessage( *remotePeer );
-		}
+		}*/
 
 		if ( _currentState == ClientState::CS_Connected )
 		{
@@ -206,6 +207,18 @@ namespace NetLib
 	{
 		_currentState = ClientState::CS_Disconnected;
 		return true;
+	}
+
+	void Client::InternalOnRemotePeerConnect( RemotePeer& remote_peer, uint16 client_side_id )
+	{
+		_clientIndex = client_side_id;
+		_currentState = ClientState::CS_Connected;
+
+		// TODO Do not hardcode it like this. It might looks weird
+		_replicationMessagesProcessor.SetLocalClientId( _clientIndex );
+
+		LOG_INFO( "Connection accepted!" );
+		ExecuteOnLocalPeerConnect();
 	}
 
 	void Client::ProcessConnectionChallenge( const ConnectionChallengeMessage& message, RemotePeer& remotePeer )

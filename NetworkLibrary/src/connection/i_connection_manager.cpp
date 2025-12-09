@@ -7,15 +7,15 @@
 
 namespace NetLib
 {
-	ConnectionManager::ConnectionManager( MessageFactory* message_factory )
+	ConnectionManager::ConnectionManager()
 	    : _isStartedUp( false )
 	    , _pendingConnections()
 	    , _connectionPipeline( nullptr )
-	    , _messageFactory( message_factory )
+	    , _messageFactory( nullptr )
 	{
 	}
 
-	bool ConnectionManager::StartUp( ConnectionConfiguration& configuration )
+	bool ConnectionManager::StartUp( ConnectionConfiguration& configuration, MessageFactory* message_factory )
 	{
 		if ( _isStartedUp )
 		{
@@ -23,6 +23,9 @@ namespace NetLib
 			           THIS_FUNCTION_NAME );
 			return false;
 		}
+
+		ASSERT( message_factory != nullptr, "Message factory can't be null" );
+		_messageFactory = message_factory;
 
 		if ( configuration.connectionPipeline != nullptr )
 		{
@@ -102,7 +105,7 @@ namespace NetLib
 			found = true;
 		}
 
-		return true;
+		return found;
 	}
 
 	bool ConnectionManager::AddIncomingMessageToPendingConnection( const Address& address,
@@ -121,7 +124,7 @@ namespace NetLib
 		if ( DoesPendingConnectionExist( address ) )
 		{
 			PendingConnection& pendingConnection = _pendingConnections[ address ];
-			pendingConnection.AddMessage( std::move( message ) );
+			pendingConnection.AddReceivedMessage( std::move( message ) );
 			success = true;
 		}
 		else
@@ -133,7 +136,7 @@ namespace NetLib
 				if ( CreatePendingConnection( address ) )
 				{
 					PendingConnection& pendingConnection = _pendingConnections[ address ];
-					pendingConnection.AddMessage( std::move( message ) );
+					pendingConnection.AddReceivedMessage( std::move( message ) );
 					success = true;
 				}
 				else
@@ -173,7 +176,7 @@ namespace NetLib
 			if ( !DoesPendingConnectionExist( address ) )
 			{
 				// Create and start up
-				_pendingConnections.emplace( address, PendingConnection( _messageFactory ) );
+				_pendingConnections.try_emplace( address, _messageFactory );
 				success = _pendingConnections[ address ].StartUp( address );
 				if ( !success )
 				{
@@ -247,7 +250,8 @@ namespace NetLib
 			const PendingConnection& pc = cit->second;
 			if ( pc.GetCurrentState() == PendingConnectionState::Completed )
 			{
-				out_connected_pending_connections.emplace_back( pc.GetAddress(), pc.GetId(), pc.GetDataPrefix() );
+				out_connected_pending_connections.emplace_back( pc.GetAddress(), pc.GetId(), pc.GetClientSideId(),
+				                                                pc.GetDataPrefix() );
 			}
 		}
 	}
@@ -271,6 +275,14 @@ namespace NetLib
 			{
 				++it;
 			}
+		}
+	}
+
+	void ConnectionManager::SendDataToPendingConnections( Socket& socket )
+	{
+		for ( auto it = _pendingConnections.begin(); it != _pendingConnections.end(); ++it )
+		{
+			it->second.SendData( socket );
 		}
 	}
 } // namespace NetLib

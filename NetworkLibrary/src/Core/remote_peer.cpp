@@ -120,7 +120,7 @@ namespace NetLib
 		_inactivityTimeLeft = _maxInactivityTime;
 		_clientSalt = clientSalt;
 		_serverSalt = serverSalt;
-		_currentState = RemotePeerState::Connecting;
+		_currentState = RemotePeerState::Connected;
 
 		// TODO Add here the list of metrics or metrics data we can to enable for this remote peer
 		if ( !_metricsHandler.StartUp( 1.f, Metrics::MetricsEnableConfig::ENABLE_ALL ) )

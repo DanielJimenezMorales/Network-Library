@@ -431,7 +431,7 @@ namespace NetLib
 		return true;
 	}
 
-	void Server::InternalOnRemotePeerConnect( RemotePeer& remote_peer )
+	void Server::InternalOnRemotePeerConnect( RemotePeer& remote_peer, uint16 client_side_id )
 	{
 		_remotePeerInputsHandler.CreateInputsBuffer( remote_peer.GetClientIndex() );
 	}

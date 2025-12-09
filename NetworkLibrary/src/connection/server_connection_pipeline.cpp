@@ -20,6 +20,8 @@ namespace NetLib
 	static std::unique_ptr< Message > CreateConnectionChallengeMessage( MessageFactory& message_factory,
 	                                                                    uint64 client_salt, uint64 server_salt )
 	{
+		LOG_INFO( "%s Creating connection challenge message for pending connection", THIS_FUNCTION_NAME );
+
 		std::unique_ptr< Message > message = message_factory.LendMessage( MessageType::ConnectionChallenge );
 		if ( message == nullptr )
 		{
@@ -39,6 +41,8 @@ namespace NetLib
 
 	static std::unique_ptr< Message > CreateConnectionDeniedMessage( MessageFactory& message_factory )
 	{
+		LOG_INFO( "%s Creating connection denied message for pending connection", THIS_FUNCTION_NAME );
+
 		std::unique_ptr< Message > message = message_factory.LendMessage( MessageType::ConnectionDenied );
 		if ( message == nullptr )
 		{
@@ -58,6 +62,8 @@ namespace NetLib
 	static std::unique_ptr< Message > CreateConnectionAcceptedMessage( MessageFactory& message_factory,
 	                                                                   uint64 data_prefix, uint16 id )
 	{
+		LOG_INFO( "%s Creating connection accepted message for pending connection", THIS_FUNCTION_NAME );
+
 		std::unique_ptr< Message > message = message_factory.LendMessage( MessageType::ConnectionAccepted );
 		if ( message == nullptr )
 		{
@@ -67,12 +73,12 @@ namespace NetLib
 			return nullptr;
 		}
 
-		std::unique_ptr< ConnectionAcceptedMessage > connectionAcceptedPacket(
+		std::unique_ptr< ConnectionAcceptedMessage > connectionAcceptedMessage(
 		    static_cast< ConnectionAcceptedMessage* >( message.release() ) );
-		connectionAcceptedPacket->prefix = data_prefix;
-		connectionAcceptedPacket->clientIndexAssigned = id;
+		connectionAcceptedMessage->prefix = data_prefix;
+		connectionAcceptedMessage->clientIndexAssigned = id;
 
-		return connectionAcceptedPacket;
+		return connectionAcceptedMessage;
 	}
 
 	static void ProcessConnectionRequest( PendingConnection& pending_connection,
@@ -88,7 +94,9 @@ namespace NetLib
 		{
 			if ( pending_connection.GetCurrentState() == PendingConnectionState::Initializing )
 			{
+				pending_connection.SetClientSalt( message.clientSalt );
 				pending_connection.SetServerSalt( GenerateServerSalt() );
+				pending_connection.GenerateDataPrefix();
 				pending_connection.SetCurrentState( PendingConnectionState::ConnectionChallenge );
 			}
 
@@ -143,7 +151,7 @@ namespace NetLib
 
 		switch ( type )
 		{
-			case MessageType::ConnectionAccepted:
+			case MessageType::ConnectionRequest:
 				{
 					ProcessConnectionRequest( pending_connection,
 					                          static_cast< const ConnectionRequestMessage& >( *message ),
