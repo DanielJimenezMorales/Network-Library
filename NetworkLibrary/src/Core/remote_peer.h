@@ -41,6 +41,7 @@ namespace NetLib
 			uint64 _clientSalt;
 			uint64 _serverSalt;
 
+			// TODO Unused variable. Remove it
 			uint16 _nextPacketSequenceNumber;
 
 			std::vector< TransmissionChannel* > _transmissionChannels;

@@ -22,7 +22,6 @@ namespace NetLib
 			static Address GetInvalid() { return Address( "0.0.0.0", 0 ); }
 
 			Address( const std::string& ip, uint32 port );
-
 			Address( const Address& other ) = default;
 
 			bool operator==( const Address& other ) const;
@@ -47,5 +46,14 @@ namespace NetLib
 			struct sockaddr_in _addressInfo;
 
 			friend class Socket;
+	};
+
+	struct AddressHasher
+	{
+			size_t operator()( const Address& address ) const noexcept
+			{
+				return std::hash< std::string >()( address.GetIP() ) ^
+				       ( std::hash< uint32 >()( address.GetPort() ) << 1 );
+			}
 	};
 } // namespace NetLib
