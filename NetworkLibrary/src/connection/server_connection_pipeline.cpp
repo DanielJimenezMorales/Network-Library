@@ -204,6 +204,7 @@ namespace NetLib
 		}
 		else
 		{
+			pending_connection.SetCurrentState( PendingConnectionState::Failed );
 			pending_connection.SetConnectionDeniedReason( ConnectionFailedReasonType::CFR_WRONG_CHALLENGE_RESPONSE );
 			outcomeMessage =
 			    CreateConnectionDeniedMessage( message_factory, pending_connection.GetConnectionDeniedReason() );

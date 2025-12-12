@@ -93,8 +93,8 @@ namespace NetLib
 	{
 		LOG_INFO( "%s Processing connection denied message for pending connection", THIS_FUNCTION_NAME );
 
-		pending_connection.SetConnectionDeniedReason( static_cast< ConnectionFailedReasonType >( message.reason ) );
 		pending_connection.SetCurrentState( PendingConnectionState::Failed );
+		pending_connection.SetConnectionDeniedReason( static_cast< ConnectionFailedReasonType >( message.reason ) );
 	}
 
 	static void ProcessMessage( PendingConnection& pending_connection, const Message* message,

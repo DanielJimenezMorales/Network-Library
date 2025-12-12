@@ -40,6 +40,13 @@ namespace NetLib
 
 			void SendData( Socket& socket );
 
+			void UpdateConnectionElapsedTime( float32 elapsed_time )
+			{
+				_currentConnectionElapsedTimeSeconds += elapsed_time;
+			};
+
+			float32 GetCurrentConnectionElapsedTime() const { return _currentConnectionElapsedTimeSeconds; };
+
 			uint64 GetClientSalt() const { return _clientSalt; };
 			uint64 GetServerSalt() const { return _serverSalt; };
 			uint64 GetDataPrefix() const { return _dataPrefix; };
@@ -82,6 +89,7 @@ namespace NetLib
 			uint16 _id;
 			uint16 _clientSideId;
 			bool _startedLocally;
+			float32 _currentConnectionElapsedTimeSeconds;
 			ConnectionFailedReasonType _connectionDeniedReason;
 	};
 } // namespace NetLib

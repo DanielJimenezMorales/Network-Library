@@ -37,6 +37,7 @@ namespace NetLib
 		_currentState = PendingConnectionState::Initializing;
 		_hasClientSaltAssigned = false;
 		_hasServerSaltAssigned = false;
+		_currentConnectionElapsedTimeSeconds = 0.f;
 		_isStartedUp = true;
 		return true;
 	}

@@ -34,6 +34,8 @@ namespace NetLib
 			_connectionPipeline = configuration.connectionPipeline;
 			_maxPendingConnections = configuration.maxPendingConnections;
 			_canStartConnections = configuration.canStartConnections;
+			_connectionTimeoutSeconds = configuration.connectionTimeoutSeconds;
+			_sendDenialOnTimeout = configuration.sendDenialOnTimeout;
 
 			_isStartedUp = true;
 		}
@@ -88,7 +90,10 @@ namespace NetLib
 
 		for ( auto& it = _pendingConnections.begin(); it != _pendingConnections.end(); ++it )
 		{
-			_connectionPipeline->ProcessConnection( it->second, *_messageFactory, elapsed_time );
+			PendingConnection& pc = it->second;
+			_connectionPipeline->ProcessConnection( pc, *_messageFactory, elapsed_time );
+
+			UpdateTimeout( pc, elapsed_time );
 		}
 	}
 
@@ -162,37 +167,37 @@ namespace NetLib
 		return success;
 	}
 
-	bool ConnectionManager::ProcessPacket(const Address& address, NetworkPacket& packet)
+	bool ConnectionManager::ProcessPacket( const Address& address, NetworkPacket& packet )
 	{
-		if (!_isStartedUp)
+		if ( !_isStartedUp )
 		{
-			LOG_ERROR("[ConnectionManager.%s] ConnectionManager is not started up, ignoring call",
-				THIS_FUNCTION_NAME);
+			LOG_ERROR( "[ConnectionManager.%s] ConnectionManager is not started up, ignoring call",
+			           THIS_FUNCTION_NAME );
 			return false;
 		}
 
 		bool success = false;
-		if (DoesPendingConnectionExist(address))
+		if ( DoesPendingConnectionExist( address ) )
 		{
-			PendingConnection& pendingConnection = _pendingConnections[address];
-			pendingConnection.ProcessPacket(packet);
+			PendingConnection& pendingConnection = _pendingConnections[ address ];
+			pendingConnection.ProcessPacket( packet );
 			success = true;
 		}
 		else
 		{
 			// Check if pending connection creation is successful - There have to be empty slots left
-			if (CreatePendingConnection(address, false))
+			if ( CreatePendingConnection( address, false ) )
 			{
-				PendingConnection& pendingConnection = _pendingConnections[address];
-				pendingConnection.ProcessPacket(packet);
+				PendingConnection& pendingConnection = _pendingConnections[ address ];
+				pendingConnection.ProcessPacket( packet );
 				success = true;
 			}
 			else
 			{
 				std::string fullAddress;
-				address.GetFull(fullAddress);
-				LOG_WARNING("ConnectionManager.%s Cannot create pending connection with address %s.",
-					THIS_FUNCTION_NAME, fullAddress.c_str());
+				address.GetFull( fullAddress );
+				LOG_WARNING( "ConnectionManager.%s Cannot create pending connection with address %s.",
+				             THIS_FUNCTION_NAME, fullAddress.c_str() );
 			}
 		}
 
@@ -364,6 +369,26 @@ namespace NetLib
 		for ( auto it = _pendingConnections.begin(); it != _pendingConnections.end(); ++it )
 		{
 			it->second.SendData( socket );
+		}
+	}
+
+	void ConnectionManager::UpdateTimeout( PendingConnection& pending_connection, float32 elapsed_time )
+	{
+		pending_connection.UpdateConnectionElapsedTime( elapsed_time );
+		if ( pending_connection.GetCurrentConnectionElapsedTime() >= _connectionTimeoutSeconds )
+		{
+			std::string addressStr;
+			pending_connection.GetAddress().GetFull( addressStr );
+			LOG_INFO( "ConnectionManager.%s Pending connection with address %s has timed out.", THIS_FUNCTION_NAME,
+			          addressStr.c_str() );
+			pending_connection.SetCurrentState( PendingConnectionState::Failed );
+			pending_connection.SetConnectionDeniedReason( ConnectionFailedReasonType::CFR_TIMEOUT );
+
+			if ( _sendDenialOnTimeout )
+			{
+				// TODO Evaluate if it is worth sending a denial message on timeout since the client-side will also time
+				// out its connection (if config stays the same between server and client.)
+			}
 		}
 	}
 } // namespace NetLib

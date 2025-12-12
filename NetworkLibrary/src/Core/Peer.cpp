@@ -41,6 +41,8 @@ namespace NetLib
 		ConnectionConfiguration connectionConfiguration;
 		connectionConfiguration.canStartConnections = ( _type == PeerType::CLIENT );
 		connectionConfiguration.maxPendingConnections = ( _type == PeerType::CLIENT ) ? 1 : 10;
+		connectionConfiguration.connectionTimeoutSeconds = 5.f;
+		connectionConfiguration.sendDenialOnTimeout = ( _type == PeerType::SERVER );
 		if ( _type == PeerType::CLIENT )
 		{
 			connectionConfiguration.connectionPipeline = new ClientConnectionPipeline();

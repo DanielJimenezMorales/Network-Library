@@ -17,6 +17,8 @@ namespace NetLib
 	{
 			uint32 maxPendingConnections;
 			bool canStartConnections;
+			float32 connectionTimeoutSeconds;
+			bool sendDenialOnTimeout;
 			IConnectionPipeline* connectionPipeline;
 	};
 
@@ -83,6 +85,7 @@ namespace NetLib
 			/
 			/	returns: true if added, false otherwise
 			>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>*/
+			// TODO Remove this deprecated method
 			bool AddIncomingMessageToPendingConnection( const Address& address, std::unique_ptr< Message > message );
 
 			bool ProcessPacket( const Address& address, NetworkPacket& packet );
@@ -119,6 +122,8 @@ namespace NetLib
 			void SendDataToPendingConnections( Socket& socket );
 
 		private:
+			void UpdateTimeout( PendingConnection& pending_connection, float32 elapsed_time );
+
 			bool _isStartedUp;
 
 			std::unordered_map< Address, PendingConnection, AddressHasher > _pendingConnections;
@@ -126,6 +131,8 @@ namespace NetLib
 			MessageFactory* _messageFactory;
 
 			uint32 _maxPendingConnections;
+			float32 _connectionTimeoutSeconds;
 			bool _canStartConnections;
+			bool _sendDenialOnTimeout;
 	};
 } // namespace NetLib
