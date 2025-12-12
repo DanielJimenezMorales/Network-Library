@@ -254,7 +254,10 @@ namespace NetLib
 		buffer.WriteInteger( controlledByPeerId );
 		buffer.WriteInteger( replicatedClassId );
 		buffer.WriteShort( dataSize );
-		buffer.WriteData( data, dataSize );
+		if ( dataSize > 0 )
+		{
+			buffer.WriteData( data, dataSize );
+		}
 	}
 
 	bool ReplicationMessage::Read( Buffer& buffer )
@@ -293,11 +296,10 @@ namespace NetLib
 		if ( dataSize > 0 )
 		{
 			data = new uint8[ dataSize ];
-		}
-
-		if ( !buffer.ReadData( data, dataSize ) )
-		{
-			return false;
+			if ( !buffer.ReadData( data, dataSize ) )
+			{
+				return false;
+			}
 		}
 
 		return true;

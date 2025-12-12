@@ -1,8 +1,8 @@
 #include "buffer.h"
 
 #include "Logger.h"
+#include "asserts.h"
 
-#include <cassert>
 #include <cmath>
 #include <cstring>
 
@@ -22,14 +22,16 @@ namespace NetLib
 
 	void Buffer::CopyUsedData( uint8* dst, uint32 dst_size ) const
 	{
-		assert( dst_size >= _index );
+		ASSERT( dst_size >= _index, "Buffer.%s The destination buffer is smaller than the used data to copy.",
+		        THIS_FUNCTION_NAME );
 
 		std::memcpy( dst, _data, _index );
 	}
 
 	void Buffer::WriteLong( uint64 value )
 	{
-		assert( _index + 8 <= _size );
+		ASSERT( _index + 8 <= _size, "Buffer.%s Write operation exceeds buffer bounds. Size: %u, Remaining: %u",
+		        THIS_FUNCTION_NAME, _size, _size - _index );
 		*( ( uint64* ) ( _data + _index ) ) = value;
 
 		_index += 8;
@@ -37,7 +39,8 @@ namespace NetLib
 
 	void Buffer::WriteInteger( uint32 value )
 	{
-		assert( _index + 4 <= _size );
+		ASSERT( _index + 4 <= _size, "Buffer.%s Write operation exceeds buffer bounds. Size: %u, Remaining: %u",
+		        THIS_FUNCTION_NAME, _size, _size - _index );
 		*( ( uint32* ) ( _data + _index ) ) = value;
 
 		_index += 4;
@@ -45,7 +48,8 @@ namespace NetLib
 
 	void Buffer::WriteShort( uint16 value )
 	{
-		assert( _index + 2 <= _size );
+		ASSERT( _index + 2 <= _size, "Buffer.%s Write operation exceeds buffer bounds. Size: %u, Remaining: %u",
+		        THIS_FUNCTION_NAME, _size, _size - _index );
 		*( ( uint16* ) ( _data + _index ) ) = value;
 
 		_index += 2;
@@ -53,7 +57,8 @@ namespace NetLib
 
 	void Buffer::WriteByte( uint8 value )
 	{
-		assert( _index + 1 <= _size );
+		ASSERT( _index + 1 <= _size, "Buffer.%s Write operation exceeds buffer bounds. Size: %u, Remaining: %u",
+		        THIS_FUNCTION_NAME, _size, _size - _index );
 		*( ( uint8* ) ( _data + _index ) ) = value;
 
 		++_index;
@@ -61,7 +66,8 @@ namespace NetLib
 
 	void Buffer::WriteFloat( float32 value )
 	{
-		assert( _index + 4 <= _size );
+		ASSERT( _index + 4 <= _size, "Buffer.%s Write operation exceeds buffer bounds. Size: %u, Remaining: %u",
+		        THIS_FUNCTION_NAME, _size, _size - _index );
 		// This memcpy needs to be done using memcpy to keep the bits configuration too
 		std::memcpy( ( _data + _index ), &value, sizeof( uint32 ) );
 		_index += 4;
@@ -69,15 +75,17 @@ namespace NetLib
 
 	void Buffer::WriteData( const uint8* data, uint32 size )
 	{
-		assert( data != nullptr );
-		assert( _index + size <= _size );
+		ASSERT( data != nullptr, "Buffer.%s Can't write nullptr data.", THIS_FUNCTION_NAME );
+		ASSERT( _index + size <= _size, "Buffer.%s Write operation exceeds buffer bounds. Size: %u, Remaining: %u",
+		        THIS_FUNCTION_NAME, _size, _size - _index );
 		std::memcpy( _data + _index, data, size );
 		_index += size;
 	}
 
 	uint64 Buffer::ReadLong()
 	{
-		assert( _index + 8 <= _size );
+		ASSERT( _index + 8 <= _size, "Buffer.%s Read operation exceeds buffer bounds. Size: %u, Remaining: %u",
+		        THIS_FUNCTION_NAME, _size, _size - _index );
 		uint64 value;
 		value = *( ( uint64* ) ( _data + _index ) );
 
@@ -101,7 +109,8 @@ namespace NetLib
 
 	uint32 Buffer::ReadInteger()
 	{
-		assert( _index + 4 <= _size );
+		ASSERT( _index + 4 <= _size, "Buffer.%s Read operation exceeds buffer bounds. Size: %u, Remaining: %u",
+		        THIS_FUNCTION_NAME, _size, _size - _index );
 		uint32 value;
 		value = *( ( uint32* ) ( _data + _index ) );
 
@@ -126,7 +135,8 @@ namespace NetLib
 
 	uint16 Buffer::ReadShort()
 	{
-		assert( _index + 2 <= _size );
+		ASSERT( _index + 2 <= _size, "Buffer.%s Read operation exceeds buffer bounds. Size: %u, Remaining: %u",
+		        THIS_FUNCTION_NAME, _size, _size - _index );
 		uint16 value;
 
 		value = *( ( uint16* ) ( _data + _index ) );
@@ -152,7 +162,8 @@ namespace NetLib
 
 	uint8 Buffer::ReadByte()
 	{
-		assert( _index + 1 <= _size );
+		ASSERT( _index + 1 <= _size, "Buffer.%s Read operation exceeds buffer bounds. Size: %u, Remaining: %u",
+		        THIS_FUNCTION_NAME, _size, _size - _index );
 		uint8 value;
 
 		value = *( ( uint8* ) ( _data + _index ) );
@@ -178,7 +189,8 @@ namespace NetLib
 
 	float32 Buffer::ReadFloat()
 	{
-		assert( _index + 4 <= _size );
+		ASSERT( _index + 4 <= _size, "Buffer.%s Read operation exceeds buffer bounds. Size: %u, Remaining: %u",
+		        THIS_FUNCTION_NAME, _size, _size - _index );
 		float32 value;
 		// This memcpy needs to be done using memcpy to recover the bits configuration too
 		std::memcpy( &value, ( _data + _index ), sizeof( float32 ) );
@@ -189,7 +201,7 @@ namespace NetLib
 
 	bool Buffer::ReadData( uint8* data, uint32 size )
 	{
-		assert( data != nullptr );
+		ASSERT( data != nullptr, "Buffer.%s Can't read into nullptr data.", THIS_FUNCTION_NAME );
 		if ( _index + size <= _size )
 		{
 			std::memcpy( data, _data + _index, size );

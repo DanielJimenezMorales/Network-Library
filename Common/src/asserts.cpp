@@ -26,7 +26,7 @@ namespace Common
 		// Try to break if a debugger exists and then exit the application
 		if ( IsDebuggerPresent() )
 		{
-			DebugBreak();
+			DEBUG_BREAK();
 		}
 		exit( -1 );
 	}

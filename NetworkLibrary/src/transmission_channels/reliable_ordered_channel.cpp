@@ -404,7 +404,7 @@ namespace NetLib
 		// Check if with this new message received we can process other newer (out of order) messages received in the
 		// previous states.
 		bool continueProcessing = true;
-		while ( !_unorderedMessagesWaitingForPrevious.empty() || continueProcessing )
+		while ( !_unorderedMessagesWaitingForPrevious.empty() && continueProcessing )
 		{
 			uint32 index = 0;
 			if ( DoesUnorderedMessagesBufferContainsSequenceNumber( _nextOrderedMessageSequenceNumber, index ) )

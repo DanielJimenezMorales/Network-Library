@@ -274,6 +274,12 @@ namespace NetLib
 
 		packet.AddMessage( std::move( disconenctionMessage ) );
 		SendPacketToAddress( packet, remotePeer.GetAddress() );
+
+		while ( packet.GetNumberOfMessages() > 0 )
+		{
+			std::unique_ptr< Message > message = packet.TryGetNextMessage();
+			_messageFactory.ReleaseMessage( std::move( message ) );
+		}
 	}
 
 	void Peer::ExecuteOnLocalPeerConnect()
