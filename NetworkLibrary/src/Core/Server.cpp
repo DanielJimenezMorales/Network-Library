@@ -36,7 +36,7 @@ namespace NetLib
 
 	bool Server::CreateNetworkEntity( uint32 entityType, uint32 controlledByPeerId, float32 posX, float32 posY )
 	{
-		if ( GetConnectionState() != PeerConnectionState::PCS_Connected )
+		if ( GetConnectionState() != PeerConnectionState::Connected )
 		{
 			LOG_WARNING( "Can't create Network entity of type %d because the server is not connected.",
 			             static_cast< int >( entityType ) );
@@ -49,7 +49,7 @@ namespace NetLib
 
 	void Server::DestroyNetworkEntity( uint32 entityId )
 	{
-		if ( GetConnectionState() != PeerConnectionState::PCS_Connected )
+		if ( GetConnectionState() != PeerConnectionState::Connected )
 		{
 			LOG_WARNING( "Can't destroy Network entity with ID: %d because the server is not connected.",
 			             static_cast< int >( entityId ) );
@@ -225,7 +225,8 @@ namespace NetLib
 		          "remove peer...",
 		          message.reason );
 
-		StartDisconnectingRemotePeer( remotePeer.GetClientIndex(), false, Connection::ConnectionFailedReasonType::CFR_UNKNOWN );
+		StartDisconnectingRemotePeer( remotePeer.GetClientIndex(), false,
+		                              Connection::ConnectionFailedReasonType::CFR_UNKNOWN );
 	}
 
 	void Server::TickReplication()

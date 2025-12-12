@@ -25,7 +25,7 @@ void PreTickNetworkSystem::Execute( Engine::ECS::World& world, float32 elapsed_t
 {
 	NetworkPeerGlobalComponent& networkPeerComponent = world.GetGlobalComponent< NetworkPeerGlobalComponent >();
 
-	if ( networkPeerComponent.peer->GetConnectionState() == NetLib::PCS_Disconnected )
+	if ( networkPeerComponent.peer->GetConnectionState() == NetLib::PeerConnectionState::Disconnected )
 	{
 		networkPeerComponent.peer->Start( _ip, _port );
 	}

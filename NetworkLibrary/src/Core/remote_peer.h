@@ -22,11 +22,10 @@ namespace NetLib
 	class Socket;
 	class MessageFactory;
 
-	enum RemotePeerState : uint8
+	enum class RemotePeerState : uint8
 	{
 		Disconnected = 0,
-		Connected = 1,
-		Connecting = 2
+		Connected = 1
 	};
 
 	class RemotePeer

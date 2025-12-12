@@ -59,7 +59,7 @@ namespace NetLib
 
 	uint32 Client::GetLocalClientId() const
 	{
-		if ( GetConnectionState() != PeerConnectionState::PCS_Connected )
+		if ( GetConnectionState() != PeerConnectionState::Connected )
 		{
 			LOG_WARNING( "Can not get the local client ID if the peer is not connected" );
 			return 0;
@@ -92,7 +92,7 @@ namespace NetLib
 		switch ( messageType )
 		{
 			case MessageType::Disconnection:
-				if ( GetConnectionState() == PeerConnectionState::PCS_Connected )
+				if ( GetConnectionState() == PeerConnectionState::Connected )
 				{
 					const DisconnectionMessage& disconnectionMessage =
 					    static_cast< const DisconnectionMessage& >( message );
@@ -100,7 +100,7 @@ namespace NetLib
 				}
 				break;
 			case MessageType::TimeResponse:
-				if ( GetConnectionState() == PeerConnectionState::PCS_Connected )
+				if ( GetConnectionState() == PeerConnectionState::Connected )
 				{
 					const TimeResponseMessage& timeResponseMessage =
 					    static_cast< const TimeResponseMessage& >( message );
@@ -108,7 +108,7 @@ namespace NetLib
 				}
 				break;
 			case MessageType::Replication:
-				if ( GetConnectionState() == PeerConnectionState::PCS_Connected )
+				if ( GetConnectionState() == PeerConnectionState::Connected )
 				{
 					const ReplicationMessage& replicationMessage = static_cast< const ReplicationMessage& >( message );
 					ProcessReplicationAction( replicationMessage );
@@ -126,7 +126,7 @@ namespace NetLib
 
 	void Client::TickConcrete( float32 elapsedTime )
 	{
-		if ( GetConnectionState() == PeerConnectionState::PCS_Connected )
+		if ( GetConnectionState() == PeerConnectionState::Connected )
 		{
 			RemotePeer* serverRemotePeer = _remotePeersHandler.GetRemotePeerFromAddress( _serverAddress );
 			if ( serverRemotePeer == nullptr )

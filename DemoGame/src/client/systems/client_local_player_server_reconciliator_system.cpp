@@ -139,7 +139,7 @@ static void EvaluateReconciliation( Engine::ECS::GameEntity& entity, const Netwo
 void ClientLocalPlayerServerReconciliatorSystem::Execute( Engine::ECS::World& world, float32 elapsed_time )
 {
 	const NetworkPeerGlobalComponent& networkPeerComponent = world.GetGlobalComponent< NetworkPeerGlobalComponent >();
-	if ( networkPeerComponent.peer->GetConnectionState() != NetLib::PCS_Connected )
+	if ( networkPeerComponent.peer->GetConnectionState() != NetLib::PeerConnectionState::Connected )
 	{
 		return;
 	}

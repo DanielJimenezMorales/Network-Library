@@ -22,18 +22,18 @@ namespace NetLib
 {
 	bool Peer::Start( const std::string& ip, uint32 port )
 	{
-		if ( _connectionState != PeerConnectionState::PCS_Disconnected )
+		if ( _connectionState != PeerConnectionState::Disconnected )
 		{
 			LOG_WARNING( "You are trying to call Peer::Start on a Peer that has already started" );
 			return true;
 		}
 
-		SetConnectionState( PeerConnectionState::PCS_Connecting );
+		SetConnectionState( PeerConnectionState::Connecting );
 
 		if ( _socket.Start() != SocketResult::SOKT_SUCCESS )
 		{
 			LOG_ERROR( "Error while starting peer, aborting operation..." );
-			SetConnectionState( PeerConnectionState::PCS_Disconnected );
+			SetConnectionState( PeerConnectionState::Disconnected );
 			return false;
 		}
 
@@ -54,14 +54,14 @@ namespace NetLib
 		if ( !_connectionManager.StartUp( connectionConfiguration, &_messageFactory, &_remotePeersHandler ) )
 		{
 			LOG_ERROR( "Error while starting peer connection manager, aborting operation..." );
-			SetConnectionState( PeerConnectionState::PCS_Disconnected );
+			SetConnectionState( PeerConnectionState::Disconnected );
 			return false;
 		}
 
 		if ( !StartConcrete( ip, port ) )
 		{
 			LOG_ERROR( "Error while starting peer, aborting operation..." );
-			SetConnectionState( PeerConnectionState::PCS_Disconnected );
+			SetConnectionState( PeerConnectionState::Disconnected );
 			return false;
 		}
 
@@ -72,7 +72,7 @@ namespace NetLib
 
 	bool Peer::PreTick()
 	{
-		if ( _connectionState == PeerConnectionState::PCS_Disconnected )
+		if ( _connectionState == PeerConnectionState::Disconnected )
 		{
 			LOG_WARNING( "You are trying to call PreTick on a Peer that is disconnected" );
 			return false;
@@ -86,7 +86,7 @@ namespace NetLib
 
 	bool Peer::Tick( float32 elapsedTime )
 	{
-		if ( _connectionState == PeerConnectionState::PCS_Disconnected )
+		if ( _connectionState == PeerConnectionState::Disconnected )
 		{
 			LOG_WARNING( "You are trying to call Peer::Tick on a Peer that is disconnected" );
 			return false;
@@ -183,7 +183,7 @@ namespace NetLib
 
 	Peer::Peer( PeerType type, uint32 maxConnections, uint32 receiveBufferSize, uint32 sendBufferSize )
 	    : _type( type )
-	    , _connectionState( PeerConnectionState::PCS_Disconnected )
+	    , _connectionState( PeerConnectionState::Disconnected )
 	    , _socket()
 	    , _address( Address::GetInvalid() )
 	    , _receiveBufferSize( receiveBufferSize )
@@ -285,7 +285,7 @@ namespace NetLib
 
 	void Peer::ExecuteOnLocalPeerConnect()
 	{
-		SetConnectionState( PeerConnectionState::PCS_Connected );
+		SetConnectionState( PeerConnectionState::Connected );
 		_onLocalPeerConnect.Execute();
 	}
 
@@ -554,7 +554,7 @@ namespace NetLib
 
 	void Peer::StopInternal()
 	{
-		if ( _connectionState == PeerConnectionState::PCS_Disconnected )
+		if ( _connectionState == PeerConnectionState::Disconnected )
 		{
 			LOG_WARNING( "You are trying to call Peer::Stop on a Peer that is disconnected" );
 			return;
@@ -567,7 +567,7 @@ namespace NetLib
 		_isStopRequested = false;
 
 		PeerConnectionState previousConnectionState = _connectionState;
-		SetConnectionState( PeerConnectionState::PCS_Disconnected );
+		SetConnectionState( PeerConnectionState::Disconnected );
 		LOG_INFO( "Peer stopped succesfully" );
 
 		ExecuteOnLocalPeerDisconnect( _stopRequestReason );
