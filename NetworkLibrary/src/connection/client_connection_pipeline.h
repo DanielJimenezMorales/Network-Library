@@ -3,10 +3,13 @@
 
 namespace NetLib
 {
-	class ClientConnectionPipeline : public IConnectionPipeline
+	namespace Connection
 	{
-		public:
-			virtual void ProcessConnection( PendingConnection& pending_connection, MessageFactory& message_factory,
-			                                float32 elapsed_time ) override;
-	};
+		class ClientConnectionPipeline : public IConnectionPipeline
+		{
+			public:
+				virtual void ProcessConnection( PendingConnection& pending_connection, MessageFactory& message_factory,
+				                                float32 elapsed_time ) override;
+		};
+	}
 }

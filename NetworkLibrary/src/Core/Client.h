@@ -57,8 +57,8 @@ namespace NetLib
 			void TickConcrete( float32 elapsedTime ) override;
 			bool StopConcrete() override;
 
-			void OnPendingConnectionAccepted( const PendingConnectionData& data ) override;
-			void OnPendingConnectionDenied( const PendingConnectionFailedData& data ) override;
+			void OnPendingConnectionAccepted( const Connection::PendingConnectionData& data ) override;
+			void OnPendingConnectionDenied( const Connection::PendingConnectionFailedData& data ) override;
 
 			void InternalOnRemotePeerDisconnect( const RemotePeer& remote_peer ) override {};
 

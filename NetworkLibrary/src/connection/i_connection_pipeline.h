@@ -5,15 +5,19 @@
 
 namespace NetLib
 {
-	class PendingConnection;
 	class MessageFactory;
 
-	class IConnectionPipeline
+	namespace Connection
 	{
-		public:
-			IConnectionPipeline() = default;
-			virtual ~IConnectionPipeline() = default;
-			virtual void ProcessConnection( PendingConnection& pending_connection, MessageFactory& message_factory,
-			                                float32 elapsed_time ) = 0;
-	};
+		class PendingConnection;
+
+		class IConnectionPipeline
+		{
+			public:
+				IConnectionPipeline() = default;
+				virtual ~IConnectionPipeline() = default;
+				virtual void ProcessConnection( PendingConnection& pending_connection, MessageFactory& message_factory,
+				                                float32 elapsed_time ) = 0;
+		};
+	}
 }

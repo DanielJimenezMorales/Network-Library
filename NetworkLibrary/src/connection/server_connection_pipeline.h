@@ -6,23 +6,26 @@ namespace NetLib
 	class Message;
 	class ConnectionChallengeResponseMessage;
 
-	class ServerConnectionPipeline : public IConnectionPipeline
+	namespace Connection
 	{
-		public:
-			ServerConnectionPipeline();
-			virtual void ProcessConnection( PendingConnection& pending_connection, MessageFactory& message_factory,
-			                                float32 elapsed_time ) override;
+		class ServerConnectionPipeline : public IConnectionPipeline
+		{
+			public:
+				ServerConnectionPipeline();
+				virtual void ProcessConnection( PendingConnection& pending_connection, MessageFactory& message_factory,
+				                                float32 elapsed_time ) override;
 
-		private:
-			void ProcessMessage( PendingConnection& pending_connection, const Message* message,
-			                     MessageFactory& message_factory );
-			void ProcessConnectionChallengeResponse( PendingConnection& pending_connection,
-			                                         const ConnectionChallengeResponseMessage& message,
-			                                         MessageFactory& message_factory );
-			uint16 GenerateNextConnectionApprovedId();
+			private:
+				void ProcessMessage( PendingConnection& pending_connection, const Message* message,
+				                     MessageFactory& message_factory );
+				void ProcessConnectionChallengeResponse( PendingConnection& pending_connection,
+				                                         const ConnectionChallengeResponseMessage& message,
+				                                         MessageFactory& message_factory );
+				uint16 GenerateNextConnectionApprovedId();
 
-			static constexpr uint16 SERVER_CONNECTION_ID = 0;
+				static constexpr uint16 SERVER_CONNECTION_ID = 0;
 
-			uint16 _nextConnectionApprovedId;
-	};
+				uint16 _nextConnectionApprovedId;
+		};
+	}
 }

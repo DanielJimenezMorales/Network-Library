@@ -151,7 +151,7 @@ namespace NetLib
 		return true;
 	}
 
-	void Client::OnPendingConnectionAccepted( const PendingConnectionData& data )
+	void Client::OnPendingConnectionAccepted( const Connection::PendingConnectionData& data )
 	{
 		ASSERT( data.startedLocally,
 		        "Client-side can't receive a connection accepted apart from the one that was started locally." );
@@ -166,7 +166,7 @@ namespace NetLib
 		ExecuteOnLocalPeerConnect();
 	}
 
-	void Client::OnPendingConnectionDenied( const PendingConnectionFailedData& data )
+	void Client::OnPendingConnectionDenied( const Connection::PendingConnectionFailedData& data )
 	{
 		LOG_INFO( "Client.%s Connection denied. Reason: %u", THIS_FUNCTION_NAME, static_cast< uint8 >( data.reason ) );
 		RequestStop( false, data.reason );
@@ -184,7 +184,8 @@ namespace NetLib
 		LOG_INFO( "Disconnection message received from server with reason code equal to %hhu. Disconnecting...",
 		          message.reason );
 
-		StartDisconnectingRemotePeer( remotePeer.GetClientIndex(), false, ConnectionFailedReasonType::CFR_UNKNOWN );
+		StartDisconnectingRemotePeer( remotePeer.GetClientIndex(), false,
+		                              Connection::ConnectionFailedReasonType::CFR_UNKNOWN );
 	}
 
 	void Client::ProcessTimeResponse( const TimeResponseMessage& message )

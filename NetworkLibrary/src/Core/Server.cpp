@@ -225,7 +225,7 @@ namespace NetLib
 		          "remove peer...",
 		          message.reason );
 
-		StartDisconnectingRemotePeer( remotePeer.GetClientIndex(), false, ConnectionFailedReasonType::CFR_UNKNOWN );
+		StartDisconnectingRemotePeer( remotePeer.GetClientIndex(), false, Connection::ConnectionFailedReasonType::CFR_UNKNOWN );
 	}
 
 	void Server::TickReplication()
@@ -259,7 +259,7 @@ namespace NetLib
 		return true;
 	}
 
-	void Server::OnPendingConnectionAccepted( const PendingConnectionData& data )
+	void Server::OnPendingConnectionAccepted( const Connection::PendingConnectionData& data )
 	{
 		ASSERT( !data.startedLocally,
 		        "Server-side can't receive a connection accepted that was started locally. Server "
