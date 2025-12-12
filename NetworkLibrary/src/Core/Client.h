@@ -22,14 +22,6 @@ namespace NetLib
 	class ReplicationMessage;
 	class IInputState;
 
-	// TODO There's a redundancy between ClientState and PeerConnectionState. We should make the ClientState to only be
-	// for the different connection states and let the Peer enum to decide the final connect disconnect
-	enum ClientState
-	{
-		CS_Disconnected = 0,
-		CS_Connected = 1
-	};
-
 	class Client : public Peer
 	{
 		public:
@@ -37,8 +29,6 @@ namespace NetLib
 			Client( const Client& ) = delete;
 
 			Client& operator=( const Client& ) = delete;
-
-			~Client() override;
 
 			bool StartClient( const std::string& server_ip, uint32 server_port );
 
@@ -70,7 +60,6 @@ namespace NetLib
 			void OnServerDisconnect();
 
 			Address _serverAddress;
-			ClientState _currentState;
 			// TODO We can probably make this a var within the Peer.h as it's shared by client and server
 			uint32 _clientIndex;
 

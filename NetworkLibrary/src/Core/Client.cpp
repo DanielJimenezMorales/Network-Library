@@ -20,14 +20,9 @@ namespace NetLib
 	    : Peer( PeerType::CLIENT, 1, 1024, 1024 )
 	    , _serverAddress( "127.0.0.1", 54000 )
 	    , inGameMessageID( 0 )
-	    , _currentState( ClientState::CS_Disconnected )
 	    , _replicationMessagesProcessor()
 	    , _clientIndex( 0 )
 	    , _timeSyncer()
-	{
-	}
-
-	Client::~Client()
 	{
 	}
 
@@ -97,7 +92,7 @@ namespace NetLib
 		switch ( messageType )
 		{
 			case MessageType::Disconnection:
-				if ( _currentState == ClientState::CS_Connected )
+				if ( GetConnectionState() == PeerConnectionState::PCS_Connected )
 				{
 					const DisconnectionMessage& disconnectionMessage =
 					    static_cast< const DisconnectionMessage& >( message );
@@ -105,7 +100,7 @@ namespace NetLib
 				}
 				break;
 			case MessageType::TimeResponse:
-				if ( _currentState == ClientState::CS_Connected )
+				if ( GetConnectionState() == PeerConnectionState::PCS_Connected )
 				{
 					const TimeResponseMessage& timeResponseMessage =
 					    static_cast< const TimeResponseMessage& >( message );
@@ -113,7 +108,7 @@ namespace NetLib
 				}
 				break;
 			case MessageType::Replication:
-				if ( _currentState == ClientState::CS_Connected )
+				if ( GetConnectionState() == PeerConnectionState::PCS_Connected )
 				{
 					const ReplicationMessage& replicationMessage = static_cast< const ReplicationMessage& >( message );
 					ProcessReplicationAction( replicationMessage );
@@ -131,7 +126,7 @@ namespace NetLib
 
 	void Client::TickConcrete( float32 elapsedTime )
 	{
-		if ( _currentState == ClientState::CS_Connected )
+		if ( GetConnectionState() == PeerConnectionState::PCS_Connected )
 		{
 			RemotePeer* serverRemotePeer = _remotePeersHandler.GetRemotePeerFromAddress( _serverAddress );
 			if ( serverRemotePeer == nullptr )
@@ -147,7 +142,6 @@ namespace NetLib
 
 	bool Client::StopConcrete()
 	{
-		_currentState = ClientState::CS_Disconnected;
 		return true;
 	}
 
@@ -157,7 +151,6 @@ namespace NetLib
 		        "Client-side can't receive a connection accepted apart from the one that was started locally." );
 
 		_clientIndex = data.clientSideId;
-		_currentState = ClientState::CS_Connected;
 
 		// TODO Do not hardcode it like this. It might looks weird
 		_replicationMessagesProcessor.SetLocalClientId( _clientIndex );
