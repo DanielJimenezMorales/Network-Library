@@ -40,7 +40,6 @@ namespace NetLib
 		// TODO, This is hardcoded
 		Connection::ConnectionConfiguration connectionConfiguration;
 		connectionConfiguration.canStartConnections = ( _type == PeerType::CLIENT );
-		connectionConfiguration.maxPendingConnections = ( _type == PeerType::CLIENT ) ? 1 : 10;
 		connectionConfiguration.connectionTimeoutSeconds = 5.f;
 		connectionConfiguration.sendDenialOnTimeout = ( _type == PeerType::SERVER );
 		if ( _type == PeerType::CLIENT )
@@ -52,7 +51,7 @@ namespace NetLib
 			connectionConfiguration.connectionPipeline = new Connection::ServerConnectionPipeline();
 		}
 
-		if ( !_connectionManager.StartUp( connectionConfiguration, &_messageFactory ) )
+		if ( !_connectionManager.StartUp( connectionConfiguration, &_messageFactory, &_remotePeersHandler ) )
 		{
 			LOG_ERROR( "Error while starting peer connection manager, aborting operation..." );
 			SetConnectionState( PeerConnectionState::PCS_Disconnected );
@@ -358,10 +357,15 @@ namespace NetLib
 
 		// Store messages within transmission channels for being processed
 		StoreReceivedMessages( packet, address );
+
+		// Clean up packet
+		NetworkPacketUtils::CleanPacket( _messageFactory, packet );
 	}
 
 	void Peer::StoreReceivedMessages( NetworkPacket& packet, const Address& address )
 	{
+		bool processedSuccessfully = false;
+
 		RemotePeer* remotePeer = _remotePeersHandler.GetRemotePeerFromAddress( address );
 		bool isPacketFromRemotePeer = ( remotePeer != nullptr );
 		if ( isPacketFromRemotePeer )
@@ -401,7 +405,7 @@ namespace NetLib
 
 	void Peer::ConvertSuccessfulConnectionsInRemotePeers()
 	{
-		std::vector< Connection::PendingConnectionData > successfulConnections;
+		std::vector< Connection::SuccessConnectionData > successfulConnections;
 		_connectionManager.GetConnectedPendingConnectionsData( successfulConnections );
 
 		for ( auto& cit = successfulConnections.cbegin(); cit != successfulConnections.cend(); ++cit )
@@ -425,7 +429,7 @@ namespace NetLib
 
 	void Peer::ProcessDeniedConnections()
 	{
-		std::vector< Connection::PendingConnectionFailedData > deniedConnections;
+		std::vector< Connection::FailedConnectionData > deniedConnections;
 		_connectionManager.GetDeniedPendingConnectionsData( deniedConnections );
 
 		for ( auto& cit = deniedConnections.cbegin(); cit != deniedConnections.cend(); ++cit )
@@ -468,7 +472,7 @@ namespace NetLib
 
 	void Peer::SendDataToPendingConnections()
 	{
-		_connectionManager.SendDataToPendingConnections( _socket );
+		_connectionManager.SendData( _socket );
 	}
 
 	void Peer::StartDisconnectingRemotePeer( uint32 id, bool shouldNotify,

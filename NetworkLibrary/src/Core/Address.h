@@ -27,6 +27,8 @@ namespace NetLib
 			bool operator==( const Address& other ) const;
 			bool operator!=( const Address& other ) const;
 
+			bool IsValid() const;
+
 			uint32 GetPort() const { return _port; }
 			const std::string& GetIP() const { return _ip; }
 			void GetFull( std::string& buffer ) const;

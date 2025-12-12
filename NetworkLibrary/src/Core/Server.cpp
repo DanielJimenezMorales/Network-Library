@@ -259,7 +259,7 @@ namespace NetLib
 		return true;
 	}
 
-	void Server::OnPendingConnectionAccepted( const Connection::PendingConnectionData& data )
+	void Server::OnPendingConnectionAccepted( const Connection::SuccessConnectionData& data )
 	{
 		ASSERT( !data.startedLocally,
 		        "Server-side can't receive a connection accepted that was started locally. Server "

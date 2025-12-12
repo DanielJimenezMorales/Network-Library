@@ -29,8 +29,8 @@ namespace NetLib
 
 	namespace Connection
 	{
-		struct PendingConnectionData;
-		struct PendingConnectionFailedData;
+		struct SuccessConnectionData;
+		struct FailedConnectionData;
 	}
 
 	struct RemotePeerDisconnectionData
@@ -144,8 +144,8 @@ namespace NetLib
 			/// Called during OnRemotePeerConnect. This function is used for events happening inside the network library
 			/// code. This function will be called before teh OnRemotePeerConnect Delegate
 			/// </summary>
-			virtual void OnPendingConnectionAccepted( const Connection::PendingConnectionData& data ) = 0;
-			virtual void OnPendingConnectionDenied( const Connection::PendingConnectionFailedData& data) = 0;
+			virtual void OnPendingConnectionAccepted( const Connection::SuccessConnectionData& data ) = 0;
+			virtual void OnPendingConnectionDenied( const Connection::FailedConnectionData& data) = 0;
 			virtual void InternalOnRemotePeerDisconnect( const RemotePeer& remote_peer ) = 0;
 			void ExecuteOnLocalPeerConnect();
 			void ExecuteOnLocalPeerDisconnect( Connection::ConnectionFailedReasonType reason );

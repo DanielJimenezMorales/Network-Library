@@ -27,6 +27,11 @@ namespace NetLib
 		return !( *this == other );
 	}
 
+	bool Address::IsValid() const
+	{
+		return *this != Address::GetInvalid();
+	}
+
 	void Address::GetFull( std::string& buffer ) const
 	{
 		buffer.append( _ip.c_str() );

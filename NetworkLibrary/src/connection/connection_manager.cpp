@@ -3,6 +3,7 @@
 #include "connection/i_connection_pipeline.h"
 #include "communication/network_packet.h"
 #include "communication/message.h"
+#include "core/remote_peers_handler.h"
 
 #include "logger.h"
 #include "asserts.h"
@@ -13,13 +14,18 @@ namespace NetLib
 	{
 		ConnectionManager::ConnectionManager()
 		    : _isStartedUp( false )
+		    , _messageFactory( nullptr )
+		    , _remotePeersHandler( nullptr )
 		    , _pendingConnections()
 		    , _connectionPipeline( nullptr )
-		    , _messageFactory( nullptr )
+		    , _connectionTimeoutSeconds( 0.f )
+		    , _canStartConnections( false )
+		    , _sendDenialOnTimeout( false )
 		{
 		}
 
-		bool ConnectionManager::StartUp( ConnectionConfiguration& configuration, MessageFactory* message_factory )
+		bool ConnectionManager::StartUp( ConnectionConfiguration& configuration, MessageFactory* message_factory,
+		                                 const RemotePeersHandler* remote_peers_handler )
 		{
 			if ( _isStartedUp )
 			{
@@ -29,12 +35,16 @@ namespace NetLib
 			}
 
 			ASSERT( message_factory != nullptr, "Message factory can't be null" );
+			ASSERT( remote_peers_handler != nullptr, "Remote peers handler can't be null" );
+
 			_messageFactory = message_factory;
+			_remotePeersHandler = remote_peers_handler;
+
+			_pendingConnections.reserve( _remotePeersHandler->GetMaxConnections() );
 
 			if ( configuration.connectionPipeline != nullptr )
 			{
 				_connectionPipeline = configuration.connectionPipeline;
-				_maxPendingConnections = configuration.maxPendingConnections;
 				_canStartConnections = configuration.canStartConnections;
 				_connectionTimeoutSeconds = configuration.connectionTimeoutSeconds;
 				_sendDenialOnTimeout = configuration.sendDenialOnTimeout;
@@ -69,6 +79,9 @@ namespace NetLib
 			}
 			_pendingConnections.clear();
 
+			_messageFactory = nullptr;
+			_remotePeersHandler = nullptr;
+
 			// Shut down connection pipeline
 			if ( _connectionPipeline != nullptr )
 			{
@@ -101,20 +114,7 @@ namespace NetLib
 
 		bool ConnectionManager::DoesPendingConnectionExist( const Address& address ) const
 		{
-			if ( !_isStartedUp )
-			{
-				LOG_ERROR( "[ConnectionManager.%s] ConnectionManager is not started up, ignoring call",
-				           THIS_FUNCTION_NAME );
-				return false;
-			}
-
-			bool found = false;
-			if ( _pendingConnections.find( address ) != _pendingConnections.end() )
-			{
-				found = true;
-			}
-
-			return found;
+			return ( _pendingConnections.find( address ) != _pendingConnections.end() );
 		}
 
 		bool ConnectionManager::ProcessPacket( const Address& address, NetworkPacket& packet )
@@ -126,29 +126,29 @@ namespace NetLib
 				return false;
 			}
 
-			bool success = false;
-			if ( DoesPendingConnectionExist( address ) )
+			ASSERT( address.IsValid(), "ConnectionManager.%s Address is not valid.", THIS_FUNCTION_NAME );
+
+			bool success = true;
+			// Check if pending connection exists
+			if ( !DoesPendingConnectionExist( address ) )
 			{
-				PendingConnection& pendingConnection = _pendingConnections[ address ];
-				pendingConnection.ProcessPacket( packet );
-				success = true;
-			}
-			else
-			{
-				// Check if pending connection creation is successful - There have to be empty slots left
-				if ( CreatePendingConnection( address, false ) )
+				// Try creating a pending connection if it doesn't exist - There have to be empty slots left
+				if ( !CreatePendingConnection( address, false ) )
 				{
-					PendingConnection& pendingConnection = _pendingConnections[ address ];
-					pendingConnection.ProcessPacket( packet );
-					success = true;
-				}
-				else
-				{
+					success = false;
+
 					std::string fullAddress;
 					address.GetFull( fullAddress );
 					LOG_WARNING( "ConnectionManager.%s Cannot create pending connection with address %s.",
 					             THIS_FUNCTION_NAME, fullAddress.c_str() );
 				}
+			}
+
+			if ( success )
+			{
+				// Process packet
+				PendingConnection& pendingConnection = _pendingConnections[ address ];
+				pendingConnection.ProcessPacket( packet );
 			}
 
 			return success;
@@ -164,7 +164,8 @@ namespace NetLib
 			}
 
 			bool success = false;
-			if ( _pendingConnections.size() < _maxPendingConnections )
+			// Check if we have slots left for new pending connections
+			if ( AreSlotsAvailableForNewPendingConnection() )
 			{
 				// Check if we have already created this pending connection
 				if ( !DoesPendingConnectionExist( address ) )
@@ -200,6 +201,13 @@ namespace NetLib
 			return success;
 		}
 
+		bool ConnectionManager::AreSlotsAvailableForNewPendingConnection() const
+		{
+			const uint32 numberOfAvailableRemotePeerSlots = _remotePeersHandler->GetNumberOfAvailableRemotePeerSlots();
+			const uint32 numberOfCurrentPendingConnections = _pendingConnections.size();
+			return ( numberOfAvailableRemotePeerSlots > numberOfCurrentPendingConnections );
+		}
+
 		bool ConnectionManager::StartConnectingToAddress( const Address& address )
 		{
 			if ( !_isStartedUp )
@@ -231,7 +239,7 @@ namespace NetLib
 		}
 
 		void ConnectionManager::GetConnectedPendingConnectionsData(
-		    std::vector< PendingConnectionData >& out_connected_pending_connections )
+		    std::vector< SuccessConnectionData >& out_connected_pending_connections )
 		{
 			if ( !_isStartedUp )
 			{
@@ -274,7 +282,7 @@ namespace NetLib
 		}
 
 		void ConnectionManager::GetDeniedPendingConnectionsData(
-		    std::vector< PendingConnectionFailedData >& out_denied_pending_connections )
+		    std::vector< FailedConnectionData >& out_denied_pending_connections )
 		{
 			if ( !_isStartedUp )
 			{
@@ -315,7 +323,7 @@ namespace NetLib
 			}
 		}
 
-		void ConnectionManager::SendDataToPendingConnections( Socket& socket )
+		void ConnectionManager::SendData( Socket& socket )
 		{
 			for ( auto it = _pendingConnections.begin(); it != _pendingConnections.end(); ++it )
 			{
@@ -332,6 +340,7 @@ namespace NetLib
 				pending_connection.GetAddress().GetFull( addressStr );
 				LOG_INFO( "ConnectionManager.%s Pending connection with address %s has timed out.", THIS_FUNCTION_NAME,
 				          addressStr.c_str() );
+
 				pending_connection.SetCurrentState( PendingConnectionState::Failed );
 				pending_connection.SetConnectionDeniedReason( ConnectionFailedReasonType::CFR_TIMEOUT );
 

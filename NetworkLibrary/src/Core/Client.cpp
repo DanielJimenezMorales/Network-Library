@@ -151,7 +151,7 @@ namespace NetLib
 		return true;
 	}
 
-	void Client::OnPendingConnectionAccepted( const Connection::PendingConnectionData& data )
+	void Client::OnPendingConnectionAccepted( const Connection::SuccessConnectionData& data )
 	{
 		ASSERT( data.startedLocally,
 		        "Client-side can't receive a connection accepted apart from the one that was started locally." );
@@ -166,7 +166,7 @@ namespace NetLib
 		ExecuteOnLocalPeerConnect();
 	}
 
-	void Client::OnPendingConnectionDenied( const Connection::PendingConnectionFailedData& data )
+	void Client::OnPendingConnectionDenied( const Connection::FailedConnectionData& data )
 	{
 		LOG_INFO( "Client.%s Connection denied. Reason: %u", THIS_FUNCTION_NAME, static_cast< uint8 >( data.reason ) );
 		RequestStop( false, data.reason );

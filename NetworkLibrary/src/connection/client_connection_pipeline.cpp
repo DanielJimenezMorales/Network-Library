@@ -129,7 +129,8 @@ namespace NetLib
 					}
 					break;
 				default:
-					// TODO Unknown message type in pending connection
+					LOG_ERROR( "ClientConnectionPipeline.%s Incoming message not supported. Type: %u",
+					           THIS_FUNCTION_NAME, static_cast< uint8 >( message->GetHeader().type ) );
 					break;
 			}
 		}
@@ -207,8 +208,6 @@ namespace NetLib
 			{
 				AddConnectionRequestMessage( pending_connection, message_factory );
 			}
-
-			// TODO Update connection timeouts
 		}
 	} // namespace Connection
 } // namespace NetLib

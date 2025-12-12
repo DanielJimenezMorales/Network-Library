@@ -106,6 +106,22 @@ namespace NetLib
 		return freeIndex;
 	}
 
+	uint32 RemotePeersHandler::GetNumberOfAvailableRemotePeerSlots() const
+	{
+		ASSERT( _isInitialized, "Remote peers handler is not initialized." );
+
+		uint32 availableIndex = 0;
+		for ( uint32 i = 0; i < _maxConnections; ++i )
+		{
+			if ( !_remotePeerSlots[ i ] )
+			{
+				++availableIndex;
+			}
+		}
+
+		return availableIndex;
+	}
+
 	RemotePeer* RemotePeersHandler::GetRemotePeerFromAddress( const Address& address )
 	{
 		ASSERT( _isInitialized, "Remote peers handler is not initialized." );
