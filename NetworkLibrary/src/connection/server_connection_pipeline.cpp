@@ -6,6 +6,7 @@
 #include "communication/message.h"
 #include "communication/message_factory.h"
 #include "connection/pending_connection.h"
+#include "core/peer.h"
 
 namespace NetLib
 {
@@ -39,7 +40,8 @@ namespace NetLib
 		return connectionChallengeMessage;
 	}
 
-	static std::unique_ptr< Message > CreateConnectionDeniedMessage( MessageFactory& message_factory )
+	static std::unique_ptr< Message > CreateConnectionDeniedMessage( MessageFactory& message_factory,
+	                                                                 ConnectionFailedReasonType reason )
 	{
 		LOG_INFO( "%s Creating connection denied message for pending connection", THIS_FUNCTION_NAME );
 
@@ -54,7 +56,7 @@ namespace NetLib
 
 		std::unique_ptr< ConnectionDeniedMessage > connectionDeniedMessage(
 		    static_cast< ConnectionDeniedMessage* >( message.release() ) );
-		connectionDeniedMessage->reason = 0;
+		connectionDeniedMessage->reason = reason;
 
 		return connectionDeniedMessage;
 	}
@@ -112,7 +114,8 @@ namespace NetLib
 		// If it is in failed state, send denied
 		else if ( pending_connection.GetCurrentState() == PendingConnectionState::Failed )
 		{
-			outcomeMessage = CreateConnectionDeniedMessage( message_factory );
+			outcomeMessage =
+			    CreateConnectionDeniedMessage( message_factory, pending_connection.GetConnectionDeniedReason() );
 		}
 
 		ASSERT( outcomeMessage != nullptr, "Message can't be nullptr" );
@@ -184,7 +187,8 @@ namespace NetLib
 		{
 			if ( pending_connection.GetCurrentState() == PendingConnectionState::Failed )
 			{
-				outcomeMessage = CreateConnectionDeniedMessage( message_factory );
+				outcomeMessage =
+				    CreateConnectionDeniedMessage( message_factory, pending_connection.GetConnectionDeniedReason() );
 			}
 			else
 			{
@@ -200,7 +204,9 @@ namespace NetLib
 		}
 		else
 		{
-			outcomeMessage = CreateConnectionDeniedMessage( message_factory );
+			pending_connection.SetConnectionDeniedReason( ConnectionFailedReasonType::CFR_WRONG_CHALLENGE_RESPONSE );
+			outcomeMessage =
+			    CreateConnectionDeniedMessage( message_factory, pending_connection.GetConnectionDeniedReason() );
 		}
 
 		ASSERT( outcomeMessage != nullptr, "Message can't be nullptr" );

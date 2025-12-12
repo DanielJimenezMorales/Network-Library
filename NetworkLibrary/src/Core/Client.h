@@ -27,9 +27,7 @@ namespace NetLib
 	enum ClientState
 	{
 		CS_Disconnected = 0,
-		CS_Connected = 1,
-		CS_SendingConnectionRequest = 2,
-		CS_SendingConnectionChallengeResponse = 3,
+		CS_Connected = 1
 	};
 
 	class Client : public Peer
@@ -56,24 +54,18 @@ namespace NetLib
 		protected:
 			bool StartConcrete( const std::string& ip, uint32 port ) override;
 			void ProcessMessageFromPeer( const Message& message, RemotePeer& remotePeer ) override;
-			void ProcessMessageFromUnknownPeer( const Message& message, const Address& address ) override;
 			void TickConcrete( float32 elapsedTime ) override;
 			bool StopConcrete() override;
 
-			void InternalOnRemotePeerConnect( RemotePeer& remote_peer, uint16 client_side_id ) override;
+			void OnPendingConnectionAccepted( const PendingConnectionData& data ) override;
+			void OnPendingConnectionDenied( const PendingConnectionFailedData& data ) override;
+
 			void InternalOnRemotePeerDisconnect( const RemotePeer& remote_peer ) override {};
 
 		private:
-			uint64 GenerateClientSaltNumber();
-			void ProcessConnectionChallenge( const ConnectionChallengeMessage& message, RemotePeer& remotePeer );
-			void ProcessConnectionRequestAccepted( const ConnectionAcceptedMessage& message, RemotePeer& remotePeer );
-			void ProcessConnectionRequestDenied( const ConnectionDeniedMessage& message );
 			void ProcessDisconnection( const DisconnectionMessage& message, RemotePeer& remotePeer );
 			void ProcessTimeResponse( const TimeResponseMessage& message );
 			void ProcessReplicationAction( const ReplicationMessage& message );
-
-			void CreateConnectionRequestMessage( RemotePeer& remotePeer );
-			void CreateConnectionChallengeResponse( RemotePeer& remotePeer );
 
 			void OnServerDisconnect();
 

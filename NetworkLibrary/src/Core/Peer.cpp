@@ -99,6 +99,7 @@ namespace NetLib
 		SendDataToPendingConnections();
 		SendDataToRemotePeers();
 		ConvertSuccessfulConnectionsInRemotePeers();
+		ProcessDeniedConnections();
 
 		if ( _isStopRequested )
 		{
@@ -211,16 +212,7 @@ namespace NetLib
 
 	bool Peer::AddRemotePeer( const Address& addressInfo, uint16 id, uint64 clientSalt, uint64 serverSalt )
 	{
-		bool addedSuccesfully = _remotePeersHandler.AddRemotePeer( addressInfo, id, clientSalt, serverSalt );
-
-		return addedSuccesfully;
-	}
-
-	void Peer::ConnectRemotePeer( RemotePeer& remotePeer )
-	{
-		remotePeer.SetConnected();
-		InternalOnRemotePeerConnect( remotePeer, 0 );
-		ExecuteOnRemotePeerConnect( remotePeer.GetClientIndex() );
+		return _remotePeersHandler.AddRemotePeer( addressInfo, id, clientSalt, serverSalt );
 	}
 
 	bool Peer::BindSocket( const Address& address ) const
@@ -370,19 +362,7 @@ namespace NetLib
 		}
 		else
 		{
-			while ( packet.GetNumberOfMessages() > 0 )
-			{
-				std::unique_ptr< Message > message = packet.TryGetNextMessage();
-				_connectionManager.AddIncomingMessageToPendingConnection( address, std::move( message ) );
-			}
-
-			// const std::vector< std::unique_ptr< Message > >& packetMessages = packet.GetAllMessages();
-			// for ( auto cit = packetMessages.cbegin(); cit != packetMessages.cend(); ++cit )
-			//{
-			//	ProcessMessageFromUnknownPeer( **cit, address );
-			// }
-
-			// NetworkPacketUtils::CleanPacket( _messageFactory, packet );
+			_connectionManager.ProcessPacket( address, packet );
 		}
 	}
 
@@ -423,7 +403,7 @@ namespace NetLib
 			{
 				RemotePeer* remotePeer = _remotePeersHandler.GetRemotePeerFromId( cit->id );
 				ASSERT( remotePeer != nullptr, "Remote peer cannot be nullptr after its creation" );
-				InternalOnRemotePeerConnect( *remotePeer, cit->clientSideId );
+				OnPendingConnectionAccepted( *cit );
 				ExecuteOnRemotePeerConnect( cit->id );
 			}
 			else
@@ -433,6 +413,19 @@ namespace NetLib
 		}
 
 		_connectionManager.ClearConnectedPendingConnections();
+	}
+
+	void Peer::ProcessDeniedConnections()
+	{
+		std::vector< PendingConnectionFailedData > deniedConnections;
+		_connectionManager.GetDeniedPendingConnectionsData( deniedConnections );
+
+		for ( auto& cit = deniedConnections.cbegin(); cit != deniedConnections.cend(); ++cit )
+		{
+			OnPendingConnectionDenied( *cit );
+		}
+
+		_connectionManager.ClearDeniedPendingConnections();
 	}
 
 	void Peer::TickRemotePeers( float32 elapsedTime )
@@ -468,11 +461,6 @@ namespace NetLib
 	void Peer::SendDataToPendingConnections()
 	{
 		_connectionManager.SendDataToPendingConnections( _socket );
-	}
-
-	void Peer::SendDataToAddress( const Buffer& buffer, const Address& address ) const
-	{
-		_socket.SendTo( buffer.GetData(), buffer.GetSize(), address );
 	}
 
 	void Peer::StartDisconnectingRemotePeer( uint32 id, bool shouldNotify, ConnectionFailedReasonType reason )

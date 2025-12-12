@@ -3,6 +3,7 @@
 
 #include "core/address.h"
 #include "connection/pending_connection.h"
+#include "connection/connection_failed_reason_type.h"
 
 #include <unordered_map>
 
@@ -10,6 +11,7 @@ namespace NetLib
 {
 	class IConnectionPipeline;
 	class Socket;
+	class NetworkPacket;
 
 	struct ConnectionConfiguration
 	{
@@ -20,8 +22,10 @@ namespace NetLib
 
 	struct PendingConnectionData
 	{
-			PendingConnectionData( const Address& address, uint16 id, uint16 client_side_id, uint64 data_prefix )
+			PendingConnectionData( const Address& address, bool started_locally, uint16 id, uint16 client_side_id,
+			                       uint64 data_prefix )
 			    : address( address )
+			    , startedLocally( started_locally )
 			    , id( id )
 			    , clientSideId( client_side_id )
 			    , dataPrefix( data_prefix )
@@ -29,9 +33,22 @@ namespace NetLib
 			}
 
 			Address address;
+			bool startedLocally;
 			uint16 id;
 			uint16 clientSideId;
 			uint64 dataPrefix;
+	};
+
+	struct PendingConnectionFailedData
+	{
+			PendingConnectionFailedData( const Address& address, ConnectionFailedReasonType reason )
+			    : address( address )
+			    , reason( reason )
+			{
+			}
+
+			Address address;
+			ConnectionFailedReasonType reason;
 	};
 
 	class ConnectionManager
@@ -68,14 +85,17 @@ namespace NetLib
 			>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>*/
 			bool AddIncomingMessageToPendingConnection( const Address& address, std::unique_ptr< Message > message );
 
+			bool ProcessPacket( const Address& address, NetworkPacket& packet );
+
 			/*>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>
 			/	brief: Creates a new pending connection based on an address
 			/
 			/	param address: The new pending connection's address
+			/	param started_locally: Whether the connection was started locally or remotely
 			/
 			/	returns: true if created, false otherwise
 			>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>*/
-			bool CreatePendingConnection( const Address& address );
+			bool CreatePendingConnection( const Address& address, bool started_locally );
 
 			/*>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>
 			/	brief: Starts connecting to a specified address
@@ -90,8 +110,11 @@ namespace NetLib
 
 			void GetConnectedPendingConnectionsData(
 			    std::vector< PendingConnectionData >& out_connected_pending_connections );
-
 			void ClearConnectedPendingConnections();
+
+			void GetDeniedPendingConnectionsData(
+			    std::vector< PendingConnectionFailedData >& out_denied_pending_connections );
+			void ClearDeniedPendingConnections();
 
 			void SendDataToPendingConnections( Socket& socket );
 

@@ -4,6 +4,7 @@
 #include <memory>
 
 #include "logger.h"
+#include "asserts.h"
 
 #include "core/time_clock.h"
 
@@ -106,14 +107,6 @@ namespace NetLib
 		TickReplication();
 	}
 
-	uint64 Server::GenerateServerSalt() const
-	{
-		// TODO Change this in order to get another random generator that generates 64bit numbers
-		srand( static_cast< uint32 >( time( NULL ) ) + 3589 );
-		uint64 serverSalt = rand();
-		return serverSalt;
-	}
-
 	void Server::ProcessMessageFromPeer( const Message& message, RemotePeer& remotePeer )
 	{
 		MessageType messageType = message.GetHeader().type;
@@ -121,20 +114,6 @@ namespace NetLib
 
 		switch ( messageType )
 		{
-			case MessageType::ConnectionRequest:
-				{
-					const ConnectionRequestMessage& connectionRequestMessage =
-					    static_cast< const ConnectionRequestMessage& >( message );
-					ProcessConnectionRequest( connectionRequestMessage, remotePeer.GetAddress() );
-					break;
-				}
-			case MessageType::ConnectionChallengeResponse:
-				{
-					const ConnectionChallengeResponseMessage& connectionChallengeResponseMessage =
-					    static_cast< const ConnectionChallengeResponseMessage& >( message );
-					ProcessConnectionChallengeResponse( connectionChallengeResponseMessage, remotePeer );
-					break;
-				}
 			case MessageType::TimeRequest:
 				{
 					const TimeRequestMessage& timeRequestMessage = static_cast< const TimeRequestMessage& >( message );
@@ -161,67 +140,6 @@ namespace NetLib
 			default:
 				LOG_WARNING( "Invalid Message type, ignoring it..." );
 				break;
-		}
-	}
-
-	void Server::ProcessMessageFromUnknownPeer( const Message& message, const Address& address )
-	{
-		if ( message.GetHeader().type == MessageType::ConnectionRequest )
-		{
-			const ConnectionRequestMessage& connectionRequestMessage =
-			    static_cast< const ConnectionRequestMessage& >( message );
-			ProcessConnectionRequest( connectionRequestMessage, address );
-		}
-		else
-		{
-			LOG_WARNING( "Server only process Connection request messages from unknown peers. Any other type of "
-			             "message will be discarded." );
-		}
-	}
-
-	void Server::ProcessConnectionRequest( const ConnectionRequestMessage& message, const Address& address )
-	{
-		std::string ip_and_port;
-		address.GetFull( ip_and_port );
-		LOG_INFO( "Processing connection request from [%s] with salt number %d", ip_and_port.c_str(),
-		          message.clientSalt );
-
-		RemotePeersHandlerResult isAbleToConnectResult = _remotePeersHandler.IsRemotePeerAbleToConnect( address );
-
-		if ( isAbleToConnectResult ==
-		     RemotePeersHandlerResult::RPH_SUCCESS ) // If there is green light keep with the connection pipeline.
-		{
-			uint64 clientSalt = message.clientSalt;
-			uint64 serverSalt = GenerateServerSalt();
-			AddRemotePeer( address, _nextAssignedRemotePeerID, clientSalt, serverSalt );
-			++_nextAssignedRemotePeerID;
-
-			RemotePeer* remotePeer = _remotePeersHandler.GetRemotePeerFromAddress( address );
-			CreateConnectionChallengeMessage( *remotePeer );
-		}
-		else if ( isAbleToConnectResult ==
-		          RemotePeersHandlerResult::RPH_ALREADYEXIST ) // If the client is already connected just send a
-		                                                       // connection approved message
-		{
-			RemotePeer* remotePeer = _remotePeersHandler.GetRemotePeerFromAddress( address );
-
-			RemotePeerState remotePeerState = remotePeer->GeturrentState();
-			if ( remotePeerState == RemotePeerState::Connected )
-			{
-				CreateConnectionApprovedMessage( *remotePeer );
-				LOG_INFO( "The client is already connected, sending connection approved..." );
-			}
-			else if ( remotePeerState == RemotePeerState::Connecting )
-			{
-				CreateConnectionChallengeMessage( *remotePeer );
-				LOG_INFO( "The client is already trying to connect, sending connection challenge..." );
-			}
-		}
-		else if ( isAbleToConnectResult ==
-		          RemotePeersHandlerResult::RPH_FULL ) // If all the client slots are full deny the connection
-		{
-			SendConnectionDeniedPacket( address, ConnectionFailedReasonType::CFR_SERVER_FULL );
-			LOG_WARNING( "All available connection slots are full. Denying incoming connection..." );
 		}
 	}
 
@@ -258,74 +176,6 @@ namespace NetLib
 
 		// Find remote client
 		remotePeer.AddMessage( std::move( timeResponseMessage ) );
-	}
-
-	void Server::CreateConnectionChallengeMessage( RemotePeer& remotePeer )
-	{
-		std::unique_ptr< Message > message = _messageFactory.LendMessage( MessageType::ConnectionChallenge );
-		if ( message == nullptr )
-		{
-			LOG_ERROR( "Can't create new Connection Challenge Message because the MessageFactory has returned a null "
-			           "message" );
-			return;
-		}
-
-		std::unique_ptr< ConnectionChallengeMessage > connectionChallengePacket(
-		    static_cast< ConnectionChallengeMessage* >( message.release() ) );
-		connectionChallengePacket->clientSalt = remotePeer.GetClientSalt();
-		connectionChallengePacket->serverSalt = remotePeer.GetServerSalt();
-		remotePeer.AddMessage( std::move( connectionChallengePacket ) );
-
-		LOG_INFO( "Connection challenge message created." );
-	}
-
-	void Server::SendConnectionDeniedPacket( const Address& address, ConnectionFailedReasonType reason )
-	{
-		std::unique_ptr< Message > message = _messageFactory.LendMessage( MessageType::ConnectionDenied );
-		std::unique_ptr< ConnectionDeniedMessage > connectionDeniedMessage(
-		    static_cast< ConnectionDeniedMessage* >( message.release() ) );
-		connectionDeniedMessage->reason = reason;
-
-		NetworkPacket packet = NetworkPacket();
-		packet.AddMessage( std::move( connectionDeniedMessage ) );
-
-		LOG_INFO( "Sending connection denied..." );
-		SendPacketToAddress( packet, address );
-
-		NetworkPacketUtils::CleanPacket( _messageFactory, packet );
-	}
-
-	void Server::ProcessConnectionChallengeResponse( const ConnectionChallengeResponseMessage& message,
-	                                                 RemotePeer& remotePeer )
-	{
-		std::string ip_and_port;
-		remotePeer.GetAddress().GetFull( ip_and_port );
-		LOG_INFO( "Processing connection challenge response from [%s]", ip_and_port.c_str() );
-
-		if ( remotePeer.GeturrentState() == RemotePeerState::Connected )
-		{
-			LOG_INFO( "The remote peer is already connected. Sending connection approved..." );
-			CreateConnectionApprovedMessage( remotePeer );
-			return;
-		}
-
-		uint64 dataPrefix = message.prefix;
-
-		if ( remotePeer.GetDataPrefix() == dataPrefix )
-		{
-			ConnectRemotePeer( remotePeer );
-
-			// Send connection approved packet
-			CreateConnectionApprovedMessage( remotePeer );
-			LOG_INFO( "Connection approved" );
-		}
-		else
-		{
-			LOG_INFO( "Connection denied due to not wrong data prefix" );
-			SendConnectionDeniedPacket( remotePeer.GetAddress(), ConnectionFailedReasonType::CFR_UNKNOWN );
-
-			StartDisconnectingRemotePeer( remotePeer.GetClientIndex(), false, ConnectionFailedReasonType::CFR_UNKNOWN );
-		}
 	}
 
 	// TODO REFACTOR THIS METHOD
@@ -378,28 +228,6 @@ namespace NetLib
 		StartDisconnectingRemotePeer( remotePeer.GetClientIndex(), false, ConnectionFailedReasonType::CFR_UNKNOWN );
 	}
 
-	void Server::CreateConnectionApprovedMessage( RemotePeer& remotePeer )
-	{
-		std::unique_ptr< Message > message = _messageFactory.LendMessage( MessageType::ConnectionAccepted );
-		if ( message == nullptr )
-		{
-			LOG_ERROR(
-			    "Can't create new Connection Accepted Message because the MessageFactory has returned a null message" );
-			return;
-		}
-
-		std::unique_ptr< ConnectionAcceptedMessage > connectionAcceptedPacket(
-		    static_cast< ConnectionAcceptedMessage* >( message.release() ) );
-		connectionAcceptedPacket->prefix = remotePeer.GetDataPrefix();
-		connectionAcceptedPacket->clientIndexAssigned = remotePeer.GetClientIndex();
-		remotePeer.AddMessage( std::move( connectionAcceptedPacket ) );
-	}
-
-	void Server::SendPacketToRemotePeer( const RemotePeer& remotePeer, const NetworkPacket& packet ) const
-	{
-		SendPacketToAddress( packet, remotePeer.GetAddress() );
-	}
-
 	void Server::TickReplication()
 	{
 		auto validRemotePeersIt = _remotePeersHandler.GetValidRemotePeersIterator();
@@ -431,9 +259,13 @@ namespace NetLib
 		return true;
 	}
 
-	void Server::InternalOnRemotePeerConnect( RemotePeer& remote_peer, uint16 client_side_id )
+	void Server::OnPendingConnectionAccepted( const PendingConnectionData& data )
 	{
-		_remotePeerInputsHandler.CreateInputsBuffer( remote_peer.GetClientIndex() );
+		ASSERT( !data.startedLocally,
+		        "Server-side can't receive a connection accepted that was started locally. Server "
+		        "does not start conenctions locally." );
+
+		_remotePeerInputsHandler.CreateInputsBuffer( data.id );
 	}
 
 	void Server::InternalOnRemotePeerDisconnect( const RemotePeer& remote_peer )

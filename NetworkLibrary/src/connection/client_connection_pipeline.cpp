@@ -93,16 +93,7 @@ namespace NetLib
 	{
 		LOG_INFO( "%s Processing connection denied message for pending connection", THIS_FUNCTION_NAME );
 
-		// Check if state is valid for a connection challenge
-		if ( pending_connection.GetCurrentState() != PendingConnectionState::ConnectionChallenge &&
-		     pending_connection.GetCurrentState() != PendingConnectionState::Failed )
-		{
-			LOG_WARNING( "%s Pending connection is not in a valid state to process a connection denied message. "
-			             "Current state: %u",
-			             THIS_FUNCTION_NAME, static_cast< uint32 >( pending_connection.GetCurrentState() ) );
-			return;
-		}
-
+		pending_connection.SetConnectionDeniedReason( static_cast< ConnectionFailedReasonType >( message.reason ) );
 		pending_connection.SetCurrentState( PendingConnectionState::Failed );
 	}
 
@@ -173,12 +164,15 @@ namespace NetLib
 	{
 		LOG_INFO( "%s Adding connection request message to pending connection", THIS_FUNCTION_NAME );
 
-		const uint64 clientSalt = GenerateClientSaltNumber();
-		pending_connection.SetClientSalt( clientSalt );
+		if ( !pending_connection.HasClientSaltAssigned() )
+		{
+			const uint64 clientSalt = GenerateClientSaltNumber();
+			pending_connection.SetClientSalt( clientSalt );
+		}
 
 		// Create connection request
 		std::unique_ptr< Message > connectionRequestMessage =
-		    CreateConnectionRequestMessage( message_factory, clientSalt );
+		    CreateConnectionRequestMessage( message_factory, pending_connection.GetClientSalt() );
 
 		// Add message to pending connection
 		pending_connection.AddMessage( std::move( connectionRequestMessage ) );

@@ -1,6 +1,9 @@
 #include "pending_connection.h"
 
 #include "logger.h"
+#include "asserts.h"
+
+#include "communication/network_packet.h"
 
 namespace NetLib
 {
@@ -8,6 +11,7 @@ namespace NetLib
 	    : _isStartedUp( false )
 	    , _address( Address::GetInvalid() )
 	    , _transmissionChannel( nullptr )
+	    , _startedLocally( false )
 	{
 	}
 
@@ -15,10 +19,11 @@ namespace NetLib
 	    : _isStartedUp( false )
 	    , _address( Address::GetInvalid() )
 	    , _transmissionChannel( message_factory )
+	    , _startedLocally( false )
 	{
 	}
 
-	bool PendingConnection::StartUp( const Address& address )
+	bool PendingConnection::StartUp( const Address& address, bool started_locally )
 	{
 		if ( _isStartedUp )
 		{
@@ -28,7 +33,10 @@ namespace NetLib
 		}
 
 		_address = address;
+		_startedLocally = started_locally;
 		_currentState = PendingConnectionState::Initializing;
+		_hasClientSaltAssigned = false;
+		_hasServerSaltAssigned = false;
 		_isStartedUp = true;
 		return true;
 	}
@@ -45,6 +53,30 @@ namespace NetLib
 		_address = Address::GetInvalid();
 		_isStartedUp = false;
 		return true;
+	}
+
+	void PendingConnection::ProcessPacket( NetworkPacket& packet )
+	{
+		// Process packet ACKs
+		/*ASSERT( packet.GetHeader().channelType != TransmissionChannelType::ReliableOrdered,
+		        "Pending connection packets must be reliable ordered." );*/
+
+		const uint32 acks = packet.GetHeader().ackBits;
+		const uint16 lastAckedMessageSequenceNumber = packet.GetHeader().lastAckedSequenceNumber;
+		_transmissionChannel.ProcessACKs( acks, lastAckedMessageSequenceNumber, _metricsHandler );
+
+		// Process packet messages one by one
+		while ( packet.GetNumberOfMessages() > 0 )
+		{
+			std::unique_ptr< Message > message = packet.TryGetNextMessage();
+			AddReceivedMessage( std::move( message ) );
+		}
+
+		if ( _metricsHandler.HasMetric( Metrics::MetricType::DOWNLOAD_BANDWIDTH ) )
+		{
+			const uint32 packet_size = packet.Size();
+			_metricsHandler.AddValue( Metrics::MetricType::DOWNLOAD_BANDWIDTH, packet_size );
+		}
 	}
 
 	const Message* PendingConnection::GetPendingReadyToProcessMessage()

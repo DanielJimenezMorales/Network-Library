@@ -49,19 +49,15 @@ namespace NetLib
 		protected:
 			bool StartConcrete( const std::string& ip, uint32 port ) override;
 			void ProcessMessageFromPeer( const Message& message, RemotePeer& remotePeer ) override;
-			void ProcessMessageFromUnknownPeer( const Message& message, const Address& address ) override;
 			void TickConcrete( float32 elapsedTime ) override;
 			bool StopConcrete() override;
 
-			void InternalOnRemotePeerConnect( RemotePeer& remote_peer, uint16 client_side_id ) override;
+			void OnPendingConnectionAccepted( const PendingConnectionData& data ) override;
+			void OnPendingConnectionDenied( const PendingConnectionFailedData& data ) override {}
+
 			void InternalOnRemotePeerDisconnect( const RemotePeer& remote_peer ) override;
 
 		private:
-			uint64 GenerateServerSalt() const;
-
-			void ProcessConnectionRequest( const ConnectionRequestMessage& message, const Address& address );
-			void ProcessConnectionChallengeResponse( const ConnectionChallengeResponseMessage& message,
-			                                         RemotePeer& remotePeer );
 			void ProcessTimeRequest( const TimeRequestMessage& message, RemotePeer& remotePeer );
 			void ProcessInputs( const InputStateMessage& message, RemotePeer& remotePeer );
 			void ProcessDisconnection( const DisconnectionMessage& message, RemotePeer& remotePeer );
@@ -77,12 +73,8 @@ namespace NetLib
 			/// </returns>
 			// int32 IsRemotePeerAbleToConnect(const Address& address) const;
 
-			void CreateConnectionChallengeMessage( RemotePeer& remotePeer );
-			void CreateConnectionApprovedMessage( RemotePeer& remotePeer );
 			void CreateDisconnectionMessage( RemotePeer& remotePeer );
 			void CreateTimeResponseMessage( RemotePeer& remotePeer, const TimeRequestMessage& timeRequest );
-			void SendConnectionDeniedPacket( const Address& address, ConnectionFailedReasonType reason );
-			void SendPacketToRemotePeer( const RemotePeer& remotePeer, const NetworkPacket& packet ) const;
 
 			void TickReplication();
 

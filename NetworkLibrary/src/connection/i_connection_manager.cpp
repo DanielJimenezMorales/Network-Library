@@ -1,6 +1,8 @@
 #include "i_connection_manager.h"
 
 #include "connection/i_connection_pipeline.h"
+#include "communication/network_packet.h"
+#include "communication/message.h"
 
 #include "logger.h"
 #include "asserts.h"
@@ -133,7 +135,7 @@ namespace NetLib
 			if ( message->GetHeader().type == MessageType::ConnectionRequest )
 			{
 				// Check if pending connection creation is successful - There have to be empty slots left
-				if ( CreatePendingConnection( address ) )
+				if ( CreatePendingConnection( address, false ) )
 				{
 					PendingConnection& pendingConnection = _pendingConnections[ address ];
 					pendingConnection.AddReceivedMessage( std::move( message ) );
@@ -160,7 +162,44 @@ namespace NetLib
 		return success;
 	}
 
-	bool ConnectionManager::CreatePendingConnection( const Address& address )
+	bool ConnectionManager::ProcessPacket(const Address& address, NetworkPacket& packet)
+	{
+		if (!_isStartedUp)
+		{
+			LOG_ERROR("[ConnectionManager.%s] ConnectionManager is not started up, ignoring call",
+				THIS_FUNCTION_NAME);
+			return false;
+		}
+
+		bool success = false;
+		if (DoesPendingConnectionExist(address))
+		{
+			PendingConnection& pendingConnection = _pendingConnections[address];
+			pendingConnection.ProcessPacket(packet);
+			success = true;
+		}
+		else
+		{
+			// Check if pending connection creation is successful - There have to be empty slots left
+			if (CreatePendingConnection(address, false))
+			{
+				PendingConnection& pendingConnection = _pendingConnections[address];
+				pendingConnection.ProcessPacket(packet);
+				success = true;
+			}
+			else
+			{
+				std::string fullAddress;
+				address.GetFull(fullAddress);
+				LOG_WARNING("ConnectionManager.%s Cannot create pending connection with address %s.",
+					THIS_FUNCTION_NAME, fullAddress.c_str());
+			}
+		}
+
+		return success;
+	}
+
+	bool ConnectionManager::CreatePendingConnection( const Address& address, bool started_locally )
 	{
 		if ( !_isStartedUp )
 		{
@@ -177,7 +216,7 @@ namespace NetLib
 			{
 				// Create and start up
 				_pendingConnections.try_emplace( address, _messageFactory );
-				success = _pendingConnections[ address ].StartUp( address );
+				success = _pendingConnections[ address ].StartUp( address, started_locally );
 				if ( !success )
 				{
 					_pendingConnections.erase( address );
@@ -218,7 +257,7 @@ namespace NetLib
 		bool success = false;
 		if ( _canStartConnections )
 		{
-			if ( CreatePendingConnection( address ) )
+			if ( CreatePendingConnection( address, true ) )
 			{
 				PendingConnection& pendingConnection = _pendingConnections[ address ];
 				pendingConnection.SetCurrentState( PendingConnectionState::Initializing );
@@ -250,8 +289,8 @@ namespace NetLib
 			const PendingConnection& pc = cit->second;
 			if ( pc.GetCurrentState() == PendingConnectionState::Completed )
 			{
-				out_connected_pending_connections.emplace_back( pc.GetAddress(), pc.GetId(), pc.GetClientSideId(),
-				                                                pc.GetDataPrefix() );
+				out_connected_pending_connections.emplace_back( pc.GetAddress(), pc.WasStartedLocally(), pc.GetId(),
+				                                                pc.GetClientSideId(), pc.GetDataPrefix() );
 			}
 		}
 	}
@@ -268,6 +307,48 @@ namespace NetLib
 		for ( auto it = _pendingConnections.begin(); it != _pendingConnections.end(); )
 		{
 			if ( it->second.GetCurrentState() == PendingConnectionState::Completed )
+			{
+				it = _pendingConnections.erase( it );
+			}
+			else
+			{
+				++it;
+			}
+		}
+	}
+
+	void ConnectionManager::GetDeniedPendingConnectionsData(
+	    std::vector< PendingConnectionFailedData >& out_denied_pending_connections )
+	{
+		if ( !_isStartedUp )
+		{
+			LOG_ERROR( "[ConnectionManager.%s] ConnectionManager is not started up, ignoring call",
+			           THIS_FUNCTION_NAME );
+			return;
+		}
+
+		for ( auto& cit = _pendingConnections.cbegin(); cit != _pendingConnections.cend(); ++cit )
+		{
+			const PendingConnection& pc = cit->second;
+			if ( pc.GetCurrentState() == PendingConnectionState::Failed )
+			{
+				out_denied_pending_connections.emplace_back( pc.GetAddress(), pc.GetConnectionDeniedReason() );
+			}
+		}
+	}
+
+	void ConnectionManager::ClearDeniedPendingConnections()
+	{
+		if ( !_isStartedUp )
+		{
+			LOG_ERROR( "[ConnectionManager.%s] ConnectionManager is not started up, ignoring call",
+			           THIS_FUNCTION_NAME );
+			return;
+		}
+
+		for ( auto it = _pendingConnections.begin(); it != _pendingConnections.end(); )
+		{
+			if ( it->second.GetCurrentState() == PendingConnectionState::Failed )
 			{
 				it = _pendingConnections.erase( it );
 			}

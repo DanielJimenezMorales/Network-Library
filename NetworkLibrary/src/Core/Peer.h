@@ -14,6 +14,7 @@
 #include "communication/message_factory.h"
 
 #include "connection/i_connection_manager.h"
+#include "connection/connection_failed_reason_type.h"
 
 #include "transmission_channels/transmission_channel.h"
 
@@ -25,15 +26,7 @@ namespace NetLib
 	class NetworkPacket;
 	class RemotePeer;
 	class Buffer;
-
-	enum ConnectionFailedReasonType : uint8
-	{
-		CFR_UNKNOWN = 0,           // Unexpect
-		CFR_TIMEOUT = 1,           // The peer is inactive
-		CFR_SERVER_FULL = 2,       // The server can't handle more connections, it has reached its maximum
-		CFR_PEER_SHUT_DOWN = 3,    // The peer has shut down its Network system
-		CFR_CONNECTION_TIMEOUT = 4 // The in process connection has taken too long
-	};
+	struct PendingConnectionData;
 
 	struct RemotePeerDisconnectionData
 	{
@@ -129,13 +122,11 @@ namespace NetLib
 
 			virtual bool StartConcrete( const std::string& ip, uint32 port ) = 0;
 			virtual void ProcessMessageFromPeer( const Message& message, RemotePeer& remotePeer ) = 0;
-			virtual void ProcessMessageFromUnknownPeer( const Message& message, const Address& address ) = 0;
 			virtual void TickConcrete( float32 elapsedTime ) = 0;
 			virtual bool StopConcrete() = 0;
 
 			void SendPacketToAddress( const NetworkPacket& packet, const Address& address ) const;
 			bool AddRemotePeer( const Address& addressInfo, uint16 id, uint64 clientSalt, uint64 serverSalt );
-			void ConnectRemotePeer( RemotePeer& remotePeer );
 			bool BindSocket( const Address& address ) const;
 
 			void StartDisconnectingRemotePeer( uint32 id, bool shouldNotify, ConnectionFailedReasonType reason );
@@ -148,7 +139,8 @@ namespace NetLib
 			/// Called during OnRemotePeerConnect. This function is used for events happening inside the network library
 			/// code. This function will be called before teh OnRemotePeerConnect Delegate
 			/// </summary>
-			virtual void InternalOnRemotePeerConnect( RemotePeer& remote_peer, uint16 client_side_id ) = 0;
+			virtual void OnPendingConnectionAccepted( const PendingConnectionData& data ) = 0;
+			virtual void OnPendingConnectionDenied( const PendingConnectionFailedData& data ) = 0;
 			virtual void InternalOnRemotePeerDisconnect( const RemotePeer& remote_peer ) = 0;
 			void ExecuteOnLocalPeerConnect();
 			void ExecuteOnLocalPeerDisconnect( ConnectionFailedReasonType reason );
@@ -183,6 +175,7 @@ namespace NetLib
 
 			void TickPendingConnections( float32 elapsed_time );
 			void ConvertSuccessfulConnectionsInRemotePeers();
+			void ProcessDeniedConnections();
 
 			// Remote peer related
 			void TickRemotePeers( float32 elapsedTime );
@@ -197,8 +190,6 @@ namespace NetLib
 			/// </summary>
 			void SendDataToRemotePeers();
 			void SendDataToPendingConnections();
-
-			void SendDataToAddress( const Buffer& buffer, const Address& address ) const;
 
 			bool DoesRemotePeerIdExistInPendingDisconnections( uint32 id ) const;
 			void FinishRemotePeersDisconnection();

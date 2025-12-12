@@ -1,13 +1,14 @@
 #pragma once
 #include "numeric_types.h"
 
+#include "communication/message.h"
+
 #include <queue>
 #include <vector>
 #include <memory>
 
 namespace NetLib
 {
-	class Message;
 	class MessageFactory;
 	class Socket;
 	class Address;
