@@ -226,7 +226,7 @@ namespace NetLib
 		          message.reason );
 
 		StartDisconnectingRemotePeer( remotePeer.GetClientIndex(), false,
-		                              Connection::ConnectionFailedReasonType::CFR_UNKNOWN );
+		                              Connection::ConnectionFailedReasonType::UNKNOWN );
 	}
 
 	void Server::TickReplication()

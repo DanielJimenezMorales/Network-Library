@@ -55,8 +55,7 @@ namespace NetLib
 	{
 		public:
 			ConnectionChallengeMessage()
-			    : clientSalt( 0 )
-			    , serverSalt( 0 )
+			    : serverSalt( 0 )
 			    , Message( MessageType::ConnectionChallenge )
 			{
 			}
@@ -67,7 +66,6 @@ namespace NetLib
 
 			~ConnectionChallengeMessage() override {};
 
-			uint64 clientSalt;
 			uint64 serverSalt;
 	};
 

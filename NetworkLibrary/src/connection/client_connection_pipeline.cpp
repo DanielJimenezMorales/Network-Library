@@ -52,22 +52,12 @@ namespace NetLib
 				return;
 			}
 
-			// Check if client salt matches
-			if ( pending_connection.GetClientSalt() != message.clientSalt )
-			{
-				LOG_ERROR(
-				    "%s The generated salt number does not match the server's challenge message salt number. Message "
-				    "salt: %llu, pending connection salt: %llu",
-				    THIS_FUNCTION_NAME, message.clientSalt, pending_connection.GetClientSalt() );
-				return;
-			}
-
 			// Update pending connection
 			pending_connection.SetServerSalt( message.serverSalt );
 			pending_connection.SetCurrentState( PendingConnectionState::ConnectionChallenge );
 
 			// Create connection challenge response
-			const uint64 dataPrefix = message.clientSalt ^ message.serverSalt;
+			const uint64 dataPrefix = pending_connection.GetClientSalt() ^ message.serverSalt;
 			std::unique_ptr< Message > connectionChallengeMessage =
 			    CreateConnectionChallengeResponseMessage( message_factory, dataPrefix );
 			pending_connection.AddMessage( std::move( connectionChallengeMessage ) );

@@ -115,8 +115,7 @@ namespace NetLib
 
 	bool Peer::Stop()
 	{
-		RequestStop( true, Connection::ConnectionFailedReasonType::CFR_PEER_SHUT_DOWN );
-		StopInternal();
+		RequestStop( true, Connection::ConnectionFailedReasonType::PEER_SHUT_DOWN );
 
 		return true;
 	}
@@ -193,7 +192,7 @@ namespace NetLib
 	    , _onLocalPeerDisconnect()
 	    , _isStopRequested( false )
 	    , _stopRequestShouldNotifyRemotePeers( false )
-	    , _stopRequestReason( Connection::ConnectionFailedReasonType::CFR_UNKNOWN )
+	    , _stopRequestReason( Connection::ConnectionFailedReasonType::UNKNOWN )
 	    , _currentTick( 0 )
 	    , _messageFactory( 3 )
 	    , _connectionManager()
@@ -271,7 +270,7 @@ namespace NetLib
 		disconenctionMessage->SetOrdered( false );
 		disconenctionMessage->SetReliability( false );
 		disconenctionMessage->prefix = remotePeer.GetDataPrefix();
-		disconenctionMessage->reason = reason;
+		disconenctionMessage->reason = static_cast< uint8 >( reason );
 
 		packet.AddMessage( std::move( disconenctionMessage ) );
 		SendPacketToAddress( packet, remotePeer.GetAddress() );
@@ -334,7 +333,7 @@ namespace NetLib
 				if ( remotePeer != nullptr )
 				{
 					StartDisconnectingRemotePeer( remotePeer->GetClientIndex(), false,
-					                              Connection::ConnectionFailedReasonType::CFR_UNKNOWN );
+					                              Connection::ConnectionFailedReasonType::UNKNOWN );
 				}
 			}
 		} while ( arePendingDatagramsToRead );
@@ -406,7 +405,7 @@ namespace NetLib
 	void Peer::ConvertSuccessfulConnectionsInRemotePeers()
 	{
 		std::vector< Connection::SuccessConnectionData > successfulConnections;
-		_connectionManager.GetConnectedPendingConnectionsData( successfulConnections );
+		_connectionManager.GetSuccessConnectionsData( successfulConnections );
 
 		for ( auto& cit = successfulConnections.cbegin(); cit != successfulConnections.cend(); ++cit )
 		{
@@ -424,20 +423,20 @@ namespace NetLib
 			}
 		}
 
-		_connectionManager.ClearConnectedPendingConnections();
+		_connectionManager.RemoveSuccessConnections();
 	}
 
 	void Peer::ProcessDeniedConnections()
 	{
 		std::vector< Connection::FailedConnectionData > deniedConnections;
-		_connectionManager.GetDeniedPendingConnectionsData( deniedConnections );
+		_connectionManager.GetFailedConnectionsData( deniedConnections );
 
 		for ( auto& cit = deniedConnections.cbegin(); cit != deniedConnections.cend(); ++cit )
 		{
 			OnPendingConnectionDenied( *cit );
 		}
 
-		_connectionManager.ClearDeniedPendingConnections();
+		_connectionManager.RemoveFailedConnections();
 	}
 
 	void Peer::TickRemotePeers( float32 elapsedTime )
@@ -454,7 +453,7 @@ namespace NetLib
 			if ( remotePeer.IsInactive() )
 			{
 				StartDisconnectingRemotePeer( remotePeer.GetClientIndex(), true,
-				                              Connection::ConnectionFailedReasonType::CFR_TIMEOUT );
+				                              Connection::ConnectionFailedReasonType::TIMEOUT );
 			}
 		}
 	}
@@ -563,6 +562,7 @@ namespace NetLib
 		StopConcrete();
 		DisconnectAllRemotePeers( _stopRequestShouldNotifyRemotePeers, _stopRequestReason );
 		_socket.Close();
+		_connectionManager.ShutDown();
 
 		_isStopRequested = false;
 

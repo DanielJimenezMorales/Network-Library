@@ -36,7 +36,6 @@ namespace NetLib
 
 			std::unique_ptr< ConnectionChallengeMessage > connectionChallengeMessage(
 			    static_cast< ConnectionChallengeMessage* >( message.release() ) );
-			connectionChallengeMessage->clientSalt = client_salt;
 			connectionChallengeMessage->serverSalt = server_salt;
 
 			return connectionChallengeMessage;
@@ -58,7 +57,7 @@ namespace NetLib
 
 			std::unique_ptr< ConnectionDeniedMessage > connectionDeniedMessage(
 			    static_cast< ConnectionDeniedMessage* >( message.release() ) );
-			connectionDeniedMessage->reason = reason;
+			connectionDeniedMessage->reason = static_cast< uint8 >( reason );
 
 			return connectionDeniedMessage;
 		}
@@ -209,8 +208,7 @@ namespace NetLib
 			else
 			{
 				pending_connection.SetCurrentState( PendingConnectionState::Failed );
-				pending_connection.SetConnectionDeniedReason(
-				    ConnectionFailedReasonType::CFR_WRONG_CHALLENGE_RESPONSE );
+				pending_connection.SetConnectionDeniedReason( ConnectionFailedReasonType::WRONG_CHALLENGE_RESPONSE );
 				outcomeMessage =
 				    CreateConnectionDeniedMessage( message_factory, pending_connection.GetConnectionDeniedReason() );
 			}

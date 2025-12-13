@@ -38,14 +38,10 @@ namespace NetLib
 
 				const Message* GetPendingReadyToProcessMessage();
 				bool AddMessage( std::unique_ptr< Message > message );
-				bool AddReceivedMessage( std::unique_ptr< Message > message );
 
 				void SendData( Socket& socket );
 
-				void UpdateConnectionElapsedTime( float32 elapsed_time )
-				{
-					_currentConnectionElapsedTimeSeconds += elapsed_time;
-				};
+				void UpdateConnectionElapsedTime( float32 elapsed_time );
 
 				float32 GetCurrentConnectionElapsedTime() const { return _currentConnectionElapsedTimeSeconds; };
 
@@ -53,16 +49,8 @@ namespace NetLib
 				uint64 GetServerSalt() const { return _serverSalt; };
 				uint64 GetDataPrefix() const { return _dataPrefix; };
 				void GenerateDataPrefix() { _dataPrefix = _clientSalt ^ _serverSalt; };
-				void SetClientSalt( uint64 client_salt )
-				{
-					_clientSalt = client_salt;
-					_hasClientSaltAssigned = true;
-				};
-				void SetServerSalt( uint64 server_salt )
-				{
-					_serverSalt = server_salt;
-					_hasServerSaltAssigned = true;
-				};
+				void SetClientSalt( uint64 client_salt );
+				void SetServerSalt( uint64 server_salt );
 
 				uint16 GetId() const { return _id; };
 				void SetId( uint16 id ) { _id = id; };
@@ -79,6 +67,8 @@ namespace NetLib
 				};
 
 			private:
+				bool AddReceivedMessage( std::unique_ptr< Message > message );
+
 				bool _isStartedUp;
 
 				Address _address;

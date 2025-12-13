@@ -14,6 +14,18 @@ namespace NetLib
 		    , _address( Address::GetInvalid() )
 		    , _transmissionChannel( nullptr )
 		    , _startedLocally( false )
+		    , _metricsHandler()
+		    , _currentState( PendingConnectionState::Initializing )
+		    , _currentConnectionElapsedTimeSeconds( 0.f )
+		    , _clientSalt( 0 )
+		    , _serverSalt( 0 )
+		    , _dataPrefix( 0 )
+		    , _hasClientSaltAssigned( false )
+		    , _hasServerSaltAssigned( false )
+		    , _id( 0 )
+		    , _clientSideId( 0 )
+		    , _connectionDeniedReason( ConnectionFailedReasonType::UNKNOWN )
+
 		{
 		}
 
@@ -22,6 +34,17 @@ namespace NetLib
 		    , _address( Address::GetInvalid() )
 		    , _transmissionChannel( message_factory )
 		    , _startedLocally( false )
+		    , _metricsHandler()
+		    , _currentState( PendingConnectionState::Initializing )
+		    , _currentConnectionElapsedTimeSeconds( 0.f )
+		    , _clientSalt( 0 )
+		    , _serverSalt( 0 )
+		    , _dataPrefix( 0 )
+		    , _hasClientSaltAssigned( false )
+		    , _hasServerSaltAssigned( false )
+		    , _id( 0 )
+		    , _clientSideId( 0 )
+		    , _connectionDeniedReason( ConnectionFailedReasonType::UNKNOWN )
 		{
 		}
 
@@ -61,9 +84,6 @@ namespace NetLib
 		void PendingConnection::ProcessPacket( NetworkPacket& packet )
 		{
 			// Process packet ACKs
-			/*ASSERT( packet.GetHeader().channelType != TransmissionChannelType::ReliableOrdered,
-			        "Pending connection packets must be reliable ordered." );*/
-
 			const uint32 acks = packet.GetHeader().ackBits;
 			const uint16 lastAckedMessageSequenceNumber = packet.GetHeader().lastAckedSequenceNumber;
 			_transmissionChannel.ProcessACKs( acks, lastAckedMessageSequenceNumber, _metricsHandler );
@@ -113,6 +133,18 @@ namespace NetLib
 			return _transmissionChannel.AddMessageToSend( std::move( message ) );
 		}
 
+		void PendingConnection::SetClientSalt( uint64 client_salt )
+		{
+			_clientSalt = client_salt;
+			_hasClientSaltAssigned = true;
+		};
+
+		void PendingConnection::SetServerSalt( uint64 server_salt )
+		{
+			_serverSalt = server_salt;
+			_hasServerSaltAssigned = true;
+		};
+
 		bool PendingConnection::AddReceivedMessage( std::unique_ptr< Message > message )
 		{
 			if ( !_isStartedUp )
@@ -123,7 +155,6 @@ namespace NetLib
 			}
 
 			const bool result = _transmissionChannel.AddReceivedMessage( std::move( message ), _metricsHandler );
-			// TODO Reset inactivity
 
 			return result;
 		}
@@ -132,5 +163,10 @@ namespace NetLib
 		{
 			_transmissionChannel.CreateAndSendPacket( socket, _address, _metricsHandler );
 		}
+
+		void PendingConnection::UpdateConnectionElapsedTime( float32 elapsed_time )
+		{
+			_currentConnectionElapsedTimeSeconds += elapsed_time;
+		};
 	} // namespace Connection
 } // namespace NetLib

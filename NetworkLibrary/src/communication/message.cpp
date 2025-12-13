@@ -36,7 +36,6 @@ namespace NetLib
 	void ConnectionChallengeMessage::Write( Buffer& buffer ) const
 	{
 		_header.Write( buffer );
-		buffer.WriteLong( clientSalt );
 		buffer.WriteLong( serverSalt );
 	}
 
@@ -44,11 +43,6 @@ namespace NetLib
 	{
 		_header.type = MessageType::ConnectionChallenge;
 		if ( !_header.ReadWithoutHeader( buffer ) )
-		{
-			return false;
-		}
-
-		if ( !buffer.ReadLong( clientSalt ) )
 		{
 			return false;
 		}
@@ -63,7 +57,7 @@ namespace NetLib
 
 	uint32 ConnectionChallengeMessage::Size() const
 	{
-		return MessageHeader::Size() + ( sizeof( uint64 ) * 2 );
+		return MessageHeader::Size() + sizeof( uint64 );
 	}
 
 	void ConnectionChallengeResponseMessage::Write( Buffer& buffer ) const

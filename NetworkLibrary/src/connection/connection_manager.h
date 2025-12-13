@@ -56,7 +56,10 @@ namespace NetLib
 
 				Address address;
 				bool startedLocally;
+				// The remote peer ID assigned by the server
 				uint16 id;
+				// The client-side ID assigned by the server (Use this variable when client opens a connection to the
+				// server and the server assigns an ID to this client's local peer)
 				uint16 clientSideId;
 				uint64 dataPrefix;
 		};
@@ -134,13 +137,37 @@ namespace NetLib
 				>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>*/
 				void SendData( Socket& socket );
 
-				void GetConnectedPendingConnectionsData(
-				    std::vector< SuccessConnectionData >& out_connected_pending_connections );
-				void ClearConnectedPendingConnections();
+				/*>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>
+				/	brief: Gets all the success connections that hasn't been removed yet.
+				/
+				/	notes: Do not forget to call RemoveSuccessConnections after processing the data.
+				/
+				/	param out_success_connections: An output array with the data of the success connections.
+				>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>*/
+				void GetSuccessConnectionsData( std::vector< SuccessConnectionData >& out_success_connections );
 
-				void GetDeniedPendingConnectionsData(
-				    std::vector< FailedConnectionData >& out_denied_pending_connections );
-				void ClearDeniedPendingConnections();
+				/*>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>
+				/	brief: Remove all the success connections to get some available slots for the new ones.
+				/
+				/	notes: Call this method after processing the success connections data, or you will lost them.
+				>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>*/
+				void RemoveSuccessConnections();
+
+				/*>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>
+				/	brief: Gets all the failed connections that hasn't been removed yet.
+				/
+				/	notes: Do not forget to call RemoveFailedConnections after processing the data.
+				/
+				/	param out_success_connections: An output array with the data of the failed connections.
+				>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>*/
+				void GetFailedConnectionsData( std::vector< FailedConnectionData >& out_failed_connections );
+
+				/*>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>
+				/	brief: Remove all the failed connections to get some available slots for the new ones.
+				/
+				/	notes: Call this method after processing the failed connections data, or you will lost them.
+				>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>*/
+				void RemoveFailedConnections();
 
 			private:
 				/*>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>
@@ -162,6 +189,11 @@ namespace NetLib
 				>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>*/
 				bool CreatePendingConnection( const Address& address, bool started_locally );
 
+				/*>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>
+				/	brief: Check if it's possible to host another new connection
+				/
+				/	returns: true if possible, false otherwise
+				>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>*/
 				bool AreSlotsAvailableForNewPendingConnection() const;
 
 				/*>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>

@@ -238,8 +238,8 @@ namespace NetLib
 			return success;
 		}
 
-		void ConnectionManager::GetConnectedPendingConnectionsData(
-		    std::vector< SuccessConnectionData >& out_connected_pending_connections )
+		void ConnectionManager::GetSuccessConnectionsData(
+		    std::vector< SuccessConnectionData >& out_success_connections )
 		{
 			if ( !_isStartedUp )
 			{
@@ -253,13 +253,13 @@ namespace NetLib
 				const PendingConnection& pc = cit->second;
 				if ( pc.GetCurrentState() == PendingConnectionState::Completed )
 				{
-					out_connected_pending_connections.emplace_back( pc.GetAddress(), pc.WasStartedLocally(), pc.GetId(),
-					                                                pc.GetClientSideId(), pc.GetDataPrefix() );
+					out_success_connections.emplace_back( pc.GetAddress(), pc.WasStartedLocally(), pc.GetId(),
+					                                      pc.GetClientSideId(), pc.GetDataPrefix() );
 				}
 			}
 		}
 
-		void ConnectionManager::ClearConnectedPendingConnections()
+		void ConnectionManager::RemoveSuccessConnections()
 		{
 			if ( !_isStartedUp )
 			{
@@ -281,8 +281,7 @@ namespace NetLib
 			}
 		}
 
-		void ConnectionManager::GetDeniedPendingConnectionsData(
-		    std::vector< FailedConnectionData >& out_denied_pending_connections )
+		void ConnectionManager::GetFailedConnectionsData( std::vector< FailedConnectionData >& out_failed_connections )
 		{
 			if ( !_isStartedUp )
 			{
@@ -296,12 +295,12 @@ namespace NetLib
 				const PendingConnection& pc = cit->second;
 				if ( pc.GetCurrentState() == PendingConnectionState::Failed )
 				{
-					out_denied_pending_connections.emplace_back( pc.GetAddress(), pc.GetConnectionDeniedReason() );
+					out_failed_connections.emplace_back( pc.GetAddress(), pc.GetConnectionDeniedReason() );
 				}
 			}
 		}
 
-		void ConnectionManager::ClearDeniedPendingConnections()
+		void ConnectionManager::RemoveFailedConnections()
 		{
 			if ( !_isStartedUp )
 			{
@@ -342,7 +341,7 @@ namespace NetLib
 				          addressStr.c_str() );
 
 				pending_connection.SetCurrentState( PendingConnectionState::Failed );
-				pending_connection.SetConnectionDeniedReason( ConnectionFailedReasonType::CFR_TIMEOUT );
+				pending_connection.SetConnectionDeniedReason( ConnectionFailedReasonType::TIMEOUT );
 
 				if ( _sendDenialOnTimeout )
 				{
