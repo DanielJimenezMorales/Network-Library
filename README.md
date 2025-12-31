@@ -17,7 +17,7 @@ Implementation Legend:
 ### Main
 - ✅ UDP protocol
 - ✅ RUDP protocol
-- 🔰 Connection pipeline (It's not customizable)
+- ✅ Connection pipeline (It's customizable)
 - ✅ Time Synchronization
 - ✅ World Replication
 - 🔰 Server-Side Inputs Buffer (Naive version)
