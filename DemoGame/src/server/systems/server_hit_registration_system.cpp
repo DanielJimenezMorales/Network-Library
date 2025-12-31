@@ -1,6 +1,7 @@
 #include "server_hit_registration_system.h"
 
 #include "logger.h"
+#include "asserts.h"
 #include "AlgorithmUtils.h"
 
 #include "ecs/world.h"
@@ -202,12 +203,9 @@ static void RollbackEntities( Engine::ECS::World& world, float32 serverTime )
 		int32 previousIndex = -1;
 		int32 nextIndex = -1;
 		FindPreviousAndNextTimeIndexes( transformHistoryComponent, serverTime, previousIndex, nextIndex );
-		if ( nextIndex < 0 )
-		{
-			bool a = true;
-		}
+
 		// TODO Investigate hit reg issue that is hitting this assert.
-		assert( nextIndex >= 0 );
+		ASSERT( nextIndex >= 0, "ServerHitRegistrationSystem.%s Couldn't find next index" );
 
 		Engine::TransformComponent& transform = it->GetComponent< Engine::TransformComponent >();
 

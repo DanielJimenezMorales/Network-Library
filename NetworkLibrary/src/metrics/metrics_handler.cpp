@@ -2,8 +2,8 @@
 
 #include "AlgorithmUtils.h"
 #include "logger.h"
+#include "asserts.h"
 
-#include "metrics/metric_names.h"
 #include "metrics/latency_metric.h"
 #include "metrics/packet_loss_metric.h"
 #include "metrics/jitter_metric.h"
@@ -11,37 +11,135 @@
 #include "metrics/download_bandwidth_metric.h"
 #include "metrics/increment_metric.h"
 
-#include <cassert>
-
 namespace NetLib
 {
 	namespace Metrics
 	{
+		const std::vector< MetricType > MetricsHandler::ALL_METRICS = { MetricType::LATENCY,
+		                                                                MetricType::JITTER,
+		                                                                MetricType::PACKET_LOSS,
+		                                                                MetricType::UPLOAD_BANDWIDTH,
+		                                                                MetricType::DOWNLOAD_BANDWIDTH,
+		                                                                MetricType::RETRANSMISSIONS,
+		                                                                MetricType::OUT_OF_ORDER_MESSAGES,
+		                                                                MetricType::DUPLICATE_MESSAGES };
+
 		MetricsHandler::MetricsHandler()
-		    : _entries()
+		    : _isStartedUp( false )
+		    , _entries()
 		{
-			AddEntry( std::make_unique< LatencyMetric >() );
-			AddEntry( std::make_unique< JitterMetric >() );
-			AddEntry( std::make_unique< PacketLossMetric >() );
-			AddEntry( std::make_unique< UploadBandwidthMetric >() );
-			AddEntry( std::make_unique< DownloadBandwidthMetric >() );
-			AddEntry( std::make_unique< IncrementMetric >( DUPLICATE_METRIC ) );
-			AddEntry( std::make_unique< IncrementMetric >( OUT_OF_ORDER_METRIC ) );
-			AddEntry( std::make_unique< IncrementMetric >( RETRANSMISSION_METRIC ) );
 		}
 
-		void MetricsHandler::Configure( float32 update_rate )
+		MetricsHandler::~MetricsHandler()
 		{
-			Reset();
+			ASSERT( !_isStartedUp, "[MetricsHandler.%s] Before destructing instance, call ShutDown.",
+			        THIS_FUNCTION_NAME );
+		}
+
+		bool MetricsHandler::AddMetrics( float32 update_rate, const std::vector< MetricType >& metrics )
+		{
+			bool result = true;
+
+			for ( auto cit = metrics.cbegin(); cit != metrics.cend(); ++cit )
+			{
+				if ( HasMetric( *cit ) )
+				{
+					LOG_WARNING( "[MetricsHandler.%s] Metric of type %u already exists. Ignoring it.",
+					             THIS_FUNCTION_NAME, static_cast< uint8 >( *cit ) );
+					continue;
+				}
+
+				switch ( *cit )
+				{
+					case MetricType::LATENCY:
+						result &= AddEntry( new LatencyMetric() );
+						break;
+					case MetricType::JITTER:
+						result &= AddEntry( new JitterMetric() );
+						break;
+					case MetricType::PACKET_LOSS:
+						result &= AddEntry( new PacketLossMetric() );
+						break;
+					case MetricType::UPLOAD_BANDWIDTH:
+						result &= AddEntry( new UploadBandwidthMetric() );
+						break;
+					case MetricType::DOWNLOAD_BANDWIDTH:
+						result &= AddEntry( new DownloadBandwidthMetric() );
+						break;
+					case MetricType::RETRANSMISSIONS:
+					case MetricType::OUT_OF_ORDER_MESSAGES:
+					case MetricType::DUPLICATE_MESSAGES:
+						result &= AddEntry( new IncrementMetric( *cit ) );
+						break;
+					default:
+						LOG_ERROR( "[MetricsHandler.%s] Unknown MetricType %u. Ignoring it.", THIS_FUNCTION_NAME,
+						           static_cast< uint8 >( *cit ) );
+						break;
+				}
+			}
 
 			for ( auto it = _entries.begin(); it != _entries.end(); ++it )
 			{
 				it->second->SetUpdateRate( update_rate );
 			}
+
+			return result;
+		}
+
+		bool MetricsHandler::HasMetric( MetricType type ) const
+		{
+			return _entries.find( type ) != _entries.end();
+		}
+
+		bool MetricsHandler::StartUp( float32 update_rate, MetricsEnableConfig enable_config,
+		                              const std::vector< MetricType >& enabled_metrics )
+		{
+			if ( _isStartedUp )
+			{
+				LOG_ERROR( "[MetricsHandler.%s] MetricsHandler is already started up, ignoring call",
+				           THIS_FUNCTION_NAME );
+				return false;
+			}
+
+			if ( enable_config == MetricsEnableConfig::ENABLE_ALL )
+			{
+				AddMetrics( update_rate, ALL_METRICS );
+			}
+			else if ( enable_config == MetricsEnableConfig::CUSTOM )
+			{
+				AddMetrics( update_rate, enabled_metrics );
+			}
+
+			_isStartedUp = true;
+			return true;
+		}
+
+		bool MetricsHandler::ShutDown()
+		{
+			if ( !_isStartedUp )
+			{
+				LOG_ERROR( "[MetricsHandler.%s] MetricsHandler is not started up, ignoring call", THIS_FUNCTION_NAME );
+				return false;
+			}
+
+			for ( auto it = _entries.begin(); it != _entries.end(); ++it )
+			{
+				delete it->second;
+			}
+
+			_entries.clear();
+			_isStartedUp = false;
+			return true;
 		}
 
 		void MetricsHandler::Update( float32 elapsed_time )
 		{
+			if ( !_isStartedUp )
+			{
+				LOG_ERROR( "[MetricsHandler.%s] MetricsHandler is not started up, ignoring call", THIS_FUNCTION_NAME );
+				return;
+			}
+
 			for ( auto it = _entries.begin(); it != _entries.end(); ++it )
 			{
 				it->second->Update( elapsed_time );
@@ -53,61 +151,75 @@ namespace NetLib
 			    "BANDWIDTH: Current: %u, "
 			    "Max: %u\nDOWNLOAD BANDWIDTH: Current: %u, Max: %u\nRETRANSMISSIONS: Current: %u\nOUT OF ORDER: "
 			    "Current: %u\nDUPLICATE: Current: %u",
-			    GetValue( LATENCY_METRIC, CURRENT_VALUE_TYPE ), GetValue( LATENCY_METRIC, MAX_VALUE_TYPE ),
-			    GetValue( JITTER_METRIC, CURRENT_VALUE_TYPE ), GetValue( JITTER_METRIC, MAX_VALUE_TYPE ),
-			    GetValue( PACKET_LOSS_METRIC, CURRENT_VALUE_TYPE ), GetValue( PACKET_LOSS_METRIC, MAX_VALUE_TYPE ),
-			    GetValue( UPLOAD_BANDWIDTH_METRIC, CURRENT_VALUE_TYPE ),
-			    GetValue( UPLOAD_BANDWIDTH_METRIC, MAX_VALUE_TYPE ),
-			    GetValue( DOWNLOAD_BANDWIDTH_METRIC, CURRENT_VALUE_TYPE ),
-			    GetValue( DOWNLOAD_BANDWIDTH_METRIC, MAX_VALUE_TYPE ),
-			    GetValue( RETRANSMISSION_METRIC, CURRENT_VALUE_TYPE ),
-			    GetValue( OUT_OF_ORDER_METRIC, CURRENT_VALUE_TYPE ), GetValue( DUPLICATE_METRIC, CURRENT_VALUE_TYPE ) );
+			    GetValue( MetricType::LATENCY, ValueType::CURRENT ), GetValue( MetricType::LATENCY, ValueType::MAX ),
+			    GetValue( MetricType::JITTER, ValueType::CURRENT ), GetValue( MetricType::JITTER, ValueType::MAX ),
+			    GetValue( MetricType::PACKET_LOSS, ValueType::CURRENT ),
+			    GetValue( MetricType::PACKET_LOSS, ValueType::MAX ),
+			    GetValue( MetricType::UPLOAD_BANDWIDTH, ValueType::CURRENT ),
+			    GetValue( MetricType::UPLOAD_BANDWIDTH, ValueType::MAX ),
+			    GetValue( MetricType::DOWNLOAD_BANDWIDTH, ValueType::CURRENT ),
+			    GetValue( MetricType::DOWNLOAD_BANDWIDTH, ValueType::MAX ),
+			    GetValue( MetricType::RETRANSMISSIONS, ValueType::CURRENT ),
+			    GetValue( MetricType::OUT_OF_ORDER_MESSAGES, ValueType::CURRENT ),
+			    GetValue( MetricType::DUPLICATE_MESSAGES, ValueType::CURRENT ) );
 		}
 
-		bool MetricsHandler::AddEntry( std::unique_ptr< IMetric > entry )
+		bool MetricsHandler::AddEntry( IMetric* metric )
 		{
-			assert( entry != nullptr );
+			ASSERT( metric != nullptr, "[MetricsHandler.%s] entry is nullptr.", THIS_FUNCTION_NAME );
 
 			bool result = false;
 
-			std::string name;
-			entry->GetName( name );
-			if ( _entries.find( name ) == _entries.end() )
+			const MetricType metricType = metric->GetType();
+			if ( !HasMetric( metricType ) )
 			{
-				_entries[ name ] = std::move( entry );
+				_entries[ metricType ] = metric;
 				result = true;
 			}
 			else
 			{
-				LOG_WARNING( "Network statistic entry with name '%s' already exists, ignoring the new one",
-				             name.c_str() );
+				LOG_WARNING( "Network statistic metric of type '%u' already exists, ignoring the new one",
+				             static_cast< uint8 >( metricType ) );
 			}
 
 			return result;
 		}
 
-		uint32 MetricsHandler::GetValue( const std::string& entry_name, const std::string& value_type ) const
+		uint32 MetricsHandler::GetValue( MetricType metric_type, ValueType value_type ) const
 		{
+			if ( !_isStartedUp )
+			{
+				LOG_ERROR( "[MetricsHandler.%s] MetricsHandler is not started up, ignoring call", THIS_FUNCTION_NAME );
+				return 0;
+			}
+
 			uint32 result = 0;
 
-			auto it = _entries.find( entry_name );
+			auto it = _entries.find( metric_type );
 			if ( it != _entries.end() )
 			{
 				result = it->second->GetValue( value_type );
 			}
 			else
 			{
-				LOG_WARNING( "Can't get a value from a metric that doesn't exist. Name: '%s'", entry_name.c_str() );
+				LOG_WARNING( "Can't get a value from a metric that doesn't exist. Metric type: '%u'",
+				             static_cast< uint8 >( metric_type ) );
 			}
 
 			return result;
 		}
 
-		bool MetricsHandler::AddValue( const std::string& entry_name, uint32 value, const std::string& sample_type )
+		bool MetricsHandler::AddValue( MetricType metric_type, uint32 value, const std::string& sample_type )
 		{
+			if ( !_isStartedUp )
+			{
+				LOG_ERROR( "[MetricsHandler.%s] MetricsHandler is not started up, ignoring call", THIS_FUNCTION_NAME );
+				return false;
+			}
+
 			bool result = false;
 
-			auto it = _entries.find( entry_name );
+			auto it = _entries.find( metric_type );
 			if ( it != _entries.end() )
 			{
 				it->second->AddValueSample( value, sample_type );
@@ -115,18 +227,11 @@ namespace NetLib
 			}
 			else
 			{
-				LOG_WARNING( "Can't add a value to a metric that doesn't exist. Name: '%s'", entry_name.c_str() );
+				LOG_WARNING( "Can't add a value to a metric that doesn't exist. Metric type: '%u'",
+				             static_cast< uint8 >( metric_type ) );
 			}
 
 			return result;
-		}
-
-		void MetricsHandler::Reset()
-		{
-			for ( auto it = _entries.begin(); it != _entries.end(); ++it )
-			{
-				it->second->Reset();
-			}
 		}
 	} // namespace Metrics
 } // namespace NetLib

@@ -18,7 +18,7 @@ namespace NetLib
 
 			virtual void Write( Buffer& buffer ) const = 0;
 			// Read it without the message header type
-			virtual void Read( Buffer& buffer ) = 0;
+			virtual bool Read( Buffer& buffer ) = 0;
 			virtual uint32 Size() const = 0;
 
 			// TODO Temp, until I find a better way to clean Replication's data field
@@ -43,7 +43,7 @@ namespace NetLib
 			}
 
 			void Write( Buffer& buffer ) const override;
-			void Read( Buffer& buffer ) override;
+			bool Read( Buffer& buffer ) override;
 			uint32 Size() const override;
 
 			~ConnectionRequestMessage() override {};
@@ -55,19 +55,17 @@ namespace NetLib
 	{
 		public:
 			ConnectionChallengeMessage()
-			    : clientSalt( 0 )
-			    , serverSalt( 0 )
+			    : serverSalt( 0 )
 			    , Message( MessageType::ConnectionChallenge )
 			{
 			}
 
 			void Write( Buffer& buffer ) const override;
-			void Read( Buffer& buffer ) override;
+			bool Read( Buffer& buffer ) override;
 			uint32 Size() const override;
 
 			~ConnectionChallengeMessage() override {};
 
-			uint64 clientSalt;
 			uint64 serverSalt;
 	};
 
@@ -81,7 +79,7 @@ namespace NetLib
 			}
 
 			void Write( Buffer& buffer ) const override;
-			void Read( Buffer& buffer ) override;
+			bool Read( Buffer& buffer ) override;
 			uint32 Size() const override;
 
 			~ConnectionChallengeResponseMessage() override {};
@@ -100,7 +98,7 @@ namespace NetLib
 			}
 
 			void Write( Buffer& buffer ) const override;
-			void Read( Buffer& buffer ) override;
+			bool Read( Buffer& buffer ) override;
 			uint32 Size() const override;
 
 			~ConnectionAcceptedMessage() override {};
@@ -119,7 +117,7 @@ namespace NetLib
 			}
 
 			void Write( Buffer& buffer ) const override;
-			void Read( Buffer& buffer ) override;
+			bool Read( Buffer& buffer ) override;
 			uint32 Size() const override;
 
 			~ConnectionDeniedMessage() override {};
@@ -138,7 +136,7 @@ namespace NetLib
 			}
 
 			void Write( Buffer& buffer ) const override;
-			void Read( Buffer& buffer ) override;
+			bool Read( Buffer& buffer ) override;
 			uint32 Size() const override;
 
 			~DisconnectionMessage() override {};
@@ -157,7 +155,7 @@ namespace NetLib
 			}
 
 			void Write( Buffer& buffer ) const override;
-			void Read( Buffer& buffer ) override;
+			bool Read( Buffer& buffer ) override;
 			uint32 Size() const override;
 
 			~TimeRequestMessage() override {};
@@ -176,7 +174,7 @@ namespace NetLib
 			}
 
 			void Write( Buffer& buffer ) const override;
-			void Read( Buffer& buffer ) override;
+			bool Read( Buffer& buffer ) override;
 			uint32 Size() const override;
 
 			~TimeResponseMessage() override {};
@@ -200,7 +198,7 @@ namespace NetLib
 			}
 
 			void Write( Buffer& buffer ) const override;
-			void Read( Buffer& buffer ) override;
+			bool Read( Buffer& buffer ) override;
 			uint32 Size() const
 			    override; // TODO Make this also dynamic based on replication action. Now it is set to its worst case
 
@@ -227,7 +225,7 @@ namespace NetLib
 			}
 
 			void Write( Buffer& buffer ) const override;
-			void Read( Buffer& buffer ) override;
+			bool Read( Buffer& buffer ) override;
 			uint32 Size() const override;
 
 			void Reset() override;
@@ -245,7 +243,7 @@ namespace NetLib
 			}
 
 			void Write( Buffer& buffer ) const override;
-			void Read( Buffer& buffer ) override;
+			bool Read( Buffer& buffer ) override;
 			uint32 Size() const override;
 
 			void Reset() override;

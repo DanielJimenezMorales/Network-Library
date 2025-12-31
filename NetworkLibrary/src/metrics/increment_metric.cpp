@@ -6,27 +6,28 @@ namespace NetLib
 {
 	namespace Metrics
 	{
-		IncrementMetric::IncrementMetric( const std::string& name )
-		    : _name( name )
+		IncrementMetric::IncrementMetric( MetricType type )
+		    : _type( type )
 		    , _currentValue( 0 )
 		{
 		}
 
-		void IncrementMetric::GetName( std::string& out_name_buffer ) const
+		MetricType IncrementMetric::GetType() const
 		{
-			out_name_buffer.assign( _name );
+			return _type;
 		}
 
-		uint32 IncrementMetric::GetValue( const std::string& value_type ) const
+		uint32 IncrementMetric::GetValue( ValueType value_type ) const
 		{
 			uint32 result = 0;
-			if ( value_type == "CURRENT" )
+			if ( value_type == ValueType::CURRENT )
 			{
 				result = _currentValue;
 			}
 			else
 			{
-				LOG_WARNING( "Unknown value type '%s' for %s Metric", value_type.c_str(), _name.c_str() );
+				LOG_WARNING( "Unknown value type '%s' for %u Metric", static_cast< uint8 >( value_type ),
+				             static_cast< uint8 >( _type ) );
 			}
 
 			return result;

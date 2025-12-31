@@ -13,6 +13,9 @@
 
 #include "communication/message_factory.h"
 
+#include "connection/connection_manager.h"
+#include "connection/connection_failed_reason_type.h"
+
 #include "transmission_channels/transmission_channel.h"
 
 class Buffer;
@@ -24,20 +27,17 @@ namespace NetLib
 	class RemotePeer;
 	class Buffer;
 
-	enum ConnectionFailedReasonType : uint8
+	namespace Connection
 	{
-		CFR_UNKNOWN = 0,           // Unexpect
-		CFR_TIMEOUT = 1,           // The peer is inactive
-		CFR_SERVER_FULL = 2,       // The server can't handle more connections, it has reached its maximum
-		CFR_PEER_SHUT_DOWN = 3,    // The peer has shut down its Network system
-		CFR_CONNECTION_TIMEOUT = 4 // The in process connection has taken too long
-	};
+		struct SuccessConnectionData;
+		struct FailedConnectionData;
+	}
 
 	struct RemotePeerDisconnectionData
 	{
 			uint32 id;
 			bool shouldNotify;
-			ConnectionFailedReasonType reason;
+			Connection::ConnectionFailedReasonType reason;
 	};
 
 	enum class PeerType : uint8
@@ -47,11 +47,11 @@ namespace NetLib
 		SERVER = 2
 	};
 
-	enum PeerConnectionState : uint8
+	enum class PeerConnectionState : uint8
 	{
-		PCS_Disconnected = 0,
-		PCS_Connecting = 1,
-		PCS_Connected = 2
+		Disconnected = 0,
+		Connecting = 1,
+		Connected = 2
 	};
 
 	// TODO Set ordered and reliable flags in all the connection messages such as challenge response, connection
@@ -88,12 +88,12 @@ namespace NetLib
 			/// value of 0 is returned.
 			/// </summary>
 			/// <param name="remote_peer_id">The remote peer id</param>
-			/// <param name="metric_name">The name of the metric. See metrics/metric_names.h for more info</param>
-			/// <param name="value_type">The type of value you want to get. See metrics/metric_names.h for more
+			/// <param name="metric_type">The type of the metric. See metrics/metric_types.h for more info</param>
+			/// <param name="value_type">The type of value you want to get. See metrics/metric_types.h for more
 			/// info</param>
 			/// <returns>The metric value on success or 0 on failure</returns>
-			uint32 GetMetric( uint32 remote_peer_id, const std::string& metric_name,
-			                  const std::string& value_type ) const;
+			uint32 GetMetric( uint32 remote_peer_id, Metrics::MetricType metric_type,
+			                  Metrics::ValueType value_type ) const;
 
 			float64 GetLocalTime() const;
 			float64 GetServerTime() const;
@@ -104,10 +104,10 @@ namespace NetLib
 			bool UnsubscribeToOnPeerConnected( const Common::Delegate<>::SubscriptionHandler& handler );
 
 			template < typename Functor >
-			Common::Delegate< ConnectionFailedReasonType >::SubscriptionHandler SubscribeToOnLocalPeerDisconnect(
-			    Functor&& functor );
+			Common::Delegate< Connection::ConnectionFailedReasonType >::SubscriptionHandler
+			SubscribeToOnLocalPeerDisconnect( Functor&& functor );
 			bool UnsubscribeToOnPeerDisconnected(
-			    const Common::Delegate< ConnectionFailedReasonType >::SubscriptionHandler& handler );
+			    const Common::Delegate< Connection::ConnectionFailedReasonType >::SubscriptionHandler& handler );
 
 			template < typename Functor >
 			Common::Delegate< uint32 >::SubscriptionHandler SubscribeToOnRemotePeerDisconnect( Functor&& functor );
@@ -127,18 +127,17 @@ namespace NetLib
 
 			virtual bool StartConcrete( const std::string& ip, uint32 port ) = 0;
 			virtual void ProcessMessageFromPeer( const Message& message, RemotePeer& remotePeer ) = 0;
-			virtual void ProcessMessageFromUnknownPeer( const Message& message, const Address& address ) = 0;
 			virtual void TickConcrete( float32 elapsedTime ) = 0;
 			virtual bool StopConcrete() = 0;
 
 			void SendPacketToAddress( const NetworkPacket& packet, const Address& address ) const;
 			bool AddRemotePeer( const Address& addressInfo, uint16 id, uint64 clientSalt, uint64 serverSalt );
-			void ConnectRemotePeer( RemotePeer& remotePeer );
 			bool BindSocket( const Address& address ) const;
 
-			void StartDisconnectingRemotePeer( uint32 id, bool shouldNotify, ConnectionFailedReasonType reason );
+			void StartDisconnectingRemotePeer( uint32 id, bool shouldNotify,
+			                                   Connection::ConnectionFailedReasonType reason );
 
-			void RequestStop( bool shouldNotifyRemotePeers, ConnectionFailedReasonType reason );
+			void RequestStop( bool shouldNotifyRemotePeers, Connection::ConnectionFailedReasonType reason );
 
 			// Delegates related
 
@@ -146,35 +145,58 @@ namespace NetLib
 			/// Called during OnRemotePeerConnect. This function is used for events happening inside the network library
 			/// code. This function will be called before teh OnRemotePeerConnect Delegate
 			/// </summary>
-			virtual void InternalOnRemotePeerConnect( RemotePeer& remote_peer ) = 0;
+			virtual void OnPendingConnectionAccepted( const Connection::SuccessConnectionData& data ) = 0;
+			virtual void OnPendingConnectionDenied( const Connection::FailedConnectionData& data ) = 0;
 			virtual void InternalOnRemotePeerDisconnect( const RemotePeer& remote_peer ) = 0;
 			void ExecuteOnLocalPeerConnect();
-			void ExecuteOnLocalPeerDisconnect( ConnectionFailedReasonType reason );
+			void ExecuteOnLocalPeerDisconnect( Connection::ConnectionFailedReasonType reason );
 
 			RemotePeersHandler _remotePeersHandler;
 			MessageFactory _messageFactory;
 
+			Connection::ConnectionManager _connectionManager;
+
 		private:
+			/// <summary>
+			/// Reads all the incoming received data from the socket
+			/// </summary>
+			void ReadReceivedData();
+
+			/// <summary>
+			/// Reads an incoming datagram received from the specified address
+			/// </summary>
+			void ReadDatagram( Buffer& buffer, const Address& address );
+
+			/// <summary>
+			/// Stores all the messages from a network packet into the corresponding transmission channels
+			/// </summary>
+			void StoreReceivedMessages( NetworkPacket& packet, const Address& address );
+
+			/// <summary>
+			/// Process all the pending received data from all the remote peers
+			/// </summary>
 			void ProcessReceivedData();
-			void ProcessDatagram( Buffer& buffer, const Address& address );
-			void ProcessNewRemotePeerMessages();
 
 			void SetConnectionState( PeerConnectionState state );
 
+			void TickPendingConnections( float32 elapsed_time );
+			void ConvertSuccessfulConnectionsInRemotePeers();
+			void ProcessDeniedConnections();
+
 			// Remote peer related
 			void TickRemotePeers( float32 elapsedTime );
-			void DisconnectAllRemotePeers( bool shouldNotify, ConnectionFailedReasonType reason );
+			void DisconnectAllRemotePeers( bool shouldNotify, Connection::ConnectionFailedReasonType reason );
 			void DisconnectRemotePeer( const RemotePeer& remotePeer, bool shouldNotify,
-			                           ConnectionFailedReasonType reason );
+			                           Connection::ConnectionFailedReasonType reason );
 
-			void CreateDisconnectionPacket( const RemotePeer& remotePeer, ConnectionFailedReasonType reason );
+			void CreateDisconnectionPacket( const RemotePeer& remotePeer,
+			                                Connection::ConnectionFailedReasonType reason );
 
 			/// <summary>
 			/// Sends pending data to all the connected remote peers
 			/// </summary>
 			void SendDataToRemotePeers();
-
-			void SendDataToAddress( const Buffer& buffer, const Address& address ) const;
+			void SendDataToPendingConnections();
 
 			bool DoesRemotePeerIdExistInPendingDisconnections( uint32 id ) const;
 			void FinishRemotePeersDisconnection();
@@ -200,12 +222,12 @@ namespace NetLib
 			// Stop request
 			bool _isStopRequested;
 			bool _stopRequestShouldNotifyRemotePeers;
-			ConnectionFailedReasonType _stopRequestReason;
+			Connection::ConnectionFailedReasonType _stopRequestReason;
 
 			std::list< RemotePeerDisconnectionData > _remotePeerPendingDisconnections;
 
 			Common::Delegate<> _onLocalPeerConnect;
-			Common::Delegate< ConnectionFailedReasonType > _onLocalPeerDisconnect;
+			Common::Delegate< Connection::ConnectionFailedReasonType > _onLocalPeerDisconnect;
 			Common::Delegate< uint32 > _onRemotePeerConnect;
 			Common::Delegate< uint32 > _onRemotePeerDisconnect;
 	};
@@ -217,8 +239,8 @@ namespace NetLib
 	}
 
 	template < typename Functor >
-	inline Common::Delegate< ConnectionFailedReasonType >::SubscriptionHandler Peer::SubscribeToOnLocalPeerDisconnect(
-	    Functor&& functor )
+	inline Common::Delegate< Connection::ConnectionFailedReasonType >::SubscriptionHandler Peer::
+	    SubscribeToOnLocalPeerDisconnect( Functor&& functor )
 	{
 		return _onLocalPeerDisconnect.AddSubscriber( std::forward< Functor >( functor ) );
 	}

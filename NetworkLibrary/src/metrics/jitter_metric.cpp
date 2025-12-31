@@ -3,8 +3,6 @@
 #include "logger.h"
 #include "AlgorithmUtils.h"
 
-#include "metrics/metric_names.h"
-
 namespace NetLib
 {
 	namespace Metrics
@@ -18,26 +16,26 @@ namespace NetLib
 			_latencySamples.reserve( MAX_BUFFER_SIZE );
 		}
 
-		void JitterMetric::GetName( std::string& out_name_buffer ) const
+		MetricType JitterMetric::GetType() const
 		{
-			out_name_buffer.assign( JITTER_METRIC );
+			return MetricType::JITTER;
 		}
 
-		uint32 JitterMetric::GetValue( const std::string& value_type ) const
+		uint32 JitterMetric::GetValue( ValueType value_type ) const
 		{
 			uint32 result = 0;
 
-			if ( value_type == "MAX" )
+			if ( value_type == ValueType::MAX )
 			{
 				result = _maxValue;
 			}
-			else if ( value_type == "CURRENT" )
+			else if ( value_type == ValueType::CURRENT )
 			{
 				result = _currentValue;
 			}
 			else
 			{
-				LOG_WARNING( "Unknown value type '%s' for JitterMetric", value_type.c_str() );
+				LOG_WARNING( "Unknown value type '%u' for JitterMetric", static_cast< uint8 >( value_type ) );
 			}
 
 			return result;

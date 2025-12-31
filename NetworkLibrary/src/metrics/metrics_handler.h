@@ -2,6 +2,7 @@
 #include "numeric_types.h"
 
 #include "metrics/i_metric.h"
+#include "metrics/metric_types.h"
 
 #include <vector>
 #include <unordered_map>
@@ -12,35 +13,48 @@ namespace NetLib
 {
 	namespace Metrics
 	{
+		enum class MetricsEnableConfig : uint8
+		{
+			ENABLE_ALL = 0,
+			DISABLE_ALL = 1,
+			CUSTOM = 2
+		};
+
 		class MetricsHandler
 		{
 			public:
 				MetricsHandler();
+				~MetricsHandler();
 
-				void Configure( float32 update_rate );
+				bool StartUp( float32 update_rate, MetricsEnableConfig enable_config,
+				              const std::vector< MetricType >& enabled_metrics = {} );
+				bool ShutDown();
 
 				void Update( float32 elapsed_time );
 
 				/// <summary>
-				/// Add a network statistic entry. This class is responsible for handling the entries memory.
+				/// Gets the value of type value_type (MAX, CURRENT...) from the metric of type metric_type. If the
+				/// 1) Metrics handler is not started up, 2) The metric does not exist or 3) the value type is invalid
+				/// the function returns 0.
 				/// </summary>
-				bool AddEntry( std::unique_ptr< IMetric > entry );
+				uint32 GetValue( MetricType metric_type, ValueType value_type ) const;
 
 				/// <summary>
-				/// Gets the value of type value_type (MAX, CURRENT...) from the entry with name entry_name. If the
-				/// entry name or the value type is invalid the function returns 0.
+				/// Adds a value to the metric of type metric_type. If the 1) Metrics handler is not started up or 2)
+				/// the metric doesn't exists it does nothing and returns false.
 				/// </summary>
-				uint32 GetValue( const std::string& entry_name, const std::string& value_type ) const;
+				bool AddValue( MetricType metric_type, uint32 value, const std::string& sample_type = "NONE" );
 
-				/// <summary>
-				/// Adds a value to the entry with name entry_name. If the entry doesn't exists it does nothing and
-				/// returns false.
-				/// </summary>
-				bool AddValue( const std::string& entry_name, uint32 value, const std::string& sample_type = "NONE" );
+				bool HasMetric( MetricType type ) const;
 
 			private:
-				void Reset();
-				std::unordered_map< std::string, std::unique_ptr< IMetric > > _entries;
+				bool AddMetrics( float32 update_rate, const std::vector< MetricType >& metrics );
+				bool AddEntry( IMetric* metric );
+
+				bool _isStartedUp;
+				std::unordered_map< MetricType, IMetric* > _entries;
+
+				static const std::vector< MetricType > ALL_METRICS;
 		};
-	}
+	} // namespace Metrics
 } // namespace NetLib

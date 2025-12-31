@@ -66,7 +66,6 @@ namespace NetLib
 
 		_remotePeerSlots[ slotIndex ] = true;
 		_remotePeers[ slotIndex ].Connect( addressInfo, id, REMOTE_PEER_INACTIVITY_TIME, clientSalt, serverSalt );
-		_remotePeers[ slotIndex ].ActivateNetworkStatistics();
 
 		auto it = _validRemotePeers.insert( &( _remotePeers[ slotIndex ] ) );
 		assert( it.second ); // If the element was already there it means that we are trying to add it again. ERROR!!
@@ -105,6 +104,22 @@ namespace NetLib
 		}
 
 		return freeIndex;
+	}
+
+	uint32 RemotePeersHandler::GetNumberOfAvailableRemotePeerSlots() const
+	{
+		ASSERT( _isInitialized, "Remote peers handler is not initialized." );
+
+		uint32 availableIndex = 0;
+		for ( uint32 i = 0; i < _maxConnections; ++i )
+		{
+			if ( !_remotePeerSlots[ i ] )
+			{
+				++availableIndex;
+			}
+		}
+
+		return availableIndex;
 	}
 
 	RemotePeer* RemotePeersHandler::GetRemotePeerFromAddress( const Address& address )

@@ -12,12 +12,20 @@ namespace NetLib
 		buffer.WriteLong( clientSalt );
 	}
 
-	void ConnectionRequestMessage::Read( Buffer& buffer )
+	bool ConnectionRequestMessage::Read( Buffer& buffer )
 	{
 		_header.type = MessageType::ConnectionRequest;
-		_header.ReadWithoutHeader( buffer );
+		if ( !_header.ReadWithoutHeader( buffer ) )
+		{
+			return false;
+		}
 
-		clientSalt = buffer.ReadLong();
+		if ( !buffer.ReadLong( clientSalt ) )
+		{
+			return false;
+		}
+
+		return true;
 	}
 
 	uint32 ConnectionRequestMessage::Size() const
@@ -28,22 +36,28 @@ namespace NetLib
 	void ConnectionChallengeMessage::Write( Buffer& buffer ) const
 	{
 		_header.Write( buffer );
-		buffer.WriteLong( clientSalt );
 		buffer.WriteLong( serverSalt );
 	}
 
-	void ConnectionChallengeMessage::Read( Buffer& buffer )
+	bool ConnectionChallengeMessage::Read( Buffer& buffer )
 	{
 		_header.type = MessageType::ConnectionChallenge;
-		_header.ReadWithoutHeader( buffer );
+		if ( !_header.ReadWithoutHeader( buffer ) )
+		{
+			return false;
+		}
 
-		clientSalt = buffer.ReadLong();
-		serverSalt = buffer.ReadLong();
+		if ( !buffer.ReadLong( serverSalt ) )
+		{
+			return false;
+		}
+
+		return true;
 	}
 
 	uint32 ConnectionChallengeMessage::Size() const
 	{
-		return MessageHeader::Size() + ( sizeof( uint64 ) * 2 );
+		return MessageHeader::Size() + sizeof( uint64 );
 	}
 
 	void ConnectionChallengeResponseMessage::Write( Buffer& buffer ) const
@@ -52,12 +66,20 @@ namespace NetLib
 		buffer.WriteLong( prefix );
 	}
 
-	void ConnectionChallengeResponseMessage::Read( Buffer& buffer )
+	bool ConnectionChallengeResponseMessage::Read( Buffer& buffer )
 	{
 		_header.type = MessageType::ConnectionChallengeResponse;
-		_header.ReadWithoutHeader( buffer );
+		if ( !_header.ReadWithoutHeader( buffer ) )
+		{
+			return false;
+		}
 
-		prefix = buffer.ReadLong();
+		if ( !buffer.ReadLong( prefix ) )
+		{
+			return false;
+		}
+
+		return true;
 	}
 
 	uint32 ConnectionChallengeResponseMessage::Size() const
@@ -72,13 +94,25 @@ namespace NetLib
 		buffer.WriteShort( clientIndexAssigned );
 	}
 
-	void ConnectionAcceptedMessage::Read( Buffer& buffer )
+	bool ConnectionAcceptedMessage::Read( Buffer& buffer )
 	{
 		_header.type = MessageType::ConnectionAccepted;
-		_header.ReadWithoutHeader( buffer );
+		if ( !_header.ReadWithoutHeader( buffer ) )
+		{
+			return false;
+		}
 
-		prefix = buffer.ReadLong();
-		clientIndexAssigned = buffer.ReadShort();
+		if ( !buffer.ReadLong( prefix ) )
+		{
+			return false;
+		}
+
+		if ( !buffer.ReadShort( clientIndexAssigned ) )
+		{
+			return false;
+		}
+
+		return true;
 	}
 
 	uint32 ConnectionAcceptedMessage::Size() const
@@ -92,11 +126,20 @@ namespace NetLib
 		buffer.WriteByte( reason );
 	}
 
-	void ConnectionDeniedMessage::Read( Buffer& buffer )
+	bool ConnectionDeniedMessage::Read( Buffer& buffer )
 	{
 		_header.type = MessageType::ConnectionDenied;
-		_header.ReadWithoutHeader( buffer );
-		reason = buffer.ReadByte();
+		if ( !_header.ReadWithoutHeader( buffer ) )
+		{
+			return false;
+		}
+
+		if ( !buffer.ReadByte( reason ) )
+		{
+			return false;
+		}
+
+		return true;
 	}
 
 	uint32 ConnectionDeniedMessage::Size() const
@@ -111,13 +154,25 @@ namespace NetLib
 		buffer.WriteByte( reason );
 	}
 
-	void DisconnectionMessage::Read( Buffer& buffer )
+	bool DisconnectionMessage::Read( Buffer& buffer )
 	{
 		_header.type = MessageType::Disconnection;
-		_header.ReadWithoutHeader( buffer );
+		if ( !_header.ReadWithoutHeader( buffer ) )
+		{
+			return false;
+		}
 
-		prefix = buffer.ReadLong();
-		reason = buffer.ReadByte();
+		if ( !buffer.ReadLong( prefix ) )
+		{
+			return false;
+		}
+
+		if ( !buffer.ReadByte( reason ) )
+		{
+			return false;
+		}
+
+		return true;
 	}
 
 	uint32 DisconnectionMessage::Size() const
@@ -131,12 +186,20 @@ namespace NetLib
 		buffer.WriteInteger( remoteTime );
 	}
 
-	void TimeRequestMessage::Read( Buffer& buffer )
+	bool TimeRequestMessage::Read( Buffer& buffer )
 	{
 		_header.type = MessageType::TimeRequest;
-		_header.ReadWithoutHeader( buffer );
+		if ( !_header.ReadWithoutHeader( buffer ) )
+		{
+			return false;
+		}
 
-		remoteTime = buffer.ReadInteger();
+		if ( !buffer.ReadInteger( remoteTime ) )
+		{
+			return false;
+		}
+
+		return true;
 	}
 
 	uint32 TimeRequestMessage::Size() const
@@ -151,13 +214,25 @@ namespace NetLib
 		buffer.WriteInteger( serverTime );
 	}
 
-	void TimeResponseMessage::Read( Buffer& buffer )
+	bool TimeResponseMessage::Read( Buffer& buffer )
 	{
 		_header.type = MessageType::TimeResponse;
-		_header.ReadWithoutHeader( buffer );
+		if ( !_header.ReadWithoutHeader( buffer ) )
+		{
+			return false;
+		}
 
-		remoteTime = buffer.ReadInteger();
-		serverTime = buffer.ReadInteger();
+		if ( !buffer.ReadInteger( remoteTime ) )
+		{
+			return false;
+		}
+
+		if ( !buffer.ReadInteger( serverTime ) )
+		{
+			return false;
+		}
+
+		return true;
 	}
 
 	uint32 TimeResponseMessage::Size() const
@@ -173,33 +248,55 @@ namespace NetLib
 		buffer.WriteInteger( controlledByPeerId );
 		buffer.WriteInteger( replicatedClassId );
 		buffer.WriteShort( dataSize );
-		// TODO Create method called WriteData(data, size) in order to avoid this for loop
-		for ( uint16 i = 0; i < dataSize; ++i )
+		if ( dataSize > 0 )
 		{
-			buffer.WriteByte( data[ i ] );
+			buffer.WriteData( data, dataSize );
 		}
 	}
 
-	void ReplicationMessage::Read( Buffer& buffer )
+	bool ReplicationMessage::Read( Buffer& buffer )
 	{
 		_header.type = MessageType::Replication;
-		_header.ReadWithoutHeader( buffer );
+		if ( !_header.ReadWithoutHeader( buffer ) )
+		{
+			return false;
+		}
 
-		replicationAction = buffer.ReadByte();
-		networkEntityId = buffer.ReadInteger();
-		controlledByPeerId = buffer.ReadInteger();
-		replicatedClassId = buffer.ReadInteger();
-		dataSize = buffer.ReadShort();
+		if ( !buffer.ReadByte( replicationAction ) )
+		{
+			return false;
+		}
+
+		if ( !buffer.ReadInteger( networkEntityId ) )
+		{
+			return false;
+		}
+
+		if ( !buffer.ReadInteger( controlledByPeerId ) )
+		{
+			return false;
+		}
+
+		if ( !buffer.ReadInteger( replicatedClassId ) )
+		{
+			return false;
+		}
+
+		if ( !buffer.ReadShort( dataSize ) )
+		{
+			return false;
+		}
+
 		if ( dataSize > 0 )
 		{
 			data = new uint8[ dataSize ];
+			if ( !buffer.ReadData( data, dataSize ) )
+			{
+				return false;
+			}
 		}
 
-		// TODO Create method called ReadData(uint8& data, size) in order to avoid this for loop
-		for ( uint16 i = 0; i < dataSize; ++i )
-		{
-			data[ i ] = buffer.ReadByte();
-		}
+		return true;
 	}
 
 	uint32 ReplicationMessage::Size() const
@@ -231,29 +328,33 @@ namespace NetLib
 		_header.Write( buffer );
 
 		buffer.WriteShort( dataSize );
-		// TODO Create method called WriteData(data, size) in order to avoid this for loop
-		for ( uint32 i = 0; i < dataSize; ++i )
-		{
-			buffer.WriteByte( data[ i ] );
-		}
+		buffer.WriteData( data, dataSize );
 	}
 
-	void InputStateMessage::Read( Buffer& buffer )
+	bool InputStateMessage::Read( Buffer& buffer )
 	{
 		_header.type = MessageType::Inputs;
-		_header.ReadWithoutHeader( buffer );
+		if ( !_header.ReadWithoutHeader( buffer ) )
+		{
+			return false;
+		}
 
-		dataSize = buffer.ReadShort();
+		if ( !buffer.ReadShort( dataSize ) )
+		{
+			return false;
+		}
+
 		if ( dataSize > 0 )
 		{
 			data = new uint8[ dataSize ];
 		}
 
-		// TODO Create method called ReadData(uint8& data, size) in order to avoid this for loop
-		for ( uint16 i = 0; i < dataSize; ++i )
+		if ( !buffer.ReadData( data, dataSize ) )
 		{
-			data[ i ] = buffer.ReadByte();
+			return false;
 		}
+
+		return true;
 	}
 
 	uint32 InputStateMessage::Size() const
@@ -275,10 +376,15 @@ namespace NetLib
 		_header.Write( buffer );
 	}
 
-	void PingPongMessage::Read( Buffer& buffer )
+	bool PingPongMessage::Read( Buffer& buffer )
 	{
 		_header.type = MessageType::PingPong;
-		_header.ReadWithoutHeader( buffer );
+		if ( !_header.ReadWithoutHeader( buffer ) )
+		{
+			return false;
+		}
+
+		return true;
 	}
 
 	uint32 PingPongMessage::Size() const

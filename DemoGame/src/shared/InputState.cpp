@@ -1,5 +1,7 @@
 #include "InputState.h"
 
+#include "logger.h"
+
 #include "core/buffer.h"
 
 InputState::InputState()
@@ -32,13 +34,26 @@ void InputState::Serialize( NetLib::Buffer& buffer ) const
 	buffer.WriteByte( isShooting ? 1 : 0 );
 }
 
-void InputState::Deserialize( NetLib::Buffer& buffer )
+bool InputState::Deserialize( NetLib::Buffer& buffer )
 {
+	if ( buffer.GetRemainingSize() < GetSize() )
+	{
+		LOG_ERROR( "Not enough data in buffer to read InputState." );
+		return false;
+	}
+
 	tick = buffer.ReadInteger();
 	serverTime = buffer.ReadFloat();
 
 	movement.X( buffer.ReadFloat() );
 	movement.Y( buffer.ReadFloat() );
+
+	if ( movement.X() >= MAXIMUM_MOVEMENT_VALUE || movement.Y() >= MAXIMUM_MOVEMENT_VALUE )
+	{
+		LOG_ERROR( "[InputState::%s] Movement value too high, possible cheating detected. X: %.3f, Y: %.3f",
+		           THIS_FUNCTION_NAME, movement.X(), movement.Y() );
+		return false;
+	}
 
 	virtualMousePosition.X( buffer.ReadFloat() );
 	virtualMousePosition.Y( buffer.ReadFloat() );
@@ -48,4 +63,6 @@ void InputState::Deserialize( NetLib::Buffer& buffer )
 
 	const uint8 isShootingByte = buffer.ReadByte();
 	isShooting = ( isShootingByte == 1 ) ? true : false;
+
+	return true;
 }

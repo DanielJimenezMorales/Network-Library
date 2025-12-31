@@ -1,6 +1,8 @@
 #pragma once
 #include "metrics/i_metric.h"
 
+#include "metrics/metric_types.h"
+
 namespace NetLib
 {
 	namespace Metrics
@@ -8,10 +10,10 @@ namespace NetLib
 		class IncrementMetric : public IMetric
 		{
 			public:
-				IncrementMetric( const std::string& name );
+				IncrementMetric( MetricType type );
 
-				void GetName( std::string& out_name_buffer ) const override;
-				uint32 GetValue( const std::string& value_type ) const override;
+				MetricType GetType() const override;
+				uint32 GetValue( ValueType value_type ) const override;
 				void SetUpdateRate( float32 update_rate ) override;
 				void Update( float32 elapsed_time ) override;
 				void AddValueSample( uint32 value, const std::string& sample_type = "NONE" ) override;
@@ -19,7 +21,7 @@ namespace NetLib
 
 			private:
 				uint32 _currentValue;
-				const std::string _name;
+				const MetricType _type;
 		};
 	}
 }

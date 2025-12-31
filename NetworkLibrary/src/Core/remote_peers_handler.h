@@ -35,6 +35,7 @@ namespace NetLib
 
 			bool AddRemotePeer( const Address& addressInfo, uint16 id, uint64 clientSalt, uint64 serverSalt );
 			int32 FindFreeRemotePeerSlot() const;
+			uint32 GetNumberOfAvailableRemotePeerSlots() const;
 			RemotePeer* GetRemotePeerFromAddress( const Address& address );
 			RemotePeer* GetRemotePeerFromId( uint32 id );
 			const RemotePeer* GetRemotePeerFromId( uint32 id ) const;
@@ -47,6 +48,7 @@ namespace NetLib
 
 			void RemoveAllRemotePeers();
 			bool RemoveRemotePeer( uint32 remotePeerId );
+			uint32 GetMaxConnections() const { return _maxConnections; }
 
 		private:
 			int32 GetIndexFromId( uint32 id ) const;

@@ -8,6 +8,9 @@
 
 namespace NetLib
 {
+	// TODO: Make the IInputState to have fixed header fields (tick and serverTime) instead of letting the concrete
+	// input class to define them. In that way we can check for tampered messages or order later to reduce jitter
+	// effects. Then, in this method, we can check if input's tick and server time are valid.
 	void RemotePeerInputsBuffer::AddInputState( IInputState* input )
 	{
 		assert( input != nullptr );

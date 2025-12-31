@@ -11,6 +11,7 @@
 #include "core/ping_pong_messages_sender.h"
 
 #include "metrics/metrics_handler.h"
+#include "metrics/metric_types.h"
 
 #include "transmission_channels/transmission_channel.h"
 
@@ -21,11 +22,10 @@ namespace NetLib
 	class Socket;
 	class MessageFactory;
 
-	enum RemotePeerState : uint8
+	enum class RemotePeerState : uint8
 	{
 		Disconnected = 0,
-		Connected = 1,
-		Connecting = 2
+		Connected = 1
 	};
 
 	class RemotePeer
@@ -40,11 +40,11 @@ namespace NetLib
 			uint64 _clientSalt;
 			uint64 _serverSalt;
 
+			// TODO Unused variable. Remove it
 			uint16 _nextPacketSequenceNumber;
 
 			std::vector< TransmissionChannel* > _transmissionChannels;
 
-			bool _metricsEnabled;
 			Metrics::MetricsHandler _metricsHandler;
 
 			PingPongMessagesSender _pingPongMessagesSender;
@@ -64,9 +64,6 @@ namespace NetLib
 
 			RemotePeer& operator=( const RemotePeer& ) = delete;
 			~RemotePeer();
-
-			void ActivateNetworkStatistics();
-			void DeactivateNetworkStatistics();
 
 			/// <summary>
 			/// Initializes all the internal systems. You must call this method before performing any other operation.
@@ -114,7 +111,7 @@ namespace NetLib
 			std::vector< TransmissionChannelType > GetAvailableTransmissionChannelTypes() const;
 			uint32 GetNumberOfTransmissionChannels() const;
 
-			uint32 GetMetric( const std::string& metric_name, const std::string& value_type ) const;
+			uint32 GetMetric( Metrics::MetricType metric_type, Metrics::ValueType value_type ) const;
 
 			/// <summary>
 			/// Disconnect and reset the remote client

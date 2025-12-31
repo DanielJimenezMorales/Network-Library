@@ -10,7 +10,7 @@
 #include "transmission_channels/unreliable_unordered_transmission_channel.h"
 #include "transmission_channels/reliable_ordered_channel.h"
 
-#include "metrics/metric_names.h"
+#include "metrics/metric_types.h"
 
 #include "core/Socket.h"
 
@@ -68,7 +68,6 @@ namespace NetLib
 	    , _nextPacketSequenceNumber( 0 )
 	    , _currentState( RemotePeerState::Disconnected )
 	    , _transmissionChannels()
-	    , _metricsEnabled( false )
 	{
 		// InitTransmissionChannels();
 	}
@@ -82,7 +81,6 @@ namespace NetLib
 	    , _nextPacketSequenceNumber( 0 )
 	    , _currentState( RemotePeerState::Disconnected )
 	    , _transmissionChannels()
-	    , _metricsEnabled( false )
 	{
 		InitTransmissionChannels( message_factory );
 	}
@@ -92,7 +90,6 @@ namespace NetLib
 	    : _address( Address::GetInvalid() )
 	    , _nextPacketSequenceNumber( 0 )
 	    , _currentState( RemotePeerState::Disconnected )
-	    , _metricsEnabled( false )
 	{
 		InitTransmissionChannels( message_factory );
 		Connect( address, id, maxInactivityTime, clientSalt, serverSalt );
@@ -112,27 +109,26 @@ namespace NetLib
 		_transmissionChannels.clear();
 	}
 
-	void RemotePeer::ActivateNetworkStatistics()
-	{
-		_metricsEnabled = true;
-		_metricsHandler.Configure( 1.f );
-	}
-
-	void RemotePeer::DeactivateNetworkStatistics()
-	{
-		_metricsEnabled = false;
-	}
-
 	void RemotePeer::Connect( const Address& address, uint16 id, float32 maxInactivityTime, uint64 clientSalt,
 	                          uint64 serverSalt )
 	{
+		bool result = true;
+
 		_address = address;
 		_id = id;
 		_maxInactivityTime = maxInactivityTime;
 		_inactivityTimeLeft = _maxInactivityTime;
 		_clientSalt = clientSalt;
 		_serverSalt = serverSalt;
-		_currentState = RemotePeerState::Connecting;
+		_currentState = RemotePeerState::Connected;
+
+		// TODO Add here the list of metrics or metrics data we can to enable for this remote peer
+		if ( !_metricsHandler.StartUp( 1.f, Metrics::MetricsEnableConfig::ENABLE_ALL ) )
+		{
+			LOG_ERROR( "[RemotePeer.%s] Failed to start up metrics handler for remote peer %u.", THIS_FUNCTION_NAME,
+			           _id );
+			result = false;
+		}
 	}
 
 	void RemotePeer::Tick( float32 elapsedTime, MessageFactory& message_factory )
@@ -144,18 +140,14 @@ namespace NetLib
 			_inactivityTimeLeft = 0.f;
 		}
 
-		Metrics::MetricsHandler* metricsHandler = _metricsEnabled ? &_metricsHandler : nullptr;
 		// Update transmission channels
 		for ( uint32 i = 0; i < GetNumberOfTransmissionChannels(); ++i )
 		{
-			_transmissionChannels[ i ]->Update( elapsedTime, metricsHandler );
+			_transmissionChannels[ i ]->Update( elapsedTime, _metricsHandler );
 		}
 
-		if ( _metricsEnabled )
-		{
-			_metricsHandler.Update( elapsedTime );
-			_pingPongMessagesSender.Update( elapsedTime, *this, message_factory );
-		}
+		_metricsHandler.Update( elapsedTime );
+		_pingPongMessagesSender.Update( elapsedTime, *this, message_factory );
 	}
 
 	bool RemotePeer::AddMessage( std::unique_ptr< Message > message )
@@ -201,8 +193,7 @@ namespace NetLib
 		for ( ; it < _transmissionChannels.end(); ++it )
 		{
 			TransmissionChannel* channel = *it;
-			Metrics::MetricsHandler* metricsHandler = _metricsEnabled ? &_metricsHandler : nullptr;
-			channel->CreateAndSendPacket( socket, _address, metricsHandler );
+			channel->CreateAndSendPacket( socket, _address, _metricsHandler );
 		}
 	}
 
@@ -232,9 +223,9 @@ namespace NetLib
 			AddReceivedMessage( std::move( message ) );
 		}
 
-		if ( _metricsEnabled )
+		if ( _metricsHandler.HasMetric( Metrics::MetricType::DOWNLOAD_BANDWIDTH ) )
 		{
-			_metricsHandler.AddValue( Metrics::DOWNLOAD_BANDWIDTH_METRIC, packet_size );
+			_metricsHandler.AddValue( Metrics::MetricType::DOWNLOAD_BANDWIDTH, packet_size );
 		}
 	}
 
@@ -244,8 +235,7 @@ namespace NetLib
 		TransmissionChannel* transmissionChannel = GetTransmissionChannelFromType( channelType );
 		if ( transmissionChannel != nullptr )
 		{
-			Metrics::MetricsHandler* metricsHandler = _metricsEnabled ? &_metricsHandler : nullptr;
-			transmissionChannel->ProcessACKs( acks, lastAckedMessageSequenceNumber, metricsHandler );
+			transmissionChannel->ProcessACKs( acks, lastAckedMessageSequenceNumber, _metricsHandler );
 		}
 	}
 
@@ -258,8 +248,7 @@ namespace NetLib
 		TransmissionChannel* transmissionChannel = GetTransmissionChannelFromType( channelType );
 		if ( transmissionChannel != nullptr )
 		{
-			Metrics::MetricsHandler* metricsHandler = _metricsEnabled ? &_metricsHandler : nullptr;
-			transmissionChannel->AddReceivedMessage( std::move( message ), metricsHandler );
+			transmissionChannel->AddReceivedMessage( std::move( message ), _metricsHandler );
 			_inactivityTimeLeft = _maxInactivityTime;
 		}
 		else
@@ -321,16 +310,18 @@ namespace NetLib
 		return static_cast< uint32 >( _transmissionChannels.size() );
 	}
 
-	uint32 RemotePeer::GetMetric( const std::string& metric_name, const std::string& value_type ) const
+	uint32 RemotePeer::GetMetric( Metrics::MetricType metric_type, Metrics::ValueType value_type ) const
 	{
 		uint32 result = 0;
-		if ( _metricsEnabled )
+		if ( _metricsHandler.HasMetric( metric_type ) )
 		{
-			result = _metricsHandler.GetValue( metric_name, value_type );
+			result = _metricsHandler.GetValue( metric_type, value_type );
 		}
 		else
 		{
-			LOG_WARNING( "You are trying to get a metric value from a RemotePeer that doesn't have metrics enabled" );
+			LOG_WARNING( "[RemotePeer.%s] You are trying to get a metric value from a RemotePeer that doesn't have "
+			             "metric of type %u enabled",
+			             THIS_FUNCTION_NAME, static_cast< uint8 >( metric_type ) );
 		}
 
 		return result;
@@ -338,6 +329,8 @@ namespace NetLib
 
 	void RemotePeer::Disconnect()
 	{
+		bool result = true;
+
 		// Reset transmission channels
 		for ( uint32 i = 0; i < GetNumberOfTransmissionChannels(); ++i )
 		{
@@ -349,6 +342,11 @@ namespace NetLib
 
 		_currentState = RemotePeerState::Disconnected;
 
-		DeactivateNetworkStatistics();
+		if ( !_metricsHandler.ShutDown() )
+		{
+			LOG_ERROR( "[RemotePeer.%s] Failed to shut down metrics handler for remote peer %u.", THIS_FUNCTION_NAME,
+			           _id );
+			result = false;
+		}
 	}
 } // namespace NetLib

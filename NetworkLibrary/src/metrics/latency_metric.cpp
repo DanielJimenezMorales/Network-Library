@@ -3,8 +3,6 @@
 #include "logger.h"
 #include "AlgorithmUtils.h"
 
-#include "metrics/metric_names.h"
-
 namespace NetLib
 {
 	namespace Metrics
@@ -17,26 +15,26 @@ namespace NetLib
 			_samples.reserve( MAX_BUFFER_SIZE );
 		}
 
-		void LatencyMetric::GetName( std::string& out_name_buffer ) const
+		MetricType LatencyMetric::GetType() const
 		{
-			out_name_buffer.assign( LATENCY_METRIC );
+			return MetricType::LATENCY;
 		}
 
-		uint32 LatencyMetric::GetValue( const std::string& value_type ) const
+		uint32 LatencyMetric::GetValue( ValueType value_type ) const
 		{
 			uint32 result = 0;
 
-			if ( value_type == "MAX" )
+			if ( value_type == ValueType::MAX )
 			{
 				result = _maxValue;
 			}
-			else if ( value_type == "CURRENT" )
+			else if ( value_type == ValueType::CURRENT )
 			{
 				result = _currentValue;
 			}
 			else
 			{
-				LOG_WARNING( "Unknown value type '%s' for LatencyMetric", value_type.c_str() );
+				LOG_WARNING( "Unknown value type '%u' for LatencyMetric", static_cast< uint8 >( value_type ) );
 			}
 
 			return result;

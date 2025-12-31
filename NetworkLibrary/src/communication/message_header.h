@@ -40,7 +40,7 @@ namespace NetLib
 
 			void Write( Buffer& buffer ) const;
 			void Read( Buffer& buffer );
-			void ReadWithoutHeader( Buffer& buffer );
+			bool ReadWithoutHeader( Buffer& buffer );
 			static uint32 Size() { return sizeof( MessageType ) + sizeof( uint16 ) + sizeof( uint8 ); }
 
 			~MessageHeader() {}

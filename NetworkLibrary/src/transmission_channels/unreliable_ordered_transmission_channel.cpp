@@ -11,8 +11,8 @@
 #include "core/socket.h"
 #include "core/address.h"
 
-#include "metrics/metric_names.h"
 #include "metrics/metrics_handler.h"
+#include "metrics/metric_types.h"
 
 namespace NetLib
 {
@@ -41,7 +41,7 @@ namespace NetLib
 	}
 
 	bool UnreliableOrderedTransmissionChannel::CreateAndSendPacket( Socket& socket, const Address& address,
-	                                                                Metrics::MetricsHandler* metrics_handler )
+	                                                                Metrics::MetricsHandler& metrics_handler )
 	{
 		bool result = false;
 
@@ -85,9 +85,9 @@ namespace NetLib
 		socket.SendTo( buffer.GetData(), buffer.GetSize(), address );
 
 		// TODO See what happens when the socket couldn't send the packet
-		if ( metrics_handler != nullptr )
+		if ( metrics_handler.HasMetric( Metrics::MetricType::UPLOAD_BANDWIDTH ) )
 		{
-			metrics_handler->AddValue( Metrics::UPLOAD_BANDWIDTH_METRIC, packet.Size() );
+			metrics_handler.AddValue( Metrics::MetricType::UPLOAD_BANDWIDTH, packet.Size() );
 		}
 
 		// Clean messages
@@ -122,7 +122,7 @@ namespace NetLib
 	}
 
 	std::unique_ptr< Message > UnreliableOrderedTransmissionChannel::GetMessageToSend(
-	    Metrics::MetricsHandler* metrics_handler )
+	    Metrics::MetricsHandler& metrics_handler )
 	{
 		if ( !ArePendingMessagesToSend() )
 		{
@@ -151,7 +151,7 @@ namespace NetLib
 	}
 
 	bool UnreliableOrderedTransmissionChannel::AddReceivedMessage( std::unique_ptr< Message > message,
-	                                                               Metrics::MetricsHandler* metrics_handler )
+	                                                               Metrics::MetricsHandler& metrics_handler )
 	{
 		assert( message != nullptr );
 
@@ -195,7 +195,7 @@ namespace NetLib
 	}
 
 	void UnreliableOrderedTransmissionChannel::ProcessACKs( uint32 acks, uint16 lastAckedMessageSequenceNumber,
-	                                                        Metrics::MetricsHandler* metrics_handler )
+	                                                        Metrics::MetricsHandler& metrics_handler )
 	{
 		// This channel is not supporting ACKs since it is unreliable. So do nothing
 	}
@@ -205,7 +205,7 @@ namespace NetLib
 		return false;
 	}
 
-	void UnreliableOrderedTransmissionChannel::Update( float32 deltaTime, Metrics::MetricsHandler* metrics_handler )
+	void UnreliableOrderedTransmissionChannel::Update( float32 deltaTime, Metrics::MetricsHandler& metrics_handler )
 	{
 	}
 

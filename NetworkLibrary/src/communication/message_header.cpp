@@ -31,11 +31,22 @@ namespace NetLib
 		ReadWithoutHeader( buffer );
 	}
 
-	void MessageHeader::ReadWithoutHeader( Buffer& buffer )
+	bool MessageHeader::ReadWithoutHeader( Buffer& buffer )
 	{
-		messageSequenceNumber = buffer.ReadShort();
-		uint8 flags = buffer.ReadByte();
+		if ( !buffer.ReadShort( messageSequenceNumber ) )
+		{
+			return false;
+		}
+
+		uint8 flags;
+		if ( !buffer.ReadByte( flags ) )
+		{
+			return false;
+		}
+
 		isReliable = BitwiseUtils::GetBitAtIndex( flags, 0 );
 		isOrdered = BitwiseUtils::GetBitAtIndex( flags, 1 );
+
+		return true;
 	}
 } // namespace NetLib
